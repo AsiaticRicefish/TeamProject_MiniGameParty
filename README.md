@@ -39,17 +39,17 @@ Mobile / Android
 ### 🔊 버그 수정 가이드
 
 #### 🕵️ 버그 발견 : Github issue 탭에 버그 리포트를 작성합니다!
-![alt text](image-2.png)
-![alt text](image-3.png)
-![alt text](image-4.png)
+![alt text](docs/images/image-2.png)
+![alt text](docs/images/image-3.png)
+![alt text](docs/images/image-4.png)
 
 #### ❌ 수정 중 : PR에서 해당 부분 작성 후 추가 작업
-![alt text](image-8.png)
+![alt text](docs/images/image-8.png)
 <br>
-![alt text](image-6.png)
+![alt text](docs/images/image-6.png)
 
 #### ✅ 수정 완료 : PR에서 관련 이슈 부분에서 해당 버그 리포트의 번호를 기입합니다
-![alt text](image-7.png)
+![alt text](docs/images/image-7.png)
 
 
 ---
