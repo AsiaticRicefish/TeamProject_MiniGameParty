@@ -20,7 +20,6 @@ Mobile / Android
 <br>
 <br>
 
-
 # ⌨️ Commit 메시지
 ### ✅ Type
 - `[Feat]` 새로운 기능 추가
@@ -37,17 +36,21 @@ Mobile / Android
 
 <br>
 
-### 👨‍🔧 버그 수정의 경우
-버그 수정의 경우 커밋시 해당 기능의 PR 번호를 작성한다.
+### 🔊 버그 수정 가이드
 
-#### ✔️ 기능을 PR 할 경우 나타나는 PR 번호
-```
-[Feat] Reload 기능 => #23
-```
-#### ✔️ 버그 픽스일 때 뒤에 명시!
-```
-[Fix] Reload 버튼이 안 눌리는 현상 수정 (#23)
-```
+#### 🕵️ 버그 발견 : Github issue 탭에 버그 리포트를 작성합니다!
+![alt text](image-2.png)
+![alt text](image-3.png)
+![alt text](image-4.png)
+
+#### ❌ 수정 중 : PR에서 해당 부분 작성 후 추가 작업
+![alt text](image-8.png)
+<br>
+![alt text](image-6.png)
+
+#### ✅ 수정 완료 : PR에서 관련 이슈 부분에서 해당 버그 리포트의 번호를 기입합니다
+![alt text](image-7.png)
+
 
 ---
 <br>
