@@ -1,8 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Photon.Pun;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+
 
 namespace Utils
 {
@@ -20,7 +22,7 @@ namespace Utils
                 return component;
             return go.AddComponent<T>();
         }
-        
+
         public static Component GetOrAddComponent(GameObject go, Type type)
         {
             if (go.TryGetComponent(type, out var component))
@@ -30,8 +32,9 @@ namespace Utils
         }
 
         #endregion
-        
+
         #region Validation
+
         ///<summary>
         /// index가 리스트/배열 등 순차 컬렉션 내에서 유효한 범위인지 확인
         /// </summary>
@@ -44,8 +47,8 @@ namespace Utils
         }
 
         #endregion
-        
-        
+
+
         #region RectTransform Control
 
         /// <summary>
@@ -106,8 +109,8 @@ namespace Utils
             Vector2 center = new Vector2(0.5f, 0.5f);
             SetRectTransform(rect, center, center, center, Vector2.zero, size, offset);
         }
-        
-        
+
+
         /// <summary>
         /// 오른쪽 위 모서리를 기준으로 UI를 배치합니다.
         /// </summary>
@@ -119,7 +122,7 @@ namespace Utils
             Vector2 pos = new Vector2(1f, 1f);
             SetRectTransform(rect, pos, pos, pos, Vector2.zero, size, offset);
         }
-        
+
         /// <summary>
         /// 오른쪽 아래 모서리를 기준으로 UI를 배치합니다.
         /// </summary>
@@ -131,7 +134,7 @@ namespace Utils
             Vector2 pos = new Vector2(1f, 0f);
             SetRectTransform(rect, pos, pos, pos, Vector2.zero, size, offset);
         }
-        
+
 
         /// <summary>
         /// 왼쪽 위 모서리를 기준으로 UI를 배치합니다.
@@ -145,7 +148,7 @@ namespace Utils
             SetRectTransform(rect, pos, pos, pos, Vector2.zero, size, offset);
         }
 
-        
+
         /// <summary>
         /// 왼쪽 아래 모서리를 기준으로 UI를 배치합니다.
         /// </summary>
@@ -157,7 +160,7 @@ namespace Utils
             Vector2 pos = new Vector2(0f, 0f);
             SetRectTransform(rect, pos, pos, pos, Vector2.zero, size, offset);
         }
-        
+
         #endregion
 
         #region Load Scene
@@ -169,10 +172,10 @@ namespace Utils
         {
             AsyncOperation op = SceneManager.LoadSceneAsync(sceneName);
             op.allowSceneActivation = false;
-            
+
             // 모달 보여지는 시간 확보
             yield return new WaitForSeconds(delay);
-            
+
             // 씬 전환
             op.allowSceneActivation = true;
         }
@@ -182,7 +185,7 @@ namespace Utils
 
 
         #region Network
-        
+
 
         public static void ClearAllPlayerProperty()
         {
@@ -197,6 +200,7 @@ namespace Utils
 
             PhotonNetwork.LocalPlayer.SetCustomProperties(clearProperties);
         }
-        
-    #endregion
+
+        #endregion
+    }
 }

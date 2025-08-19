@@ -1,6 +1,8 @@
 using System;
+using LDH_Util;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using Utils;
 
 namespace LDH_UI
 {
@@ -47,21 +49,7 @@ namespace LDH_UI
         }
 
         #endregion
-
-
-        #region UI Show/Hide
-
-        public virtual void Show()
-        {
-            gameObject.SetActive(true);
-        }
         
-        public virtual void Close()
-        {
-            gameObject.SetActive(false);
-        }
-
-        #endregion
   
     }
 }

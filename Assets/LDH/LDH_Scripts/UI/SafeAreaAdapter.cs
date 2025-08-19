@@ -14,16 +14,25 @@ namespace LDH_UI
 
         private void Init()
         {
-            _rt = GetComponent<RectTransform>();
+            FindComponent();
             Apply(true);
         }
 
         // 화면 크기/회전/디바이스 시뮬레이터 변경 시 호출
         private void OnRectTransformDimensionsChange()
         {
+            if(!isActiveAndEnabled) return;     // enabled == true이고 계층에서 활성화 상태가 아니면 return
+
+            FindComponent();
             Apply();
         }
 
+        private void FindComponent()
+        {
+            if (_rt == null)
+                _rt = GetComponent<RectTransform>();
+        }
+        
         private void Apply(bool force = false)
         {
             Rect safeArea = Screen.safeArea;
