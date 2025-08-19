@@ -28,8 +28,11 @@ public class ShootingSceneController : BaseGameSceneController
         var sequentialComponents = new List<IGameComponent>();
 
         // 의존성 순서대로 추가
-        /* if (ShootingGameManager.Instance is IGameComponent netComp)
-            sequentialComponents.Add(netComp);*/
+        /* if (ShootingGameManager.Instance is IGameComponent gameManagerComp)
+            sequentialComponents.Add(gameManagerComp);*/
+
+        /* if (TurnManager.Instance is IGameComponent turnManagerComp)
+            sequentialComponents.Add(turnManagerComp);*/
 
         // 필요하다면 다른 순차 초기화 컴포넌트들 추가
 
@@ -44,11 +47,8 @@ public class ShootingSceneController : BaseGameSceneController
         var parallelComponents = new List<ICoroutineGameComponent>();
 
         // 독립적으로 초기화 가능한 컴포넌트들 추가
-        if (ShootingGameManager.Instance is ICoroutineGameComponent gameComp)
-            parallelComponents.Add(gameComp);
-
-        if (TurnManager.Instance is ICoroutineGameComponent uiComp)
-            parallelComponents.Add(uiComp);
+        /*if (ShootingGameManager.Instance is ICoroutineGameComponent gameComp)
+            parallelComponents.Add(gameComp);*/
 
         yield return StartCoroutine(InitializeCoroutineComponentsSafely(parallelComponents));
     }
