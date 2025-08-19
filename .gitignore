@@ -75,5 +75,13 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 /Assets/Imports
 
+
+# Mac file setting
+.DS_Store
+
+# Rider
+.idea/
+
 # Firebase config (keep out of VCS for security)
 firebase.json
+
