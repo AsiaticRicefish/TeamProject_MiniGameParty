@@ -81,3 +81,7 @@ crashlytics-build.properties
 
 # Rider
 .idea/
+
+# Firebase config (keep out of VCS for security)
+firebase.json
+
