@@ -4,9 +4,10 @@ using System.Collections.Generic;
 using Photon.Pun;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Object = UnityEngine.Object;
 
 
-namespace Utils
+namespace LDH_Utils
 {
     public static class Util_LDH
     {
@@ -48,7 +49,27 @@ namespace Utils
 
         #endregion
 
+        #region Resource
 
+        public static T Instantiate<T>(string prefabPath, Transform parent = null) where T : UnityEngine.Object
+        {
+            T prefab = Resources.Load<T>(prefabPath);
+            if (prefabPath == null)
+            {
+                Debug.Log($"[Util_LDH] 프리팹을 가져올 수 없습니다. : {prefabPath}");
+                return null;
+            }
+            
+            T go = Object.Instantiate(prefab, parent);
+            go.name = prefab.name;
+
+            return go;
+        }
+
+
+        #endregion
+        
+        
         #region RectTransform Control
 
         /// <summary>
@@ -158,6 +179,13 @@ namespace Utils
         public static void SetLeftBottom(RectTransform rect, Vector2 size, Vector2? offset = null)
         {
             Vector2 pos = new Vector2(0f, 0f);
+            SetRectTransform(rect, pos, pos, pos, Vector2.zero, size, offset);
+        }
+
+
+        public static void SetCenterBottom(RectTransform rect, Vector2 size, Vector2? offset = null)
+        {
+            Vector2 pos = new Vector2(0.5f, 0f);
             SetRectTransform(rect, pos, pos, pos, Vector2.zero, size, offset);
         }
 

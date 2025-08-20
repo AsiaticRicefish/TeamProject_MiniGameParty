@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using LDH_UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -7,29 +8,29 @@ namespace Managers
 {
     public static class Manager
     {
-        // ¿ªÇÒ: ¸Å´ÏÀú »ý¼º/µî·Ï¸¸ ´ã´ç
+        // ï¿½ï¿½ï¿½ï¿½: ï¿½Å´ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½Ï¸ï¿½ ï¿½ï¿½ï¿½
         // public static FirebaseManager Firebase => FirebaseManager.Instance;
         // public static NetworkManager Network => NetworkManager.Instance;
         // public static SoundManager Sound => SoundManager.Instance;
-        // public static UIManager UI => UIManager.Instance;
+        public static UIManager UI => UIManager.Instance;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         public static void Initialize()
         {
-            // Àü¿ª ¸Å´ÏÀú¸¸ »ý¼º
+            // ï¿½ï¿½ï¿½ï¿½ ï¿½Å´ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             var manager = Object.Instantiate(Resources.Load<GameObject>("Prefabs/@Manager"));
             Object.DontDestroyOnLoad(manager);
 
            // manager.AddComponent<FirebaseManager>();
            // manager.AddComponent<NetworkManager>();
            // manager.AddComponent<SoundManager>();
-           // manager.AddComponent<UIManager>();
+           manager.AddComponent<UIManager>();
 
-            // ¾Àº° °ÔÀÓ ¸Å´ÏÀú´Â °¢ ¾À¿¡¼­ ÀÚÃ¼ÀûÀ¸·Î »ý¼º
+            // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Å´ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             SceneManager.sceneLoaded += OnSceneLoaded;
         }
 
-        // ¾ÀÀÌ ÀÌµ¿µÉ ¶§ ÃÊ±âÈ­°¡ ¶Ç ÇÊ¿äÇÑ ºÎºÐÀÌ ÀÖÀ» °Í °°¾Æ¼­ ÀÛ¼ºÇØµÐ ¸Þ¼­µå (¼±ÅÃ)
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ê±ï¿½È­ï¿½ï¿½ ï¿½ï¿½ ï¿½Ê¿ï¿½ï¿½ï¿½ ï¿½Îºï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½Æ¼ï¿½ ï¿½Û¼ï¿½ï¿½Øµï¿½ ï¿½Þ¼ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½)
         private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
 

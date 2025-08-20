@@ -11,6 +11,18 @@ namespace LDH_Util
             PointExit,
             Drag,
         }
+        
+        public enum ScreenUI
+        {
+            
+        }
+        
+        public enum UILayer
+        {
+            Screen,
+            Popup,
+            Toast
+        }
 
         
 
