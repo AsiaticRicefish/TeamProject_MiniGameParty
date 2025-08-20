@@ -131,7 +131,11 @@ namespace LDH_UI
         // 초기화
         protected virtual void Init()
         {
-            cg ??= Util_LDH.GetOrAddComponent<CanvasGroup>(gameObject);
+            if (cg == null)
+            {
+                // cg = GetComponent<CanvasGroup>();
+                cg = Util_LDH.GetOrAddComponent<CanvasGroup>(gameObject);
+            }
 
             cg.alpha = 0f;
             _isVisible = false;
