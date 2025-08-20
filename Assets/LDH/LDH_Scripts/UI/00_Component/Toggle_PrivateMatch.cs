@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace LDH_UI.Component
+namespace LDH_UI
 {
     public class Toggle_PrivateMatch : MonoBehaviour
     {
