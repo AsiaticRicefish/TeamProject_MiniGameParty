@@ -7,7 +7,7 @@ public class UnimoEgg : MonoBehaviour
     private Vector3 startTouchPos;
     private Vector3 endTouchPos;
 
-    private float forceMultiplier = 5f;
+    private float forceMultiplier = 15f;
 
     private void Awake()
     {
@@ -15,7 +15,7 @@ public class UnimoEgg : MonoBehaviour
     }
 
     //터치 시작했을 때
-    public void OnTouchStart(Vector3 touchPos)
+    public void OnTouchStart(Vector2 touchPos)
     {
         Debug.Log("유니모 찾아서 터치 시작함");
         startTouchPos = touchPos;               //시작 위치를 저장
@@ -23,7 +23,7 @@ public class UnimoEgg : MonoBehaviour
     }
 
     //터치 중일때
-    public void OnTouchMove(Vector3 touchPos)
+    public void OnTouchMove(Vector2 touchPos)
     {
         // 화면 좌표의 Y를 월드 좌표의 Z로 변환
         //Vector3 worldPos = Camera.main.ScreenToWorldPoint(new Vector3(touchPos.x, touchPos.y, Camera.main.transform.position.y));
@@ -32,15 +32,14 @@ public class UnimoEgg : MonoBehaviour
     }
 
     //터치를 땟을 때
-    public void OnTouchEnd(Vector3 touchPos)
+    public void OnTouchEnd(Vector2 endtouchPos)
     {
         //TODO - 추후 나중에 놓은 시간만큼 forceMultiplier값을 높게 하여 곱해줘야한다.
         rb.isKinematic = false;
-        endTouchPos = touchPos; // 직접 전달받은 좌표 사용(놓은 순간 해당 좌표)
 
         //항상 카메라는 x,y좌표 보다 Camera.main.transform.position.y 만큼 떨어져있다.
-        Vector3 startWorld = Camera.main.ScreenToWorldPoint(new Vector3(startTouchPos.x, startTouchPos.y, Camera.main.transform.position.y));
-        Vector3 endWorld = Camera.main.ScreenToWorldPoint(new Vector3(touchPos.x, touchPos.y, Camera.main.transform.position.y));
+        Vector3 startWorld = Camera.main.ScreenToWorldPoint(new Vector3(startTouchPos.x,startTouchPos.y,0/*Camera.main.transform.position.y*/));
+        Vector3 endWorld = Camera.main.ScreenToWorldPoint(new Vector3(endtouchPos.x,endtouchPos.y,0/*Camera.main.transform.position.y*/));
         Vector3 dir = (startWorld - endWorld);
         dir.y = 0;
         rb.AddForce(dir.normalized * forceMultiplier, ForceMode.Impulse);

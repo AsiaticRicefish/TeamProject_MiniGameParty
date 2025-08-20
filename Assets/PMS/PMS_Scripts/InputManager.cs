@@ -19,7 +19,21 @@ public class InputManager : MonoBehaviour
             touchAction = playerInput.actions.FindAction("TouchPress");
         }
     }
+
+    #region 싱글 환경 테스트 코드 - 추후 자기턴일때 자기만 Input이 가능하도록 설계 예정 
     private void OnEnable()
+    {
+        EnableInput();
+    }
+
+    private void OnDisable()
+    {
+        // 스크립트가 비활성화될 때 이벤트 구독 해제
+        DisableInput();
+    }
+    #endregion
+
+    private void EnableInput()
     {
         // TouchPress 액션의 이벤트를 구독
         if (touchAction != null)
@@ -31,9 +45,9 @@ public class InputManager : MonoBehaviour
         }
     }
 
-    private void OnDisable()
+    //touchAction 비활성화 - 클릭못하게 막음
+    private void DisableInput()
     {
-        // 스크립트가 비활성화될 때 이벤트 구독 해제
         if (touchAction != null)
         {
             touchAction.started -= OnTouchPress;
@@ -41,12 +55,6 @@ public class InputManager : MonoBehaviour
             touchAction.canceled -= OnTouchPress;
             touchAction.Disable();
         }
-    }
-
-    private void Update()
-    {
-        Debug.DrawRay(transform.position, transform.forward * 10f, Color.red); // 100f는 Ray의 길이, 1f는 표시 시간
-        //아니 레이가 왜 안보이지 기즈모를 껏나?  
     }
 
     // TouchPress 이벤트 연결
@@ -60,30 +68,28 @@ public class InputManager : MonoBehaviour
         // 터치인지 마우스인지 확인해서 위치 가져오기
         if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
         {
-            screenPos = Touchscreen.current.primaryTouch.position.ReadValue();
+            screenPos = Touchscreen.current.primaryTouch.position.ReadValue();   //Vector2 -> x,y값
         }
         else if (Mouse.current != null)
         {
-            screenPos = Mouse.current.position.ReadValue();
+            screenPos = Mouse.current.position.ReadValue(); //Vector2 -> x,y값
         }
         else
         {
             return;
         }
-        Ray ray = mainCam.ScreenPointToRay(screenPos);
-        
 
-        Debug.DrawRay(ray.origin, ray.direction * 100f, Color.red); // 100f는 Ray의 길이, 1f는 표시 시간
+
+        Ray ray = mainCam.ScreenPointToRay(screenPos);
 
         if (ctx.started)
         {
             Debug.Log("start");
             // 터치 시작 → Raycast로 알 선택
-            if (Physics.Raycast(ray, out RaycastHit hit))
+            if (Physics.Raycast(ray, out RaycastHit hit,Mathf.Infinity,LayerMask.GetMask("UnimoEgg")))
             {
                 selectedUnimoEgg = hit.collider.GetComponent<UnimoEgg>();
-                Debug.Log(hit.collider.gameObject.name);
-                selectedUnimoEgg?.OnTouchStart(screenPos);          
+                selectedUnimoEgg?.OnTouchStart(screenPos);       
             }
         }
         else if (ctx.performed)
@@ -97,10 +103,13 @@ public class InputManager : MonoBehaviour
             selectedUnimoEgg?.OnTouchEnd(screenPos);
             selectedUnimoEgg = null;
 
-            if(selectedUnimoEgg == null)
+            DisableInput();                         //한번 쏘고 나면 인풋 못하게
+
+            if (selectedUnimoEgg == null)
             {
                 Debug.Log("NULL처리완료");
             }
+
         }
     }
 
