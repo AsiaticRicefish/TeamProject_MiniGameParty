@@ -7,7 +7,7 @@ public class UnimoEgg : MonoBehaviour
     private Vector3 startTouchPos;
     private Vector3 endTouchPos;
 
-    private float forceMultiplier = 15f;
+    [SerializeField][Range(0.1f,15f)] private float forceMultiplier = 15f;
 
     private void Awake()
     {

@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
-using ShootingScene_TurnManager;
+using ShootingScene;
 
 public class ShootingSceneController : BaseGameSceneController
 {
