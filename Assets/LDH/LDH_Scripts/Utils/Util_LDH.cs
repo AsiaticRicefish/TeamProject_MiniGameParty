@@ -68,7 +68,22 @@ namespace LDH_Utils
 
 
         #endregion
-        
+
+
+        #region Util
+
+        // <summary>
+        /// 초 단위 시간을 입력받아 HH:MM 형식의 문자열로 변환하여 반환한다.
+        /// </summary>
+        /// <param name="seconds">변환할 시간(초 단위)</param>
+        /// <returns>HH : MM 형식 문자열</returns>
+        public static string FormatTimeHM(float seconds)
+        {
+            TimeSpan ts = TimeSpan.FromSeconds(seconds);
+            return $"{ts.Minutes} : {ts.Seconds:D2}";
+        }
+
+        #endregion
         
         #region RectTransform Control
 
@@ -210,7 +225,6 @@ namespace LDH_Utils
 
 
         #endregion
-
 
         #region Network
 
