@@ -56,5 +56,6 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "TeamProject_MiniGameParty.sln"
+    "dotnet.defaultSolution": "TeamProject_MiniGameParty.sln",
+    "files.encoding": "euckr"
 }
