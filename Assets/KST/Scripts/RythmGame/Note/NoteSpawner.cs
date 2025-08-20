@@ -6,8 +6,13 @@ using System.Collections;
 
 namespace RhythmGame
 {
-
-    public class NoteSpawner : MonoBehaviourPunCallbacks
+    /// <summary>
+    /// Note를 스폰하는 클래스로, 
+    /// 마스터 클라이언트가 담당하여 실행하며, Note 생성 시 속도, 종류 등을 설정함.
+    /// 
+    /// 해당 클래스는 독립성이 보장되어야 하며, 추후 게임매니저 및 네트워크 매니저에서도 이용할 가능성이 있기에, 싱글톤으로 구현
+    /// </summary>
+    public class NoteSpawner : PunSingleton<NoteSpawner>
     {
         //오브젝트 풀 관련
         [SerializeField] private PooledObject[] _notePrefabs;
