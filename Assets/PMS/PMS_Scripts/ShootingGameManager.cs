@@ -6,6 +6,8 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
 {
     private ShootingGameState currentState;
 
+    public UnimoEgg currentUnimo;
+    
     public int CurrentRound { get; private set; } = 0;
     public int MaxRounds { get; private set; } = 3;
 
