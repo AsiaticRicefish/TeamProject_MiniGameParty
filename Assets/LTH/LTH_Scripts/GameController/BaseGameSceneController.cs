@@ -1,9 +1,11 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Photon.Pun;
 using UnityEngine;
 
+[RequireComponent(typeof(PhotonView))]
 public abstract class BaseGameSceneController : MonoBehaviourPun
 {
     [Header("초기화 설정")]
@@ -35,14 +37,31 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
 
     private void Start()
     {
-        if (PhotonNetwork.IsConnected)
+        StartCoroutine(Co_StartWhenInRoom());
+    }
+
+    private IEnumerator Co_StartWhenInRoom()
+    {
+        // 연결 & 룸입장까지 대기
+        yield return new WaitUntil(() => PhotonNetwork.IsConnected && PhotonNetwork.InRoom);
+
+        // PhotonView 준비 여부 체크 (Scene에 미리 있는 뷰라면 보통 자동 할당되지만, 0이면 RPC 금지)
+        if (photonView == null || photonView.ViewID == 0)
         {
-            StartCoroutine(SafeInitialize());
-        }
-        else
+#if PHOTON_UNITY_NETWORKING_2_OR_NEWER
+        if (!PhotonNetwork.AllocateViewID(photonView))
         {
-            Debug.LogError($"[{GameType}Controller] Photon 연결되지 않음!");
+            Debug.LogError("[Jenga] PhotonView ViewID=0 → AllocateViewID 실패. 씬 배치 또는 네트워크 인스턴스로 생성해야 합니다.");
+            yield break;
         }
+#else
+            int id = PhotonNetwork.AllocateViewID(PhotonNetwork.LocalPlayer.ActorNumber);
+            photonView.ViewID = id;
+            PhotonNetwork.RegisterPhotonView(photonView);
+#endif
+        }
+
+        StartCoroutine(SafeInitialize());
     }
 
     private void SendRPCSafely(string methodName, params object[] parameters)
@@ -51,7 +70,7 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
         {
             photonView.RPC(methodName, RpcTarget.All, parameters);
         }
-        catch (System.Exception e)
+        catch (Exception e)
         {
             Debug.LogError($"[{GameType}Controller] RPC 호출 실패: {methodName} → {e.Message}");
         }
@@ -100,7 +119,7 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
     // 호출 시점: SafeInitialize() 1단계에서 자동 호출
     // loadedPlayers 집합에 플레이어 ID 추가
     [PunRPC]
-    void OnPlayerSceneLoaded(int playerId)
+    public void OnPlayerSceneLoaded(int playerId)
     {
         loadedPlayers.Add(playerId);
         Debug.Log($"플레이어 {playerId} 로딩 완료 ({loadedPlayers.Count}/{PhotonNetwork.CurrentRoom.PlayerCount})");
@@ -110,7 +129,7 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
     // 호출 시점: 순차/병렬 초기화 완료 후
     // InitializedPlayers 집합에 플레이어 ID 추가
     [PunRPC]
-    void OnPlayerInitialized(int playerId)
+    public void OnPlayerInitialized(int playerId)
     {
         initializedPlayers.Add(playerId);
         Debug.Log($"플레이어 {playerId} 초기화 완료 ({initializedPlayers.Count}/{PhotonNetwork.CurrentRoom.PlayerCount})");
@@ -120,9 +139,8 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
     // 호출자: 마스터 클라이언트
     // NotifyGameStart() 호출하여 각 매니저들에게 게임 시작 알림
     [PunRPC]
-    void StartGame()
+    public void StartGame()
     {
-        Debug.Log($"{GameType} 게임 시작!");
         NotifyGameStart();
     }
     #endregion
@@ -131,6 +149,9 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
     private IEnumerator WaitForAllPlayersLoaded() // 모든 플레이어가 씬 로딩 완료할 때까지 대기
     {
         Debug.Log("모든 플레이어 로딩 대기 중...");
+
+        while (!PhotonNetwork.IsConnected || !PhotonNetwork.InRoom || PhotonNetwork.CurrentRoom == null)
+            yield return null;
 
         float timer = 0f;
         while (loadedPlayers.Count < PhotonNetwork.CurrentRoom.PlayerCount)
@@ -223,7 +244,7 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
     private IEnumerator InitializeCoroutineComponentSafely(ICoroutineGameComponent component)
     {
         IEnumerator routine = null;
-        
+
         try
         {
             routine = component.InitializeCoroutine();
