@@ -25,7 +25,11 @@ public class PlayerManager : CombinedSingleton<PlayerManager>
     {
         if (!players.ContainsKey(id)) // 중복 등록 방지
         {
-            players.Add(id, new GamePlayer(id, nickname));
+            GameObject playerObj = new GameObject($"GamePlayer_{nickname}");
+            var gamePlayer = playerObj.AddComponent<GamePlayer>();
+            gamePlayer.Init(id, nickname);
+
+            players.Add(id, gamePlayer);
         }
     }
 

@@ -42,6 +42,13 @@ MonoBehaviour:
   - OnPlayerInitialized
   - OnPlayerSceneLoaded
   - StartGame
+  - SyncBlockRemoval
+  - SyncGameState
+  - SyncTimingResult
+  - ReceiveBlockRemoval
+  - ReceiveGameState
+  - ReceivePlayerActionResult
+  - ReceiveTimingResult
   - NoteSpawn
   DisableAutoOpenWizard: 1
   ShowSettings: 0

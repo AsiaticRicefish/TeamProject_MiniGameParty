@@ -14,8 +14,7 @@ namespace DesignPattern
         private static T _instance;
 
         [Tooltip("true: ¾À ÀÌµ¿ ½Ã À¯Áö / false: ¾À¸¶´Ù »õ·Î »ý¼ºµÊ")]
-        [SerializeField]
-        private bool isPersistent = true;
+        protected bool isPersistent = true;
 
         public static T Instance
         {
