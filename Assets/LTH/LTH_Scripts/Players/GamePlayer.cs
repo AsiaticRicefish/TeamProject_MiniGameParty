@@ -28,11 +28,15 @@ public class GamePlayer : MonoBehaviour
 
     public int BoardPosition { get; set; }          // 현재 보드에서의 위치 (0부터 시작, 0은 시작점)
 
+    #region 미니게임 관련 데이터
+    public JengaPlayerData JengaData { get; set; }
+    #endregion
+
 
     // 전체 게임에서 이긴 횟수 (이건 순위 정렬이나 추후에 랭크에 사용하는 경우 사용)
     public int WinCount { get; set; }
 
-    public GamePlayer(string id, string nickname)
+    public void Init(string id, string nickname)
     {
         PlayerId = id;
         Nickname = nickname;
@@ -43,5 +47,7 @@ public class GamePlayer : MonoBehaviour
         WinCount = 0;
         BoardPosition = 0;
         WinThisMiniGame = false;
+
+        JengaData = new JengaPlayerData(); // 미니게임 데이터 초기화
     }
 }
