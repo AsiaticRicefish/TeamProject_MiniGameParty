@@ -2,7 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class JengaSceneController : MonoBehaviour
+public enum JengaGameState
 {
-   
+    Waiting,
+    Playing,
+    Paused,
+    Finished
 }
