@@ -49,6 +49,14 @@ MonoBehaviour:
   - ReceiveGameState
   - ReceivePlayerActionResult
   - ReceiveTimingResult
+  - NoteSpawn
+  - ReceiveBlockRemovalRequest
+  - RPC_ApplyBlockRemoval
+  - RPC_NotifyTowerCollapsed
+  - RPC_RequestBlockRemoval
+  - RPC_ReceiveSnapshot
+  - RPC_RequestSnapshot
+  - RPC_ApplyGameState
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 0
