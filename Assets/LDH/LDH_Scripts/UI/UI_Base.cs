@@ -5,6 +5,7 @@ using LDH_Util;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using LDH_Utils;
+using UnityEngine.UI;
 
 namespace LDH_UI
 {
@@ -28,6 +29,8 @@ namespace LDH_UI
         
         // 이벤트
         public event Action<UI_Base> OnCloseRequested;   
+        
+        
         protected void Awake() => Init();
         protected void OnDestroy()
         {
@@ -62,6 +65,33 @@ namespace LDH_UI
         #endregion
 
         #region Core Visibility Logic
+
+        // 자식 -> 부모 순서로 레이아웃 강제 갱신
+        private async UniTask ForceReBuildLayout(Transform root, CancellationToken ct)
+        {
+            if (!root) return;
+
+            RectTransform targetRect = null;
+            if (root.TryGetComponent<LayoutGroup>(out var layout))
+            {
+                 targetRect = layout.GetComponent<RectTransform>();
+            }
+            else
+            {
+                var layoutChild = root.GetComponentInChildren<LayoutGroup>(true);
+                targetRect = layoutChild.GetComponent<RectTransform>();
+            }
+
+            
+            if(targetRect!=null)
+                LayoutRebuilder.ForceRebuildLayoutImmediate(targetRect);
+            
+            // 프레임 끝까지 한 번 흘려 레이아웃/메시 갱신을 보장
+            await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, ct);
+            Canvas.ForceUpdateCanvases();
+            
+        }
+        
         private async UniTask PlayVisibilityAsync(bool visible)
         {
             // 1) 이전 애니메이션이 돌고 있다면 정상적으로 취소시킨다.(매 실행마다 이전 토큰을 Cancel+Dispose하고 새로운 토큰 소스를 만든다.)
@@ -89,6 +119,10 @@ namespace LDH_UI
                     if (!gameObject.activeSelf)
                         gameObject.SetActive(true);
                     
+                    
+                    // 레이아웃 강제 갱신을 위해 추가
+                    
+                    await ForceReBuildLayout(transform, ct);
                     await OnShowAsync(ct);
                     _isVisible = true;
                 }
