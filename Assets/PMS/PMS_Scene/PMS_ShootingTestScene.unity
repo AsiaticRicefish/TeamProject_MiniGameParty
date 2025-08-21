@@ -541,7 +541,6 @@ GameObject:
   - component: {fileID: 1000485878}
   - component: {fileID: 1000485877}
   - component: {fileID: 1000485876}
-  - component: {fileID: 1000485875}
   - component: {fileID: 1000485881}
   m_Layer: 20
   m_Name: Cylinder
@@ -550,19 +549,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1000485875
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1000485874}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5d3901c0ef69ecb4f894b8514d6186c5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  forceMultiplier: 10
 --- !u!54 &1000485876
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -588,7 +574,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 80
+  m_Constraints: 112
   m_CollisionDetection: 2
 --- !u!136 &1000485877
 CapsuleCollider:
@@ -675,7 +661,8 @@ Transform:
   m_LocalPosition: {x: 0.08, y: 0.4, z: -1.18}
   m_LocalScale: {x: 0.3, y: 0.03, z: 0.3}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1073440903}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1000485881
@@ -690,7 +677,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bb1dca665c8f37844b6226e5ea38930a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forceMultiplier: 15
+  forceMultiplier: 5
 --- !u!1 &1073440900
 GameObject:
   m_ObjectHideFlags: 0
@@ -778,11 +765,11 @@ Transform:
   m_GameObject: {fileID: 1073440900}
   serializedVersion: 2
   m_LocalRotation: {x: 0.70709777, y: 0.0035789788, z: -0.0035789788, w: 0.70709777}
-  m_LocalPosition: {x: 0, y: 6.08, z: -1.19}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: -0.26666665, y: 189.33336, z: -0.0333333}
+  m_LocalScale: {x: 3.3333333, y: 3.3333335, z: 33.333336}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1000485880}
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: -0.58}
 --- !u!114 &1073440904
 MonoBehaviour:
@@ -946,7 +933,6 @@ GameObject:
   - component: {fileID: 1703553573}
   - component: {fileID: 1703553572}
   - component: {fileID: 1703553571}
-  - component: {fileID: 1703553570}
   - component: {fileID: 1703553576}
   m_Layer: 0
   m_Name: Cylinder (1)
@@ -955,19 +941,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1703553570
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1703553569}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5d3901c0ef69ecb4f894b8514d6186c5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  forceMultiplier: 30
 --- !u!54 &1703553571
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1205,7 +1178,6 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 1073440903}
   - {fileID: 229229124}
   - {fileID: 702217532}
   - {fileID: 367844497}

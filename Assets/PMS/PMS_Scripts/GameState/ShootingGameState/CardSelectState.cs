@@ -15,5 +15,8 @@ public class CardSelectState : ShootingGameState
     { 
 
     }
-    public override void Exit() { }
+    public override void Exit() 
+    {
+        Debug.Log("[ShootingGameState] - CardSelect 상태에서 벗어남");
+    }
 }

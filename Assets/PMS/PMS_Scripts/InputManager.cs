@@ -71,8 +71,7 @@ namespace ShootingScene
         {
             Vector2 screenPos;
 
-            //왜 인지 모르겠는데 pc에서 자꾸 이상한데 값을 들고옴
-            //Vector2 touchPos = Touchscreen.current.primaryTouch.position.ReadValue();
+            //왜 인지 모르겠는데 pc에서 Simulrator로 Player하면 자꾸 이상한데 값을 들고옴
 
             // 터치인지 마우스인지 확인해서 위치 가져오기
             if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
@@ -112,7 +111,7 @@ namespace ShootingScene
                 selectedUnimoEgg?.OnTouchEnd(screenPos);
                 selectedUnimoEgg = null;
 
-                DisableInput();                         //한번 쏘고 나면 인풋 못하게
+                //DisableInput();                         //한번 쏘고 나면 다시 못쏘도록
 
                 if (selectedUnimoEgg == null)
                 {

@@ -7,7 +7,7 @@ public class UnimoEgg : MonoBehaviour
     private Vector3 startTouchPos;
     private Vector3 endTouchPos;
 
-    [SerializeField][Range(0.1f,15f)] private float forceMultiplier = 15f;
+    [SerializeField][Range(0.1f,15f)] private float forceMultiplier = 10f;
 
     private void Awake()
     {
@@ -40,10 +40,18 @@ public class UnimoEgg : MonoBehaviour
         //항상 카메라는 x,y좌표 보다 Camera.main.transform.position.y 만큼 떨어져있다.
         Vector3 startWorld = Camera.main.ScreenToWorldPoint(new Vector3(startTouchPos.x,startTouchPos.y,0/*Camera.main.transform.position.y*/));
         Vector3 endWorld = Camera.main.ScreenToWorldPoint(new Vector3(endtouchPos.x,endtouchPos.y,0/*Camera.main.transform.position.y*/));
-        Vector3 dir = (startWorld - endWorld);
-        dir.y = 0;
-        rb.AddForce(dir.normalized * forceMultiplier, ForceMode.Impulse);
 
+        //두벡터사이의 거리를 구함
+        //float pullBackPower = Vector3.Distance(startWorld,endWorld);
+        //Debug.Log(pullBackPower);
+
+        //두벡터 사이의 방향을 구함 -> 여기서 dir.magnitude의 값은 벡터의 크기
+        Vector3 dir = (startWorld - endWorld);
+        Debug.Log(dir.magnitude);
+        dir.y = 0;
+
+        //forceMultiplier - 보정값
+        rb.AddForce(dir * forceMultiplier, ForceMode.Impulse);
         /*Vector3 dir = startTouchPos - endTouchPos; //종료 -> 시작 방향 벡터
 
         dir = new Vector3(dir.x, 0 , dir.z);
