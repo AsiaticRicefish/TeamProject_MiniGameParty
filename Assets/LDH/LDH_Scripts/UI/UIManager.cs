@@ -34,7 +34,7 @@ namespace LDH_UI
 
 
         //---- UI Root 오브젝트 ---- //
-        public static UI_Root UIRoot { get; private set; }
+        public UI_Root UIRoot { get; private set; }
 
 
         [SerializeField] private string uiRootFolder = "Prefabs/UI";
@@ -86,7 +86,9 @@ namespace LDH_UI
                 string fullPath = Path.Combine(screenFolder, screenUIName);
 
                 // 2. 프리팹 인스턴스화
-                GameObject go = Util_LDH.Instantiate<GameObject>(fullPath, UIRoot.transform);
+                UI_Screen prefab = Resources.Load<UI_Screen>(fullPath);
+                    
+                UI_Screen ui = Util_LDH.Instantiate<UI_Screen>(prefab, getUIAreaTransform(prefab.Area));
 
                 // 3. Type 얻기 (주의: 네임스페이스 포함 문자열 필요)
                 Type uiType = GetUIType(screenUIName);
@@ -98,7 +100,6 @@ namespace LDH_UI
                 }
 
                 // 4. 컴포넌트 캐싱 및 비활성화
-                UI_Screen ui = Util_LDH.GetOrAddComponent(go, uiType) as UI_Screen;
                 _screenCache.Add(uiType, ui);
 
                 ui.OnCloseRequested += HandleCloseRequested;
@@ -115,7 +116,7 @@ namespace LDH_UI
         #endregion
 
 
-        #region Canvas Setting
+        #region Canvas Setting / UI Area
 
         /// <summary>
         /// 지정한 오브젝트에 Canvas 컴포넌트를 설정하고 정렬 순서를 부여합니다.
@@ -146,6 +147,20 @@ namespace LDH_UI
             }
         }
 
+
+        private Transform getUIAreaTransform(Define_LDH.UIAreaType areaType)
+        {
+            if (UIRoot == null) return null;
+            return areaType switch
+            {
+                Define_LDH.UIAreaType.Top => UIRoot.TopArea.transform,
+                Define_LDH.UIAreaType.Center => UIRoot.CenterArea.transform,
+                Define_LDH.UIAreaType.Bottom => UIRoot.BottomArea.transform,
+                Define_LDH.UIAreaType.Default => UIRoot.transform,
+                _ => UIRoot.transform,
+            };
+        }
+
         #endregion
 
         #region Screen (재사용)
@@ -153,7 +168,8 @@ namespace LDH_UI
         public T CreateScreenUI<T>(string name = null) where T : UI_Screen
         {
             name ??= typeof(T).Name;
-            var screen = Util_LDH.Instantiate<T>(Path.Combine(screenFolder, name), UIRoot.transform);
+            var screenPrefab = Resources.Load<T>(Path.Combine(screenFolder, name));
+            T screen = Util_LDH.Instantiate<T>(screenPrefab, getUIAreaTransform(screenPrefab.Area));
 
             //INit에서 각자 알아서 canvas group alpha 처리될꺼니까 관련 로직은 삭제
 
@@ -216,8 +232,10 @@ namespace LDH_UI
         /// </summary>
         public T CreatePopupUI<T>(string name = null) where T : UI_Popup
         {
+            
             name ??= typeof(T).Name;
-            T popup = Util_LDH.Instantiate<T>(Path.Combine(popupFolder, name), UIRoot.transform);
+            var popupPrefab = Resources.Load<T>(Path.Combine(popupFolder, name));
+            T popup = Util_LDH.Instantiate<T>(popupPrefab, getUIAreaTransform(popupPrefab.Area));
             
             // 실제 show시에 stack에 push 됨
             // 외부에서 UI 닫기에 대해 UIManager가 처리하도록 구독
@@ -294,8 +312,9 @@ namespace LDH_UI
 
         public UI_Toast CreateToast(string name = "UI_Toast")
         {
-            var toast = Util_LDH.Instantiate<UI_Toast>(Path.Combine(toastFolder, name), UIRoot.BottomArea.transform);
-
+            var toastPrefab = Resources.Load<UI_Toast>(Path.Combine(toastFolder, name));
+            UI_Toast toast = Util_LDH.Instantiate<UI_Toast>(toastPrefab, getUIAreaTransform(toastPrefab.Area));
+            
             //배치
             Util_LDH.SetCenterBottom(toast.TargetRect, toast.TargetRect.sizeDelta, new Vector2(0f, 60f));
 

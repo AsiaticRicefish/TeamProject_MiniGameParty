@@ -684,6 +684,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a1cadbd1136461ca6e68c8024d70552, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _area: 1
   cg: {fileID: 0}
   interactable: 1
   blocksRaycasts: 1
@@ -693,7 +694,9 @@ MonoBehaviour:
   elpasedText: {fileID: 7261803108623511696}
   cancelButton: {fileID: 6981149270313642209}
   targetRectOffset: {x: 0, y: -60}
-  fadeTime: 0.3
+  matchingInProgressMessage: Finding...
+  matchingCompleteMessage: Complete!
+  fadeTime: 0.1
 --- !u!1001 &400251787444086974
 PrefabInstance:
   m_ObjectHideFlags: 0

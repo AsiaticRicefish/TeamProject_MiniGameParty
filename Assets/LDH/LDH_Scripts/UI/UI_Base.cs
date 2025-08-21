@@ -10,6 +10,8 @@ namespace LDH_UI
 {
     public abstract class UI_Base : MonoBehaviour
     {
+        
+        [SerializeField] protected Define_LDH.UIAreaType _area = Define_LDH.UIAreaType.Default;
         [SerializeField] protected CanvasGroup cg;
         [SerializeField] protected bool interactable;
         [SerializeField] protected bool blocksRaycasts;
@@ -20,7 +22,11 @@ namespace LDH_UI
         protected bool _isAnimating = false;        // 애니메이션 실행 중인지 여부
         private CancellationTokenSource _cts;   // 현재 실행 중인 트랜지션을 취소하기 위한 토큰 소스 (취소 신호를 만들고 보내는 주체)
         
-        public bool IsVisible => _isVisible; // ← 가시성 조회용
+        // 프로퍼티
+        public bool IsVisible => _isVisible; // 가시성 조회용
+        public Define_LDH.UIAreaType Area => _area;
+        
+        // 이벤트
         public event Action<UI_Base> OnCloseRequested;   
         protected void Awake() => Init();
         protected void OnDestroy()

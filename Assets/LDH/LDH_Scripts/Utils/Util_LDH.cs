@@ -66,6 +66,17 @@ namespace LDH_Utils
             return go;
         }
 
+        public static T Instantiate<T>(T prefab, Transform parent = null) where T : UnityEngine.Object
+        {
+            if (prefab == null) return null;
+            
+            T go = Object.Instantiate(prefab, parent);
+            go.name = prefab.name;
+            
+            return go;
+        }
+        
+        
 
         #endregion
 
@@ -77,7 +88,7 @@ namespace LDH_Utils
         /// </summary>
         /// <param name="seconds">변환할 시간(초 단위)</param>
         /// <returns>HH : MM 형식 문자열</returns>
-        public static string FormatTimeHM(float seconds)
+        public static string FormatTimeMS(float seconds)
         {
             TimeSpan ts = TimeSpan.FromSeconds(seconds);
             return $"{ts.Minutes} : {ts.Seconds:D2}";
@@ -201,6 +212,12 @@ namespace LDH_Utils
         public static void SetCenterBottom(RectTransform rect, Vector2 size, Vector2? offset = null)
         {
             Vector2 pos = new Vector2(0.5f, 0f);
+            SetRectTransform(rect, pos, pos, pos, Vector2.zero, size, offset);
+        }
+        
+        public static void SetCenterTop(RectTransform rect, Vector2 size, Vector2? offset = null)
+        {
+            Vector2 pos = new Vector2(0.5f, 1f);
             SetRectTransform(rect, pos, pos, pos, Vector2.zero, size, offset);
         }
 

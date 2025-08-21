@@ -3,8 +3,8 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using LDH_Util;
 using LDH_Utils;
+using Managers;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -20,8 +20,10 @@ namespace LDH_UI
         [SerializeField] private TextMeshProUGUI elpasedText;
         [SerializeField] private Button cancelButton;
         
-        [Header("Transform Setting")] [SerializeField]
-        private Vector2 targetRectOffset;
+        [Header("UI Setting")] 
+        [SerializeField] private Vector2 targetRectOffset;
+        [SerializeField] private string matchingInProgressMessage = "Finding...";
+        [SerializeField] private string matchingCompleteMessage = "Complete!";
         
         [Header("Animation Setting")]
         [SerializeField] private float fadeTime = 0.3f;
@@ -43,13 +45,15 @@ namespace LDH_UI
             SetElapsed();
             
             // 위치
+            transform.SetParent(Manager.UI.UIRoot.CenterArea.transform);
             Util_LDH.SetCenterTop(targetRect, targetRect.sizeDelta, targetRectOffset);
+            
         }
-        
 
+        #region UI Data Update
         public void SetStatus(bool isComplete)
         {
-            statusText.text = isComplete ? "매칭 완료!" : "매칭 중...";
+            statusText.text = isComplete ? matchingCompleteMessage : matchingInProgressMessage;
         }
 
         public void SetPlayerCount(int currentPlayerCount, int maxPlayerCount)
@@ -63,8 +67,38 @@ namespace LDH_UI
             elpasedText.text = Util_LDH.FormatTimeMS(value);
         }
 
+        public void SetCancelable(bool cancelable)
+        {
+            cancelButton.interactable = cancelable;
+        }
+        
 
+        #endregion
 
+     
+        
+        /// <summary>
+        /// Self Auto Close
+        /// </summary>
+        /// <param name="seconds"></param>
+        /// <param name="ct"></param>
+        public async UniTask AutoCloseAfter(float seconds, CancellationToken ct)
+        {
+            // 매칭 완료를 잠깐 보여주기 위한 지연
+            try
+            {
+                await UniTask.Delay(TimeSpan.FromSeconds(seconds), cancellationToken: ct);
+            }
+            catch (OperationCanceledException)
+            {
+                return; // 팝업이 파괴되면 자연스레 취소됨
+            }
+
+            // UI 매니저의 표준 닫기 흐름을 타고 싶으면 RequestClose()가 안전
+            Manager.UI.ClosePopupUI(this).Forget();
+        }
+
+        
         #region Animation
 
         protected override async UniTask OnShowAsync(CancellationToken ct)
@@ -73,7 +107,7 @@ namespace LDH_UI
             float t = 0f;
             while (t < fadeTime)
             {
-                t += Time.deltaTime;
+                t += Time.unscaledDeltaTime;
                 cg.alpha = Mathf.Clamp01(t / fadeTime);
                 await UniTask.Yield(ct);
             }
@@ -86,7 +120,7 @@ namespace LDH_UI
             float t = 0f;
             while (t < fadeTime)
             {
-                t += Time.deltaTime;
+                t += Time.unscaledDeltaTime;
                 cg.alpha = 1f - Mathf.Clamp01(t / fadeTime);
                 await UniTask.Yield(ct);
             }
