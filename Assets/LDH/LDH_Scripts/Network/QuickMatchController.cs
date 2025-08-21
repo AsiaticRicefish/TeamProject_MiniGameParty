@@ -18,7 +18,7 @@ namespace Network
     /// - 방 입장 후 팝업 생성 / 갱신(상태, 인원, 경과 시간)
     /// - 정원 도달 시 마스터가 matchState=Complete 전파 + 짧은 지연 후 씬 이동
     /// </summary>
-    public class QuickMatchController : MonoBehaviour
+    public partial class MatchController : MonoBehaviour
     {
 
         [Header("UI")]
@@ -29,7 +29,7 @@ namespace Network
         private UI_Popup_QuickMatch _popup;  // 상태/인원/타이머 표시용 팝업
         private CancellationTokenSource _cts; // 팝업 생명주기 + 컨트롤러 생명주기에 연동될 토큰
         private bool _starting;  // 중복 시작 방지 플래그
-        
+        private bool _requesting; // 빠른 매칭 시작 버튼 중복 연타 방지 플래그
         
         private void Start() => Subscribe();
 
@@ -82,6 +82,14 @@ namespace Network
         // 빠른 매칭 시작
         public void OnClickMatchingStart()
         {
+            // 1) 이미 방 안이거나 요청 중이면 무시
+            if (_requesting || PhotonNetwork.InRoom) return;
+            _requesting = true;
+            quickMatchButton.interactable = false;
+            
+            
+            //이미 방에 들어와있으면 중복 호출 방지
+            if (PhotonNetwork.CurrentRoom != null) return;
             Manager.Network.JoinQuickMatchRoom();
         }
         
@@ -92,6 +100,10 @@ namespace Network
             _cts?.Cancel();
             _cts.Dispose();
             _cts = null;
+
+            _starting = false;
+            _requesting = false;
+            quickMatchButton.interactable = true;
         }
         
 
