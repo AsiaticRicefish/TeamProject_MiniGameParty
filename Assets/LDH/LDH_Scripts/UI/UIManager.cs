@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using DesignPattern;
 using LDH_Util;
@@ -306,31 +307,57 @@ namespace LDH_UI
         {
             _toastQueue.Enqueue((message, duration));
             if (!_isToastShowing)
-                ProcessToastQueue().Forget(e => Debug.LogException(e));
+                ProcessToastQueue(this.GetCancellationTokenOnDestroy()).Forget(LogException);
+        }
+
+        private static void LogException(Exception ex)
+        {
+            //정상 취소는 로그 남기지 않기
+            if (ex is OperationCanceledException) return;
+            
+            Debug.LogException(ex);
         }
 
 
-        private async UniTask ProcessToastQueue()
+        private async UniTask ProcessToastQueue(CancellationToken ct)
         {
             _isToastShowing = true;
 
-            if (_toast == null)
-                _toast = CreateToast(); // 1개만 재사용
-
-            while (_toastQueue.Count > 0)
+            try
             {
-                var (msg, dur) = _toastQueue.Dequeue();
+                if (_toast == null)
+                    _toast = CreateToast(); // 1개만 재사용
 
-                _toast.SetMessage(msg);
-                SetCanvas(_toast.gameObject, Define_LDH.UILayer.Toast, sort: true);
-                await _toast.ShowAsync();
+                while (_toastQueue.Count > 0)
+                {
+                    var (msg, dur) = _toastQueue.Dequeue();
 
-                await UniTask.Delay(TimeSpan.FromSeconds(dur), cancellationToken: this.GetCancellationTokenOnDestroy());
+                    _toast.SetMessage(msg);
+                    SetCanvas(_toast.gameObject, Define_LDH.UILayer.Toast, sort: true);
+                    await _toast.ShowAsync();
 
-                await CloseToastUI(_toast);
+                    await UniTask.Delay(TimeSpan.FromSeconds(dur),
+                        cancellationToken: this.GetCancellationTokenOnDestroy());
+
+                    await CloseToastUI(_toast);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                //정상 종료
+                Debug.Log("[UIManager] Toast 정상 종료");
+            }
+            catch (Exception ex)
+            {
+                // 그 외는 비정상 종료
+                Debug.LogException(ex);
+            }
+            finally
+            {
+                _isToastShowing = false;
             }
 
-            _isToastShowing = false;
+           
         }
 
 
