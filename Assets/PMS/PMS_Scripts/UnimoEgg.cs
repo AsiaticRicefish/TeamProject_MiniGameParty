@@ -53,6 +53,9 @@ public class UnimoEgg : MonoBehaviour
         //forceMultiplier - 보정값
         rb.AddForce(dir * forceMultiplier, ForceMode.Impulse);
         /*Vector3 dir = startTouchPos - endTouchPos; //종료 -> 시작 방향 벡터
+         
+
+        //해상도 max min 힘의 크기? 특정힘까지만 줄수있도록 
 
         dir = new Vector3(dir.x, 0 , dir.z);
         

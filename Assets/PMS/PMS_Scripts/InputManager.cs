@@ -87,7 +87,6 @@ namespace ShootingScene
                 return;
             }
 
-
             Ray ray = mainCam.ScreenPointToRay(screenPos);
 
             if (ctx.started)
