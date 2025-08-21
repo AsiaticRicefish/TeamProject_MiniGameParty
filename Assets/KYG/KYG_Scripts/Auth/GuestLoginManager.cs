@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Threading.Tasks;
 using Firebase;
 using Firebase.Auth;
@@ -6,6 +7,7 @@ using Firebase.Extensions;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace KYG.Auth
 {
@@ -19,11 +21,19 @@ namespace KYG.Auth
         [Header("UI References")]
         [SerializeField] private string defaultRegion = "asia"; // Photon Region (예: "asia", "kr"가 없으면 "asia" 권장)
         
+        
+        [Header("Scene")]
+        [SerializeField] private bool autoLoadLobbyScene = true;   // 로비 참여 시 자동 로비 씬 이동 여부
+        [SerializeField] private string lobbySceneName = "LobbyScene";  // 로비 씬 이름
+        
         private FirebaseAuth _auth;
         private FirebaseUser _user;
 
         public bool IsFirebaseReady { get; private set; }
         public bool IsPhotonConnected => PhotonNetwork.IsConnected;
+        
+        // 중복 로딩 방지용 플래그
+        private bool _isLoadingScene = false;
 
         private void Awake()
         {
@@ -34,7 +44,7 @@ namespace KYG.Auth
 
         private void Start()
         {
-            // 1) Firebase 의존성 확인 및 초기화
+            // Firebase 의존성 확인 및 초기화
             FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
             {
                 if (task.Result == DependencyStatus.Available)
@@ -65,7 +75,7 @@ namespace KYG.Auth
                 return;
             }
 
-            // 2) 닉네임 간단 검증
+            // 닉네임 간단 검증
             nickname = SanitizeNickname(nickname);
             if (string.IsNullOrEmpty(nickname))
             {
@@ -75,7 +85,7 @@ namespace KYG.Auth
 
             try
             {
-                // 3) Firebase 익명 로그인 (이미 로그인 상태면 재사용)
+                // Firebase 익명 로그인 (이미 로그인 상태면 재사용)
                 _user = _auth.CurrentUser;
                 if (_user == null)
                 {
@@ -88,14 +98,14 @@ namespace KYG.Auth
                     Debug.Log($"[GuestLogin] Reuse Firebase UID: {_user.UserId}");
                 }
 
-                // 4) Firebase 프로필에 닉네임 저장(선택)
+                // Firebase 프로필에 닉네임 저장(선택)
                 await SetFirebaseDisplayNameIfNeeded(_user, nickname);
 
-                // 5) Photon 접속 설정
+                // Photon 접속 설정
                 PhotonNetwork.NickName = nickname;              // 방/게임 내 표시명
                 PhotonNetwork.AuthValues = new AuthenticationValues(_user.UserId); // 고유 식별자(UID)
 
-                // 6) 리전+세팅으로 접속
+                // 리전+세팅으로 접속
                 var settings = PhotonNetwork.PhotonServerSettings.AppSettings;
                 // 특정 리전을 강제하고 싶으면 아래 두 줄 사용
                 settings.FixedRegion = defaultRegion; // "asia" 권장
@@ -154,6 +164,43 @@ namespace KYG.Auth
         public override void OnJoinedLobby()
         {
             Debug.Log("[GuestLogin] Joined Lobby.");
+            
+            // 로비 참여 시 로비 씬으로 이동
+            if (autoLoadLobbyScene)
+                LoadLobbySceneIfNeeded();
+        }
+        #endregion
+        
+        #region Scene Helpers
+        /// <summary>
+        /// 현재 씬이 로비 씬이 아니고, 빌드에 등록되어 있다면 로비 씬으로 전환
+        /// </summary>
+        private void LoadLobbySceneIfNeeded()
+        {
+            if (_isLoadingScene) return;
+
+            var active = SceneManager.GetActiveScene().name;
+            if (active == lobbySceneName)
+            {
+                Debug.Log("[GuestLogin] Already in Lobby scene.");
+                return;
+            }
+
+            if (!Application.CanStreamedLevelBeLoaded(lobbySceneName))
+            {
+                Debug.LogError($"[GuestLogin] Lobby scene '{lobbySceneName}' is not in Build Settings.");
+                return;
+            }
+
+            StartCoroutine(CoLoadScene(lobbySceneName));
+        }
+
+        private IEnumerator CoLoadScene(string sceneName)
+        {
+            _isLoadingScene = true;
+            AsyncOperation op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
+            while (!op.isDone) yield return null;
+            _isLoadingScene = false;
         }
         #endregion
     }

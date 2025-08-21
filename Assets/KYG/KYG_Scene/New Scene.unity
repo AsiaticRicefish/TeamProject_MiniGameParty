@@ -133,6 +133,7 @@ GameObject:
   m_Component:
   - component: {fileID: 99408737}
   - component: {fileID: 99408736}
+  - component: {fileID: 99408738}
   m_Layer: 0
   m_Name: GuestLogin
   m_TagString: Untagged
@@ -153,6 +154,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultRegion: asia
+  autoLoadLobbyScene: 1
+  lobbySceneName: LobbyScene
 --- !u!4 &99408737
 Transform:
   m_ObjectHideFlags: 0
@@ -168,6 +171,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &99408738
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 99408735}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e743a6b9b9e939446b9207bb1a819990, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  nicknameInput: {fileID: 918197097}
+  loginButton: {fileID: 1051153010}
 --- !u!1 &400221143
 GameObject:
   m_ObjectHideFlags: 0
