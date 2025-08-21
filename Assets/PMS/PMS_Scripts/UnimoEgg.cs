@@ -4,6 +4,9 @@ using UnityEngine;
 public class UnimoEgg : MonoBehaviour
 {
     private Rigidbody rb;
+
+    private Vector3 startdic;
+
     private Vector3 startTouchPos;
     private Vector3 endTouchPos;
 
