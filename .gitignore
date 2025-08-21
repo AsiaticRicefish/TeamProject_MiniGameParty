@@ -116,14 +116,12 @@ render.experimental.xml
 
 # Google Services (e.g. APIs or Firebase)
 google-services.json
+google-services.json.meta
 crashlytics.properties
 fabric.properties
 
 # Android Profiling
 *.hprof
-
-# Binary files
-*.so
 
 # Environment variables
 .env
@@ -136,4 +134,3 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots
 fastlane/test_output
-
