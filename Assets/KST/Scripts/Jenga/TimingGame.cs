@@ -13,16 +13,14 @@ public class TimingGame : MonoBehaviour
     [SerializeField] RectTransform _sliderRect;
 
     //설정
-    float _limitTime = 1000f; //제한시간
-    float _speed; //별 이동 속도
-    [SerializeField] Vector2 speedRange = new(0.4f, 0.8f); //별 이동 속도 범위
-    [SerializeField] Vector2 _succesZoneSize = new(100f, 200f); //성공 영역 사이즈
-
-    public event Action<bool, float> OnFinished; //성공여부 이벤트
-
+    [SerializeField] float _limitTime = 5f; //제한시간 -> 5초로 변경하기
+    [SerializeField] float _speed = 1.6f; //별 이동 속도
+    [SerializeField] float _zoneW; //성공 존 너비
+    [SerializeField] float _zoneWRate = 0.45f; //성공 존 너비 비율
     bool _isRun = false; //게임 실행 여부
     float _remainTime; // 잔여 시간
     float _pingPongTimer;
+    public event Action<bool, float> OnFinished; //성공여부 이벤트
 
     void Awake() =>
         Init();
@@ -43,7 +41,7 @@ public class TimingGame : MonoBehaviour
             //사운드 삽입하기.
             var (ok, acc) = Calculate();
             GameEnd(ok, ok ? acc : 0f);
-        }        
+        }
     }
 
     private void Init()
@@ -52,6 +50,14 @@ public class TimingGame : MonoBehaviour
         _slider.minValue = 0f;
         _slider.maxValue = 100f;
         _slider.value = 0f;
+
+        //슬라이더 핸들 크기(별 크기) 조절
+        RectTransform handle = _slider.handleRect;
+
+        float handleW = _sliderRect.rect.width * 0.15f;
+        float handleH = _sliderRect.rect.height * 0.15f;
+
+        handle.sizeDelta = new(handleW, handleH);
 
         //텍스트 초기화
         _timeText.text = "";
@@ -65,24 +71,30 @@ public class TimingGame : MonoBehaviour
     /// </summary>
     public void GameStart()
     {
+        gameObject.SetActive(true);
+
         if (_isRun) return;
 
         _isRun = true;
 
         //사운드 삽입하기
 
+        //성공 존 설정
         SetSuccesZone();
 
         //초기화
         _slider.value = 0f;
         _pingPongTimer = 0f;
-        _speed = UnityEngine.Random.Range(speedRange.x, speedRange.y);
+        _speed = 1.6f;
+        _zoneWRate = 0.45f;
 
         _remainTime = _limitTime;
         gameObject.SetActive(true);
 
         _timeText.text = Mathf.CeilToInt(_remainTime).ToString();
         StartCoroutine(IE_CountDown());
+
+        Debug.Log($"현재 속도 {_speed} 현재 영역 {_zoneWRate}");
     }
 
     /// <summary>
@@ -94,19 +106,10 @@ public class TimingGame : MonoBehaviour
 
         float sliderWidth = _sliderRect.rect.width;
 
-        //성공 존의 랜덤 폭 선택
-        float zoneWidth = Mathf.Clamp(
-            UnityEngine.Random.Range(_succesZoneSize.x, _succesZoneSize.y),
-            _succesZoneSize.x, sliderWidth);
+        _zoneW = sliderWidth * _zoneWRate;
 
-        //성공 존 시작 x 좌표 설정
-        float start = UnityEngine.Random.Range(0f, sliderWidth - zoneWidth);
-
-        //성공존 가로 폭 설정
-        _successZone.sizeDelta = new(zoneWidth, _successZone.sizeDelta.y);
-
-        //성공 존 좌측 모서리를 start존 위치에 맞게 설정
-        _successZone.anchoredPosition = new(start, 0f);
+        _successZone.sizeDelta = new(_zoneW, _successZone.sizeDelta.y);
+        _successZone.anchoredPosition = new((sliderWidth - _zoneW) / 2f, 0f);
 
         _successZone.gameObject.SetActive(true);
     }
@@ -135,7 +138,7 @@ public class TimingGame : MonoBehaviour
     {
         //슬라이더 폭(px)을 구하기
         float width = _sliderRect.rect.width;
-        
+
         //슬라이더 핸들 위치를 픽셀 값으로 매핑
         float nowPos = Mathf.Lerp(0f, width, _slider.value / 100f);
 
@@ -146,10 +149,8 @@ public class TimingGame : MonoBehaviour
         bool isInside = (start <= nowPos) && (nowPos <= end);
 
         if (!isInside)
-        {
             //게임 종료(실패 처리)
             return (false, 0f);
-        }
 
         //정확도 판정하기
         float center = (start + end) * 0.5f;
@@ -176,7 +177,66 @@ public class TimingGame : MonoBehaviour
         Debug.Log($"성공 여부 : {isSuccess}, 정확도 : {accuracy}");
 
         //비활성화(테스트를 위해 잠시 비활성화)
-        // gameObject.SetActive(false);
+        gameObject.SetActive(false);
+    }
+
+    /// <summary>
+    /// 성공 판정 영역 5% 감소(30% 이하로 감소 불가)
+    /// 혹은 움직이는 오브젝트의 왕복 시간 0.2초 감소(1초 이하로 감소 불가)
+    /// </summary>
+    /// <param name="level">난이도 레벨, 높을수록 더욱 어려워짐.</param>
+    public void DifficultyChange(int level)
+    {
+        if (level < 0) return;
+        //랜덤으로 아래 중 하나 고르기
+        bool type = UnityEngine.Random.Range(0, 2) == 0;
+        bool isChnaged = type ? DescSpeed(level) || DescZone(level) : DescZone(level) || DescSpeed(level);
+
+        if (!isChnaged)
+            Debug.Log("최고 난이도입니다.");
+    }
+    /// <summary>
+    /// 왕복 속도 감소 로직
+    /// 입력받은 레벨에 맞는 속도 지정
+    /// </summary>
+    /// <param name="level">난이도 레벨, 높을 수록 왕복 속도가 더 빨라짐.</param>
+    /// <returns></returns>
+    bool DescSpeed(int level)
+    {
+        float before = _speed;
+        float temp = before - level * 0.2f;
+        float after = Mathf.Clamp(temp, 1f, 1.6f);
+
+        if (after < before)
+        {
+            _speed = after;
+            Debug.Log($"after : {after} before : {before}");
+            Debug.Log($"왕복 시간 감소 {_speed}");
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// 판정 영역 감소 로직
+    /// 입력받은 레벨에 맞는 판정역역 지정
+    /// </summary>
+    /// <param name="level">난이도 레벨, 높을 수록 판정 영역이 더 좁아짐.</param>
+    /// <returns></returns>
+    bool DescZone(int level)
+    {
+        float before = _zoneWRate;
+        float temp = before - level * 0.05f;
+        float after = Mathf.Clamp(temp, 0.3f, 0.45f);
+
+        if (after < before)
+        {
+            _zoneWRate = after;
+            Debug.Log($"after : {after} before : {before}");
+            Debug.Log($"판정 영역 감소 {_zoneWRate}");
+            return true;
+        }
+        return false;
     }
 
 
