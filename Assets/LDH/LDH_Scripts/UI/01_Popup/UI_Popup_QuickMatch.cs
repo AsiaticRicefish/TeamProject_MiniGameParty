@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using LDH_Utils;
+using LDH_Util;
 using Managers;
 using TMPro;
 using UnityEngine;

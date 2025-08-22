@@ -9,7 +9,7 @@ using Object = UnityEngine.Object;
 
 
 
-namespace LDH_Utils
+namespace LDH_Util
 {
     public static class Util_LDH
     {
