@@ -7,7 +7,7 @@ using LDH_UI;
 
 namespace ShootingScene
 {
-    public class CardUI : MonoBehaviour, IPointerClickHandler
+    public class CardUI : MonoBehaviour
     {
         [SerializeField] 
         private Sprite faceSprite,backSprite;
@@ -39,23 +39,19 @@ namespace ShootingScene
 
         public void Subscribe()
         {
-            //UI_Base.BindUIEvent(gameObject, (_) => OnClick());
-
-            //테스트 코드
-
+            //UI에서 손가락 터치를 하고 땟을때 Tap
+            UI_Base.BindUIEvent(gameObject, (_) => TapClick());
             //UI가 손가락 터치를 인식했을 때 
             UI_Base.BindUIEvent(gameObject, (_) => OnClick(), LDH_Util.Define_LDH.UIEvent.PointEnter);
             //UI가 손가락 터치를 인식못했을 때
             UI_Base.BindUIEvent(gameObject, (_) => UnClick(), LDH_Util.Define_LDH.UIEvent.PointExit);
 
             cardImage.sprite = backSprite;
-
         }
 
         public void OnClick()
         {
-            sizeUp();
-            //cardBackGround.color = ChangeColor;          
+            sizeUp();    
         }
 
         public void UnClick()
@@ -80,8 +76,7 @@ namespace ShootingScene
             transform.localScale = targetScale;
         }
 
-        //IPointerClickHandler 필요
-        public void OnPointerClick(PointerEventData eventData)
+        public void TapClick()
         {
             if (isFlipped && !isFlipping) return;
 
@@ -93,7 +88,6 @@ namespace ShootingScene
         //IPointerDownHandler, IPointerUpHandler 필요
         //public void OnPointerDown(PointerEventData eventData) => OnClick();
         //public void OnPointerUp(PointerEventData eventData) => UnClick();
-
 
         public void Flip()
         {
