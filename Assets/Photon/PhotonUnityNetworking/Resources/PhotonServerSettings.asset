@@ -49,6 +49,7 @@ MonoBehaviour:
   - ReceiveGameState
   - ReceivePlayerActionResult
   - ReceiveTimingResult
+  - NoteSpawn
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 0

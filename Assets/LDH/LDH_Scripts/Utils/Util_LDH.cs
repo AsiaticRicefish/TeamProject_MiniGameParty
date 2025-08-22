@@ -4,9 +4,10 @@ using System.Collections.Generic;
 using Photon.Pun;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Object = UnityEngine.Object;
 
 
-namespace Utils
+namespace LDH_Utils
 {
     public static class Util_LDH
     {
@@ -48,7 +49,53 @@ namespace Utils
 
         #endregion
 
+        #region Resource
 
+        public static T Instantiate<T>(string prefabPath, Transform parent = null) where T : UnityEngine.Object
+        {
+            T prefab = Resources.Load<T>(prefabPath);
+            if (prefabPath == null)
+            {
+                Debug.Log($"[Util_LDH] 프리팹을 가져올 수 없습니다. : {prefabPath}");
+                return null;
+            }
+            
+            T go = Object.Instantiate(prefab, parent);
+            go.name = prefab.name;
+
+            return go;
+        }
+
+        public static T Instantiate<T>(T prefab, Transform parent = null) where T : UnityEngine.Object
+        {
+            if (prefab == null) return null;
+            
+            T go = Object.Instantiate(prefab, parent);
+            go.name = prefab.name;
+            
+            return go;
+        }
+        
+        
+
+        #endregion
+
+
+        #region Util
+
+        // <summary>
+        /// 초 단위 시간을 입력받아 HH:MM 형식의 문자열로 변환하여 반환한다.
+        /// </summary>
+        /// <param name="seconds">변환할 시간(초 단위)</param>
+        /// <returns>HH : MM 형식 문자열</returns>
+        public static string FormatTimeMS(float seconds)
+        {
+            TimeSpan ts = TimeSpan.FromSeconds(seconds);
+            return $"{ts.Minutes} : {ts.Seconds:D2}";
+        }
+
+        #endregion
+        
         #region RectTransform Control
 
         /// <summary>
@@ -161,6 +208,19 @@ namespace Utils
             SetRectTransform(rect, pos, pos, pos, Vector2.zero, size, offset);
         }
 
+
+        public static void SetCenterBottom(RectTransform rect, Vector2 size, Vector2? offset = null)
+        {
+            Vector2 pos = new Vector2(0.5f, 0f);
+            SetRectTransform(rect, pos, pos, pos, Vector2.zero, size, offset);
+        }
+        
+        public static void SetCenterTop(RectTransform rect, Vector2 size, Vector2? offset = null)
+        {
+            Vector2 pos = new Vector2(0.5f, 1f);
+            SetRectTransform(rect, pos, pos, pos, Vector2.zero, size, offset);
+        }
+
         #endregion
 
         #region Load Scene
@@ -182,7 +242,6 @@ namespace Utils
 
 
         #endregion
-
 
         #region Network
 
