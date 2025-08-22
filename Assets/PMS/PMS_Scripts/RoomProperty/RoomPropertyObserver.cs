@@ -76,7 +76,7 @@ public class RoomPropertyObserver : PunSingleton<RoomPropertyObserver>, IGameCom
 
     public override void OnLeftRoom()
     {
-        _observers.Clear();
+        _observers.Clear();         //개인적인 _observers clear해줘야함
         Destroy(gameObject);
     }
 

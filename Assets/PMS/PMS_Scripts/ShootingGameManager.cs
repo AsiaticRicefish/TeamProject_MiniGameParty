@@ -12,7 +12,7 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
 
     public UnimoEgg currentUnimo;
 
-    private Dictionary<string, ShootingPlayerData> players = new(); // UID를 key로 가지는 플레이어 데이터
+    public Dictionary<string, ShootingPlayerData> players = new(); // UID를 key로 가지는 플레이어 데이터
     private Dictionary<string, int> playerScores = new();        // 플레이어별 점수
 
     public int CurrentRound { get; private set; } = 0;
@@ -80,12 +80,26 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
             return;
         }
 
-        Debug.Log("[ShootingGameManager] - 슈팅 게임 시작!");
+        if (PhotonNetwork.IsMasterClient)
+            RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "InitState");
 
+        Debug.Log("[ShootingGameManager] - 슈팅 게임 시작!");
         //난 타이머가 없어도 된다. 
     }
 
-    [PunRPC]
+    public void ChangeStateByName(string stateName)
+    {
+        switch (stateName)
+        {
+            case "InitState": ChangeState(new InitState()); break;
+            case "CardSelectState": ChangeState(new CardSelectState()); break;
+            default:
+                Debug.LogError($"[ChangeStateByName] {stateName}에 해당하는 상태가 없습니다.");
+                break;
+        }
+    }
+
+    /*[PunRPC]
     public void RPC_ChangeState(string stateName)
     {
         switch (stateName)
@@ -95,5 +109,5 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
             default:
                 Debug.Log($"[ShootingGameManager - RPC_ChangeState] - {stateName}에 해당되는 상태가 존재 하지 않습니다"); break;
         }
-    }
+    }*/
 }
