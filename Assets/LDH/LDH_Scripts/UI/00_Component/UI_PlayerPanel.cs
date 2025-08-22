@@ -1,32 +1,129 @@
 using System;
-using Managers;
+using Photon.Realtime;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+
 namespace LDH_UI
 {
+    /// <summary>
+    /// 플레이어 패널 UI 관리
+    /// - 클릭 이벤트만 외부에 알림 (ProfileClicked, ReadyClicked)
+    /// - 외부에서 상태(점유/인터랙션/비주얼)를 세팅
+    /// Photon/권한 판정/커스텀 프로퍼티 변경 x
+    /// </summary>
     public class UI_PlayerPanel : MonoBehaviour
     {
-        [SerializeField] private Button readyButton;
+        [Header("UI Component")] [SerializeField]
+        private Button inviteButton; // 프로필 버튼
 
-        [SerializeField] private string readyMessage = "Ready";
-        [SerializeField] private string notReadyMessage = "Not Ready";
-        [SerializeField] private Color readyColor;
-        [SerializeField] private Color notReadyColor;
+        [SerializeField] private Image profileImage; // 프로필 이미지지
+        [SerializeField] private Button readyButton; // 준비 버튼
+        [SerializeField] private TextMeshProUGUI readyText;
 
 
-        private void Start()
+        [Header("Styles")] [SerializeField] private UI_ButtonStateStyle readyTheme;
+        [SerializeField] private UI_ButtonStateStyle notReadyTheme;
+
+
+        public int SlotIndex { get; private set; } = -1;
+        public bool IsOccupied { get; private set; }
+
+        public event Action<int> InviteButtonClicked;
+        public event Action<int> ReadyClicked;
+
+
+        /// <summary>
+        /// 초기화 : 슬롯 인덱스 지정, 클릭 이벤트 바인딩
+        /// </summary>
+        /// <param name="slotIndex"></param>
+        /// <param name="canInvite"></param>
+        public void Init(int slotIndex, bool canInvite) // 마스만 권한 있음
         {
-           
+            SlotIndex = slotIndex;
+
+            // 클릭 이벤트를 외부로 전달하기 위한 구독 처리
+            inviteButton.onClick.RemoveAllListeners();
+            inviteButton.onClick.AddListener(() => InviteButtonClicked?.Invoke(SlotIndex));
+
+            readyButton.onClick.RemoveAllListeners();
+            readyButton.onClick.AddListener(() => ReadyClicked?.Invoke(SlotIndex));
+
+            // 초기 UI 상태 : 빈 슬롯으로 설정, ready 비활성
+            SetSlotEmpty();
         }
 
 
-        public void SetButtonState(bool isReady)
+        public void SetSlotEmpty()
         {
-            readyButton.GetComponentInChildren<TextMeshProUGUI>().text = isReady ? readyMessage : notReadyMessage;
-            readyButton.image.color = isReady ? readyColor : notReadyColor;
+            SetOccupied(false); // 빈 슬롯으로 처리
+            SetReadyButtonInteractable(false);
+            SetReadyVisual(false);
         }
 
+        public void BindPlayer(Player player, bool isLocalPlayer, bool isReady)
+        {
+            SetOccupied(true);
+            SetReadyButtonInteractable(isLocalPlayer); // 로컬 플레이어만 버튼 조작 가능
+            SetReadyVisual(isReady); // 초기 Ready 표시
+        }
+
+
+        #region UI Control API
+
+        /// <summary>
+        /// 슬롯 점유 / 비점유 상태에 따라 UI 반영 (프로필 이미지 표시 여부, 초대 기능 활성화 여부)
+        /// </summary>
+        /// <param name="occupied"></param>
+        public void SetOccupied(bool occupied)
+        {
+            IsOccupied = occupied;
+            profileImage.enabled = occupied;
+            SetInviteActive(!occupied);
+        }
+
+        /// <summary>
+        /// Ready 버튼의 비주얼(텍스트/색)을 상태에 맞게 반영
+        /// </summary>
+        /// <param name="isReady"></param>
+        public void SetReadyVisual(bool isReady)
+        {
+            readyText.text = isReady ? readyTheme.label : notReadyTheme.label;
+            readyText.color = isReady ? readyTheme.labelColor : notReadyTheme.labelColor;
+            readyButton.image.color = isReady ? readyTheme.backgroundColor : notReadyTheme.backgroundColor;
+        }
+
+
+        /// <summary>
+        /// Ready 버튼 Interaction 제어 (local player만 제어 가능하도록 설정해야 함)
+        /// </summary>
+        /// <param name="interactable"></param>
+        public void SetReadyButtonInteractable(bool interactable)
+        {
+            readyButton.interactable = interactable;
+        }
+
+
+        /// <summary>
+        /// 프로필 버튼 인터랙션 제어(마스터만 true로 세팅하기)
+        /// </summary>
+        public void SetInviteActive(bool active)
+        {
+            inviteButton.interactable = active;
+        }
+
+
+        /// <summary>
+        /// 게임 시작 직전 전체 잠금 등에 사용(현재 상태를 반영해서 && 로 처리)
+        /// </summary>
+        public void SetInteractableAll(bool interactable)
+        {
+            readyButton.interactable = interactable && readyButton.interactable;
+            inviteButton.interactable = interactable && inviteButton.interactable;
+        }
+
+        #endregion
+        
     }
 }

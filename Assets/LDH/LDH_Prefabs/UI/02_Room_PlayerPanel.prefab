@@ -34,9 +34,9 @@ RectTransform:
   - {fileID: 3674331276838249899}
   m_Father: {fileID: 2254830176104062553}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 33.75}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 155, y: 155}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7228509114998294149
@@ -102,7 +102,7 @@ MonoBehaviour:
     m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
     m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
     m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_DisabledColor: {r: 1, g: 1, b: 1, a: 1}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
   m_SpriteState:
@@ -316,22 +316,22 @@ PrefabInstance:
     - target: {fileID: 8817762041393369388, guid: 781e76cf87ee34622a365677a99e99ea,
         type: 3}
       propertyPath: m_AnchorMax.x
-      value: 0.5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8817762041393369388, guid: 781e76cf87ee34622a365677a99e99ea,
         type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0.5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8817762041393369388, guid: 781e76cf87ee34622a365677a99e99ea,
         type: 3}
       propertyPath: m_AnchorMin.x
-      value: 0.5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8817762041393369388, guid: 781e76cf87ee34622a365677a99e99ea,
         type: 3}
       propertyPath: m_AnchorMin.y
-      value: 0.5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8817762041393369388, guid: 781e76cf87ee34622a365677a99e99ea,
         type: 3}
@@ -386,7 +386,7 @@ PrefabInstance:
     - target: {fileID: 8817762041393369388, guid: 781e76cf87ee34622a365677a99e99ea,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -81.25
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8817762041393369388, guid: 781e76cf87ee34622a365677a99e99ea,
         type: 3}
