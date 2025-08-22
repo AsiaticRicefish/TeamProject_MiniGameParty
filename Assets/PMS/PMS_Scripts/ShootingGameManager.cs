@@ -1,19 +1,62 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
 using DesignPattern;
 
+[RequireComponent(typeof(PhotonView))]
+[DisallowMultipleComponent]
 public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameComponent , IGameStartHandler
 {
     private ShootingGameState currentState;
 
     public UnimoEgg currentUnimo;
-    
+
+    private Dictionary<string, ShootingPlayerData> players = new(); // UID를 key로 가지는 플레이어 데이터
+    private Dictionary<string, int> playerScores = new();        // 플레이어별 점수
+
     public int CurrentRound { get; private set; } = 0;
     public int MaxRounds { get; private set; } = 3;
-
-    private void Start()
+    protected override void OnAwake()
     {
-        ChangeState(new InitState());
+        base.isPersistent = false;          //슈팅 게임 안에서만 존재 
+    }
+
+    public void Initialize()
+    {
+        Debug.Log("[ShootingGameManager] - 슈팅 게임 초기화");
+        InitializePlayers();                // 플레이어 정보 세팅 - 따로 instantiate에서 만들 필요는 없음.
+        ChangeState(new InitState());       //전부 InitState 씬 상태
+    }
+
+    private void InitializePlayers()
+    {
+        // 현재 방에 접속해 있는 모든 Photon 플레이어 목록을 순회
+        foreach (var photonPlayer in PhotonNetwork.PlayerList)
+        {
+            // PhotonNetwork.PlayerList에서 꺼낸 플레이어 객체의 CustomProperties에서 uid (Firebase UID)를 추출
+            string uid = photonPlayer.CustomProperties["uid"] as string;
+
+            // UID를 기반으로 PlayerManager에서 해당 플레이어의 GamePlayer 객체를 가져옴
+            var gamePlayer = PlayerManager.Instance.GetPlayer(uid);
+            if (gamePlayer != null)
+            {
+                // GamePlayer에 미니게임 전용 데이터 생성 - ShootingPlayerData
+                gamePlayer.ShootingData = new ShootingPlayerData
+                {
+                    score = 0
+                };
+
+                // ShootingGame 딕셔너리에 플레이어들을 uid 저장
+                players[uid] = gamePlayer.ShootingData;
+                // 점수를 저장하는 playerScores 딕셔너리에도 해당 UID로 0점 등록 (초기값)
+                playerScores[uid] = 0;
+            }
+            else
+            {
+                Debug.LogError($"[ShootingGameManager - InitializePlayers] {uid}에 해당하는 GamePlayer를 찾을 수 없음");
+            }
+        }
     }
 
     private void Update()
@@ -29,14 +72,17 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
         currentState.Enter();
     }
 
-    public void Initialize()
-    {
-        Debug.Log("[ShootingGameManager] - 슈팅 게임 초기화");
-    }
-
     public void OnGameStart()
     {
+        if (JengaNetworkManager.Instance == null)
+        {
+            Debug.LogError("[ShootingGameManager] - 슈팅 게임 시작 오류, Instance가 생성이 안됨 ");
+            return;
+        }
+
         Debug.Log("[ShootingGameManager] - 슈팅 게임 시작!");
+
+        //난 타이머가 없어도 된다. 
     }
 
     [PunRPC]

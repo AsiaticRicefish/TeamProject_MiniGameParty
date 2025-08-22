@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using DesignPattern;
 
@@ -7,6 +9,7 @@ namespace ShootingScene
     //원형 연결 리스트 사용  끝 -> 시작의 이동
     public class TurnManager : CombinedSingleton<TurnManager>, IGameComponent
     {
+        private List<GameObject> playerList = new List<GameObject>();
         // TODO - 턴 매니저
         // 슈팅게임은 턴이 있어야한다.
         public void Initialize()

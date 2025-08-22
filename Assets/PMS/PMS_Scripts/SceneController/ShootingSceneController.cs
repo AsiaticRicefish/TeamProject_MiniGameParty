@@ -2,8 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using Photon.Pun;
 using ShootingScene;
 
+[RequireComponent(typeof(PhotonView))]
+[DisallowMultipleComponent]
 public class ShootingSceneController : BaseGameSceneController
 {
     //따로 이벤트는 없는거 같음
@@ -13,9 +16,8 @@ public class ShootingSceneController : BaseGameSceneController
 
     protected override IEnumerator WaitForManagersAwake()
     {
-        yield return new WaitUntil(() =>
-            ShootingGameManager.Instance != null &&
-            TurnManager.Instance != null);
+        yield return WaitForSingletonReady<ShootingNetworkManager>();
+        yield return WaitForSingletonReady<ShootingGameManager>();
 
         Debug.Log("모든 ShootingGameScene 매니저 Awake완료");
     }
@@ -25,16 +27,11 @@ public class ShootingSceneController : BaseGameSceneController
     {
         Debug.Log("ShootingGameScene 순차 초기화 시작");
 
-        var sequentialComponents = new List<IGameComponent>();
-
-        // 의존성 순서대로 추가
-        /* if (ShootingGameManager.Instance is IGameComponent gameManagerComp)
-            sequentialComponents.Add(gameManagerComp);*/
-
-        /* if (TurnManager.Instance is IGameComponent turnManagerComp)
-            sequentialComponents.Add(turnManagerComp);*/
-
-        // 필요하다면 다른 순차 초기화 컴포넌트들 추가
+        var sequentialComponents = new IGameComponent[]
+        {
+            ShootingNetworkManager.Instance,
+            ShootingGameManager.Instance
+        };
 
         yield return StartCoroutine(InitializeComponentsSafely(sequentialComponents));
     }
@@ -46,9 +43,7 @@ public class ShootingSceneController : BaseGameSceneController
 
         var parallelComponents = new List<ICoroutineGameComponent>();
 
-        // 독립적으로 초기화 가능한 컴포넌트들 추가
-        /*if (ShootingGameManager.Instance is ICoroutineGameComponent gameComp)
-            parallelComponents.Add(gameComp);*/
+        //parallelComponents.Add()
 
         yield return StartCoroutine(InitializeCoroutineComponentsSafely(parallelComponents));
     }
@@ -57,11 +52,19 @@ public class ShootingSceneController : BaseGameSceneController
     protected override void NotifyGameStart()
     {
         //OnGameStarted?.Invoke();
-
-        if (ShootingGameManager.Instance is IGameStartHandler gameStart)
-            gameStart.OnGameStart();
-
-        Debug.Log("Shooting 게임 시작 알림 완료");
+        if (ShootingGameManager.Instance == null)
+        {
+            Debug.LogError("[NotifyGameStart] ShootingGameManager is NULL");
+            return;
+        }
+        try
+        {
+            ShootingGameManager.Instance.OnGameStart();
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[NotifyGameStart] {ex}\n{ex.StackTrace}");
+        }
     }
 
 }
