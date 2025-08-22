@@ -18,6 +18,7 @@ namespace Network
         // ------ Events ------ //
         public event Action ConnectedToMaster; // 로딩 씬 UI에서 이벤트 구독할 예정
         public event Action JoinedRoom;
+        public event Action LeftRoom;
         public event Action<Player> PlayerEntered;
         public event Action<Player> PlayerLeft;
         public event Action<int, int> RoomPlayerCountChanged; // (current, max)
@@ -56,7 +57,7 @@ namespace Network
         }
 
 
-        #region Matching API
+        #region Quick Matching API
 
         // 빠른 매칭 : 빠른 매칭 방에 랜덤 입장
         public void JoinQuickMatchRoom()
@@ -81,9 +82,53 @@ namespace Network
             string roomName = $"QUICK-{UnityEngine.Random.Range(100000, 999999)}";
             PhotonNetwork.CreateRoom(roomName, options);
         }
+        
+        
+        #endregion
+        
+        
+        #region Private Matching API
+
+        // 비공개 룸 입장
+        public void JoinPrivateRoom()
+        {
+            Debug.Log($"[NetworkManager] 빠른 매칭을 시작합니다. 방을 탐색합니다.");
+            var exptected = new Hashtable { { RoomProps.MatchType, MatchType.Quick.ToString() } };
+            PhotonNetwork.JoinRandomRoom(exptected, MAX_PLAYERS);
+        }
+
+        public void JoinPrivateRoomByCode(string code)
+        {
+            
+        }
+        
+        // 빠른 매칭 방 생성 : 빠른 매칭 방에 입장 실패 시 호출
+        public void CreatePrivateRoom()
+        {
+
+            var options = new RoomOptions
+            {
+                MaxPlayers = MAX_PLAYERS, // 최대 인원 설정
+                IsVisible = true, // 로비 노출 여부 
+                IsOpen = true, // 입장 가능 여부 -> 게임 시작 시 false로 만들어야 함
+                CustomRoomProperties = new Hashtable
+                {
+                    { RoomProps.MatchType, MatchType.Private.ToString() }, 
+                    {RoomProps.MatchState, MatchState.Matching.ToString()},
+                    // {RoomProps.RoomCode, }
+                },
+                CustomRoomPropertiesForLobby = new[] { RoomProps.MatchType, RoomProps.MatchState, RoomProps.RoomCode }
+            };
+            string roomName = $"QUICK-{UnityEngine.Random.Range(100000, 999999)}";
+            PhotonNetwork.CreateRoom(roomName, options);
+        }
+        
+        
+        #endregion
 
 
 
+        #region Start Game / Leave Room API
 
         public void LeaveRoom() => PhotonNetwork.LeaveRoom();
         public void LoadGameScene()
@@ -91,6 +136,28 @@ namespace Network
             Debug.Log("[NetworkManager] 게임 씬으로 이동합니다.");
             StartCoroutine(Util_LDH.LoadSceneWithDelay(gameSceneName, 0.5f));
         }
+        
+
+        #endregion
+
+        #region Properties control
+
+        public static void ClearAllPlayerProperty()
+        {
+            Debug.Log("[NetworkManager] 모든 플레이어 커스텀 프로퍼티를 초기화합니다.");
+            
+            var customProperties = PhotonNetwork.LocalPlayer.CustomProperties;
+
+            var clearProperties = new ExitGames.Client.Photon.Hashtable();
+
+            foreach (var key in customProperties.Keys)
+            {
+                clearProperties[key] = null;
+            }
+
+            PhotonNetwork.LocalPlayer.SetCustomProperties(clearProperties);
+        }
+
 
         #endregion
         
@@ -123,6 +190,15 @@ namespace Network
 
             JoinedRoom?.Invoke();
             RoomPlayerCountChanged?.Invoke(PhotonNetwork.CurrentRoom.PlayerCount, PhotonNetwork.CurrentRoom.MaxPlayers);
+        }
+
+        public override void OnLeftRoom()
+        {
+            Debug.Log($"[NetworkManager] {PhotonNetwork.CurrentRoom.Name} 방에서 나갔습니다.");
+            
+            ClearAllPlayerProperty();
+            
+            LeftRoom?.Invoke();
         }
 
 
@@ -163,5 +239,6 @@ namespace Network
         
 
         #endregion
+        
     }
 }

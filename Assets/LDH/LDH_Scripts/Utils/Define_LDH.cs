@@ -52,6 +52,15 @@ namespace LDH_Util
         public enum MatchState { Matching, Complete}
 
         public const int MAX_PLAYERS = 3;
+        
+        
+        public static class PlayerProps
+        {
+            public const string ReadyState = "readyState"; //"Ready", "NotReady"
+            
+            // public 
+        }
+        
 
         #endregion
 
