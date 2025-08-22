@@ -11,6 +11,10 @@ public class TimingGame : MonoBehaviour
     [SerializeField] Slider _slider; // 슬라이더
     [SerializeField] RectTransform _successZone; // 성공 영역
     [SerializeField] RectTransform _sliderRect;
+    [SerializeField] GameObject _sliderGo; // 타이밍 미니게임 Wrap오브젝트
+    [SerializeField] GameObject _finishPanel; //성공, 실패 여부 패널
+    [SerializeField] TMP_Text _finishText;
+
 
     //설정
     [SerializeField] float _limitTime = 5f; //제한시간 -> 5초로 변경하기
@@ -35,7 +39,7 @@ public class TimingGame : MonoBehaviour
         float x = Mathf.PingPong(_pingPongTimer / _speed, 1f);
         _slider.value = Mathf.Lerp(0f, 100f, x);
 
-        //TODO 김승태 : 화면 터치 관련 로직(임시)
+        //TODO 김승태 : 화면 터치 관련 로직(임시), 모바일 버전 터치로 변경 필요.
         if (Input.GetMouseButtonDown(0))
         {
             //사운드 삽입하기.
@@ -77,9 +81,10 @@ public class TimingGame : MonoBehaviour
 
         _isRun = true;
 
-        //사운드 삽입하기
+        //TODO 김승태 : 타이밍 게임 BGM 실행
 
         //성공 존 설정
+        _sliderGo.SetActive(true);
         SetSuccesZone();
 
         //초기화
@@ -170,11 +175,39 @@ public class TimingGame : MonoBehaviour
         if (!_isRun) return;
         _isRun = false;
 
+        Debug.Log($"성공 여부 : {isSuccess}, 정확도 : {accuracy}");
+
+        _sliderGo.SetActive(false);
+        StartCoroutine(IE_PanelCount(isSuccess));
 
         //이벤트 퍼블리싱
         OnFinished?.Invoke(isSuccess, accuracy);
+    }
 
-        Debug.Log($"성공 여부 : {isSuccess}, 정확도 : {accuracy}");
+    /// <summary>
+    /// 성공 혹은 실패 여부를 띄우는 UI
+    /// </summary>
+    /// <param name="isSuccess">타이밍 미니게임 성공 여부</param>
+    /// <returns></returns>
+    IEnumerator IE_PanelCount(bool isSuccess)
+    {
+        _finishPanel.SetActive(true);
+        if (isSuccess)
+        {
+            _finishText.text = "Success!";
+            //TODO 김승태 : 성공 SFX 실행
+        }
+        else
+        {
+            _finishText.text = "Fail!";
+            //TODO 김승태 : 실패 SFX 실행
+            //TODO 김승태 : 추후 젠가 실패 애니메이션 추가.
+        }
+
+        yield return new WaitForSeconds(2f);
+
+        _finishPanel.SetActive(false);
+        _finishText.text = "";
 
         //비활성화(테스트를 위해 잠시 비활성화)
         gameObject.SetActive(false);
@@ -195,6 +228,7 @@ public class TimingGame : MonoBehaviour
         if (!isChnaged)
             Debug.Log("최고 난이도입니다.");
     }
+
     /// <summary>
     /// 왕복 속도 감소 로직
     /// 입력받은 레벨에 맞는 속도 지정
