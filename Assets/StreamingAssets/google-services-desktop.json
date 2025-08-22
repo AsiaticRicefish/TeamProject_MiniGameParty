@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "32202351078",
+    "project_id": "unimo-56ebc",
+    "storage_bucket": "unimo-56ebc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:32202351078:android:7b4a9151c1260b48b83627",
+        "android_client_info": {
+          "package_name": "com.Hwgi.UNIMO"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA8g_EaJ_yBH5rOB4sSHfGsVdTCXhnKtqI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
