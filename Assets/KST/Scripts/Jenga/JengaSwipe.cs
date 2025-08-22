@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
+[RequireComponent(typeof(Collider))]
 public class JengaSwipe : MonoBehaviour
 {
     [SerializeField] float _speed;
