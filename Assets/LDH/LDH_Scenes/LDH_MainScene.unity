@@ -403,7 +403,7 @@ MonoBehaviour:
   m_CharacterValidation: 3
   m_RegexValue: 
   m_GlobalPointSize: 14
-  m_CharacterLimit: 0
+  m_CharacterLimit: 4
   m_OnEndEdit:
     m_PersistentCalls:
       m_Calls: []
@@ -491,6 +491,7 @@ GameObject:
   m_Component:
   - component: {fileID: 662488575}
   - component: {fileID: 662488574}
+  - component: {fileID: 662488576}
   m_Layer: 0
   m_Name: MatchController
   m_TagString: Untagged
@@ -526,6 +527,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &662488576
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 662488573}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47c3a50b234648a5b785abd3b0386e25, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  privateMatchOptions: {fileID: 998426698}
 --- !u!1 &722618587
 GameObject:
   m_ObjectHideFlags: 0
@@ -1010,7 +1024,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ea57cd1e7de4b11a4dd38dbe6a4ae7c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _optionObj: {fileID: 76096889}
+  privateMatchToggle: {fileID: 998426697}
+  optionObj: {fileID: 76096889}
+  createRoomButton: {fileID: 722618589}
+  roomCodeInputField: {fileID: 659398063}
 --- !u!1 &1086165769
 GameObject:
   m_ObjectHideFlags: 0

@@ -33,7 +33,11 @@ namespace Network
         public event Action<Player> PlayerLeft;         // 다른 플레이어 퇴장 이벤트
         public event Action<int, int> RoomPlayerCountChanged; // (current, max)
         public event Action<short, string> JoinRandomFailed;    // 랜덤 룸 입장 실패 이벤트
+        public event Action<short, string> JoinFailed;    // 비공개 룸 입장 실패 이벤트
         public event Action<string> MatchStateChanged;      // 매치 상태(룸 커스텀 프로퍼티) 변경 이벤트
+
+        public event Action<Player, bool> ReadyStateChanged;     // 준비 상태(플레이어 커스텀 프로퍼티) 변경 이벤트
+        
 
 
         #endregion
@@ -82,7 +86,9 @@ namespace Network
         // 빠른 매칭 방 생성 : 빠른 매칭 방에 입장 실패 시 호출
         public void CreateQuickMatchRoom()
         {
-            _createType = MatchType.Private;
+            if(_createType!= MatchType.None) return;
+            
+            _createType = MatchType.Quick;
 
             var options = new RoomOptions
             {
@@ -107,6 +113,8 @@ namespace Network
         // 빠른 매칭 방 생성 : 빠른 매칭 방에 입장 실패 시 호출
         public void CreatePrivateRoom()
         {
+            if(_createType!= MatchType.None) return;
+            
             _createType = MatchType.Private;
             _privateRetryCount = 0;
             StartCoroutine(TryCreatePrivateRoom());
@@ -207,7 +215,7 @@ namespace Network
 
         #region Pun Callbacks - Room
 
-        // ---- 방 입장 ---- 
+        // ---- 방 입장 / 입장 실패 ---- 
         public override void OnJoinedRoom()
         {
             Debug.Log($"[NetworkManager] {PhotonNetwork.CurrentRoom.Name} 방에 입장했습니다.");
@@ -215,11 +223,30 @@ namespace Network
             JoinedRoom?.Invoke();
             RoomPlayerCountChanged?.Invoke(PhotonNetwork.CurrentRoom.PlayerCount, PhotonNetwork.CurrentRoom.MaxPlayers);
         }
+        
+              
+        // 랜덤 룸 입장 실패 (빠른 매칭)
+        public override void OnJoinRandomFailed(short returnCode, string message)
+        {
+            Debug.Log($"[NetworkManager] 빠른 매칭을 위한 랜덤 방 입장에 실패했습니다. 방을 생성합니다.");
+            JoinRandomFailed?.Invoke(returnCode, message);
+            CreateQuickMatchRoom();
+        }
+        
+        // 랜덤 룸 입장 실패 (빠른 매칭)
+        public override void OnJoinRoomFailed(short returnCode, string message)
+        {
+            Debug.Log($"[NetworkManager] 비공개 방 입장에 실패했습니다. ({returnCode}) {message}");
+            JoinFailed?.Invoke(returnCode, message);
+        }
+        
+          
+
 
         // ---- 방 퇴장 -------
         public override void OnLeftRoom()
         {
-            Debug.Log($"[NetworkManager] {PhotonNetwork.CurrentRoom.Name} 방에서 나갔습니다.");
+            Debug.Log($"[NetworkManager] 방에서 나갔습니다.");
             
             ClearAllPlayerProperty();
             
@@ -243,15 +270,7 @@ namespace Network
         }
 
         
-        
-        // ------ 랜덤 룸 입장 (빠른 매칭 전용) ------- //
-        public override void OnJoinRandomFailed(short returnCode, string message)
-        {
-            Debug.Log($"[NetworkManager] 빠른 매칭을 위한 랜덤 방 입장에 실패했습니다. 방을 생성합니다.");
-            JoinRandomFailed?.Invoke(returnCode, message);
-            CreateQuickMatchRoom();
-        }
-        
+  
         
         // ------ 방 생성 
 
@@ -292,7 +311,12 @@ namespace Network
             if (changed.TryGetValue(RoomProps.MatchState, out var value) && value is string state)
                 MatchStateChanged?.Invoke(state);
         }
-        
+
+        public override void OnPlayerPropertiesUpdate(Player targetPlayer, Hashtable changedProps)
+        {
+            if (changedProps.TryGetValue(PlayerProps.ReadyState, out var value) && value is bool isReady)
+                ReadyStateChanged?.Invoke(targetPlayer, isReady);
+        }
 
         #endregion
         
