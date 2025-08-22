@@ -23,11 +23,18 @@ namespace ShootingScene
 
         private bool isPressing = false;
 
+        //터치 하면 UI가 끊어지게
+        public event Action onTouched;
+
         private void Awake()
         {
-            if (Instance == null && Instance != this)
+            if (Instance == null)
             {
                 Instance = this;
+            }
+            else if (Instance != this)
+            {
+                Destroy(gameObject); // 혹은 그냥 return
             }
 
             // PlayerInput 컴포넌트를 가져오고, 액션을 찾습니다.
@@ -127,6 +134,8 @@ namespace ShootingScene
                 // 터치 시작 → Raycast로 알 선택
                 if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, LayerMask.GetMask("DirectionSign")))
                 {
+                    Debug.Log("Raycast hit DirectionSign!");
+                    onTouched?.Invoke();
                     selectedDirectionSign = hit.collider.GetComponent<DirectionSign>();
                     selectedDirectionSign?.OnTouchStart(screenPos);
                 }

@@ -45,7 +45,6 @@ public class DirectionSign : MonoBehaviour
             if (chargeSlider != null)
                 chargeSlider.value = chargePower / chargeMax;
         }
-
     }
 
     public void OnTouchStart(Vector2 touchPos)
