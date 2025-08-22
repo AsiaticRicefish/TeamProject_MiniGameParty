@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Jenga
+  m_EditorClassIdentifier: 
+  m_GroupName: Jenga
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 9daea83c8bba73f488fe35d0b0c16d84
+  m_SerializeEntries:
+  - m_GUID: 1a5d5dda88d23f4459fe9c1b1dcc3ba2
+    m_Address: Assets/Imports/Shrimple3D LowPoly Pack/UsePrefabs
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: efc2531fbc716f7409d27168060779e5, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: a4eee0652f591a949a47545ed2c43b7e, type: 2}
+    - {fileID: 11400000, guid: c5b84be4610a12448923724709780fcd, type: 2}

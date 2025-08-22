@@ -6,6 +6,7 @@ using DesignPattern;
 using Photon.Pun;
 using Photon.Pun.Demo.PunBasics;
 using UnityEngine;
+using ExitGames.Client.Photon;
 
 
 /// <summary>
@@ -83,6 +84,11 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
 
     public void StartGame()
     {
+        if (JengaNetworkManager.Instance == null)
+        {
+            Debug.LogError("[JengaGameManager.StartGame] NetworkManager is NULL");
+            return;
+        }
         // 상태 변경은 네트워크 매니저를 통해 전파
         JengaNetworkManager.Instance.BroadcastGameState(JengaGameState.Playing);
 
@@ -120,22 +126,23 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         else
         {
             player.isAlive = false;
-        }
 
-        // 플레이어가 아직 게임 완료 처리가 되지 않았다면
-        if (!playerFinished[uid])
-        {
-            playerFinished[uid] = true;
-            OnPlayerFinished?.Invoke(uid);
-            CheckAllPlayersFinished();
+            // 젠가가 붕괴할 때만 완료 처리
+            if (!playerFinished[uid])
+            {
+                playerFinished[uid] = true;
+                OnPlayerFinished?.Invoke(uid);
+                CheckAllPlayersFinished();
+            }
         }
         OnPlayerAction?.Invoke(uid, success, scoreGained);
     }
 
     private void CheckAllPlayersFinished()
     {
-        // 모든 플레이어가 게임을 마쳤거나, 시간이 다 되었으면 EndGame() 호출
-        if (playerFinished.Values.All(f => f) || remainingTime <= 0)
+        // 전원 탈락시 조기 종료 허용
+        // 아니면 타임업으로만 종료
+        if (playerFinished.Values.All(f => f))
         {
             EndGame();
         }
@@ -260,4 +267,77 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         return playerFinished.TryGetValue(uid, out var finished) && finished;
     }
     #endregion
+
+    /// <summary>
+    /// 이 타워 주인의 타워가 무너졌다는 것을 마스터가 수신했을 때 처리하는 함수
+    /// </summary>
+    public void OnTowerCollapsed(int ownerActorNumber)
+    {
+        if (!PhotonNetwork.IsMasterClient) return; // 마스터만 처리
+        if (currentState != JengaGameState.Playing) return; // late RPC 방지
+
+        // 1) 우선 타워에서 UID를 얻어본다 (타워 생성 시 ownerUid 저장해 두는 전제)
+        string uid = JengaTowerManager.Instance?.GetOwnerUidByActor(ownerActorNumber);
+
+        // 2) 실패 시 보조로 Actor→UID 매핑 시도
+        if (string.IsNullOrEmpty(uid))
+            uid = TryGetUidFromActor(ownerActorNumber);
+
+        if (string.IsNullOrEmpty(uid))
+        {
+            Debug.LogWarning($"[JengaGameManager.OnTowerCollapsed] UID not resolved. actor = {ownerActorNumber}");
+            return;
+        }
+
+        if (!players.TryGetValue(uid, out var pdata))
+        {
+            Debug.LogWarning($"[JengaGameManager.OnTowerCollapsed] Player not registered. uid={uid}. Auto-registering as spectator.");
+
+            return;
+        }
+
+        if (!pdata.isAlive) return;
+
+        // 탈락 처리
+        pdata.isAlive = false;
+
+        // 동점 순위 정렬에서 마지막 성공 시각을 최대값으로 설정하여 순위에서 밀리도록 설정
+        pdata.lastSuccessTime = float.MaxValue;
+
+        // 중복 방지 : 이미 Finished 처리된 유저면 다시 이벤트를 쏘지 않도록 예외처리
+        if (!playerFinished.TryGetValue(uid, out var finished) || !finished)
+        {
+            playerFinished[uid] = true;
+
+            OnPlayerAction?.Invoke(uid, false, 0); // 실패 액션 이벤트
+            OnPlayerFinished?.Invoke(uid); // 관전 모드 전환, UI 표시 등에 활용하도록 이벤트 호출
+        }
+
+        CheckAllPlayersFinished();
+    }
+
+    /// <summary>
+    /// Photon ↔ Firebase를 연결해주는 “번역기” 역할
+    /// </summary>
+    private string TryGetUidFromActor(int actorNumber)
+    {
+        // 현재 방에 있는 플레이어 중 ActorNumber가 같은 플레이어를 찾음
+        var p = PhotonNetwork.PlayerList.FirstOrDefault(x => x.ActorNumber == actorNumber);
+
+        // 찾은 플레이어의 CustomProperties에서 "uid" 키 꺼내기
+        if (p != null && p.CustomProperties != null && p.CustomProperties.TryGetValue("uid", out var uidObj))
+        {
+            return uidObj as string;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// 현재 생존 상태인 플레이어 수를 센다.
+    /// </summary>
+    private int AliveCount()
+    {
+        // OnTowerCollapsed의 종료 조건 판단에 사용함
+        return players.Count(kv => kv.Value.isAlive);
+    }
 }
