@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using DesignPattern;
 using LDH_Util;
 using LDH_Utils;
@@ -12,20 +13,31 @@ namespace Network
 {
     public partial class NetworkManager : PunSingleton<NetworkManager>
     {
+        [Header("Scene Setting")]
         [SerializeField] private string gameSceneName;
         [SerializeField] private bool autoSyncScene = true;
+        
+        private MatchType _createType = MatchType.None;
+        //--- private matching ---- 
+        private int _privateRetryCount;
+
+        #region Events
 
         // ------ Events ------ //
         public event Action ConnectedToMaster; // 로딩 씬 UI에서 이벤트 구독할 예정
-        public event Action JoinedRoom;
-        public event Action LeftRoom;
-        public event Action<Player> PlayerEntered;
-        public event Action<Player> PlayerLeft;
+
+        public event Action CreatedRoom;      // 방 생성 이벤트
+        public event Action JoinedRoom;       // 방 입장 이벤트
+        public event Action LeftRoom;         // 방 퇴장 이벥트
+        public event Action<Player> PlayerEntered;      // 다른 플레이어 입장 이벤트
+        public event Action<Player> PlayerLeft;         // 다른 플레이어 퇴장 이벤트
         public event Action<int, int> RoomPlayerCountChanged; // (current, max)
-        public event Action<short, string> JoinRandomFailed;
-        public event Action<string> MatchStateChanged;
+        public event Action<short, string> JoinRandomFailed;    // 랜덤 룸 입장 실패 이벤트
+        public event Action<string> MatchStateChanged;      // 매치 상태(룸 커스텀 프로퍼티) 변경 이벤트
 
 
+        #endregion
+        
 
         // 초기화 작업
         protected override void OnAwake()
@@ -63,13 +75,14 @@ namespace Network
         public void JoinQuickMatchRoom()
         {
             Debug.Log($"[NetworkManager] 빠른 매칭을 시작합니다. 방을 탐색합니다.");
-            var exptected = new Hashtable { { RoomProps.MatchType, MatchType.Quick.ToString() } };
-            PhotonNetwork.JoinRandomRoom(exptected, MAX_PLAYERS);
+            var expected = new Hashtable { { RoomProps.MatchType, MatchType.Quick.ToString() } };
+            PhotonNetwork.JoinRandomRoom(expected, MAX_PLAYERS);
         }
 
         // 빠른 매칭 방 생성 : 빠른 매칭 방에 입장 실패 시 호출
         public void CreateQuickMatchRoom()
         {
+            _createType = MatchType.Private;
 
             var options = new RoomOptions
             {
@@ -89,40 +102,51 @@ namespace Network
         
         #region Private Matching API
 
-        // 비공개 룸 입장
-        public void JoinPrivateRoom()
-        {
-            Debug.Log($"[NetworkManager] 빠른 매칭을 시작합니다. 방을 탐색합니다.");
-            var exptected = new Hashtable { { RoomProps.MatchType, MatchType.Quick.ToString() } };
-            PhotonNetwork.JoinRandomRoom(exptected, MAX_PLAYERS);
-        }
+        #region Create Private Room Logic
 
-        public void JoinPrivateRoomByCode(string code)
-        {
-            
-        }
-        
         // 빠른 매칭 방 생성 : 빠른 매칭 방에 입장 실패 시 호출
         public void CreatePrivateRoom()
         {
+            _createType = MatchType.Private;
+            _privateRetryCount = 0;
+            StartCoroutine(TryCreatePrivateRoom());
+        }
 
-            var options = new RoomOptions
+        private IEnumerator TryCreatePrivateRoom()
+        {
+            yield return null; // 한 프레임 대기
+            
+            string roomCode = Util_LDH.Generate4DigitString();
+            string roomName = $"PRIV-{roomCode}";
+            PhotonNetwork.CreateRoom(roomName, SetPrivateRoomOptions(roomCode));
+        }
+        
+        private RoomOptions SetPrivateRoomOptions(string roomCode)
+        {
+            return new RoomOptions
             {
                 MaxPlayers = MAX_PLAYERS, // 최대 인원 설정
-                IsVisible = true, // 로비 노출 여부 
+                IsVisible    = false,     // 코드로만 입장하도록 비노출 권장
                 IsOpen = true, // 입장 가능 여부 -> 게임 시작 시 false로 만들어야 함
                 CustomRoomProperties = new Hashtable
                 {
                     { RoomProps.MatchType, MatchType.Private.ToString() }, 
                     {RoomProps.MatchState, MatchState.Matching.ToString()},
-                    // {RoomProps.RoomCode, }
+                    {RoomProps.RoomCode, roomCode}
                 },
                 CustomRoomPropertiesForLobby = new[] { RoomProps.MatchType, RoomProps.MatchState, RoomProps.RoomCode }
             };
-            string roomName = $"QUICK-{UnityEngine.Random.Range(100000, 999999)}";
-            PhotonNetwork.CreateRoom(roomName, options);
         }
+
+        #endregion
+       
         
+        // 비공개 룸 입장
+        // 친구초대 보낼 때도 room code를 담아서 보내면 같은 api로 방 입장 시도 가능
+        public void JoinPrivateRoomByCode(string code)
+        {
+            PhotonNetwork.JoinRoom($"PRIV-{code}");
+        }
         
         #endregion
 
@@ -183,7 +207,7 @@ namespace Network
 
         #region Pun Callbacks - Room
 
-        // 방 입장시
+        // ---- 방 입장 ---- 
         public override void OnJoinedRoom()
         {
             Debug.Log($"[NetworkManager] {PhotonNetwork.CurrentRoom.Name} 방에 입장했습니다.");
@@ -192,6 +216,7 @@ namespace Network
             RoomPlayerCountChanged?.Invoke(PhotonNetwork.CurrentRoom.PlayerCount, PhotonNetwork.CurrentRoom.MaxPlayers);
         }
 
+        // ---- 방 퇴장 -------
         public override void OnLeftRoom()
         {
             Debug.Log($"[NetworkManager] {PhotonNetwork.CurrentRoom.Name} 방에서 나갔습니다.");
@@ -202,7 +227,7 @@ namespace Network
         }
 
 
-        /// 다른 플레이어가 방에 새로 입장했을 때 호출
+        /// ------- 플레이어 입장 / 퇴장 -----------
         public override void OnPlayerEnteredRoom(Player newPlayer)
         {
             
@@ -210,27 +235,58 @@ namespace Network
             PlayerEntered?.Invoke(newPlayer);
             RoomPlayerCountChanged?.Invoke(PhotonNetwork.CurrentRoom.PlayerCount, PhotonNetwork.CurrentRoom.MaxPlayers);
         }
-
-
-        /// 다른 플레이어가 방에서 나갔을 때 호출
+        
         public override void OnPlayerLeftRoom(Player otherPlayer)
         {
             PlayerLeft?.Invoke(otherPlayer);
             RoomPlayerCountChanged?.Invoke(PhotonNetwork.CurrentRoom.PlayerCount, PhotonNetwork.CurrentRoom.MaxPlayers);
         }
 
+        
+        
+        // ------ 랜덤 룸 입장 (빠른 매칭 전용) ------- //
         public override void OnJoinRandomFailed(short returnCode, string message)
         {
             Debug.Log($"[NetworkManager] 빠른 매칭을 위한 랜덤 방 입장에 실패했습니다. 방을 생성합니다.");
             JoinRandomFailed?.Invoke(returnCode, message);
             CreateQuickMatchRoom();
         }
+        
+        
+        // ------ 방 생성 
 
-        public override void OnCreateRoomFailed(short returnCode, string message)
+        public override void OnCreatedRoom()
         {
-            Debug.LogError($"[NetworkManager] 방 생성 실패 - {returnCode} : {message}");
+            Debug.Log($"[NetworkManager] 방 생성 완료(타입 : {_createType}) : {PhotonNetwork.CurrentRoom.Name}");
+            _createType = MatchType.None;
+            CreatedRoom?.Invoke();
         }
         
+        
+        public override void OnCreateRoomFailed(short returnCode, string message)
+        {
+            Debug.LogWarning($"[NetworkManager] 방 생성 실패(타입 : {_createType})  - {returnCode} : {message}");
+            
+            // 비공개 방 생성 & 방 이름(방 코드) 중복인 경우 재시도
+            if (_createType == MatchType.Private && returnCode == ErrorCode.GameIdAlreadyExists)
+            {
+                if (_privateRetryCount++ < PRIVATE_MAX_RETRY)
+                {
+                    StartCoroutine(TryCreatePrivateRoom());
+                    return;
+                }
+                else
+                {
+                    Debug.LogWarning($"[NetworkManager] 비공개 방 생성 재시도 횟수 초과 : 시도 횟수 {_privateRetryCount}");
+                }
+            }
+
+            _createType = MatchType.None;
+
+        }
+        
+        
+        // ------ 프로퍼티 관련 -------- //
         public override void OnRoomPropertiesUpdate(Hashtable changed)
         {
             if (changed.TryGetValue(RoomProps.MatchState, out var value) && value is string state)

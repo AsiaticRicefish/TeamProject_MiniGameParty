@@ -1,10 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using Photon.Pun;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
+
 
 
 namespace LDH_Utils
@@ -93,7 +95,13 @@ namespace LDH_Utils
             TimeSpan ts = TimeSpan.FromSeconds(seconds);
             return $"{ts.Minutes} : {ts.Seconds:D2}";
         }
-
+        
+        public static string Generate4DigitString()
+        {
+            int n = RandomNumberGenerator.GetInt32(0, 10000); // 0~9999 균등
+            return n.ToString("D4"); // 0000 허용
+        }
+        
         #endregion
         
         #region RectTransform Control
