@@ -1,18 +1,27 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace ShootingScene
 {
-    public class InputManager : MonoBehaviour
+    public class PlayerInputManager : MonoBehaviour
     {
-        public static InputManager Instance { get; private set; }
+        public static PlayerInputManager Instance { get; private set; }
 
         [SerializeField] private Camera mainCam;
 
         private PlayerInput playerInput; // PlayerInput 컴포넌트 참조 변수
         private InputAction touchAction; // TouchPress 액션 참조 변수
 
-        private UnimoEgg selectedUnimoEgg;
+        private DirectionSign selectedDirectionSign;
+        private UnimoEgg currentPlayerUnimo;
+
+        //private float limitTime = 5.0f;    //플레이 제한시간
+        private float chargingtime;        //현재 차징 시간
+
+        private bool isPressing = false;
 
         private void Awake()
         {
@@ -26,6 +35,15 @@ namespace ShootingScene
             if (playerInput != null)
             {
                 touchAction = playerInput.actions.FindAction("TouchPress");
+            }
+        }
+
+        private void Update()
+        {
+            // 누르고 있는 동안만 timer 증가
+            if (isPressing)
+            {
+                chargingtime += Time.deltaTime;
             }
         }
 
@@ -69,6 +87,16 @@ namespace ShootingScene
         // TouchPress 이벤트 연결
         public void OnTouchPress(InputAction.CallbackContext ctx)
         {
+            /*if(limitTime > 5.0f)
+            {
+                Debug.Log("제한시간이 지나서 강제 실행");
+
+                // TODO - 강제 실행 추가 작업처리                 
+                // 아예 손을 안댔거나
+                // 터치중인데 제한시간이 지났거나
+                 
+            }*/
+
             Vector2 screenPos;
 
             //왜 인지 모르겠는데 pc에서 Simulrator로 Player하면 자꾸 이상한데 값을 들고옴
@@ -92,32 +120,47 @@ namespace ShootingScene
             if (ctx.started)
             {
                 Debug.Log("start");
+
+                // 타이머 초기화
+                ResetChargingTime();
+
                 // 터치 시작 → Raycast로 알 선택
-                if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, LayerMask.GetMask("UnimoEgg")))
+                if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, LayerMask.GetMask("DirectionSign")))
                 {
-                    selectedUnimoEgg = hit.collider.GetComponent<UnimoEgg>();
-                    selectedUnimoEgg?.OnTouchStart(screenPos);
+                    selectedDirectionSign = hit.collider.GetComponent<DirectionSign>();
+                    selectedDirectionSign?.OnTouchStart(screenPos);
                 }
             }
             else if (ctx.performed)
             {
-                Debug.Log("move");
-                selectedUnimoEgg?.OnTouchMove(screenPos);
+                isPressing = true;
+                Debug.Log($"click중 - 누른 시간: {chargingtime}초");
+                selectedDirectionSign?.OnTouch(chargingtime);
+
             }
             else if (ctx.canceled)
             {
-                Debug.Log("end");
-                selectedUnimoEgg?.OnTouchEnd(screenPos);
-                selectedUnimoEgg = null;
+                Debug.Log($"end - 최종 누른 시간: {chargingtime:F2}초");
+                isPressing = false; // 타이머 증가 중단
+
+                selectedDirectionSign?.OnTouchEnd();
+                selectedDirectionSign = null;
 
                 //DisableInput();                         //한번 쏘고 나면 다시 못쏘도록
 
-                if (selectedUnimoEgg == null)
+                if (selectedDirectionSign == null)
                 {
                     Debug.Log("NULL처리완료");
                 }
 
             }
+        }
+
+        public void ResetChargingTime()
+        {
+            // 타이머 초기화 및 차징중인지 아닌지 bool 변수 초기화
+            chargingtime = 0f;
+            isPressing = false;
         }
 
         public void OnTouchPosition(InputAction.CallbackContext ctx)
