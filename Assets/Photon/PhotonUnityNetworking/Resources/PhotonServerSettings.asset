@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: PhotonServerSettings
   m_EditorClassIdentifier: 
   AppSettings:
-    AppIdRealtime: 
+    AppIdRealtime: d49d4737-e6b3-4ffa-bc6b-f89243bcec28
     AppIdFusion: 
     AppIdChat: 
     AppIdVoice: 
@@ -50,6 +50,14 @@ MonoBehaviour:
   - ReceivePlayerActionResult
   - ReceiveTimingResult
   - NoteSpawn
+  - ReceiveBlockRemovalRequest
+  - RPC_ApplyBlockRemoval
+  - RPC_NotifyTowerCollapsed
+  - RPC_RequestBlockRemoval
+  - RPC_ReceiveSnapshot
+  - RPC_RequestSnapshot
+  - RPC_ApplyGameState
+  - RPC_ChangeState
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 0
