@@ -70,10 +70,9 @@ public class UnimoEgg : MonoBehaviour
     public void Shot(Vector3 dir)
     {
         rb.velocity = Vector3.zero; // 기존 속도 초기화
-        rb.AddForce(dir * forceMultiplier, ForceMode.Impulse);
-        Debug.Log($"발사 방향의 힘의 크기 - {dir.magnitude * forceMultiplier}");
-
-        // Rigidbody Drag로 자연 감속
-        rb.drag = 1f;
+        rb.AddForce(dir, ForceMode.Impulse);
+        //rb.AddForce(dir * forceMultiplier, ForceMode.Impulse);
+        Debug.Log($"발사 방향의 힘의 크기 - {dir.magnitude}");
+        //Debug.Log($"발사 방향의 힘의 크기 - {dir.magnitude * forceMultiplier}");
     }
 }

@@ -11,8 +11,8 @@ public class DirectionSign : MonoBehaviour
 
     [Header("Charge Settings")]
     public float chargeMin = 0f;
-    public float chargeMax = 5f;
-    public float chargeSpeed = 10f;
+    public float chargeMax = 25f;
+    //public float chargeSpeed = 10f;
 
     [Header("References")]
     public Transform firePoint;       // 발사 위치
