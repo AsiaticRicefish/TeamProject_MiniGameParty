@@ -10,7 +10,7 @@ public class UnimoEgg : MonoBehaviour
     private Vector3 startTouchPos;
     private Vector3 endTouchPos;
 
-    [SerializeField][Range(0.1f,15f)] private float forceMultiplier = 10f;
+    [SerializeField][Range(0.1f,15f)] private float forceMultiplier = 3f;
 
     private void Awake()
     {
@@ -41,8 +41,8 @@ public class UnimoEgg : MonoBehaviour
         rb.isKinematic = false;
 
         //항상 카메라는 x,y좌표 보다 Camera.main.transform.position.y 만큼 떨어져있다.
-        Vector3 startWorld = Camera.main.ScreenToWorldPoint(new Vector3(startTouchPos.x,startTouchPos.y,0/*Camera.main.transform.position.y*/));
-        Vector3 endWorld = Camera.main.ScreenToWorldPoint(new Vector3(endtouchPos.x,endtouchPos.y,0/*Camera.main.transform.position.y*/));
+        Vector3 startWorld = Camera.main.ScreenToWorldPoint(new Vector3(startTouchPos.x,startTouchPos.y,Camera.main.transform.position.y));
+        Vector3 endWorld = Camera.main.ScreenToWorldPoint(new Vector3(endtouchPos.x,endtouchPos.y,Camera.main.transform.position.y));
 
         //두벡터사이의 거리를 구함
         //float pullBackPower = Vector3.Distance(startWorld,endWorld);
@@ -65,5 +65,15 @@ public class UnimoEgg : MonoBehaviour
         //Vector3 force = new Vector3(delta.x, 0, delta.y) * forceMultiplier;
 
         rb.AddForce(dir.normalized * forceMultiplier, ForceMode.Impulse);*/
+    }
+
+    public void Shot(Vector3 dir)
+    {
+        rb.velocity = Vector3.zero; // 기존 속도 초기화
+        rb.AddForce(dir * forceMultiplier, ForceMode.Impulse);
+        Debug.Log($"발사 방향의 힘의 크기 - {dir.magnitude * forceMultiplier}");
+
+        // Rigidbody Drag로 자연 감속
+        rb.drag = 1f;
     }
 }
