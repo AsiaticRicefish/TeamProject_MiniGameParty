@@ -57,6 +57,7 @@ namespace Network
             Manager.Network.ReadyStateChanged += OnPlayerReadyChanged;
             Manager.Network.SlotIndexChanged  += OnPlayerSlotChanged;
             Manager.Network.MatchStateChanged += OnMatchStateChanged;
+            Manager.Network.MasterClientSwiched += OnMasterClientChanged;
         }
 
         private void UnsubscribeNetwork()
@@ -72,6 +73,7 @@ namespace Network
             Manager.Network.ReadyStateChanged -= OnPlayerReadyChanged;
             Manager.Network.SlotIndexChanged  -= OnPlayerSlotChanged;
             Manager.Network.MatchStateChanged -= OnMatchStateChanged;
+            Manager.Network.MasterClientSwiched -= OnMasterClientChanged;
         }
 
         
@@ -144,6 +146,12 @@ namespace Network
             
             
             MatchController.Instance.SetMatching(MatchType.Private, true);
+            
+            //마스터는 반드시 0번 슬롯에 위치해야 하므로!
+            //방에 입장했을 때 로컬에서 자기 선호 슬롯으로 배치될 수 있는지를 판단하고 플레이어 프로퍼티를 설정하기 때문에
+            //
+            //마스터의 선호 슬롯 인덱스를 0번으로 설정하고 방을 생성한다.
+            _preferredSlotToJoin = 0;
             
             Manager.Network.CreatePrivateRoom();
         }
@@ -235,7 +243,7 @@ namespace Network
 
         #endregion
         
-        #region  Player Enter/Leave/Props
+        #region  Player Enter/Leave/Props/Master Change
 
         private void OnPlayerEnteredRoom(Player newPlayer)
         {
@@ -255,6 +263,16 @@ namespace Network
            RebuildAllPanels();
         }
 
+        private void OnMasterClientChanged(Player newMaster)
+        {
+            if(!newMaster.IsLocal) return;
+            
+            //로컬이고 마스터가 된 경우
+            //슬롯을 0번으로 옮기기 위해 선호 슬롯을 정해주고 assgin을 다시 한다.(강제)
+            _preferredSlotToJoin = 0;
+            AssignSlotIndex(newMaster, true);
+        }
+        
         private void OnPlayerReadyChanged(Player targetPlayer, bool isReady)
         {
             Debug.Log($"[PrivateMatchController] OnPlayerReadyChanged({targetPlayer.NickName}, ready:{isReady})");
@@ -386,7 +404,7 @@ namespace Network
             //UI 갱신
             Debug.Log($"[PrivateMatchController] BuildPanel(slot:{slotIdx}, player:{pl.NickName}), ready:{GetReady(pl)}, isLocal:{pl.IsLocal})");
 
-            _popupRoom[slotIdx].ApplyPlayer(GetReady(pl), pl.IsLocal);
+            _popupRoom[slotIdx].ApplyPlayer(GetReady(pl), pl.IsLocal, pl.IsMasterClient);
         }
         
         
@@ -396,14 +414,14 @@ namespace Network
         #region Slot
 
         // 슬롯 배정
-        private int AssignSlotIndex(Player p)
+        private int AssignSlotIndex(Player p, bool force = false)
         {
             
             Debug.Log($"[PrivateMatchController] AssignSlotIndex({p.NickName}))");
             int slotIndex = -1;
             
             // 1) 선호 슬롯 사용 시도
-            if (_preferredSlotToJoin.HasValue && IsSlotFree(_preferredSlotToJoin.Value))
+            if (_preferredSlotToJoin.HasValue && (force || IsSlotFree(_preferredSlotToJoin.Value)))
             {
                 slotIndex = _preferredSlotToJoin.Value;
                 Debug.Log($"[PrivateMatchController] 선호 슬롯 사용 가능 : {_preferredSlotToJoin.Value}");

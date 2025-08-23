@@ -72,16 +72,6 @@ namespace LDH_UI
                 }
             }
         }
-
-        public void ApplyEmptySlot(int slot, bool canInviteForEmpty)
-        {
-            this[slot]?.SetEmpty(canInviteForEmpty);
-        }
-
-        public void ApplyPlayerToSlot(int slot, bool isReady, bool isLocalOwner)
-        {
-            this[slot]?.ApplyPlayer(isReady, isLocalOwner);
-        }
         
         #endregion
         

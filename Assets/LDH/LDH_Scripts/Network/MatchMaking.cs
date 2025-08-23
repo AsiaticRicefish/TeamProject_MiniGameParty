@@ -25,7 +25,6 @@ namespace Network
 
         // ------ Events ------ //
         public event Action ConnectedToMaster; // 로딩 씬 UI에서 이벤트 구독할 예정
-
         public event Action CreatedRoom;      // 방 생성 이벤트
         public event Action JoinedRoom;       // 방 입장 이벤트
         public event Action LeftRoom;         // 방 퇴장 이벥트
@@ -35,10 +34,10 @@ namespace Network
         public event Action<short, string> JoinRandomFailed;    // 랜덤 룸 입장 실패 이벤트
         public event Action<short, string> JoinFailed;    // 비공개 룸 입장 실패 이벤트
         public event Action<string> MatchStateChanged;      // 매치 상태(룸 커스텀 프로퍼티) 변경 이벤트
-
         public event Action<Player, bool> ReadyStateChanged;     // 준비 상태(플레이어 커스텀 프로퍼티) 변경 이벤트
 
-        public event Action<Player, int> SlotIndexChanged; 
+        public event Action<Player, int> SlotIndexChanged;
+        public event Action<Player> MasterClientSwiched;
 
         #endregion
         
@@ -216,7 +215,8 @@ namespace Network
 
         #region Pun Callbacks - Room
 
-        // ---- 방 입장 / 입장 실패 ---- 
+        #region 방 입장 / 입장 실패
+
         public override void OnJoinedRoom()
         {
             Debug.Log($"[NetworkManager] {PhotonNetwork.CurrentRoom.Name} 방에 입장했습니다.");
@@ -240,11 +240,14 @@ namespace Network
             Debug.Log($"[NetworkManager] 비공개 방 입장에 실패했습니다. ({returnCode}) {message}");
             JoinFailed?.Invoke(returnCode, message);
         }
+
+
+
+
+        #endregion
+
+        #region 방 퇴장
         
-          
-
-
-        // ---- 방 퇴장 -------
         public override void OnLeftRoom()
         {
             Debug.Log($"[NetworkManager] 방에서 나갔습니다.");
@@ -253,9 +256,12 @@ namespace Network
             
             LeftRoom?.Invoke();
         }
+        
 
+        #endregion
 
-        /// ------- 플레이어 입장 / 퇴장 -----------
+        #region 플레이어 입장 / 퇴장 / 마스터 변경
+
         public override void OnPlayerEnteredRoom(Player newPlayer)
         {
             
@@ -270,10 +276,15 @@ namespace Network
             RoomPlayerCountChanged?.Invoke(PhotonNetwork.CurrentRoom.PlayerCount, PhotonNetwork.CurrentRoom.MaxPlayers);
         }
 
-        
-  
-        
-        // ------ 방 생성 
+
+        public override void OnMasterClientSwitched(Player newMasterClient)
+        {
+           MasterClientSwiched?.Invoke(newMasterClient);
+        }
+
+        #endregion
+
+        #region 방 생성 / 방 생성 실패
 
         public override void OnCreatedRoom()
         {
@@ -304,9 +315,13 @@ namespace Network
             _createType = MatchType.None;
 
         }
-        
-        
-        // ------ 프로퍼티 관련 -------- //
+
+
+
+        #endregion
+
+        #region 프로퍼티
+
         public override void OnRoomPropertiesUpdate(Hashtable changed)
         {
             if (changed.TryGetValue(RoomProps.MatchState, out var value) && value is string state)
@@ -322,6 +337,11 @@ namespace Network
                 SlotIndexChanged?.Invoke(targetPlayer,slotIndex);
         }
 
+
+        #endregion
+        
+        
+       
         #endregion
         
     }

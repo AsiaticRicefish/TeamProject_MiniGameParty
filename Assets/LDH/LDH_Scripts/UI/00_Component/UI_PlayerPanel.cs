@@ -22,9 +22,11 @@ namespace LDH_UI
         [SerializeField] private Image profileImage; // 프로필 이미지지
         [SerializeField] private Button readyButton; // 준비 버튼
         [SerializeField] private TextMeshProUGUI readyText;
+        [SerializeField] private TextMeshProUGUI masterIcon;
 
 
-        [Header("Styles")] [SerializeField] private UI_ButtonStateStyle readyTheme;
+        [Header("Styles")] 
+        [SerializeField] private UI_ButtonStateStyle readyTheme;
         [SerializeField] private UI_ButtonStateStyle notReadyTheme;
 
         public int SlotIndex { get; private set; } = -1;
@@ -39,7 +41,6 @@ namespace LDH_UI
         /// 초기화 : 슬롯 인덱스 지정, 클릭 이벤트 바인딩
         /// </summary>
         /// <param name="slotIndex"></param>
-        /// <param name="canInvite"></param>
         public void Setup(int slotIndex) // 마스만 권한 있음
         {
             SlotIndex = slotIndex;
@@ -52,25 +53,25 @@ namespace LDH_UI
             readyButton.onClick.AddListener(() => ReadyClicked?.Invoke(SlotIndex));
         }
 
+        
+        //rebuild 할 때마다 호출됨.
         public void SetEmpty(bool canInvite)
         {
             SetOccupied(false); // 빈 슬롯으로 처리
-            
             SetReadyButtonInteractable(false);
             SetReadyVisual(false);
             SetInviteActive(canInvite);
-
+            SetMasterIcon(false);
         }
 
-        public void ApplyPlayer(bool isReady, bool isLocalPlayer)
+        public void ApplyPlayer(bool isReady, bool isLocalPlayer, bool isMasterClient)
         {
             SetOccupied(true);
             SetProfileImage();
-            
             SetReadyButtonInteractable(isLocalPlayer);
             SetReadyVisual(isReady);
-            
             SetInviteActive(false);
+            SetMasterIcon(isMasterClient);
         }
         
 
@@ -90,6 +91,11 @@ namespace LDH_UI
         public void SetProfileImage()
         {
             //todo: 프로필 이미지 설정
+        }
+
+        public void SetMasterIcon(bool isMaster)
+        {
+            masterIcon.enabled = isMaster;
         }
 
         /// <summary>
