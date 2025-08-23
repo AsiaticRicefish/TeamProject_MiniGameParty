@@ -220,6 +220,8 @@ namespace Network
             Debug.LogWarning($"[PrivateMatchController] 비공개 룸 입장 실패");
             Manager.UI.EnqueueToast($"({returnCode}) {message}");
             
+            UnsubscribeNetwork();
+            
             MatchController.Instance.SetMatching(MatchType.Private, false);
             
             _requesting = false;
