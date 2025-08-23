@@ -1,4 +1,5 @@
 using System;
+using Photon.Pun;
 using Photon.Realtime;
 using TMPro;
 using UnityEngine;
@@ -26,20 +27,20 @@ namespace LDH_UI
         [Header("Styles")] [SerializeField] private UI_ButtonStateStyle readyTheme;
         [SerializeField] private UI_ButtonStateStyle notReadyTheme;
 
-
         public int SlotIndex { get; private set; } = -1;
         public bool IsOccupied { get; private set; }
 
         public event Action<int> InviteButtonClicked;
         public event Action<int> ReadyClicked;
 
+        
 
         /// <summary>
         /// 초기화 : 슬롯 인덱스 지정, 클릭 이벤트 바인딩
         /// </summary>
         /// <param name="slotIndex"></param>
         /// <param name="canInvite"></param>
-        public void Init(int slotIndex, bool canInvite) // 마스만 권한 있음
+        public void Setup(int slotIndex) // 마스만 권한 있음
         {
             SlotIndex = slotIndex;
 
@@ -49,28 +50,31 @@ namespace LDH_UI
 
             readyButton.onClick.RemoveAllListeners();
             readyButton.onClick.AddListener(() => ReadyClicked?.Invoke(SlotIndex));
-
-            // 초기 UI 상태 : 빈 슬롯으로 설정, ready 비활성
-            SetSlotEmpty();
         }
 
-
-        public void SetSlotEmpty()
+        public void SetEmpty(bool canInvite)
         {
             SetOccupied(false); // 빈 슬롯으로 처리
+            
             SetReadyButtonInteractable(false);
             SetReadyVisual(false);
+            SetInviteActive(canInvite);
+
         }
 
-        public void BindPlayer(Player player, bool isLocalPlayer, bool isReady)
+        public void ApplyPlayer(bool isReady, bool isLocalPlayer)
         {
             SetOccupied(true);
-            SetReadyButtonInteractable(isLocalPlayer); // 로컬 플레이어만 버튼 조작 가능
-            SetReadyVisual(isReady); // 초기 Ready 표시
+            SetProfileImage();
+            
+            SetReadyButtonInteractable(isLocalPlayer);
+            SetReadyVisual(isReady);
+            
+            SetInviteActive(false);
         }
+        
 
-
-        #region UI Control API
+        #region UI Control
 
         /// <summary>
         /// 슬롯 점유 / 비점유 상태에 따라 UI 반영 (프로필 이미지 표시 여부, 초대 기능 활성화 여부)
@@ -80,7 +84,11 @@ namespace LDH_UI
         {
             IsOccupied = occupied;
             profileImage.enabled = occupied;
-            SetInviteActive(!occupied);
+        }
+
+        public void SetProfileImage()
+        {
+            //todo: 프로필 이미지 설정
         }
 
         /// <summary>
@@ -111,6 +119,7 @@ namespace LDH_UI
         public void SetInviteActive(bool active)
         {
             inviteButton.interactable = active;
+            inviteButton.image.color = active ? readyTheme.backgroundColor : Color.white;
         }
 
 

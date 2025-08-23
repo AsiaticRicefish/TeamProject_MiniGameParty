@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using DesignPattern;
+using ExitGames.Client.Photon.StructWrapping;
 using LDH_Util;
 using Photon.Pun;
 using Photon.Realtime;
@@ -36,8 +37,8 @@ namespace Network
         public event Action<string> MatchStateChanged;      // 매치 상태(룸 커스텀 프로퍼티) 변경 이벤트
 
         public event Action<Player, bool> ReadyStateChanged;     // 준비 상태(플레이어 커스텀 프로퍼티) 변경 이벤트
-        
 
+        public event Action<Player, int> SlotIndexChanged; 
 
         #endregion
         
@@ -152,6 +153,7 @@ namespace Network
         // 친구초대 보낼 때도 room code를 담아서 보내면 같은 api로 방 입장 시도 가능
         public void JoinPrivateRoomByCode(string code)
         {
+            Debug.Log($"[NetworkManager] PRIV-{code}에 입장을 시도합니다.");
             PhotonNetwork.JoinRoom($"PRIV-{code}");
         }
         
@@ -313,8 +315,11 @@ namespace Network
 
         public override void OnPlayerPropertiesUpdate(Player targetPlayer, Hashtable changedProps)
         {
-            if (changedProps.TryGetValue(PlayerProps.ReadyState, out var value) && value is bool isReady)
+            if (changedProps.TryGetValue(PlayerProps.ReadyState, out var readyValue) && readyValue is bool isReady)
                 ReadyStateChanged?.Invoke(targetPlayer, isReady);
+            
+            if(changedProps.TryGetValue(PlayerProps.SlotIndex, out var slotValue) && slotValue is int slotIndex)
+                SlotIndexChanged?.Invoke(targetPlayer,slotIndex);
         }
 
         #endregion

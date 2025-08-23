@@ -492,6 +492,7 @@ GameObject:
   - component: {fileID: 662488575}
   - component: {fileID: 662488574}
   - component: {fileID: 662488576}
+  - component: {fileID: 662488577}
   m_Layer: 0
   m_Name: MatchController
   m_TagString: Untagged
@@ -512,6 +513,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   quickMatchButton: {fileID: 6299535677436413601}
+  starting: 0
 --- !u!4 &662488575
 Transform:
   m_ObjectHideFlags: 0
@@ -540,6 +542,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   privateMatchOptions: {fileID: 998426698}
+  starting: 0
+--- !u!114 &662488577
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 662488573}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b7b0ef8e98c9460d8dba9c0df3d3e95f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  QuickMatch: {fileID: 662488574}
+  PrivateMatch: {fileID: 662488576}
+  startDelaySec: 0.8
 --- !u!1 &722618587
 GameObject:
   m_ObjectHideFlags: 0

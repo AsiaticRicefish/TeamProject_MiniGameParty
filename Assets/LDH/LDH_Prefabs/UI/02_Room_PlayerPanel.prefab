@@ -132,6 +132,7 @@ GameObject:
   - component: {fileID: 2254830176104062553}
   - component: {fileID: 4063011257752468795}
   - component: {fileID: 1170402116482858814}
+  - component: {fileID: 57612948684628441}
   m_Layer: 5
   m_Name: 02_Room_PlayerPanel
   m_TagString: Untagged
@@ -158,7 +159,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: -33.75}
-  m_SizeDelta: {x: 155, y: 222.5}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &4063011257752468795
 MonoBehaviour:
@@ -200,6 +201,30 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_HorizontalFit: 2
   m_VerticalFit: 2
+--- !u!114 &57612948684628441
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2276168755652985111}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3e01df1ebd54b83bd34143a5b3f170d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  inviteButton: {fileID: 1369687942885848742}
+  profileImage: {fileID: 7085154291777132502}
+  readyButton: {fileID: 2254227954740070375}
+  readyText: {fileID: 6091312537284146386}
+  readyTheme:
+    label: Ready
+    labelColor: {r: 0, g: 0, b: 0, a: 1}
+    backgroundColor: {r: 0.8039216, g: 0.95686275, b: 0.827451, a: 1}
+  notReadyTheme:
+    label: NotReady
+    labelColor: {r: 0, g: 0, b: 0, a: 1}
+    backgroundColor: {r: 0.8509804, g: 0.8509804, b: 0.8509804, a: 1}
 --- !u!1 &8037395206345289854
 GameObject:
   m_ObjectHideFlags: 0
@@ -302,6 +327,26 @@ PrefabInstance:
         type: 3}
       propertyPath: m_fontSizeBase
       value: 25
+      objectReference: {fileID: 0}
+    - target: {fileID: 7309338515615268959, guid: 781e76cf87ee34622a365677a99e99ea,
+        type: 3}
+      propertyPath: m_Colors.m_DisabledColor.a
+      value: 0.7490196
+      objectReference: {fileID: 0}
+    - target: {fileID: 7309338515615268959, guid: 781e76cf87ee34622a365677a99e99ea,
+        type: 3}
+      propertyPath: m_Colors.m_DisabledColor.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7309338515615268959, guid: 781e76cf87ee34622a365677a99e99ea,
+        type: 3}
+      propertyPath: m_Colors.m_DisabledColor.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7309338515615268959, guid: 781e76cf87ee34622a365677a99e99ea,
+        type: 3}
+      propertyPath: m_Colors.m_DisabledColor.r
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8817762041393369388, guid: 781e76cf87ee34622a365677a99e99ea,
         type: 3}
@@ -414,3 +459,27 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 8802106006006777784}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &2254227954740070375 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7309338515615268959, guid: 781e76cf87ee34622a365677a99e99ea,
+    type: 3}
+  m_PrefabInstance: {fileID: 8802106006006777784}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &6091312537284146386 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3364167739469575018, guid: 781e76cf87ee34622a365677a99e99ea,
+    type: 3}
+  m_PrefabInstance: {fileID: 8802106006006777784}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

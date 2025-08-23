@@ -25,10 +25,11 @@ namespace Network
         [SerializeField] private Button quickMatchButton;
         
         [Header("Config")]
-        private float _startDelaySec = 0.8f;
+       
         private UI_Popup_QuickMatch _popupQuickMatch;  // 상태/인원/타이머 표시용 팝업
         private CancellationTokenSource _cts; // 팝업 생명주기 + 컨트롤러 생명주기에 연동될 토큰
-        private bool _starting;  // 중복 시작 방지 플래그
+        
+        public bool starting;  // 중복 시작 방지 플래그
         private bool _requesting; // 빠른 매칭 시작 버튼 중복 연타 방지 플래그
 
         private void Start()
@@ -105,7 +106,7 @@ namespace Network
             Manager.Network.LeaveRoom();
             Unsubscribe();
             
-            _starting = false;
+            starting = false;
             _requesting = false;
             quickMatchButton.interactable = true;
         }
@@ -166,67 +167,19 @@ namespace Network
         {
             if (!PhotonNetwork.IsMasterClient) return;
             
-            if (current == max && !_starting)
+            if (current == max && !starting)
             {
-                _starting = true;
-                RequestStartGame();
+                starting = true;
+                MatchController.Instance.RequestStartGame();
             }
             else if (current < max)
             {
                 // 누군가 나가면 다시 대기 모드
-                _starting = false;
+                starting = false;
             }
         }
 
         
-        /// 방 상태를 Complete로 전파하고(취소 불가), 짧은 지연 후 씬 로드.
-        /// 중간 이탈이 있으면 상태를 Matching으로 롤백.
-        private void RequestStartGame()
-        {
-            if (!PhotonNetwork.IsMasterClient) return;
-            var room = PhotonNetwork.CurrentRoom;
-            if (room == null) return;
-            
-            Debug.Log("[QuickMatchController] 매칭 완료.");
-            
-            // 입장 차단 + 상태 전파
-            room.IsOpen = false;
-            room.SetCustomProperties( new Hashtable { { Define_LDH.RoomProps.MatchState, Define_LDH.MatchState.Complete.ToString() } });
-
-
-            StartCoroutine(StartGameWithDelay());
-        }
-
-        /// 매칭 완료 연출 시간만큼 기다렸다가 씬 이동
-        private IEnumerator StartGameWithDelay()
-        {
-            Debug.Log("[QuickMatchController] 마스터 클라이언트에서 게임을 시작합니다.");
-            yield return new WaitForSeconds(_startDelaySec);
-            
-            
-            // 안전 재검증(이탈 대비)
-            var room = PhotonNetwork.CurrentRoom;
-            if (room != null &&
-                room.PlayerCount == room.MaxPlayers &&
-                Equals(room.CustomProperties[Define_LDH.RoomProps.MatchState], Define_LDH.MatchState.Complete.ToString()))
-            {
-                
-                Manager.Network.LoadGameScene();
-            }
-            else
-            {
-                // 롤백
-                if (room != null)
-                {
-                    room.IsOpen = true;
-                    room.SetCustomProperties(new Hashtable {
-                        { Define_LDH.RoomProps.MatchState, Define_LDH.MatchState.Matching.ToString() }
-                    });
-                }
-                _starting = false;
-            }
-            
-        }
 
         /// 방 상태가 바뀌면 모든 클라에서 UI 전환.
         /// 일정 시간 후 팝업 닫힘 처리
@@ -245,13 +198,13 @@ namespace Network
                 _cts = null;
                 
                 //UI 닫기
-                _popupQuickMatch.AutoCloseAfter(_startDelaySec, _popupQuickMatch.GetCancellationTokenOnDestroy()).Forget();
+                _popupQuickMatch.AutoCloseAfter(MatchController.Instance.startDelaySec, _popupQuickMatch.GetCancellationTokenOnDestroy()).Forget();
             }
             else
             {
                 _popupQuickMatch.SetStatus(false);
                 _popupQuickMatch.SetCancelable(true);
-                _starting = false;
+                starting = false;
             }
         }
 
