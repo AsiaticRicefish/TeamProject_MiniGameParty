@@ -84,6 +84,7 @@ namespace LDH_UI
         {
             IsOccupied = occupied;
             profileImage.enabled = occupied;
+            inviteButton.image.color = occupied ? Color.white : readyTheme.backgroundColor;
         }
 
         public void SetProfileImage()
@@ -119,7 +120,6 @@ namespace LDH_UI
         public void SetInviteActive(bool active)
         {
             inviteButton.interactable = active;
-            inviteButton.image.color = active ? readyTheme.backgroundColor : Color.white;
         }
 
 

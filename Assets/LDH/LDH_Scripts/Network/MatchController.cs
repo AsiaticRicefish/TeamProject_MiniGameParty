@@ -5,6 +5,7 @@ using Managers;
 using Photon.Pun;
 using UnityEngine;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
+using static LDH_Util.Define_LDH;
 
 namespace Network
 {
@@ -12,6 +13,13 @@ namespace Network
     {
         private static MatchController _instance;
         public static MatchController Instance => _instance;
+        
+        // 매칭 모드
+        public MatchType CurrentMatchType { get; private set; } = MatchType.None;
+        
+        public bool IsMatching { get; private set; }
+        public event Action<MatchType, bool> MatchTypeChanged;
+        
 
         [Header("Match Controller")]
         public QuickMatchController QuickMatch;
@@ -29,6 +37,21 @@ namespace Network
 
             PrivateMatch ??= GetComponent<PrivateMatchController>();
         }
+
+        public void SetMatching(MatchType type, bool isMatching)
+        {
+            IsMatching = isMatching;
+            CurrentMatchType = type;
+            
+            QuickMatch?.SetButtonInteractable(!isMatching);
+            PrivateMatch?.SetButtonInteractable(!isMatching);
+            
+            MatchTypeChanged?.Invoke(type, isMatching);
+        }
+
+
+
+        #region Game Start Logic
 
         /// 방 상태를 Complete로 전파하고(취소 불가), 짧은 지연 후 씬 로드.
         /// 중간 이탈이 있으면 상태를 Matching으로 롤백.
@@ -82,5 +105,6 @@ namespace Network
             }
             
         }
+        #endregion
     }
 }

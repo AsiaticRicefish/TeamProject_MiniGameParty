@@ -36,6 +36,7 @@ namespace Network
         {
             // 빠른 매칭 버튼 클릭 이벤트 바인딩
             quickMatchButton.onClick.AddListener(OnClickMatchingStart);
+            
         }
 
         private void OnDestroy()
@@ -92,8 +93,7 @@ namespace Network
             Subscribe();
             
             _requesting = true;
-            quickMatchButton.interactable = false;
-            
+            MatchController.Instance.SetMatching(Define_LDH.MatchType.Quick, true);
             
             //이미 방에 들어와있으면 중복 호출 방지
             if (PhotonNetwork.CurrentRoom != null) return;
@@ -108,7 +108,8 @@ namespace Network
             
             starting = false;
             _requesting = false;
-            quickMatchButton.interactable = true;
+            
+            MatchController.Instance.SetMatching(Define_LDH.MatchType.Quick, false);
         }
         
 
@@ -116,6 +117,13 @@ namespace Network
 
 
         #region UI Control
+        
+        public void SetButtonInteractable(bool interactable)
+        {
+            if (quickMatchButton != null)
+                quickMatchButton.interactable = interactable;
+        }
+        
         
         // 방 입장 직후 호출
         // 팝업 생성, 초기 상태 / 인원 / 타이머 설정

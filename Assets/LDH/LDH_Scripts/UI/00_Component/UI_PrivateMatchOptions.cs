@@ -10,7 +10,6 @@ namespace LDH_UI
     {
         [Header("Component UI")] 
         
-        
         [SerializeField] private Toggle privateMatchToggle;
         [SerializeField] private GameObject optionObj;
         [SerializeField] private Button createRoomButton;

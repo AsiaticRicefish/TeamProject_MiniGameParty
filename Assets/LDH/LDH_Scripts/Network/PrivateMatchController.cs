@@ -17,7 +17,9 @@ namespace Network
     public class PrivateMatchController : MonoBehaviour
     {
         [SerializeField] private UI_PrivateMatchOptions privateMatchOptions; // 비공개 매칭 선택 패널
-        private UI_Popup_PrivateRoom _popup; // 비공개 룸 패널 UI
+        private UI_Popup_PrivateRoom _popupRoom; // 비공개 룸 패널 UI
+        private UI_Popup_FriendsList _popupFriends;
+        
         private int? _preferredSlotToJoin; // 로컬 입장 시 희망 슬롯(초대 수락 경로로 설정됨)
         
         
@@ -72,9 +74,32 @@ namespace Network
             Manager.Network.MatchStateChanged -= OnMatchStateChanged;
         }
 
+        
+        public void SetButtonInteractable(bool interactable)
+        {
+            if (privateMatchOptions.PrivateMatchToggle != null)
+            {
+                privateMatchOptions.PrivateMatchToggle.interactable = interactable;
+                privateMatchOptions.PrivateMatchToggle.isOn = false;
+            }
+              
+        }
         #endregion
 
         #region Invitation
+
+
+        public void OpenFriendsList()
+        {
+            Debug.Log($"[PrivateMatchController] 친구 목록 패널 팝업을 생성합니다.");
+            // 룸 패널 팝업 ui 생성
+            _popupFriends = Manager.UI.CreatePopupUI<UI_Popup_FriendsList>();
+            
+            //todo: 친구 목록 불러오기 및 설정 코드 추가
+
+            Manager.UI.ShowPopupUI(_popupFriends).Forget();
+            
+        }
 
         /// <summary>
         /// 초대 수락(선호 슬롯을 전달받음 -> 선호 슬롯 인덱스 셋팅 후 진입 시도)
@@ -94,9 +119,17 @@ namespace Network
 
         private void RequestJoinPrivateRoom(string input)
         {
+            if (string.IsNullOrEmpty(input)) return;
+            if (_requesting || PhotonNetwork.InRoom) return;
+            
             Debug.Log($"[PrivateMatchController]  RequestJoinPrivateRoom(input:'{input.Trim()}')");
+            
+            _requesting = true;
             _preferredSlotToJoin = null; // 일반 입장 → 앞에서부터
             SubscribeNetwork();
+
+            MatchController.Instance.SetMatching(MatchType.Private, true);
+
             Manager.Network.JoinPrivateRoomByCode(input.Trim());
         }
 
@@ -107,10 +140,11 @@ namespace Network
             Debug.Log($"[PrivateMatchController] RequestCreatePrivateRoom()");
             
             _requesting = true;
-            privateMatchOptions.PrivateMatchToggle.isOn = false;
-            privateMatchOptions.PrivateMatchToggle.interactable = false;
-
             SubscribeNetwork();
+            
+            
+            MatchController.Instance.SetMatching(MatchType.Private, true);
+            
             Manager.Network.CreatePrivateRoom();
         }
         
@@ -128,7 +162,7 @@ namespace Network
             
             Debug.Log($"[PrivateMatchController] 룸 패널 팝업을 생성합니다.");
             // 룸 패널 팝업 ui 생성
-            _popup = Manager.UI.CreatePopupUI<UI_Popup_PrivateRoom>();
+            _popupRoom = Manager.UI.CreatePopupUI<UI_Popup_PrivateRoom>();
 
             // -------- UI 설정 및 바인딩 -----------
             // 1) 방 코드 설정
@@ -136,17 +170,17 @@ namespace Network
                 value is string roomCode)
             {
                 Debug.Log($"[PrivateMatchController] Room code set: {roomCode}");
-                _popup.SetRoomCode(roomCode);
+                _popupRoom.SetRoomCode(roomCode);
             }
 
             // 2) 나가기 버튼 연결
             Debug.Log($"[PrivateMatchController] 나가기 버튼 이벤트 바인딩(OnClosedRequested -> OnClickLeaveRoom)");
-            _popup.OnCloseRequested += (_) => OnClickLeaveRoom();
+            _popupRoom.OnCloseRequested += (_) => OnClickLeaveRoom();
             
             
             // 3) 패널 초기화 및 슬롯 인덱스 설정
             Debug.Log($"[PrivateMatchController] ResetAllSlots(canInvite:{_isMaster})");
-            _popup.ResetAllSlots(_isMaster);
+            _popupRoom.ResetAllSlots(_isMaster);
             
             
             // 4) 패널 클릭 이벤트 바인딩
@@ -169,7 +203,7 @@ namespace Network
             
             // 모든 설정이 완료됐다면 UI를 표시한다.
             Debug.Log($"[PrivateMatchController] Popup shown");
-            Manager.UI.ShowPopupUI(_popup).Forget();
+            Manager.UI.ShowPopupUI(_popupRoom).Forget();
         }
 
         // 방 입장 실패
@@ -177,8 +211,11 @@ namespace Network
         {
             Debug.LogWarning($"[PrivateMatchController] 비공개 룸 입장 실패");
             Manager.UI.EnqueueToast($"({returnCode}) {message}");
+            
+            MatchController.Instance.SetMatching(MatchType.Private, false);
+            
             _requesting = false;
-            privateMatchOptions.PrivateMatchToggle.interactable = true;
+ 
         }
 
         
@@ -191,8 +228,9 @@ namespace Network
             Manager.Network.LeaveRoom();
             UnsubscribeNetwork();
 
+            MatchController.Instance.SetMatching(MatchType.Private, false);
             _requesting = false;
-            privateMatchOptions.PrivateMatchToggle.interactable = true;
+            
         }
 
         #endregion
@@ -222,7 +260,7 @@ namespace Network
             Debug.Log($"[PrivateMatchController] OnPlayerReadyChanged({targetPlayer.NickName}, ready:{isReady})");
 
             int slotIdx = GetSlotIndex(targetPlayer);
-            _popup[slotIdx]?.SetReadyVisual(isReady);
+            _popupRoom[slotIdx]?.SetReadyVisual(isReady);
             
             if(PhotonNetwork.IsMasterClient)
                 TryStartGame();
@@ -243,9 +281,9 @@ namespace Network
         {
             Debug.Log($"[PrivateMatchController] BindAllPanelEvents()");
             
-            if (_popup?.PlayerPanels == null) return;
+            if (_popupRoom?.PlayerPanels == null) return;
 
-            foreach (var panel in _popup.PlayerPanels)
+            foreach (var panel in _popupRoom.PlayerPanels)
             {
                 if (panel == null) continue;
                 panel.InviteButtonClicked += OnClickInviteButton;
@@ -256,9 +294,9 @@ namespace Network
         private void UnbindAllPanelEvents()
         {
             Debug.Log($"[PrivateMatchController] UnbindAllPanelEvents()");
-            if (_popup?.PlayerPanels == null) return;
+            if (_popupRoom?.PlayerPanels == null) return;
 
-            foreach (var panel in _popup.PlayerPanels)
+            foreach (var panel in _popupRoom.PlayerPanels)
             {
                 if (panel == null) continue;
                 panel.InviteButtonClicked -= OnClickInviteButton;
@@ -282,6 +320,9 @@ namespace Network
             Debug.Log($"[PrivateMatchController] 슬롯이 비어있으므로 초대가 가능합니다.");
 
             // TODO: 친구 목록 팝업 열기 후, 선택 시 실제 초대 전송 (roomCode, preferredSlot=slot)
+            
+            OpenFriendsList();
+            
             // FriendsPopup.Open(code, slot, onInvite=SendInvite)
             // Manager.UI.EnqueueToast($"Invite requested for slot {slot}");
         }
@@ -315,11 +356,11 @@ namespace Network
         {
             Debug.Log($"[PrivateMatchController] RebuildAllPanels()");
             
-            if (_popup?.PlayerPanels == null) return;
+            if (_popupRoom?.PlayerPanels == null) return;
             
             // 모든 패널 초기화
             Debug.Log($"[PrivateMatchController] 모든 패널을 초기화합니다.");
-            _popup.ResetAllSlots(_isMaster);
+            _popupRoom.ResetAllSlots(_isMaster);
             
             
             // 각 플레이어의 패널 설정해주기
@@ -345,7 +386,7 @@ namespace Network
             //UI 갱신
             Debug.Log($"[PrivateMatchController] BuildPanel(slot:{slotIdx}, player:{pl.NickName}), ready:{GetReady(pl)}, isLocal:{pl.IsLocal})");
 
-            _popup[slotIdx].ApplyPlayer(GetReady(pl), pl.IsLocal);
+            _popupRoom[slotIdx].ApplyPlayer(GetReady(pl), pl.IsLocal);
         }
         
         
@@ -420,7 +461,7 @@ namespace Network
         /// </summary>
         /// <param name="slot"></param>
         /// <returns></returns>
-        // private bool IsSlotFree(int slot) => !(_popup.PlayerPanels[slot].IsOccupied);
+        // private bool IsSlotFree(int slot) => !(_popupRoom.PlayerPanels[slot].IsOccupied);
         private bool IsSlotFree(int slot) =>
             !PhotonNetwork.PlayerList.Any(pl => GetSlotIndex(pl) == slot); //UI 패널의 IsOccupied에 의존하면, 이벤트 순서상 잠깐 어긋나는 타이밍에 잘못 판단할 수 있어서 ->  슬롯 점유/빈자리 판단은 항상 Photon 커스텀 프로퍼티로 계산한다.
 
@@ -432,7 +473,7 @@ namespace Network
         {
             int idx = -1;
 
-            for (int i = 0; i < _popup.PlayerPanels.Count; i++)
+            for (int i = 0; i < _popupRoom.PlayerPanels.Count; i++)
             {
                 if (IsSlotFree(i))
                 {
@@ -485,13 +526,13 @@ namespace Network
             {
                 Debug.Log($"[PrivateMatchController] MatchState가 {state}로 변경되었습니다. 사용자 입력을 막고 UI 자동 닫기를 처리합니다.");
                 // 레디 버튼, 초대 버튼, 나가기 버튼 interactable 못하게 처리
-                foreach (var playerPanel in _popup.PlayerPanels)
+                foreach (var playerPanel in _popupRoom.PlayerPanels)
                 {
                     playerPanel.SetInteractableAll(false);
                 }
                 
                 //UI 자동 닫기
-                _popup.AutoCloseAfter(MatchController.Instance.startDelaySec, _popup.GetCancellationTokenOnDestroy()).Forget();
+                _popupRoom.AutoCloseAfter(MatchController.Instance.startDelaySec, _popupRoom.GetCancellationTokenOnDestroy()).Forget();
             }
             else
             {
