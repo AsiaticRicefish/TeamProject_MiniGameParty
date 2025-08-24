@@ -18,6 +18,10 @@ public class ShootingSceneController : BaseGameSceneController
     {
         yield return WaitForSingletonReady<ShootingNetworkManager>();
         yield return WaitForSingletonReady<ShootingGameManager>();
+        yield return WaitForSingletonReady<RoomPropertyObserver>();
+        yield return WaitForSingletonReady<InputManager>();
+        //턴매니저 추가
+        //카드 매니저 추가 
 
         Debug.Log("모든 ShootingGameScene 매니저 Awake완료");
     }
@@ -29,8 +33,10 @@ public class ShootingSceneController : BaseGameSceneController
 
         var sequentialComponents = new IGameComponent[]
         {
+            RoomPropertyObserver.Instance,
             ShootingNetworkManager.Instance,
-            ShootingGameManager.Instance
+            ShootingGameManager.Instance,
+            InputManager.Instance
         };
 
         yield return StartCoroutine(InitializeComponentsSafely(sequentialComponents));

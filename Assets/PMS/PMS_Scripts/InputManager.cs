@@ -1,12 +1,11 @@
+using DesignPattern;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace ShootingScene
 {
-    public class InputManager : MonoBehaviour
+    public class InputManager : CombinedSingleton<InputManager>, IGameComponent
     {
-        public static InputManager Instance { get; private set; }
-
         [SerializeField] private Camera mainCam;
 
         private PlayerInput playerInput; // PlayerInput 컴포넌트 참조 변수
@@ -14,13 +13,13 @@ namespace ShootingScene
 
         private UnimoEgg selectedUnimoEgg;
 
-        private void Awake()
+        protected override void OnAwake()
         {
-            if (Instance == null && Instance != this)
-            {
-                Instance = this;
-            }
+            isPersistent = false;
+        }
 
+        public void Initialize()
+        {
             // PlayerInput 컴포넌트를 가져오고, 액션을 찾습니다.
             playerInput = GetComponent<PlayerInput>();
             if (playerInput != null)
