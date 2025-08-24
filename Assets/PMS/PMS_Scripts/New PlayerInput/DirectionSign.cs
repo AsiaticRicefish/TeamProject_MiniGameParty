@@ -64,7 +64,7 @@ public class DirectionSign : MonoBehaviour
         {
             Debug.DrawRay(ShootingGameManager.Instance.currentUnimo.transform.position, currentDir * lineLength, Color.yellow);
             // period = 한 사이클 시간 (0→Max→0)
-            float chargePeriod = 2f;
+            float chargePeriod = 4f;
             // 누른 후 경과시간
             float elapsed = Time.time - pressStartTime;
 
