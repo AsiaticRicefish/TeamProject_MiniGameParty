@@ -3,12 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
+using ExitGames.Client.Photon; // Hashtable
 
 namespace PMS_Util
 {
     public static class PMS_Util
     {
         //한방에 100명씩 있는 대규모 멀티게임이 아니니깐 괜찮지 않을까? 
+        //아 그냥 bool값 이 몇개인지만 마스터가 확인하면 되지 않을까, 일일히 확인하지 않고
 
         /// <summary>
         /// 모든 플레이어의 특정 Bool 프로퍼티가 true가 될 때까지 대기
@@ -83,6 +85,19 @@ namespace PMS_Util
                 }
             }
             return true; // 모든 플레이어 true
+        }
+
+        //범용적 사용 - 제한 두지 않음 로비/룸
+        //자신의 플레이어 프로퍼티 변경하는 함수 -> Myself
+        public static void SetPlayerProperty(string prop, object value)
+        {
+            ExitGames.Client.Photon.Hashtable props = new ExitGames.Client.Photon.Hashtable 
+            {
+                { prop, value }
+            };
+            PhotonNetwork.LocalPlayer.SetCustomProperties(props);
+
+            Debug.Log($"[PMS_Util] 플레이어 {PhotonNetwork.LocalPlayer.NickName} 프로퍼티 '{prop}' = {value} 설정 완료");
         }
     }
 }
