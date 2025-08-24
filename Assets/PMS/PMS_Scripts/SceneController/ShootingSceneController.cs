@@ -59,12 +59,15 @@ public class ShootingSceneController : BaseGameSceneController
         }
         try
         {
-            ShootingGameManager.Instance.OnGameStart();
+            if (PhotonNetwork.IsMasterClient)
+            {
+                RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "CardSelectState");
+            }
+            //나머지 클라이어트도 룸프로퍼티 변경으로 인한 콜백함수로 ChangeState 실행되겠지?
         }
         catch (Exception ex)
         {
             Debug.LogError($"[NotifyGameStart] {ex}\n{ex.StackTrace}");
         }
     }
-
 }
