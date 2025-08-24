@@ -21,7 +21,7 @@ namespace ShootingScene
                 //마스터 클라이언트만 사용할 룸 프로퍼티 생성 및 구독 처리
                 var props = new ExitGames.Client.Photon.Hashtable
                 {
-                    { ShootingGamePropertyKeys.State, "Init" },
+                    { ShootingGamePropertyKeys.State, "InitState" },
                     { ShootingGamePropertyKeys.Turn, -1 },
                     ///{ ShootingGamePropertyKeyss.PlayerScore_Prefix + Player },
                 };

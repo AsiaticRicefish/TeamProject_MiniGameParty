@@ -6,7 +6,7 @@ using DesignPattern;
 
 [RequireComponent(typeof(PhotonView))]
 [DisallowMultipleComponent]
-public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameComponent , IGameStartHandler
+public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameComponent, IGameStartHandler
 {
     private ShootingGameState currentState;
 
@@ -79,9 +79,11 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
             Debug.LogError("[ShootingGameManager] - 슈팅 게임 시작 오류, Instance가 생성이 안됨 ");
             return;
         }
-
+        //마스터 클라이언트가 게임 시작을 알린다.
         if (PhotonNetwork.IsMasterClient)
+        {
             RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "InitState");
+        }
 
         Debug.Log("[ShootingGameManager] - 슈팅 게임 시작!");
         //난 타이머가 없어도 된다. 
