@@ -1,120 +1,164 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using UnityEngine.EventSystems;
-using LDH_UI;
-//using DG.Tweening;
 
 namespace ShootingScene
 {
-    public class CardUI : MonoBehaviour
+    /// <summary>
+    /// ì¹´ë“œ 1ì¥ UI. í´ë¦­ ì‹œ CardManagerì— ì„ íƒ ìš”ì²­.
+    /// ì„ íƒ ìƒíƒœ/ë¹„í™œì„± ìƒíƒœê°€ í™”ë©´ì— í™•ì‹¤íˆ ë³´ì´ë„ë¡
+    /// ë³´ì´ëŠ” ì´ë¯¸ì§€ë“¤(faceImage, cardBackGround)ì„ ëª¨ë‘ í‹´íŠ¸í•©ë‹ˆë‹¤.
+    /// </summary>
+    public class CardUI : MonoBehaviour, IPointerClickHandler
     {
-        [SerializeField] 
-        private Sprite faceSprite,backSprite;
+        [Header("Refs")]
+        [SerializeField] private Image cardBackGround;   // ì¹´ë“œ ë°°ê²½(ì—†ìœ¼ë©´ ë¹„ì›Œë„ ë¨)
+        [SerializeField] private Image faceImage;        // ì‹¤ì œë¡œ ë³´ì´ëŠ” ì •ì‚¬ê°í˜• ì´ë¯¸ì§€(í°ìƒ‰)
+        [SerializeField] private TMP_Text numberText;    // ìˆ«ì í‘œê¸°ìš©(ì•ë©´ì¼ ë•Œë§Œ í‘œì‹œ)
 
-        [SerializeField] private Image cardBackGround;
-        [SerializeField] private Image cardImage;
-        [SerializeField] private Color ChangeColor;
+        [Header("Sprites")]
+        [SerializeField] private Sprite backSprite;      // ë’·ë©´
+        [SerializeField] private Sprite faceSpriteBase;  // ì•ë©´ ê¸°ë³¸
 
-        private bool isChecking;
+        [Header("Colors")]
+        [SerializeField] private Color normalColor   = Color.white;                     // ê¸°ë³¸
+        [SerializeField] private Color disabledColor = new Color(1f, 1f, 1f, 0.35f);    // ì„ íƒ ë¶ˆê°€(ë‚¨ì´ ì§‘ì€ ì¹´ë“œ)
+        [SerializeField] private Color ownerColor    = new Color(0.8f, 1f, 0.8f, 1f);   // ë‚´ê°€ ì§‘ì€ ì¹´ë“œ(ì—°ë…¹)
+        [SerializeField] private Color selectedColor = new Color(0.8f, 0.8f, 0.8f, 1f); // ì„ íƒë¨ í‘œì‹œ(íšŒìƒ‰)
 
-        public Vector3 normalScale = Vector3.one;    // ¿ø·¡ Å©±â
-        public Vector3 hoverScale = Vector3.one * 1.2f; // ¸¶¿ì½º ¿À¹ö½Ã Ä¿Áö´Â Å©±â
+        [Header("Flip")]
+        [SerializeField] private float flipDuration = 0.2f;
 
-        private Vector3 targetScale;
-
-        //CardFlip
         private RectTransform rt;
-        private bool isFlipped = false;
-        private bool isFlipping = false;
-        private float flipDuration = 0.2f; // µÚÁı´Â ½Ã°£
-        private Quaternion startRot;
-        private Quaternion endRot;
+        private bool isFlipping;
+        private bool isFace; // ì•ë©´ ìƒíƒœì¸ì§€
+        private int _index;  // 0..N-1
+        private int _value;  // 1..N
+        private System.Action<int> _onClick;
 
-        public void Awake()
+        private void Awake()
         {
-           rt = GetComponent<RectTransform>();
-        }
-        public void Start() => Subscribe();
-
-        public void Subscribe()
-        {
-            //UI¿¡¼­ ¼Õ°¡¶ô ÅÍÄ¡¸¦ ÇÏ°í ¶­À»¶§ Tap
-            UI_Base.BindUIEvent(gameObject, (_) => TapClick());
-            //UI°¡ ¼Õ°¡¶ô ÅÍÄ¡¸¦ ÀÎ½ÄÇßÀ» ¶§ 
-            UI_Base.BindUIEvent(gameObject, (_) => OnClick(), LDH_Util.Define_LDH.UIEvent.PointEnter);
-            //UI°¡ ¼Õ°¡¶ô ÅÍÄ¡¸¦ ÀÎ½Ä¸øÇßÀ» ¶§
-            UI_Base.BindUIEvent(gameObject, (_) => UnClick(), LDH_Util.Define_LDH.UIEvent.PointExit);
-
-            cardImage.sprite = backSprite;
+            rt = GetComponent<RectTransform>();
+            SetFace(false);
+            // ì´ˆê¸° ìƒ‰ì„ í™•ì‹¤íˆ ì ìš©
+            ApplyTint(normalColor);
         }
 
-        public void OnClick()
+        /// <summary>ì¹´ë“œ ì´ˆê¸°í™”</summary>
+        public void Setup(int index, int value, System.Action<int> onClicked)
         {
-            sizeUp();    
+            _index   = index;
+            _value   = value;
+            _onClick = onClicked;
+
+            SetFace(false);
+            UpdateNumberText(_value, false);
+            ApplyTint(normalColor);
         }
 
-        public void UnClick()
+        public void OnPointerClick(PointerEventData eventData)
         {
-            sizeDown();
+            if (isFlipping || isFace) return;
+            _onClick?.Invoke(_index);
         }
 
-        //ÃßÈÄ DotweenÀÌ³ª Animation »ç¿ëÇÏÁö ¾ÊÀ»±î
-        public void sizeUp()
+        /// <summary>ë²„íŠ¼/íŠ¸ë¦¬ê±° ì—°ê²°ìš©</summary>
+        public void OnTap()
         {
-            if (isFlipped && !isFlipping) return;
-
-            targetScale = hoverScale;
-            transform.localScale = targetScale;
+            if (isFlipping || isFace) return;
+            _onClick?.Invoke(_index);
         }
 
-        public void sizeDown()
+        /// <summary>
+        /// ìƒí˜¸ì‘ìš© ê°€ëŠ¥/ë¶ˆê°€ + ë‚´ ì¹´ë“œ ê°•ì¡°
+        /// interactable: true  -> ì•„ì§ ì•„ë¬´ë„ ì•ˆ ì§‘ì€ ì¹´ë“œ
+        /// interactable: false -> ëˆ„êµ°ê°€ê°€ ì§‘ì€ ì¹´ë“œ
+        /// </summary>
+        public void SetInteractable(bool interactable, bool isOwner = false)
         {
-            if (isFlipped && !isFlipping) return;
-
-            targetScale = normalScale;
-            transform.localScale = targetScale;
+            if (interactable)
+            {
+                // ì•„ì§ ì„ íƒë˜ì§€ ì•ŠìŒ
+                ApplyTint(isOwner ? ownerColor : normalColor);
+            }
+            else
+            {
+                // ì´ë¯¸ ì„ íƒë¨(ë‚¨ì´ê±°ë‚˜ ë‚˜ê±°ë‚˜)
+                ApplyTint(isOwner ? ownerColor : disabledColor);
+            }
         }
 
-        public void TapClick()
+        /// <summary>ì„ íƒë¨ì„ ì¦‰ì‹œ í‘œì‹œ(ë’¤ì§‘íˆê¸° ì „ ë‹¨ê³„)</summary>
+        public void SetSelected(bool isOwner)
         {
-            if (isFlipped && !isFlipping) return;
-
-            Flip();
-            Debug.Log("Å¬¸¯ÇÔ");
-            //UI 180µµ È¸ÀüÇØ¼­ ´Ù½Ã Å¬¸¯À» ¸øÇÔ
+            ApplyTint(isOwner ? ownerColor : selectedColor);
         }
 
-        //IPointerDownHandler, IPointerUpHandler ÇÊ¿ä
-        //public void OnPointerDown(PointerEventData eventData) => OnClick();
-        //public void OnPointerUp(PointerEventData eventData) => UnClick();
-
-        public void Flip()
+        /// <summary>ì¹´ë“œ ê³µê°œ ì• ë‹ˆë©”ì´ì…˜</summary>
+        public void RevealFace()
         {
-            if (isFlipping) return; // ÁøÇà ÁßÀÌ¸é ¹«½Ã
-
-            isFlipped = !isFlipped;
-            startRot = rt.localRotation;                //½ÃÀÛ È¸Àü°ªÀ» ÀúÀå
-            endRot = startRot * Quaternion.Euler(0, 180, 0); // yÃà È¸Àü
-            StartCoroutine(FlipAnim());
+            if (isFace || isFlipping) return;
+            StartCoroutine(CoFlipToFace());
         }
 
-        private IEnumerator FlipAnim()
+        private IEnumerator CoFlipToFace()
         {
             isFlipping = true;
-            float time = 0;
+            Quaternion start = rt.localRotation;
+            Quaternion mid   = start * Quaternion.Euler(0, 90, 0);
+            Quaternion end   = start * Quaternion.Euler(0, 180, 0);
+            float half = flipDuration * 0.5f;
+            float t = 0;
 
-            while (time < flipDuration)
+            while (t < half)
             {
-                time += Time.deltaTime;
-                float t = Mathf.Clamp01(time / flipDuration);
-                rt.localRotation = Quaternion.Slerp(startRot, endRot, t);
+                t += Time.deltaTime;
+                rt.localRotation = Quaternion.Slerp(start, mid, t / half);
                 yield return null;
             }
-            rt.localRotation = Quaternion.Euler(0, 0, 0);
-            cardImage.sprite = faceSprite;
-            endRot = startRot;
+
+            SetFace(true);
+            UpdateNumberText(_value, true);
+
+            t = 0;
+            while (t < half)
+            {
+                t += Time.deltaTime;
+                rt.localRotation = Quaternion.Slerp(mid, end, t / half);
+                yield return null;
+            }
+
+            rt.localRotation = Quaternion.identity;
             isFlipping = false;
+        }
+
+        private void SetFace(bool showFace)
+        {
+            isFace = showFace;
+
+            if (faceImage != null)
+                faceImage.sprite = showFace ? faceSpriteBase : backSprite;
+
+            if (numberText != null)
+                numberText.gameObject.SetActive(showFace);
+        }
+
+        private void UpdateNumberText(int number, bool show)
+        {
+            if (numberText == null) return;
+            numberText.text = show ? number.ToString() : string.Empty;
+        }
+
+        /// <summary>
+        /// ì‹¤ì œë¡œ ë³´ì´ëŠ” ëª¨ë“  Imageì— ë™ì¼í•œ í‹´íŠ¸ë¥¼ ì ìš©.
+        /// (Prefabë§ˆë‹¤ ì–´ë–¤ ì´ë¯¸ì§€ê°€ ì•/ë’¤ì¸ì§€ ë‹¬ë¼ë„ ì•ˆì „)
+        /// </summary>
+        private void ApplyTint(Color c)
+        {
+            if (cardBackGround != null) cardBackGround.color = c;
+            if (faceImage      != null) faceImage.color      = c;
         }
     }
 }
