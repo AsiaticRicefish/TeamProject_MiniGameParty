@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
 using ExitGames.Client.Photon; // Hashtable
+using System.Linq;
 
 namespace PMS_Util
 {
@@ -98,6 +99,26 @@ namespace PMS_Util
             PhotonNetwork.LocalPlayer.SetCustomProperties(props);
 
             Debug.Log($"[PMS_Util] 플레이어 {PhotonNetwork.LocalPlayer.NickName} 프로퍼티 '{prop}' = {value} 설정 완료");
+        }
+
+        public static string TryGetUidFromActor(int actorNumber)
+        {
+            //연결 안 됨 or 연결됐지만 Room에 존재하지 않음
+            if (!PhotonNetwork.IsConnected || (!PhotonNetwork.InRoom))
+            {
+                Debug.Log("현재 해당 클라이언트는 체크를 확인 할 수 없는 상태입니다.");
+                return null;
+            }
+
+            // 현재 방에 있는 플레이어 중 ActorNumber가 같은 플레이어를 찾음
+            var p = PhotonNetwork.PlayerList.FirstOrDefault(x => x.ActorNumber == actorNumber);                         //using System.Linq; 추가 해야 FirstOrDefault 사용가능
+
+            // 찾은 플레이어의 CustomProperties에서 "uid" 키 꺼내기
+            if (p != null && p.CustomProperties != null && p.CustomProperties.TryGetValue("uid", out var uidObj))
+            {
+                return uidObj as string;
+            }
+            return null;
         }
     }
 }
