@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &9043512953739879483
+--- !u!1 &1620587405723649436
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,51 +8,41 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 7209915223178915543}
-  - component: {fileID: 8011586431347609675}
+  - component: {fileID: 1108038756419047845}
+  - component: {fileID: 2658409117490003364}
   m_Layer: 0
-  m_Name: JengaTowerManager
+  m_Name: JengaTimingManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &7209915223178915543
+--- !u!4 &1108038756419047845
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9043512953739879483}
+  m_GameObject: {fileID: 1620587405723649436}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.300864, y: -0.23845437, z: 2.4659169}
+  m_LocalPosition: {x: 116.216644, y: 130.18143, z: 11.598944}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8011586431347609675
+--- !u!114 &2658409117490003364
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9043512953739879483}
+  m_GameObject: {fileID: 1620587405723649436}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d4d4d2bb0f835c4418e93dfdaaf3ed7e, type: 3}
+  m_Script: {fileID: 11500000, guid: 29689e6cf11b31745935df2a917b5653, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  buildMode: 1
-  towerPrefab: {fileID: 8740428832293438736, guid: 7b83c050d997ad64d811a5827e05fc98,
-    type: 3}
-  blockPrefab: {fileID: 6998178785332921636, guid: 1acd6bffe313fb24680de2aebd1845de,
-    type: 3}
-  towerHeight: 13
-  towersParent: {fileID: 0}
-  fixedPositions:
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
-  - {x: 0, y: 0, z: 0}
+  timingUI: {fileID: 0}
+  _isRunning: 0
