@@ -24,6 +24,10 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     // 관전자 스냅샷 대기 적용 용 코루틴
     private Coroutine _pendingApplyCo;
 
+    // 점수 계산 상수
+    private const int BASE_SCORE = 10;
+    private const int MAX_BONUS = 10;
+
     /// <summary>
     /// 젠가 씬에서만 살아있는 일시적 싱글톤
     /// </summary>
@@ -31,8 +35,8 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     {
         base.isPersistent = false;
 
-        thisPhotonView = GetComponent<PhotonView>();
-        
+        base.OnAwake();
+
         // 중복 PhotonView가 붙어 있으면 정리
         var pvs = GetComponents<PhotonView>();
         if (pvs.Length > 1)
@@ -46,13 +50,13 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     /// </summary>
     public void Initialize()
     {
-#if PHOTON_UNITY_NETWORKING_2_OR_NEWER
-          if (PhotonNetwork.InRoom && thisPhotonView.ViewID == 0)
-        {
-            if (!PhotonNetwork.AllocateViewID(thisPhotonView))
-                Debug.LogError("[NM] AllocateViewID failed. (씬에 미리 배치 + Scene ViewID 권장)");
-        }
-#endif
+//#if PHOTON_UNITY_NETWORKING_2_OR_NEWER
+//          if (PhotonNetwork.InRoom && thisPhotonView.ViewID == 0)
+//        {
+//            if (!PhotonNetwork.AllocateViewID(thisPhotonView))
+//                Debug.LogError("[NM] AllocateViewID failed. (씬에 미리 배치 + Scene ViewID 권장)");
+//        }
+//#endif
     }
 
 
@@ -63,7 +67,7 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     /// </summary>
     public void SendPlayerActionResult(string uid, bool success, int score)
     {
-        photonView.RPC(nameof(ReceivePlayerActionResult), RpcTarget.MasterClient, uid, success, score);
+        thisPhotonView.RPC(nameof(ReceivePlayerActionResult), RpcTarget.MasterClient, uid, success, score);
     }
 
     /// <summary>
@@ -88,14 +92,24 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     /// </summary>
     public void BroadcastGameState(JengaGameState state)
     {
+        Debug.Log($"[JengaNetwork] BroadcastGameState called: {state}");
+
         if (!PhotonNetwork.InRoom)
         {
+            Debug.LogError("[JengaNetwork] Not in room!");
             return;
         }
         if (thisPhotonView == null)
         {
+            Debug.LogError("[JengaNetwork] PhotonView is null!");
             return;
         }
+        if (thisPhotonView.ViewID == 0)
+        {
+            Debug.LogError("[JengaNetwork] PhotonView ViewID is 0!");
+            return;
+        }
+        Debug.Log($"[JengaNetwork] Sending RPC to change state to: {state}");
 
         thisPhotonView.RPC(nameof(RPC_ApplyGameState), RpcTarget.All, (int)state);
     }
@@ -104,7 +118,7 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     private void RPC_ApplyGameState(int stateInt)
     {
         var state = (JengaGameState)stateInt;
-        Debug.Log($"[JengaNetwork - RPC_ApplyGameState] {state}");
+        Debug.Log($"[NM] ApplyGameState → {state}");
         JengaGameManager.Instance?.ApplyGameStateChange(state);
     }
 
@@ -117,7 +131,7 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     /// </summary>
     public void SendTimingResult(string uid, bool success, float accuracy)
     {
-        photonView.RPC(nameof(ReceiveTimingResult), RpcTarget.MasterClient, uid, success, accuracy);
+        thisPhotonView.RPC(nameof(ReceiveTimingResult), RpcTarget.MasterClient, uid, success, accuracy);
     }
 
     /// <summary>
@@ -140,47 +154,105 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     // 요청자는 ActorNumber로 식별. UID 매핑이 필요하면 내부에서 변환.
     public void RequestBlockRemoval_MasterAuth(int actorNumber, int blockId, int clientSuggestedScore, float clientAccuracy)
     {
-        photonView.RPC(nameof(RPC_RequestBlockRemoval), RpcTarget.MasterClient, actorNumber, blockId, clientSuggestedScore, clientAccuracy);
+        thisPhotonView.RPC(nameof(RPC_RequestBlockRemoval), RpcTarget.MasterClient, actorNumber, blockId, clientSuggestedScore, clientAccuracy);
     }
 
     // === 마스터에서 수신/검증 ===
     [PunRPC]
     private void RPC_RequestBlockRemoval(int actorNumber, int blockId, int clientSuggestedScore, float clientAccuracy)
     {
-        if (!PhotonNetwork.IsMasterClient) return;
+        Debug.Log($"[NET] REQ_Remove recv on Master actor={actorNumber} blockId ={blockId} acc={clientAccuracy:0.00}");
 
-        // 0) 상태 체크
-        if (JengaGameManager.Instance == null || JengaGameManager.Instance.currentState != JengaGameState.Playing)
+        // A) 마스터/상태
+        if (!PhotonNetwork.IsMasterClient) { Debug.LogWarning("[NET] Reject: not master"); return; }
+
+        var gm = JengaGameManager.Instance;
+        if (gm == null)
+        {
+            Debug.LogWarning("[NET] GM NULL → 점수 반영은 스킵하고 검증/적용은 진행");
+        }
+        else if (gm.currentState != JengaGameState.Playing)
+        {
+            Debug.LogWarning($"[NET] Reject: state={gm.currentState}");
+            ReplyDeny(actorNumber, blockId, "state-not-playing");
             return;
+        }
 
-        // 1) 타워/블록 조회
-        var tower = JengaTowerManager.Instance?.GetPlayerTower(actorNumber);
+
+        // --- 타워/블록 해석 ---
+        var tm = JengaTowerManager.Instance;
+        if (tm == null) { Debug.LogError("[NET] Reject: TowerManager null"); ReplyDeny(actorNumber, blockId, "towerMgr-null"); return; }
+
+        // 타워/블록 조회
+        var tower = tm.GetPlayerTower(actorNumber);
+        if (tower == null)
+        {
+            Debug.LogWarning($"[NET] Reject: tower null for actor={actorNumber}");
+            ReplyDeny(actorNumber, blockId, "tower-null");
+            return;
+        }
+
+
         var block = tower?.GetBlockById(blockId);
+        if (block == null)
+        {
+            Debug.LogWarning($"[NET] Reject: block null (actor={actorNumber}, blockId={blockId})");
+            ReplyDeny(actorNumber, blockId, "block-null");
+            return;
+        }
+        if (block.OwnerActorNumber != actorNumber)
+            Debug.LogWarning($"[NET] Owner mismatch: reqActor={actorNumber} blockOwner={block.OwnerActorNumber} id={blockId}");
 
-        bool valid =
-            tower != null &&
-            block != null &&
-            !block.IsRemoved &&
-            tower.GetRemovableBlocks().Contains(block);
+        if (block.IsRemoved)
+        {
+            Debug.LogWarning($"[NET] Reject: already removed (actor={actorNumber}, blockId={blockId})");
+            ReplyDeny(actorNumber, blockId, "already-removed");
+            return;
+        }
 
-        if (!valid) return;
 
+        // C) 제거 가능성 검증 (캐시 vs 규칙)
+        bool removableCache = tower.GetRemovableBlocks().Contains(block);
+        bool removableRule = tower.CanRemoveBlock(block);
 
-        // 2) 점수 계산은 서버가 최종 결정
-        int baseScore = 10;
-        int bonus = Mathf.Clamp(Mathf.RoundToInt(clientAccuracy * 10f), 0, 10);
-        int finalScore = baseScore + bonus;
+        if (!removableCache || !removableRule)
+        {
+            Debug.LogWarning($"[NET] Not removable (cache={removableCache}, rule={removableRule}) remain={tower.GetRemainingBlocks()}");
+            if (!removableRule)
+            {
+                ReplyDeny(actorNumber, blockId, "not-removable");
+                return;
+            }
+            else
+            {
+                Debug.Log("[NET] Proceeding by RULE (cache stale suspected)");
+            }
+        }
 
-        // 3) 전체 적용 브로드캐스트 (소유자 + 블록ID 필수)
-        photonView.RPC(nameof(RPC_ApplyBlockRemoval), RpcTarget.All, actorNumber, blockId, /*withAnimation*/ true, finalScore);
+        // D) 점수 계산(서버 결정)
+        int bonus = Mathf.Clamp(Mathf.RoundToInt(clientAccuracy * MAX_BONUS), 0, MAX_BONUS);
+        int finalScore = BASE_SCORE + bonus;
+
+        Debug.Log($"[NET] OK → Broadcast Apply owner={actorNumber} blockId={blockId} score={finalScore}");
+        thisPhotonView.RPC(nameof(RPC_ApplyBlockRemoval), RpcTarget.All, actorNumber, blockId, true, finalScore, true);
     }
 
     [PunRPC]
-    private void RPC_ApplyBlockRemoval(int ownerActorNumber, int blockId, bool withAnimation, int score)
+    private void RPC_ApplyBlockRemoval(int ownerActorNumber, int blockId, bool withAnimation, int score, bool isSuccess = true)
     {
+        Debug.Log($"[NET] APPLY_Remove recv owner={ownerActorNumber} blockId={blockId} withAnim={withAnimation} succ={isSuccess}");
         // 1) 실제 제거 반영
         var tower = JengaTowerManager.Instance?.GetPlayerTower(ownerActorNumber);
-        tower?.ApplyBlockRemoval(blockId, withAnimation);
+        var block = tower?.GetBlockById(blockId);
+
+        if (block != null && withAnimation)
+        {
+            block.RemoveWithAnimation(isSuccess); // isSuccess 파라미터 전달
+        }
+        else
+        {
+            tower?.ApplyBlockRemoval(blockId, withAnimation, isSuccess);
+        }
 
         // 2) 점수 반영은 마스터만 집계
         if (PhotonNetwork.IsMasterClient)
@@ -196,6 +268,23 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
         // 3) 공통 연출/사운드/UI
         // JengaUIManager
         // JengaSoundManager
+    }
+
+    /// <summary>
+    /// 거절 시 요청자에게만 통지 → 클라에서 pending 잠금 해제/토스트 표시 등에 사용
+    /// </summary>
+    private void ReplyDeny(int actorNumber, int blockId, string reason)
+    {
+        var target = PhotonNetwork.CurrentRoom?.GetPlayer(actorNumber);
+        if (target == null) return;
+        thisPhotonView.RPC(nameof(RPC_BlockRemovalDenied), target, blockId, reason);
+    }
+
+    [PunRPC]
+    private void RPC_BlockRemovalDenied(int blockId, string reason)
+    {
+        var myTower = JengaTowerManager.Instance?.GetPlayerTower(PhotonNetwork.LocalPlayer.ActorNumber);
+        var block = myTower?.GetBlockById(blockId);
     }
 
     /// <summary>
@@ -215,31 +304,43 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     public void SyncBlockRemovalForOwner(int actorNumber, int blockId, bool withAnimation)
     {
         if (!PhotonNetwork.IsMasterClient) return;
-        photonView.RPC(nameof(RPC_ApplyBlockRemoval), RpcTarget.All, actorNumber, blockId, withAnimation, 0);
+        thisPhotonView.RPC(nameof(RPC_ApplyBlockRemoval), RpcTarget.All, actorNumber, blockId, withAnimation, 0);
     }
 
     #endregion
 
     #region 타워 붕괴 알림
 
-    /// <summary>
-    /// 마스터 → 전체: 타워 붕괴 알림
-    /// </summary>
-    public void NotifyTowerCollapsed(int actorNumber)
+    // 클라이언트 → 마스터: "이 사람의 타워를 붕괴시켜 주세요"
+    public void RequestTowerCollapse_MasterAuth(int ownerActorNumber)
     {
-        if (!PhotonNetwork.IsMasterClient) return;
-        photonView.RPC(nameof(RPC_NotifyTowerCollapsed), RpcTarget.All, actorNumber);
+        thisPhotonView.RPC(nameof(RPC_RequestTowerCollapse_Master), RpcTarget.MasterClient, ownerActorNumber);
     }
 
-    /// <summary>
-    /// [RPC] 붕괴 수신
-    /// </summary>
     [PunRPC]
-    private void RPC_NotifyTowerCollapsed(int ownerActorNumber)
+    private void RPC_RequestTowerCollapse_Master(int ownerActorNumber, PhotonMessageInfo info)
     {
-        Debug.Log($"[JengaNetwork - RPC_NotifyTowerCollapsed] 붕괴된 타워 소유자 = {ownerActorNumber}");
+        if (!PhotonNetwork.IsMasterClient) return;
+
+        thisPhotonView.RPC(nameof(RPC_ApplyTowerCollapse_All), RpcTarget.All, ownerActorNumber);
+    }
+
+    // 전체 적용: 모든 클라에서 같은 코드로 실제 붕괴 실행
+    [PunRPC]
+    private void RPC_ApplyTowerCollapse_All(int ownerActorNumber)
+    {
+        var tower = JengaTowerManager.Instance?.GetPlayerTower(ownerActorNumber);
+        
+        if (tower == null) return;
+
+        JengaTowerManager.Instance.WithSuppressedCollapse(() =>
+        {
+            tower.TriggerCollapseOnce();
+        });
+
         JengaGameManager.Instance?.OnTowerCollapsed(ownerActorNumber);
     }
+
     #endregion
 
     #region 관전자(레이트 조인) 동기화: 스냅샷
@@ -258,7 +359,7 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     /// </summary>
     public void RequestSnapshotFromMaster()
     {
-        photonView.RPC(nameof(RPC_RequestSnapshot), RpcTarget.MasterClient, PhotonNetwork.LocalPlayer.ActorNumber);
+        thisPhotonView.RPC(nameof(RPC_RequestSnapshot), RpcTarget.MasterClient, PhotonNetwork.LocalPlayer.ActorNumber);
     }
 
     /// <summary>
@@ -286,7 +387,7 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
             return;
         }
 
-        photonView.RPC(nameof(RPC_ReceiveSnapshot), target, table);
+        thisPhotonView.RPC(nameof(RPC_ReceiveSnapshot), target, table);
     }
 
     /// <summary>

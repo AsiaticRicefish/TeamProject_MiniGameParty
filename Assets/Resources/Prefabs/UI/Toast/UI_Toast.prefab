@@ -250,7 +250,7 @@ MonoBehaviour:
   cg: {fileID: 0}
   interactable: 0
   blocksRaycasts: 0
-  fadeTime: 0.5
+  fadeTime: 0.2
   targetRect: {fileID: 8168342789119663353}
   label: {fileID: 5071549837417796468}
 --- !u!1 &9073194853098304073

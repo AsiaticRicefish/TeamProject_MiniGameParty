@@ -48,10 +48,20 @@ namespace LDH_Util
             public const string RoomCode  = "code"; // "1234" (private일 때만)
         }
 
-        public enum MatchType { Quick, Private }
-        public enum MatchState { Matching, Complete}
+        public enum MatchType { Quick, Private, None }
+        public enum MatchState { Matching, Complete, None}
 
-        public const int MAX_PLAYERS = 3;
+        public const int MAX_PLAYERS = 2;
+        public const int PRIVATE_MAX_RETRY = 5;
+        
+        
+        public static class PlayerProps
+        {
+            public const string ReadyState = "readyState"; //bool 타입으로 true, false
+            public const string SlotIndex = "slotIndex"; // 0~4까지의 숫자
+            
+        }
+        
 
         #endregion
 

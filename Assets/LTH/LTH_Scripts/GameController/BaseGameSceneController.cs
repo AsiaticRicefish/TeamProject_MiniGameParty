@@ -37,6 +37,7 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
 
     private void Start()
     {
+        Debug.Log("[JengaScene] Start() called - about to call SafeInitialize()");
         StartCoroutine(Co_StartWhenInRoom());
     }
 
@@ -82,35 +83,45 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
         if (isInitializing) yield break;
         isInitializing = true;
 
-        Debug.Log("초기화 시작");
+        Debug.Log($"[{GameType}] === SafeInitialize START ===");
 
         // 1단계: 내가 씬 로딩 완료했다고 알림
+        Debug.Log($"[{GameType}] Step 1: Sending OnPlayerSceneLoaded");
         SendRPCSafely(nameof(OnPlayerSceneLoaded), PhotonNetwork.LocalPlayer.ActorNumber);
 
         // 2단계: 모든 플레이어 씬 로딩 완료 대기
+        Debug.Log($"[{GameType}] Step 2: WaitForAllPlayersLoaded");
         yield return StartCoroutine(WaitForAllPlayersLoaded());
 
         // 3단계: 매니저들 Awake 완료 대기
+        Debug.Log($"[{GameType}] Step 3: WaitForManagersAwake");
         yield return StartCoroutine(WaitForManagersAwake());
 
         // 4단계: 순차 초기화 (의존성 있는 것들)
+        Debug.Log($"[{GameType}] Step 4: InitializeSequentialManagers");
         yield return StartCoroutine(InitializeSequentialManagers());
 
         // 5단계: 병렬 초기화 (독립적인 것들)
+        Debug.Log($"[{GameType}] Step 5: InitializeParallelManagers");
         yield return StartCoroutine(InitializeParallelManagers());
 
         // 6단계: 내가 초기화 완료했다고 알림
+        Debug.Log($"[{GameType}] Step 6: Sending OnPlayerInitialized");
         SendRPCSafely(nameof(OnPlayerInitialized), PhotonNetwork.LocalPlayer.ActorNumber);
 
         // 7단계: 모든 플레이어 초기화 완료 대기
+        Debug.Log($"[{GameType}] Step 7: WaitForAllPlayersInitialized - WAITING...");
         yield return StartCoroutine(WaitForAllPlayersInitialized());
+        Debug.Log($"[{GameType}] Step 7: WaitForAllPlayersInitialized - COMPLETED");
 
         // 8단계: 게임 시작
+        Debug.Log($"[{GameType}] Step 8: Game Start (isMaster: {PhotonNetwork.IsMasterClient})");
         if (PhotonNetwork.IsMasterClient)
         {
             SendRPCSafely(nameof(StartGame));
         }
 
+        Debug.Log($"[{GameType}] === SafeInitialize END ===");
         isInitializing = false;
     }
 
@@ -223,25 +234,34 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
     // ICoroutineGameComponent들을 병렬로 안전하게 초기화
     protected IEnumerator InitializeCoroutineComponentsSafely(IEnumerable<ICoroutineGameComponent> components)
     {
-        var coroutines = new List<Coroutine>();
-
-        foreach (var component in components)
+        var componentList = components.Where(c => c != null).ToList();
+        if (componentList.Count == 0)
         {
-            var coroutine = StartCoroutine(InitializeCoroutineComponentSafely(component));
-            coroutines.Add(coroutine);
+            Debug.Log("병렬 초기화할 컴포넌트가 없습니다.");
+            yield break;
         }
 
-        // 모든 병렬 초기화 완료 대기
-        while (coroutines.Any(c => c != null))
+        Debug.Log($"병렬 초기화 시작: {componentList.Count}개 컴포넌트");
+
+        var completionTracker = new Dictionary<string, bool>();
+
+        foreach (var component in componentList)
         {
-            coroutines.RemoveAll(c => c == null);
-            yield return null;
+            var componentName = component.GetType().Name;
+            completionTracker[componentName] = false;
+            StartCoroutine(InitializeCoroutineComponentSafelyWithTracker(component, componentName, completionTracker));
+        }
+
+        // 모든 컴포넌트 완료까지 대기
+        while (completionTracker.Values.Any(completed => !completed))
+        {
+            yield return new WaitForSeconds(0.1f);
         }
 
         Debug.Log("모든 병렬 초기화 완료");
     }
 
-    private IEnumerator InitializeCoroutineComponentSafely(ICoroutineGameComponent component)
+    private IEnumerator InitializeCoroutineComponentSafelyWithTracker(ICoroutineGameComponent component, string componentName, Dictionary<string, bool> tracker)
     {
         IEnumerator routine = null;
 
@@ -251,7 +271,8 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
         }
         catch (System.Exception e)
         {
-            Debug.LogError($"[{GameType}Controller] 병렬 초기화 준비 실패 {component.GetType().Name}: {e.Message}");
+            Debug.LogError($"[{GameType}Controller] 병렬 초기화 준비 실패 {componentName}: {e.Message}");
+            tracker[componentName] = true; // 실패해도 완료로 처리
             yield break;
         }
 
@@ -277,12 +298,14 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
 
         if (errorOccurred)
         {
-            Debug.LogError($"[{GameType}Controller] 병렬 초기화 실패 {component.GetType().Name}: {error.Message}");
+            Debug.LogError($"[{GameType}Controller] 병렬 초기화 실패 {componentName}: {error.Message}");
         }
         else
         {
-            Debug.Log($"병렬 초기화 완료: {component.GetType().Name}");
+            Debug.Log($"병렬 초기화 완료: {componentName}");
         }
+
+        tracker[componentName] = true; // 성공/실패 관계없이 완료 표시
     }
     #endregion
 }
