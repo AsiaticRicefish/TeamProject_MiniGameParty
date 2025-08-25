@@ -63,6 +63,9 @@ MonoBehaviour:
   - RPC_TryPick
   - RPC_SetCurrentTurn
   - RPC_OnTurnOrderReady
+  - RPC_BlockRemovalDenied
+  - RPC_ApplyTowerCollapse_All
+  - RPC_RequestTowerCollapse_Master
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

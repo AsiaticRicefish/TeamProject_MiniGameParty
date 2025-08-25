@@ -1,8 +1,9 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using MiniGameJenga;
 using Photon.Pun;
 using UnityEngine;
-using System;
 using UnityEngine.EventSystems;
 
 /// <summary>
@@ -13,7 +14,7 @@ using UnityEngine.EventSystems;
 /// </summary>
 
 [Serializable]
-public class JengaBlock : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
+public class JengaBlock : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler
 {
     #region 식별/상태
     public int BlockId { get; private set; }
@@ -46,6 +47,7 @@ public class JengaBlock : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
     public static event Action<JengaBlock> OnAnyBlockTimingStart;   // 2차 클릭
     #endregion
 
+    private bool _pendingRemoval = false; // 제거 요청 sent, 서버 승인 대기
     private void Awake()
     {
         if (_mpb == null) _mpb = new MaterialPropertyBlock();
@@ -94,15 +96,21 @@ public class JengaBlock : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
     /// 1차 클릭: 블록 선택
     /// 2차 클릭: 타이밍 시작
     /// </summary>
-    public void OnPointerClick(PointerEventData eventData)
+    public void OnPointerClick(PointerEventData eventData) // 클릭/탭 완료 이벤트
     {
-        if (!_interactable || _busy || IsRemoved) return;
+        if (!_interactable || _busy || _pendingRemoval || IsRemoved) return; 
+
+        // 타이밍 매니저가 이미 실행 중이면 무시
+        if (JengaTimingManager.Instance._isTimingActive) return;
 
         // 내 타워의 블록만 조작 가능
         if (OwnerActorNumber != PhotonNetwork.LocalPlayer.ActorNumber) return;
 
         var tower = JengaTowerManager.Instance?.GetPlayerTower(OwnerActorNumber);
+
         if (tower == null) return;
+        if (!tower.CanRemoveBlock(this)) return;
+
 
         // 제거 가능 블록인지 검사
         var canRemove = tower.GetRemovableBlocks().Contains(this);
@@ -122,22 +130,42 @@ public class JengaBlock : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
             if (_busy || IsRemoved) return; // 이미 타이밍 중이거나 제거된 블록은 무시
             _isSelected = false;
             Highlight(false);
-            OnAnyBlockTimingStart?.Invoke(this);
+            OnAnyBlockTimingStart?.Invoke(this); // JengaTimingManager에서 타이밍 UI 시작
 
-            _busy = true; 
-
-            // ToDo : 타이밍 시작 → JengaTimingManager
+            _busy = true;
         }
+    }
+
+    public void OnPointerDown(PointerEventData eventData) // 마우스 클릭 시작 / 터치 시작
+    {
+        if (!_interactable || _busy || _pendingRemoval || IsRemoved) return;
+        if (OwnerActorNumber != PhotonNetwork.LocalPlayer.ActorNumber) return;
+
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+            return;
+
+        var tower = JengaTowerManager.Instance?.GetPlayerTower(OwnerActorNumber);
+        if (tower != null && tower.CanRemoveBlock(this))
+        {
+            Highlight(true);
+        }
+    }
+
+    public void OnPointerUp(PointerEventData eventData) // 마우스 버튼 뗌 / 터치 종료
+    {
+        if (!_isSelected) Highlight(false);
     }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (!_interactable || IsRemoved) return;
+        if (!_interactable || _pendingRemoval || IsRemoved) return;
         if (OwnerActorNumber != PhotonNetwork.LocalPlayer.ActorNumber) return;
 
         var tower = JengaTowerManager.Instance?.GetPlayerTower(OwnerActorNumber);
-        if (tower != null && tower.GetRemovableBlocks().Contains(this) && !_isSelected)
+        if (tower != null && tower.CanRemoveBlock(this) && !_isSelected)
+        {
             Highlight(true);
+        }
     }
 
     public void OnPointerExit(PointerEventData eventData)
@@ -154,23 +182,30 @@ public class JengaBlock : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
     /// - 여기서는 점수 간이 계산만 하고, “마스터에 제거 요청”만 보낸다.
     /// - 최종 적용(제거/애니)은 마스터 승인 후 브로드캐스트에서 처리.
     /// </summary>
-    private void OnTimingComplete(bool success, float accuracy)
+    public void ApplyTimingResult(bool success, float accuracy)
     {
         _busy = false;
         Highlight(false);
         if (IsRemoved) return;
 
-        var playerId = PhotonNetwork.LocalPlayer.ActorNumber;
-
         if (!success)
         {
-            // 실패는 UI만 처리. 필요 시 실패 보고를 따로 보낼 수 있음.
-            // JengaSoundManager.Instance?.PlayTimingFailSound();
+            // 타이밍 실패 시 타워 붕괴
+            var tower = JengaTowerManager.Instance?.GetPlayerTower(OwnerActorNumber);
+            if (tower != null)
+            {
+                // 실패 사실을 마스터에게 요청 (누구 타워인지도 함께)
+                JengaNetworkManager.Instance?.RequestTowerCollapse_MasterAuth(OwnerActorNumber);
+            }
             return;
+            // JengaSoundManager.Instance?.PlayTimingFailSound();
         }
-        // JengaSoundManager.Instance?.PlayTimingSuccessSound();
 
-        // (프로토타입) 간단 점수 산출
+        // JengaSoundManager.Instance?.PlayTimingSuccessSound();
+        _pendingRemoval = true;
+
+        var playerId = PhotonNetwork.LocalPlayer.ActorNumber;
+
         int baseScore = 10;
         int bonusScore = Mathf.RoundToInt(Mathf.Clamp01(accuracy) * 10f);
         int totalScore = baseScore + bonusScore;
@@ -183,26 +218,46 @@ public class JengaBlock : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
     #endregion
 
     #region 네트워크 수신 시 실제 적용 (JengaNetworkManager.RPC_ApplyBlockRemoval에서 호출)
-    public void RemoveWithAnimation()
+    public void RemoveWithAnimation(bool isSuccess = true)
     {
-        if (IsRemoved) return;
+        Debug.Log($"[Block] RemoveWithAnimation enter id={BlockId} isRemoved={IsRemoved} active={gameObject.activeSelf}");
+        if (IsRemoved && !gameObject.activeSelf) return;
         IsRemoved = true;
-        StartCoroutine(RemoveAnimation());
+
+        Debug.Log($"[Block] RemoveWithAnimation enter id={BlockId} isRemoved={IsRemoved} active={gameObject.activeSelf}");
+        if (isSuccess)
+        {
+            StartCoroutine(RemoveAnimationSuccess());
+        }
+        else
+        {
+            StartCoroutine(RemoveAnimationFail());
+        }
     }
 
     public void RemoveImmediately()
     {
         if (IsRemoved) return;
         IsRemoved = true;
+
         gameObject.SetActive(false);
     }
 
-    private IEnumerator RemoveAnimation()
+    private IEnumerator RemoveAnimationSuccess()
+    {
+        // 임시: 간단하게 바로 사라지기
+        yield return new WaitForSeconds(0.1f);
+        gameObject.SetActive(false);
+
+        // ToDo : 나중에 캐릭터 발사 연출로 교체 예정
+    }
+
+    private IEnumerator RemoveAnimationFail()
     {
         if (_rb) _rb.isKinematic = false;
 
         var tower = GetComponentInParent<JengaTower>();
-        Vector3 dir = Vector3.up; // 기본값
+        Vector3 dir = Vector3.up;
         if (tower) dir = (transform.position - tower.transform.position).normalized;
 
         _rb?.AddForce(dir * 5f, ForceMode.Impulse);

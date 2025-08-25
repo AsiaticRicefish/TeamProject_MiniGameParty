@@ -6,7 +6,6 @@ using Cysharp.Threading.Tasks;
 using DesignPattern;
 using LDH_Util;
 using UnityEngine;
-using LDH_Utils;
 
 namespace LDH_UI
 {
