@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,10 +11,15 @@ namespace ShootingScene
     [RequireComponent(typeof(PhotonView))]
     public class TurnManager : PunSingleton<TurnManager>, IGameComponent
     {
+        public Transform eggSpawnPoint; // 알 생성 위치
+        public UnimoEgg currentUnimoEgg;
+
         //private List<int> turnOrder = new List<int>();
         private int currentTurnIndex = 0; // 아직 턴 시작 전
         private int currentRound = 1;     // 현재 라운드
         private int totalRounds = 3;      // 반복할 총 라운드 수
+
+        public event Action<UnimoEgg> OnTurnChanged;        //턴변경 이벤트 호출
 
         protected override void OnAwake()
         {
@@ -75,7 +81,7 @@ namespace ShootingScene
 
                 if (currentRound > totalRounds)
                 {
-                    Debug.Log("[TurnManager] 모든 라운드 종료!");
+                    Debug.Log("[TurnManager] - 모든 라운드 종료!");
                     // TODO - 게임 종료 처리 또는 다음 상태로 전환
                     return;
                 }
@@ -114,6 +120,7 @@ namespace ShootingScene
             if (isMyTurn)
             {
                 Debug.Log("내 턴 시작!");
+                SpawnEggForMe(myUid);
                 InputManager.Instance.EnableInput();
             }
             else
@@ -121,6 +128,16 @@ namespace ShootingScene
                 Debug.Log("다른 사람 턴입니다");
                 InputManager.Instance.DisableInput();
             }
+
+            OnTurnChanged?.Invoke(currentUnimoEgg);
+        }
+
+        private void SpawnEggForMe(string uid)
+        {
+            // Photon으로 알 생성
+            GameObject eggObj = PhotonNetwork.Instantiate("UnimoEggPrefab", eggSpawnPoint.position, Quaternion.identity);
+            currentUnimoEgg = eggObj.GetComponent<UnimoEgg>();
+            currentUnimoEgg.ShooterUid = uid;
         }
     }
 }

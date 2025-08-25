@@ -10,7 +10,7 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
 {
     private ShootingGameState currentState;
 
-    public UnimoEgg currentUnimo;
+    //public UnimoEgg currentUnimo;
 
     public Dictionary<string, ShootingPlayerData> players = new(); // UID를 key로 가지는 플레이어 데이터
     private Dictionary<string, int> playerScores = new();        // 플레이어별 점수
@@ -97,10 +97,17 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
         {
             case "InitState": ChangeState(new InitState()); break;
             case "CardSelectState": ChangeState(new CardSelectState()); break;
+            case "GamePlayState": ChangeState(new GamePlayState()); break;
+            case "CheckGameWinnderState": ChangeState(new GamePlayState()); break;
             default:
                 Debug.LogError($"[ChangeStateByName] {stateName}에 해당하는 상태가 없습니다.");
                 break;
         }
+    }
+
+    public void CheckGameWinner()
+    {
+        
     }
 
     /*[PunRPC]

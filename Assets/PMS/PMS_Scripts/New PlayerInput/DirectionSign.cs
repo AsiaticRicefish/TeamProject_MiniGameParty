@@ -34,7 +34,8 @@ public class DirectionSign : MonoBehaviour
         if (isSwing)
         {
             // forward 기준
-            Vector3 forward = ShootingGameManager.Instance.currentUnimo.transform.forward;
+            //Vector3 forward = ShootingGameManager.Instance.currentUnimo.transform.forward;          
+            Vector3 forward = TurnManager.Instance.currentUnimoEgg.transform.forward;
 
             // 시간에 따라 -1 ~ 1로 반복되는 값
             float t = Mathf.Sin(Time.time * speed);
@@ -53,16 +54,16 @@ public class DirectionSign : MonoBehaviour
 
             // 디버그 라인 확인
             //Debug.DrawRay(player.position, forward * 5, Color.white);  // forward
-            Debug.DrawRay(ShootingGameManager.Instance.currentUnimo.transform.position, leftDir * 5, Color.red);    // left 50도
-            Debug.DrawRay(ShootingGameManager.Instance.currentUnimo.transform.position, rightDir * 5, Color.blue);  // right 50도
+            Debug.DrawRay(TurnManager.Instance.currentUnimoEgg.transform.position, leftDir * 5, Color.red);    // left 50도
+            Debug.DrawRay(TurnManager.Instance.currentUnimoEgg.transform.position, rightDir * 5, Color.blue);  // right 50도
 
             //움직이는 Ray
-            Debug.DrawRay(ShootingGameManager.Instance.currentUnimo.transform.position, currentDir * lineLength, Color.yellow);
+            Debug.DrawRay(TurnManager.Instance.currentUnimoEgg.transform.position, currentDir * lineLength, Color.yellow);
         }
 
         if (isPress)
         {
-            Debug.DrawRay(ShootingGameManager.Instance.currentUnimo.transform.position, currentDir * lineLength, Color.yellow);
+            Debug.DrawRay(TurnManager.Instance.currentUnimoEgg.transform.position, currentDir * lineLength, Color.yellow);
             // period = 한 사이클 시간 (0→Max→0)
             float chargePeriod = 4f;
             // 누른 후 경과시간
@@ -118,7 +119,7 @@ public class DirectionSign : MonoBehaviour
         {
             Debug.Log($"힘의 크기 {chargePower}");
             Debug.Log("방향표시등에서 손을 땜");
-            ShootingGameManager.Instance.currentUnimo.Shot(dir * chargePower);
+            TurnManager.Instance.currentUnimoEgg.Shot(dir * chargePower);
             //다작업후에
             ResetData();
 
@@ -146,7 +147,7 @@ public class DirectionSign : MonoBehaviour
 
         dir = currentDir;
 
-        Vector3 forward = ShootingGameManager.Instance.currentUnimo.transform.forward;
+        Vector3 forward = TurnManager.Instance.currentUnimoEgg.transform.forward;
 
         float angle = Vector3.Angle(forward, dir);
 
