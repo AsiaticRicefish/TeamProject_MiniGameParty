@@ -78,7 +78,7 @@ namespace LDH_UI
             else
             {
                 var layoutChild = root.GetComponentInChildren<LayoutGroup>(true);
-                targetRect = layoutChild.GetComponent<RectTransform>();
+                targetRect = layoutChild?.GetComponent<RectTransform>();
             }
 
             

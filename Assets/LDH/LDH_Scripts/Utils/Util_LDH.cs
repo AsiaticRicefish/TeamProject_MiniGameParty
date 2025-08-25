@@ -101,6 +101,11 @@ namespace LDH_Util
             int n = RandomNumberGenerator.GetInt32(0, 10000); // 0~9999 균등
             return n.ToString("D4"); // 0000 허용
         }
+
+        public static void ConsoleLog<T>(T type, string message) where T : MonoBehaviour
+        {
+            Debug.Log($"[{type.GetType().Name}] {message}");
+        }
         
         #endregion
         
