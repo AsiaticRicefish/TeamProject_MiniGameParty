@@ -107,7 +107,16 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
 
     public void CheckGameWinner()
     {
-        
+        if(PhotonNetwork.IsMasterClient)
+        {
+            GameObject[] unimoEggList = GameObject.FindGameObjectsWithTag("UnimoEgg");
+        }
+        Debug.Log("[ShootingGameManager] - 우승자 계산");
+    }
+
+    public void EndGame()
+    {
+        Debug.Log("[ShootingGameManager] - 게임 종료");
     }
 
     /*[PunRPC]

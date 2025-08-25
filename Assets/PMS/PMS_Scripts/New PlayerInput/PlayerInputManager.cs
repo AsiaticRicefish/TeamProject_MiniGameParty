@@ -1,3 +1,4 @@
+using DesignPattern;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,10 +7,8 @@ using UnityEngine.InputSystem;
 
 namespace ShootingScene
 {
-    public class PlayerInputManager : MonoBehaviour
+    public class PlayerInputManager : CombinedSingleton<PlayerInputManager>,IGameComponent
     {
-        public static PlayerInputManager Instance { get; private set; }
-
         [SerializeField] private Camera mainCam;
 
         private PlayerInput playerInput; // PlayerInput 컴포넌트 참조 변수
@@ -26,17 +25,13 @@ namespace ShootingScene
         //터치 하면 UI가 끊어지게
         public event Action onTouched;
 
-        private void Awake()
+        protected override void OnAwake()
         {
-            if (Instance == null)
-            {
-                Instance = this;
-            }
-            else if (Instance != this)
-            {
-                Destroy(gameObject); // 혹은 그냥 return
-            }
-
+            isPersistent = false;
+        }
+     
+        public void Initialize()
+        {
             // PlayerInput 컴포넌트를 가져오고, 액션을 찾습니다.
             playerInput = GetComponent<PlayerInput>();
             if (playerInput != null)
@@ -55,7 +50,7 @@ namespace ShootingScene
         }
 
         #region 싱글 환경 테스트 코드 - 추후 자기턴일때 자기만 Input이 가능하도록 설계 예정 
-        private void OnEnable()
+        /*private void OnEnable()
         {
             EnableInput();
         }
@@ -64,7 +59,7 @@ namespace ShootingScene
         {
             // 스크립트가 비활성화될 때 이벤트 구독 해제
             DisableInput();
-        }
+        }*/
         #endregion
 
         public void EnableInput()

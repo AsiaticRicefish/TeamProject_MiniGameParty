@@ -98,11 +98,11 @@ namespace ShootingScene
         {
             if (!PhotonNetwork.IsMasterClient) return;
             currentTurnIndex = 0;                 // 0번부터 시작
-            BroadcastCurrentTurn(currentTurnIndex);
+            BroadcastCurrentTurn();
         }
 
         [PunRPC]
-        private void RPC_SetCurrentTurn(int turnIndex,int roundIndex )
+        private void RPC_SetCurrentTurn(int turnIndex,int roundIndex)
         {
             string myUid = PMS_Util.PMS_Util.GetMyUid();
             if (string.IsNullOrEmpty(myUid))
