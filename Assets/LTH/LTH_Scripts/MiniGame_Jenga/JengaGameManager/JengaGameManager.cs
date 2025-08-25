@@ -10,30 +10,37 @@ using ExitGames.Client.Photon;
 
 
 /// <summary>
-/// JengaGameManager´Â Á¨°¡ ¹Ì´Ï°ÔÀÓÀÇ ÀüÃ¼ ÁøÇàÀ» ÅëÁ¦ÇÏ´Â Áß¾Ó ÄÁÆ®·Ñ·¯ ¿ªÇÒÀ» ¼öÇàÇÏ¸ç,
-/// °ÔÀÓ »óÅÂ °ü¸®, Å¸ÀÌ¸Ó, ÇÃ·¹ÀÌ¾î Á¤º¸ ÃÊ±âÈ­, Á¡¼ö Ã³¸®, ¼øÀ§ °è»ê, °ÔÀÓ Á¾·á ÈÄ 
-/// ¸ŞÀÎ ¾À º¹±Í±îÁö Æ÷ÇÔÇÑ´Ù.
+/// JengaGameManagerëŠ” ì  ê°€ ë¯¸ë‹ˆê²Œì„ì˜ ì „ì²´ ì§„í–‰ì„ í†µì œí•˜ëŠ” ì¤‘ì•™ ì»¨íŠ¸ë¡¤ëŸ¬ ì—­í• ì„ ìˆ˜í–‰í•˜ë©°,
+/// ê²Œì„ ìƒíƒœ ê´€ë¦¬, íƒ€ì´ë¨¸, í”Œë ˆì´ì–´ ì •ë³´ ì´ˆê¸°í™”, ì ìˆ˜ ì²˜ë¦¬, ìˆœìœ„ ê³„ì‚°, ê²Œì„ ì¢…ë£Œ í›„ 
+/// ë©”ì¸ ì”¬ ë³µê·€ê¹Œì§€ í¬í•¨í•œë‹¤.
 /// </summary>
 
 public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameComponent
 {
-    [Header("°ÔÀÓ ¼³Á¤")]
-    [SerializeField] private float gameTime = 180f; // ÀüÃ¼ °ÔÀÓ ½Ã°£ (±âº» 180ÃÊ)
-    [SerializeField] private string mainMapSceneName; // ¸ŞÀÎ ¾À ÀÌ¸§ (¿¹: "MainGameScene")
+    [Header("ê²Œì„ ì„¤ì •")]
+    [SerializeField] private float gameTime = 180f; // ì „ì²´ ê²Œì„ ì‹œê°„ (ê¸°ë³¸ 180ì´ˆ)
+    [SerializeField] private string mainMapSceneName; // ë©”ì¸ ì”¬ ì´ë¦„ (ì˜ˆ: "MainGameScene")
 
-    [Header("°ÔÀÓ »óÅÂ")]
+    [Header("ê²Œì„ ìƒíƒœ")]
     public JengaGameState currentState = JengaGameState.Waiting;
-    public float remainingTime; // ³²Àº ½Ã°£
+    public float remainingTime; // ë‚¨ì€ ì‹œê°„
 
-    // ÀÌº¥Æ®
-    public Action<JengaGameState> OnGameStateChanged;       // °ÔÀÓ »óÅÂ º¯°æ ÀÌº¥Æ®
-    public Action<string, bool, int> OnPlayerAction;        // ÇÃ·¹ÀÌ¾îID, ¼º°ø¿©ºÎ, Á¡¼ö
-    public Action<string> OnPlayerFinished;                 // ÇÃ·¹ÀÌ¾î°¡ °ÔÀÓ ¿Ï·á
-    public Action<Dictionary<string, int>> OnGameFinished;  // ÃÖÁ¾ ¼øÀ§
+    [Header("ì¹´ìš´íŠ¸ë‹¤ìš´ ì„¤ì •")]
+    [SerializeField] private float countdownDuration = 3f; // ì¹´ìš´íŠ¸ë‹¤ìš´ ì‹œê°„
+    [SerializeField] private bool useCountdown = true; // ì¹´ìš´íŠ¸ë‹¤ìš´ ì‚¬ìš© ì—¬ë¶€
 
-    private Dictionary<string, JengaPlayerData> players = new(); // UID¸¦ key·Î °¡Áö´Â ÇÃ·¹ÀÌ¾î µ¥ÀÌÅÍ
-    private Dictionary<string, int> playerScores = new();        // ÇÃ·¹ÀÌ¾îº° Á¡¼ö
-    private Dictionary<string, bool> playerFinished = new();     // ÇÃ·¹ÀÌ¾îº° °ÔÀÓ ¿Ï·á ¿©ºÎ
+    [Header("UI ì´ë²¤íŠ¸")]
+    public Action<float> OnTimeUpdated;
+
+    // ì´ë²¤íŠ¸
+    public Action<JengaGameState> OnGameStateChanged;       // ê²Œì„ ìƒíƒœ ë³€ê²½ ì´ë²¤íŠ¸
+    public Action<string, bool, int> OnPlayerAction;        // í”Œë ˆì´ì–´ID, ì„±ê³µì—¬ë¶€, ì ìˆ˜
+    public Action<string> OnPlayerFinished;                 // í”Œë ˆì´ì–´ê°€ ê²Œì„ ì™„ë£Œ
+    public Action<Dictionary<string, int>> OnGameFinished;  // ìµœì¢… ìˆœìœ„
+
+    private Dictionary<string, JengaPlayerData> players = new(); // UIDë¥¼ keyë¡œ ê°€ì§€ëŠ” í”Œë ˆì´ì–´ ë°ì´í„°
+    private Dictionary<string, int> playerScores = new();        // í”Œë ˆì´ì–´ë³„ ì ìˆ˜
+    private Dictionary<string, bool> playerFinished = new();     // í”Œë ˆì´ì–´ë³„ ê²Œì„ ì™„ë£Œ ì—¬ë¶€
 
     protected override void OnAwake()
     {
@@ -43,22 +50,30 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
 
     public void Initialize()
     {
-        // ¸ÕÀú ¸ğµç Photon ÇÃ·¹ÀÌ¾î°¡ PlayerManager¿¡ µî·ÏµÇµµ·Ï º¸Àå
+        // ë¨¼ì € ëª¨ë“  Photon í”Œë ˆì´ì–´ê°€ PlayerManagerì— ë“±ë¡ë˜ë„ë¡ ë³´ì¥
         PlayerManager.Instance.EnsureAllPhotonPlayersRegistered();
 
-        InitializePlayers(); // ÇÃ·¹ÀÌ¾î Á¤º¸ ¼¼ÆÃ
+        InitializePlayers(); // í”Œë ˆì´ì–´ ì •ë³´ ì„¸íŒ…
         currentState = JengaGameState.Waiting;
         remainingTime = gameTime;
 
-        Debug.Log("[JengaGameManager - Initialize] ÃÊ±âÈ­ ¿Ï·á");
+        Debug.Log("[JengaGameManager - Initialize] ì´ˆê¸°í™” ì™„ë£Œ");
+
+        // ì´ˆê¸°í™” ì™„ë£Œ í›„ ì¹´ìš´íŠ¸ë‹¤ìš´ ì‹œì‘ (ë§ˆìŠ¤í„°ë§Œ)
+        if (PhotonNetwork.IsMasterClient)
+        {
+            // ì•½ê°„ì˜ ì§€ì—° í›„ ì¹´ìš´íŠ¸ë‹¤ìš´ ì‹œì‘ (ë‹¤ë¥¸ ë§¤ë‹ˆì €ë“¤ ì´ˆê¸°í™” ì™„ë£Œ ëŒ€ê¸°)
+            StartCoroutine(DelayedCountdownStart());
+        }
     }
 
+    #region í”Œë ˆì´ì–´ ì´ˆê¸°í™”
     private void InitializePlayers()
     {
-        // ÇöÀç ¹æ¿¡ Á¢¼ÓÇØ ÀÖ´Â ¸ğµç Photon ÇÃ·¹ÀÌ¾î ¸ñ·ÏÀ» ¼øÈ¸
+        // í˜„ì¬ ë°©ì— ì ‘ì†í•´ ìˆëŠ” ëª¨ë“  Photon í”Œë ˆì´ì–´ ëª©ë¡ì„ ìˆœíšŒ
         foreach (var photonPlayer in PhotonNetwork.PlayerList)
         {
-            // PhotonNetwork.PlayerList¿¡¼­ ²¨³½ ÇÃ·¹ÀÌ¾î °´Ã¼ÀÇ CustomProperties¿¡¼­ uid (Firebase UID)¸¦ ÃßÃâ
+            // PhotonNetwork.PlayerListì—ì„œ êº¼ë‚¸ í”Œë ˆì´ì–´ ê°ì²´ì˜ CustomPropertiesì—ì„œ uid (Firebase UID)ë¥¼ ì¶”ì¶œ
             string uid = photonPlayer.CustomProperties["uid"] as string;
 
             if (string.IsNullOrEmpty(uid))
@@ -67,36 +82,37 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
                 continue;
             }
 
-            //// UID¸¦ ±â¹İÀ¸·Î PlayerManager¿¡¼­ ÇØ´ç ÇÃ·¹ÀÌ¾îÀÇ GamePlayer °´Ã¼¸¦ °¡Á®¿È
+            //// UIDë¥¼ ê¸°ë°˜ìœ¼ë¡œ PlayerManagerì—ì„œ í•´ë‹¹ í”Œë ˆì´ì–´ì˜ GamePlayer ê°ì²´ë¥¼ ê°€ì ¸ì˜´
             //var gamePlayer = PlayerManager.Instance.GetPlayer(uid);
 
-            // CreateOrGetPlayer¸¦ »ç¿ëÇÏ¿© ÇÃ·¹ÀÌ¾î°¡ ¾øÀ¸¸é ÀÚµ¿ »ı¼º
+            // CreateOrGetPlayerë¥¼ ì‚¬ìš©í•˜ì—¬ í”Œë ˆì´ì–´ê°€ ì—†ìœ¼ë©´ ìë™ ìƒì„±
             var gamePlayer = PlayerManager.Instance.CreateOrGetPlayer(uid, photonPlayer.NickName);
 
             if (gamePlayer != null)
             {
-                // GamePlayer¿¡ ¹Ì´Ï°ÔÀÓ Àü¿ë µ¥ÀÌÅÍÀÎ JengaPlayerData¸¦ »õ·Î ¸¸µé¾î ÇÒ´ç
+                // GamePlayerì— ë¯¸ë‹ˆê²Œì„ ì „ìš© ë°ì´í„°ì¸ JengaPlayerDataë¥¼ ìƒˆë¡œ ë§Œë“¤ì–´ í• ë‹¹
                 gamePlayer.JengaData = new JengaPlayerData
                 {
                     towerPosition = GetPlayerTowerPosition(uid),
                     gameStartTime = Time.time,
                 };
 
-                // JengaGameManagerÀÇ players µñ¼Å³Ê¸®¿¡ UID¸¦ key·Î »ç¿ëÇØ¼­ JengaPlayerData¸¦ µî·Ï
+                // JengaGameManagerì˜ players ë”•ì…”ë„ˆë¦¬ì— UIDë¥¼ keyë¡œ ì‚¬ìš©í•´ì„œ JengaPlayerDataë¥¼ ë“±ë¡
                 players[uid] = gamePlayer.JengaData;
-                // Á¡¼ö¸¦ ÀúÀåÇÏ´Â playerScores µñ¼Å³Ê¸®¿¡µµ ÇØ´ç UID·Î 0Á¡ µî·Ï (ÃÊ±â°ª)
+                // ì ìˆ˜ë¥¼ ì €ì¥í•˜ëŠ” playerScores ë”•ì…”ë„ˆë¦¬ì—ë„ í•´ë‹¹ UIDë¡œ 0ì  ë“±ë¡ (ì´ˆê¸°ê°’)
                 playerScores[uid] = 0;
-                // ¾ÆÁ÷ °ÔÀÓÀ» ³¡³»Áö ¾Ê¾Ò´Ù´Â ÀÇ¹Ì·Î playerFinished ÇÃ·¡±×¸¦ false·Î ¼³Á¤
+                // ì•„ì§ ê²Œì„ì„ ëë‚´ì§€ ì•Šì•˜ë‹¤ëŠ” ì˜ë¯¸ë¡œ playerFinished í”Œë˜ê·¸ë¥¼ falseë¡œ ì„¤ì •
                 playerFinished[uid] = false;
                 Debug.Log($"[JengaGameManager - InitializePlayers] Successfully initialized player: {uid} ({photonPlayer.NickName})");
             }
             else
             {
-                Debug.LogError($"[JengaGameManager - InitializePlayers] {uid}¿¡ ÇØ´çÇÏ´Â GamePlayer¸¦ Ã£À» ¼ö ¾øÀ½");
+                Debug.LogError($"[JengaGameManager - InitializePlayers] {uid}ì— í•´ë‹¹í•˜ëŠ” GamePlayerë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŒ");
             }
         }
         Debug.Log($"[JengaGameManager - InitializePlayers] Initialized {players.Count} players");
     }
+    #endregion
 
     public void StartGame()
     {
@@ -106,31 +122,102 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
             return;
         }
 
-        if (!PhotonNetwork.IsMasterClient) return;
-
-        if (currentState == JengaGameState.Playing || currentState == JengaGameState.Finished)
+        if (!PhotonNetwork.IsMasterClient)
         {
-            Debug.Log("[JGM] Skip: already started/finished");
+            Debug.Log("[JengaGameManager.StartGame] Not master client - waiting for state broadcast");
             return;
         }
 
-        Debug.Log("[JGM] All checks passed - proceeding to start game");
+        if (currentState == JengaGameState.Playing || currentState == JengaGameState.Finished)
+        {
+            Debug.Log("[JengaGameManager] Skip: already started/finished");
+            return;
+        }
 
-        // 1) ¸¶½ºÅÍ ·ÎÄÃ ¸ÕÀú Playing ¼¼ÆÃ
-        Debug.Log("[JGM] Step 1: ApplyGameStateChange(Playing)");
+        // 1) ë§ˆìŠ¤í„° ë¡œì»¬ ë¨¼ì € Playing ì„¸íŒ…
+        Debug.Log("[JengaGameManager] Step 1: ApplyGameStateChange(Playing)");
         ApplyGameStateChange(JengaGameState.Playing);
 
-        // 2) ÀüÃ¼¿¡ ÀüÆÄ
-        Debug.Log("[JGM] Step 2: BroadcastGameState(Playing)");
+        // 2) ì „ì²´ì— ì „íŒŒ
+        Debug.Log("[JengaGameManager] Step 2: BroadcastGameState(Playing)");
         JengaNetworkManager.Instance.BroadcastGameState(JengaGameState.Playing);
 
-        // 3) Å¸ÀÌ¸Ó´Â ¸¶½ºÅÍ¸¸ °¡µ¿
-        Debug.Log("[JGM] Step 3: StartCoroutine(GameTimer)");
-        StartCoroutine(GameTimer());
+        // 3) íƒ€ì´ë¨¸ëŠ” ì¹´ìš´íŠ¸ë‹¤ìš´ì´ ì™„ì „íˆ ëë‚œ í›„ì—ë§Œ ì‹œì‘
+        Debug.Log("[JengaGameManager] Step 3: StartCoroutine(GameTimer)");
+        if (!useCountdown)
+        {
+            StartCoroutine(GameTimer());
+        }
+    }
+
+    #region ì¹´ìš´íŠ¸ë‹¤ìš´ ê´€ë ¨
+    /// <summary>
+    /// ì•½ê°„ì˜ ì§€ì—° í›„ ì¹´ìš´íŠ¸ë‹¤ìš´ ì‹œì‘
+    /// </summary>
+    private IEnumerator DelayedCountdownStart()
+    {
+        yield return new WaitForSeconds(0.5f); // 0.5ì´ˆ ëŒ€ê¸°
+        StartGameWithCountdown();
+    }
+
+
+    /// <summary>
+    /// ê²Œì„ ì´ˆê¸°í™” ì™„ë£Œ í›„ ì¹´ìš´íŠ¸ë‹¤ìš´ ì‹œì‘ (ë§ˆìŠ¤í„°ë§Œ í˜¸ì¶œ)
+    /// </summary>
+    public void StartGameWithCountdown()
+    {
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            Debug.Log("[JengaGameManager] Not master client - waiting for countdown broadcast");
+            return;
+        }
+
+        if (currentState == JengaGameState.Finished)
+        {
+            Debug.Log("[JengaGameManager] Skip countdown: game already finished");
+            return;
+        }
+
+        // ë°”ë¡œ Playing ìƒíƒœë¡œ ë³€ê²½
+        ApplyGameStateChange(JengaGameState.Playing);
+        JengaNetworkManager.Instance?.BroadcastGameState(JengaGameState.Playing);
+
+        if (useCountdown)
+        {
+            Debug.Log("[JengaGameManager] Starting countdown...");
+
+            // ë„¤íŠ¸ì›Œí¬ ë§¤ë‹ˆì €ë¥¼ í†µí•´ ëª¨ë“  í´ë¼ì´ì–¸íŠ¸ì—ê²Œ ì¹´ìš´íŠ¸ë‹¤ìš´ ì‹œì‘ ì‹ í˜¸
+            JengaNetworkManager.Instance?.BroadcastStartCountdown(countdownDuration);
+
+            // ì¹´ìš´íŠ¸ë‹¤ìš´ ì™„ë£Œ í›„ ê²Œì„ ì‹œì‘ì„ ìœ„í•œ ì½”ë£¨í‹´
+            StartCoroutine(CountdownToGameStart());
+        }
+        else
+        {
+            // ì¹´ìš´íŠ¸ë‹¤ìš´ ì—†ì´ ë°”ë¡œ ê²Œì„ ì‹œì‘
+            StartGame();
+        }
     }
 
     /// <summary>
-    /// µ¿±âÈ­µÈ °ÔÀÓ »óÅÂ¸¦ ³»ºÎ¿¡ Àû¿ëÇÏ°í ÀÌº¥Æ®·Î ¾Ë¸²
+    /// ì¹´ìš´íŠ¸ë‹¤ìš´ ì™„ë£Œë¥¼ ê¸°ë‹¤ë¦° í›„ ê²Œì„ ì‹œì‘
+    /// </summary>
+    private IEnumerator CountdownToGameStart()
+    {
+        // ì¹´ìš´íŠ¸ë‹¤ìš´ ì‹œê°„ë§Œí¼ ëŒ€ê¸°
+        yield return new WaitForSeconds(countdownDuration + 1f); // +1ì´ˆëŠ” "START!" í‘œì‹œ ì‹œê°„
+
+        // ëª¨ë“  í´ë¼ì´ì–¸íŠ¸ì—ê²Œ ì¹´ìš´íŠ¸ë‹¤ìš´ ì™„ë£Œ ì•Œë¦¼
+        JengaNetworkManager.Instance?.BroadcastCountdownComplete();
+
+        // íƒ€ì´ë¨¸ ì‹œì‘
+        StartCoroutine(GameTimer());
+    }
+
+    #endregion
+
+    /// <summary>
+    /// ë™ê¸°í™”ëœ ê²Œì„ ìƒíƒœë¥¼ ë‚´ë¶€ì— ì ìš©í•˜ê³  ì´ë²¤íŠ¸ë¡œ ì•Œë¦¼
     /// </summary>
     public void ApplyGameStateChange(JengaGameState newState)
     {
@@ -139,26 +226,26 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
     }
 
     /// <summary>
-    /// ³×Æ®¿öÅ©¸¦ ÅëÇØ ¼ö½ÅµÈ ÇÃ·¹ÀÌ¾î Çàµ¿ °á°ú¸¦ °ÔÀÓ »óÅÂ¿¡ ¹İ¿µ
+    /// ë„¤íŠ¸ì›Œí¬ë¥¼ í†µí•´ ìˆ˜ì‹ ëœ í”Œë ˆì´ì–´ í–‰ë™ ê²°ê³¼ë¥¼ ê²Œì„ ìƒíƒœì— ë°˜ì˜
     /// </summary>
     public void ApplyPlayerActionResult(string uid, bool success, int scoreGained = 0)
     {
-        // ÇØ´ç UID°¡ players µñ¼Å³Ê¸®¿¡ ¾øÀ¸¸é (Áï, µî·ÏµÇÁö ¾ÊÀº ÇÃ·¹ÀÌ¾î¸é) ¾Æ¹« µ¿ÀÛ ¾È ÇÏ°í Á¾·á.
+        // í•´ë‹¹ UIDê°€ players ë”•ì…”ë„ˆë¦¬ì— ì—†ìœ¼ë©´ (ì¦‰, ë“±ë¡ë˜ì§€ ì•Šì€ í”Œë ˆì´ì–´ë©´) ì•„ë¬´ ë™ì‘ ì•ˆ í•˜ê³  ì¢…ë£Œ.
         if (!players.TryGetValue(uid, out var player)) return;
 
         if (success)
         {
-            player.score += scoreGained; // JengaPlayerData ÀÚÃ¼¿¡ ÀúÀåµÈ Á¡¼ö ¾÷µ¥ÀÌÆ®
-            playerScores[uid] += scoreGained; // ¼øÀ§ °è»êÀ» À§ÇÑ Á¡¼ö
+            player.score += scoreGained; // JengaPlayerData ìì²´ì— ì €ì¥ëœ ì ìˆ˜ ì—…ë°ì´íŠ¸
+            playerScores[uid] += scoreGained; // ìˆœìœ„ ê³„ì‚°ì„ ìœ„í•œ ì ìˆ˜
 
-            // ¸¶Áö¸· ¼º°ø ½Ã°¢ ÀúÀå (»ó´ë ½Ã°£) => µ¿Á¡ÀÏ °æ¿ì ¸ÕÀú ¼º°øÇÑ ÇÃ·¹ÀÌ¾î°¡ ¿ì¼± ¼øÀ§ ¹èÄ¡
+            // ë§ˆì§€ë§‰ ì„±ê³µ ì‹œê° ì €ì¥ (ìƒëŒ€ ì‹œê°„) => ë™ì ì¼ ê²½ìš° ë¨¼ì € ì„±ê³µí•œ í”Œë ˆì´ì–´ê°€ ìš°ì„  ìˆœìœ„ ë°°ì¹˜
             player.lastSuccessTime = Time.time - player.gameStartTime;
         }
         else
         {
             player.isAlive = false;
 
-            // Á¨°¡°¡ ºØ±«ÇÒ ¶§¸¸ ¿Ï·á Ã³¸®
+            // ì  ê°€ê°€ ë¶•ê´´í•  ë•Œë§Œ ì™„ë£Œ ì²˜ë¦¬
             if (!playerFinished[uid])
             {
                 playerFinished[uid] = true;
@@ -171,128 +258,155 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
 
     private void CheckAllPlayersFinished()
     {
-        // Àü¿ø Å»¶ô½Ã Á¶±â Á¾·á Çã¿ë
-        // ¾Æ´Ï¸é Å¸ÀÓ¾÷À¸·Î¸¸ Á¾·á
+        // ì „ì› íƒˆë½ì‹œ ì¡°ê¸° ì¢…ë£Œ í—ˆìš©
+        // ì•„ë‹ˆë©´ íƒ€ì„ì—…ìœ¼ë¡œë§Œ ì¢…ë£Œ
         if (playerFinished.Values.All(f => f))
         {
+            Debug.Log("[JengaGameManager] All players eliminated - ending game early");
             EndGame();
         }
     }
 
     /// <summary>
-    /// °ÔÀÓ Á¾·á ÈÄ ÃÖÁ¾ ¼øÀ§¸¦ °è»êÇÏ°í ¸ŞÀÎ °ÔÀÓ¿¡ °á°ú¸¦ Àü´Ş
+    /// ê²Œì„ ì¢…ë£Œ í›„ ìµœì¢… ìˆœìœ„ë¥¼ ê³„ì‚°í•˜ê³  ë©”ì¸ ê²Œì„ì— ê²°ê³¼ë¥¼ ì „ë‹¬
     /// </summary>
     private void EndGame()
     {
-        JengaNetworkManager.Instance.BroadcastGameState(JengaGameState.Finished); // °ÔÀÓ »óÅÂ¸¦ "Finished"·Î º¯°æ
+        JengaNetworkManager.Instance.BroadcastGameState(JengaGameState.Finished); // ê²Œì„ ìƒíƒœë¥¼ "Finished"ë¡œ ë³€ê²½
 
-        // ¼øÀ§ °è»ê (Á¡¼ö ±âÁØ, ¿Ï·á ½Ã°£µµ °í·Á)
+        // ìˆœìœ„ ê³„ì‚° (ì ìˆ˜ ê¸°ì¤€, ì™„ë£Œ ì‹œê°„ë„ ê³ ë ¤)
         var rankings = CalculateRankings();
-        OnGameFinished?.Invoke(rankings); // OnGameFinished·Î ¿ÜºÎ¿¡ ¾Ë¸²
+        OnGameFinished?.Invoke(rankings); // OnGameFinishedë¡œ ì™¸ë¶€ì— ì•Œë¦¼
 
-        // ¸ŞÀÎ °ÔÀÓ¿¡ °á°ú Àü´Ş
+        // ë©”ì¸ ê²Œì„ì— ê²°ê³¼ ì „ë‹¬
         SendResultToMainGame(rankings);
     }
 
     private Dictionary<string, int> CalculateRankings()
     {
-        // Á¡¼ö¼øÀ¸·Î Á¤·Ä, µ¿Á¡ÀÏ °æ¿ì »ıÁ¸ ¿©ºÎ·Î ÆÇ´Ü
+        // ì ìˆ˜ìˆœìœ¼ë¡œ ì •ë ¬, ë™ì ì¼ ê²½ìš° ìƒì¡´ ì—¬ë¶€ë¡œ íŒë‹¨
         var sortedPlayers = players
-            .OrderByDescending(pair => pair.Value.score) // ¸ÕÀú ºí·Ï °³¼ö
-            .ThenBy(pair => pair.Value.lastSuccessTime) // µ¿Á¡ ½Ã ºü¸¥ »ç¶÷
+            .OrderByDescending(pair => pair.Value.score) // ë¨¼ì € ë¸”ë¡ ê°œìˆ˜
+            .ThenBy(pair => pair.Value.lastSuccessTime) // ë™ì  ì‹œ ë¹ ë¥¸ ì‚¬ëŒ
             .ToList();
 
-        // µñ¼Å³Ê¸® ÇüÅÂ·Î UIDº° ¼øÀ§¸¦ ÀúÀå
+        // ë”•ì…”ë„ˆë¦¬ í˜•íƒœë¡œ UIDë³„ ìˆœìœ„ë¥¼ ì €ì¥
         // { "playerA": 1, "playerB": 2, "playerC": 3, "playerD": 4 }
         var rankings = new Dictionary<string, int>();
         for (int i = 0; i < sortedPlayers.Count; i++)
         {
-            string uid = sortedPlayers[i].Key; // Key´Â UID
-            rankings[uid] = i + 1; // 1µî, 2µî, 3µî, 4µî ¼øÀ¸·Î ¹øÈ£ ¸Å±è
+            string uid = sortedPlayers[i].Key; // KeyëŠ” UID
+            rankings[uid] = i + 1; // 1ë“±, 2ë“±, 3ë“±, 4ë“± ìˆœìœ¼ë¡œ ë²ˆí˜¸ ë§¤ê¹€
         }
         return rankings;
     }
 
     /// <summary>
-    /// Á¡¼ö ¼øÀ§¸¦ ¸ŞÀÎ °ÔÀÓ ½Ã½ºÅÛ¿¡ Àü´ŞÇÏ°í,
-    /// ÇÃ·¹ÀÌ¾îÀÇ ½Â¸® ¿©ºÎ¸¦ ¾÷µ¥ÀÌÆ®ÇÑ µÚ ¸ŞÀÎ ¾ÀÀ¸·Î º¹±Í ÁØºñ
+    /// ì ìˆ˜ ìˆœìœ„ë¥¼ ë©”ì¸ ê²Œì„ ì‹œìŠ¤í…œì— ì „ë‹¬í•˜ê³ ,
+    /// í”Œë ˆì´ì–´ì˜ ìŠ¹ë¦¬ ì—¬ë¶€ë¥¼ ì—…ë°ì´íŠ¸í•œ ë’¤ ë©”ì¸ ì”¬ìœ¼ë¡œ ë³µê·€ ì¤€ë¹„
     /// </summary>
     private void SendResultToMainGame(Dictionary<string, int> rankings)
     {
-        // ¸ŞÀÎ °ÔÀÓ¿¡ °á°ú Àü´Ş ("Jenga"¶ó´Â Å°·Î °á°ú ÀúÀå)
+        // ë©”ì¸ ê²Œì„ì— ê²°ê³¼ ì „ë‹¬ ("Jenga"ë¼ëŠ” í‚¤ë¡œ ê²°ê³¼ ì €ì¥)
         GameResultData.SetMinigameResult("Jenga", rankings);
 
-        // ¸ŞÀÎ °ÔÀÓÀÇ PlayerManager¸¦ ÅëÇÑ ¼øÀ§ ¾÷µ¥ÀÌÆ®
+        // ë©”ì¸ ê²Œì„ì˜ PlayerManagerë¥¼ í†µí•œ ìˆœìœ„ ì—…ë°ì´íŠ¸
         foreach (var pair in rankings)
         {
-            // PlayerManager¸¦ ÅëÇØ ½ÇÁ¦ ÇÃ·¹ÀÌ¾î ¿ÀºêÁ§Æ®¸¦ Ã£±â
+            // PlayerManagerë¥¼ í†µí•´ ì‹¤ì œ í”Œë ˆì´ì–´ ì˜¤ë¸Œì íŠ¸ë¥¼ ì°¾ê¸°
             var player = PlayerManager.Instance.GetPlayer(pair.Key);
             if (player != null)
             {
-                // gamePlayer.WinThisMiniGame = (1µîÀÎÁö ¿©ºÎ) ¼³Á¤
+                // gamePlayer.WinThisMiniGame = (1ë“±ì¸ì§€ ì—¬ë¶€) ì„¤ì •
                 player.WinThisMiniGame = pair.Value == 1;
             }
         }
-        // ÀÏÁ¤ ½Ã°£ ÈÄ ¸ŞÀÎ ¾ÀÀ¸·Î º¹±Í
+        // ì¼ì • ì‹œê°„ í›„ ë©”ì¸ ì”¬ìœ¼ë¡œ ë³µê·€
         StartCoroutine(ReturnToMainGameAfterDelay(3f));
     }
 
     /// <summary>
-    /// ÀÏÁ¤ ½Ã°£ ÈÄ ¸ŞÀÎ ¾ÀÀ¸·Î ÀüÈ¯ (¸¶½ºÅÍ Å¬¶óÀÌ¾ğÆ®¸¸ È£Ãâ)
+    /// ì¼ì • ì‹œê°„ í›„ ë©”ì¸ ì”¬ìœ¼ë¡œ ì „í™˜ (ë§ˆìŠ¤í„° í´ë¼ì´ì–¸íŠ¸ë§Œ í˜¸ì¶œ)
     /// </summary>
     private IEnumerator ReturnToMainGameAfterDelay(float delay)
     {
         yield return new WaitForSeconds(delay);
 
-        // ¾À ÀüÈ¯
+        // ì”¬ ì „í™˜
         if (PhotonNetwork.IsMasterClient)
         {
-            PhotonNetwork.LoadLevel(mainMapSceneName); // ¾À ÀÌ¸§Àº º¯°æ °¡´É
+            PhotonNetwork.LoadLevel(mainMapSceneName); // ì”¬ ì´ë¦„ì€ ë³€ê²½ ê°€ëŠ¥
         }
     }
 
     /// <summary>
-    /// °ÔÀÓ Å¸ÀÌ¸Ó
+    /// ë„¤íŠ¸ì›Œí¬ë¥¼ í†µí•´ ë™ê¸°í™”ëœ ì‹œê°„ì„ ì ìš©í•˜ê³  UI ì—…ë°ì´íŠ¸
     /// </summary>
-    private IEnumerator GameTimer()
+    public void SyncRemainingTime(float syncedTime)
+    {
+        remainingTime = syncedTime;
+        OnTimeUpdated?.Invoke(remainingTime);
+    }
+
+    /// <summary>
+    /// ê²Œì„ íƒ€ì´ë¨¸
+    /// </summary>
+    public IEnumerator GameTimer()
     {
         while (remainingTime > 0 && currentState == JengaGameState.Playing)
         {
-            // ¸Å ÇÁ·¹ÀÓÀÌ ¾Æ´Ñ 1ÃÊ¸¶´Ù remainingTime-- °¨¼Ò
+            // ë§¤ í”„ë ˆì„ì´ ì•„ë‹Œ 1ì´ˆë§ˆë‹¤ remainingTime-- ê°ì†Œ
             yield return new WaitForSeconds(1f);
             remainingTime--;
+
+            // ë§ˆìŠ¤í„°ì—ì„œë§Œ ë„¤íŠ¸ì›Œí¬ ë™ê¸°í™” ì‹¤í–‰ (ì‹œê°„ì´ ì„œë¡œ ë‹¤ë¥´ë©´ ì•ˆë¨)
+            if (PhotonNetwork.IsMasterClient)
+            {
+                JengaNetworkManager.Instance?.BroadcastTimeSync(remainingTime);
+            }
         }
 
-        // ½Ã°£ÀÌ ´Ù µÇ¸é EndGame() È£Ãâ
+        // ì‹œê°„ì´ ë‹¤ ë˜ë©´ EndGame() í˜¸ì¶œ
         if (currentState == JengaGameState.Playing)
         {
             EndGame();
         }
     }
 
+    // UIì—ì„œ í˜„ì¬ ë‚¨ì€ ì‹œê°„ì„ ê°€ì ¸ì˜¬ ìˆ˜ ìˆëŠ” í¼ë¸”ë¦­ ë©”ì„œë“œ
+    public float GetRemainingTime() => remainingTime;
+    public string GetFormattedTime()
+    {
+        // ë°˜ì˜¬ë¦¼ìœ¼ë¡œ ë” ì •í™•í•œ ì‹œê°„ í‘œì‹œ
+        int totalSeconds = Mathf.RoundToInt(remainingTime);
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+        return $"{minutes:00}:{seconds:00}";
+    }
+
     private Vector3 GetPlayerTowerPosition(string playerId)
     {
-        // 4¸íÀÇ ÇÃ·¹ÀÌ¾î°¡ °¢ÀÚ ´Ù¸¥ À§Ä¡¿¡ Å¸¿ö ¹èÄ¡
+        // 4ëª…ì˜ í”Œë ˆì´ì–´ê°€ ê°ì ë‹¤ë¥¸ ìœ„ì¹˜ì— íƒ€ì›Œ ë°°ì¹˜
         Vector3[] towerPositions = {
-            new Vector3(-5, 0, 5),   // ÇÃ·¹ÀÌ¾î 1
-            new Vector3(5, 0, 5),    // ÇÃ·¹ÀÌ¾î 2  
-            new Vector3(-5, 0, -5),  // ÇÃ·¹ÀÌ¾î 3
-            new Vector3(5, 0, -5)    // ÇÃ·¹ÀÌ¾î 4
+            new Vector3(-5, 0, 5),   // í”Œë ˆì´ì–´ 1
+            new Vector3(5, 0, 5),    // í”Œë ˆì´ì–´ 2  
+            new Vector3(-5, 0, -5),  // í”Œë ˆì´ì–´ 3
+            new Vector3(5, 0, -5)    // í”Œë ˆì´ì–´ 4
         };
-        // ÇÃ·¹ÀÌ¾î IDÀÇ ÇØ½ÃÄÚµå¸¦ ÀÌ¿ëÇØ À§Ä¡ ÀÎµ¦½º °áÁ¤
+        // í”Œë ˆì´ì–´ IDì˜ í•´ì‹œì½”ë“œë¥¼ ì´ìš©í•´ ìœ„ì¹˜ ì¸ë±ìŠ¤ ê²°ì •
         int index = Math.Abs(playerId.GetHashCode()) % 4;
         return towerPositions[index];
     }
 
-    #region ¿ÜºÎ¿¡¼­ Á¶È¸ÇÏ´Â µ¥ÀÌÅÍ (UI³ª Á¶°ÇÃ³¸®¿¡ »ç¿ë)
-    // ¿ÜºÎ¿¡¼­ Æ¯Á¤ ÇÃ·¹ÀÌ¾îÀÇ ÇöÀç Á¡¼ö Á¶È¸
+    #region ì™¸ë¶€ì—ì„œ ì¡°íšŒí•˜ëŠ” ë°ì´í„° (UIë‚˜ ì¡°ê±´ì²˜ë¦¬ì— ì‚¬ìš©)
+    // ì™¸ë¶€ì—ì„œ íŠ¹ì • í”Œë ˆì´ì–´ì˜ í˜„ì¬ ì ìˆ˜ ì¡°íšŒ
     public int GetPlayerScore(string uid)
     {
-        // playerScores µñ¼Å³Ê¸®¿¡¼­ °ª °¡Á®¿À±â (TryGetValue)
+        // playerScores ë”•ì…”ë„ˆë¦¬ì—ì„œ ê°’ ê°€ì ¸ì˜¤ê¸° (TryGetValue)
         return playerScores.TryGetValue(uid, out var score) ? score : 0;
     }
 
-    // ¿ÜºÎ¿¡¼­ Æ¯Á¤ ÇÃ·¹ÀÌ¾îÀÇ °ÔÀÓ ¿Ï·á ¿©ºÎ Á¶È¸
+    // ì™¸ë¶€ì—ì„œ íŠ¹ì • í”Œë ˆì´ì–´ì˜ ê²Œì„ ì™„ë£Œ ì—¬ë¶€ ì¡°íšŒ
     public bool IsPlayerFinished(string uid)
     {
         return playerFinished.TryGetValue(uid, out var finished) && finished;
@@ -300,17 +414,17 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
     #endregion
 
     /// <summary>
-    /// ÀÌ Å¸¿ö ÁÖÀÎÀÇ Å¸¿ö°¡ ¹«³ÊÁ³´Ù´Â °ÍÀ» ¸¶½ºÅÍ°¡ ¼ö½ÅÇßÀ» ¶§ Ã³¸®ÇÏ´Â ÇÔ¼ö
+    /// ì´ íƒ€ì›Œ ì£¼ì¸ì˜ íƒ€ì›Œê°€ ë¬´ë„ˆì¡Œë‹¤ëŠ” ê²ƒì„ ë§ˆìŠ¤í„°ê°€ ìˆ˜ì‹ í–ˆì„ ë•Œ ì²˜ë¦¬í•˜ëŠ” í•¨ìˆ˜
     /// </summary>
     public void OnTowerCollapsed(int ownerActorNumber)
     {
-        if (!PhotonNetwork.IsMasterClient) return; // ¸¶½ºÅÍ¸¸ Ã³¸®
-        if (currentState != JengaGameState.Playing) return; // late RPC ¹æÁö
+        if (!PhotonNetwork.IsMasterClient) return; // ë§ˆìŠ¤í„°ë§Œ ì²˜ë¦¬
+        if (currentState != JengaGameState.Playing) return; // late RPC ë°©ì§€
 
-        // 1) ¿ì¼± Å¸¿ö¿¡¼­ UID¸¦ ¾ò¾îº»´Ù (Å¸¿ö »ı¼º ½Ã ownerUid ÀúÀåÇØ µÎ´Â ÀüÁ¦)
+        // 1) ìš°ì„  íƒ€ì›Œì—ì„œ UIDë¥¼ ì–»ì–´ë³¸ë‹¤ (íƒ€ì›Œ ìƒì„± ì‹œ ownerUid ì €ì¥í•´ ë‘ëŠ” ì „ì œ)
         string uid = JengaTowerManager.Instance?.GetOwnerUidByActor(ownerActorNumber);
 
-        // 2) ½ÇÆĞ ½Ã º¸Á¶·Î Actor¡æUID ¸ÅÇÎ ½Ãµµ
+        // 2) ì‹¤íŒ¨ ì‹œ ë³´ì¡°ë¡œ Actorâ†’UID ë§¤í•‘ ì‹œë„
         if (string.IsNullOrEmpty(uid))
             uid = TryGetUidFromActor(ownerActorNumber);
 
@@ -328,33 +442,33 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
 
         if (!pdata.isAlive) return;
 
-        // Å»¶ô Ã³¸®
+        // íƒˆë½ ì²˜ë¦¬
         pdata.isAlive = false;
 
-        // µ¿Á¡ ¼øÀ§ Á¤·Ä¿¡¼­ ¸¶Áö¸· ¼º°ø ½Ã°¢À» ÃÖ´ë°ªÀ¸·Î ¼³Á¤ÇÏ¿© ¼øÀ§¿¡¼­ ¹Ğ¸®µµ·Ï ¼³Á¤
+        // ë™ì  ìˆœìœ„ ì •ë ¬ì—ì„œ ë§ˆì§€ë§‰ ì„±ê³µ ì‹œê°ì„ ìµœëŒ€ê°’ìœ¼ë¡œ ì„¤ì •í•˜ì—¬ ìˆœìœ„ì—ì„œ ë°€ë¦¬ë„ë¡ ì„¤ì •
         pdata.lastSuccessTime = float.MaxValue;
 
-        // Áßº¹ ¹æÁö : ÀÌ¹Ì Finished Ã³¸®µÈ À¯Àú¸é ´Ù½Ã ÀÌº¥Æ®¸¦ ½îÁö ¾Êµµ·Ï ¿¹¿ÜÃ³¸®
+        // ì¤‘ë³µ ë°©ì§€ : ì´ë¯¸ Finished ì²˜ë¦¬ëœ ìœ ì €ë©´ ë‹¤ì‹œ ì´ë²¤íŠ¸ë¥¼ ì˜ì§€ ì•Šë„ë¡ ì˜ˆì™¸ì²˜ë¦¬
         if (!playerFinished.TryGetValue(uid, out var finished) || !finished)
         {
             playerFinished[uid] = true;
 
-            OnPlayerAction?.Invoke(uid, false, 0); // ½ÇÆĞ ¾×¼Ç ÀÌº¥Æ®
-            OnPlayerFinished?.Invoke(uid); // °üÀü ¸ğµå ÀüÈ¯, UI Ç¥½Ã µî¿¡ È°¿ëÇÏµµ·Ï ÀÌº¥Æ® È£Ãâ
+            OnPlayerAction?.Invoke(uid, false, 0); // ì‹¤íŒ¨ ì•¡ì…˜ ì´ë²¤íŠ¸
+            OnPlayerFinished?.Invoke(uid); // ê´€ì „ ëª¨ë“œ ì „í™˜, UI í‘œì‹œ ë“±ì— í™œìš©í•˜ë„ë¡ ì´ë²¤íŠ¸ í˜¸ì¶œ
         }
 
         CheckAllPlayersFinished();
     }
 
     /// <summary>
-    /// Photon ¡ê Firebase¸¦ ¿¬°áÇØÁÖ´Â ¡°¹ø¿ª±â¡± ¿ªÇÒ
+    /// Photon â†” Firebaseë¥¼ ì—°ê²°í•´ì£¼ëŠ” â€œë²ˆì—­ê¸°â€ ì—­í• 
     /// </summary>
     private string TryGetUidFromActor(int actorNumber)
     {
-        // ÇöÀç ¹æ¿¡ ÀÖ´Â ÇÃ·¹ÀÌ¾î Áß ActorNumber°¡ °°Àº ÇÃ·¹ÀÌ¾î¸¦ Ã£À½
+        // í˜„ì¬ ë°©ì— ìˆëŠ” í”Œë ˆì´ì–´ ì¤‘ ActorNumberê°€ ê°™ì€ í”Œë ˆì´ì–´ë¥¼ ì°¾ìŒ
         var p = PhotonNetwork.PlayerList.FirstOrDefault(x => x.ActorNumber == actorNumber);
 
-        // Ã£Àº ÇÃ·¹ÀÌ¾îÀÇ CustomProperties¿¡¼­ "uid" Å° ²¨³»±â
+        // ì°¾ì€ í”Œë ˆì´ì–´ì˜ CustomPropertiesì—ì„œ "uid" í‚¤ êº¼ë‚´ê¸°
         if (p != null && p.CustomProperties != null && p.CustomProperties.TryGetValue("uid", out var uidObj))
         {
             return uidObj as string;
@@ -363,11 +477,11 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
     }
 
     /// <summary>
-    /// ÇöÀç »ıÁ¸ »óÅÂÀÎ ÇÃ·¹ÀÌ¾î ¼ö¸¦ ¼¾´Ù.
+    /// í˜„ì¬ ìƒì¡´ ìƒíƒœì¸ í”Œë ˆì´ì–´ ìˆ˜ë¥¼ ì„¼ë‹¤.
     /// </summary>
     private int AliveCount()
     {
-        // OnTowerCollapsedÀÇ Á¾·á Á¶°Ç ÆÇ´Ü¿¡ »ç¿ëÇÔ
+        // OnTowerCollapsedì˜ ì¢…ë£Œ ì¡°ê±´ íŒë‹¨ì— ì‚¬ìš©í•¨
         return players.Count(kv => kv.Value.isAlive);
     }
 }

@@ -6,39 +6,39 @@ using UnityEngine;
 
 public class JengaTower : MonoBehaviour
 {
-    [Header("Å¸¿ö Á¤º¸")]
-    [Tooltip("Ãş ¼ö(ÇÁ¸®ÆÕ ½ºÄµ ½Ã ÀÚµ¿ °è»ê)")]
+    [Header("íƒ€ì›Œ ì •ë³´")]
+    [Tooltip("ì¸µ ìˆ˜(í”„ë¦¬íŒ¹ ìŠ¤ìº” ì‹œ ìë™ ê³„ì‚°)")]
     public int towerHeight;
 
-    // ¼ÒÀ¯ÀÚ Ç¥ÁØ/º¸Á¶ Å°
+    // ì†Œìœ ì í‘œì¤€/ë³´ì¡° í‚¤
     public int ownerActorNumber { get; private set; }
     public string ownerUid { get; private set; }
 
-    [Header("ºí·Ï °ü¸®")]
-    public readonly List<JengaBlock> allBlocks = new();                         // ÀüÃ¼ ºí·Ï
+    [Header("ë¸”ë¡ ê´€ë¦¬")]
+    public readonly List<JengaBlock> allBlocks = new();                         // ì „ì²´ ë¸”ë¡
     private readonly Dictionary<int, List<JengaBlock>> _blocksByLayer = new();  // layer -> blocks
     private readonly HashSet<int> _removedBlockIds = new();
     private readonly List<JengaBlock> _removableCache = new();
 
-    [Header("ÇÁ¸®ÆÕ & »çÀÌÂ¡")]
+    [Header("í”„ë¦¬íŒ¹ & ì‚¬ì´ì§•")]
     [SerializeField] private GameObject blockPrefab;
-    [SerializeField] private float blockWidth = 1.0f;    // ±ä º¯
-    [SerializeField] private float blockDepth = 0.3f;    // ÂªÀº º¯
-    [SerializeField] private float blockHeight = 0.3f;   // ³ôÀÌ (y)
-    [SerializeField] private float blockGap = 0.01f;     // ºí·Ï »çÀÌ ¹Ì¼¼ °£°İ
+    [SerializeField] private float blockWidth = 1.0f;    // ê¸´ ë³€
+    [SerializeField] private float blockDepth = 0.3f;    // ì§§ì€ ë³€
+    [SerializeField] private float blockHeight = 0.3f;   // ë†’ì´ (y)
+    [SerializeField] private float blockGap = 0.01f;     // ë¸”ë¡ ì‚¬ì´ ë¯¸ì„¸ ê°„ê²©
 
-    [Header("¾ÈÁ¤¼º ÆÇÁ¤")]
-    [SerializeField, Range(0f, 30f)] private float tiltFailAngle = 15f; // ºí·ÏÀÌ ÀÌ °¢µµ ÀÌ»ó ±â¿ï¸é ºÒ¾ÈÁ¤
-    [SerializeField] private float dropFailY = -0.2f;                   // ¹Ù´Ú ±âÁØ ³«ÇÏ Çã¿ëÄ¡
-    [SerializeField] private bool allowTopRemoval = true;               // ÃÖ»ó´Ü Á¦°Å Çã¿ë ¿©ºÎ
-    [SerializeField, Min(0)] private int topSafeLayers = 1;             // ÃÖ»ó´Ü º¸È£Ãş ¼ö
+    [Header("ì•ˆì •ì„± íŒì •")]
+    [SerializeField, Range(0f, 30f)] private float tiltFailAngle = 15f; // ë¸”ë¡ì´ ì´ ê°ë„ ì´ìƒ ê¸°ìš¸ë©´ ë¶ˆì•ˆì •
+    [SerializeField] private float dropFailY = -0.2f;                   // ë°”ë‹¥ ê¸°ì¤€ ë‚™í•˜ í—ˆìš©ì¹˜
+    [SerializeField] private bool allowTopRemoval = true;               // ìµœìƒë‹¨ ì œê±° í—ˆìš© ì—¬ë¶€
+    [SerializeField, Min(0)] private int topSafeLayers = 1;             // ìµœìƒë‹¨ ë³´í˜¸ì¸µ ìˆ˜
 
-    [Header("ÇÁ¸®ÆÕ ¸ğµå ¿É¼Ç")]
-    [SerializeField] private bool preferLayerByParentName = true; // "Layer_0" ºÎ¸ğ¸í ¿ì¼±
+    [Header("í”„ë¦¬íŒ¹ ëª¨ë“œ ì˜µì…˜")]
+    [SerializeField] private bool preferLayerByParentName = true; // "Layer_0" ë¶€ëª¨ëª… ìš°ì„ 
     [SerializeField] private string layerPrefix = "Layer_";
-    [SerializeField] private bool allowTopRemovalInPrefab = true; // ÇÁ¸®ÆÕ ¸ğµå ±âº»°ª
+    [SerializeField] private bool allowTopRemovalInPrefab = true; // í”„ë¦¬íŒ¹ ëª¨ë“œ ê¸°ë³¸ê°’
     [SerializeField, Range(0.0005f, 0.05f)]
-    private float yQuantizeEpsilon = 0.01f; // Y ±×·ìÇÎ ¿ÀÂ÷ Çã¿ëÄ¡
+    private float yQuantizeEpsilon = 0.01f; // Y ê·¸ë£¹í•‘ ì˜¤ì°¨ í—ˆìš©ì¹˜
 
     private bool _isCollapsed = false;
 
@@ -78,7 +78,7 @@ public class JengaTower : MonoBehaviour
         var blocks = GetComponentsInChildren<JengaBlock>(includeInactive: true);
         if (blocks == null || blocks.Length == 0)
         {
-            Debug.LogError("[JengaTower - InitializeFromExistingHierarchy] ÀÌ Å¸¿ö¿¡¼­ Á¨°¡ ºí·ÏÀ» Ã£À» ¼ö ¾ø½À´Ï´Ù.");
+            Debug.LogError("[JengaTower - InitializeFromExistingHierarchy] ì´ íƒ€ì›Œì—ì„œ ì  ê°€ ë¸”ë¡ì„ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.");
             return;
         }
 
@@ -414,7 +414,7 @@ public class JengaTower : MonoBehaviour
 
     private IEnumerator CollapseAnimation()
     {
-        // Å¸¿ö ·çÆ®¸¦ ±â¿ïÀÌ±â
+        // íƒ€ì›Œ ë£¨íŠ¸ë¥¼ ê¸°ìš¸ì´ê¸°
         float tiltAngle = UnityEngine.Random.Range(15f, 25f);
         Vector3 tiltAxis = new Vector3(
             UnityEngine.Random.Range(-1f, 1f),
@@ -422,7 +422,7 @@ public class JengaTower : MonoBehaviour
             UnityEngine.Random.Range(-1f, 1f)
         ).normalized;
 
-        // Å¸¿ö ÀüÃ¼¸¦ ÃµÃµÈ÷ ±â¿ïÀÌ±â
+        // íƒ€ì›Œ ì „ì²´ë¥¼ ì²œì²œíˆ ê¸°ìš¸ì´ê¸°
         float duration = 1f;
         Quaternion startRot = transform.rotation;
         Quaternion targetRot = Quaternion.AngleAxis(tiltAngle, tiltAxis) * startRot;
@@ -435,7 +435,7 @@ public class JengaTower : MonoBehaviour
             yield return null;
         }
 
-        // ÀÌÁ¦ ¸ğµç ºí·ÏÀ» ¹°¸® Àû¿ë (Áß·Â¸¸À¸·Î)
+        // ì´ì œ ëª¨ë“  ë¸”ë¡ì„ ë¬¼ë¦¬ ì ìš© (ì¤‘ë ¥ë§Œìœ¼ë¡œ)
         foreach (var block in allBlocks.Where(b => !b.IsRemoved))
         {
             if (block.TryGetComponent<Rigidbody>(out var rb))

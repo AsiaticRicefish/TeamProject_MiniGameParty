@@ -32,8 +32,8 @@ public class CameraManager : CombinedSingleton<CameraManager>
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        Debug.Log($"[CameraManager] OnSceneLoaded() ¡æ ½ºÅÃ ÃÊ±âÈ­. ¾À: {scene.name}");
-        ClearStack();  // ½ºÅÃ Å¬¸®¾î
+        Debug.Log($"[CameraManager] OnSceneLoaded() â†’ ìŠ¤íƒ ì´ˆê¸°í™”. ì”¬: {scene.name}");
+        ClearStack();  // ìŠ¤íƒ í´ë¦¬ì–´
     }
 
 
@@ -41,22 +41,22 @@ public class CameraManager : CombinedSingleton<CameraManager>
 
 
     /// <summary>
-    /// ÇöÀç ¾ÀÀÇ MainCamera¸¦ Ã£¾Æ ÀçÁöÁ¤ÇÕ´Ï´Ù.
+    /// í˜„ì¬ ì”¬ì˜ MainCameraë¥¼ ì°¾ì•„ ì¬ì§€ì •í•©ë‹ˆë‹¤.
     /// </summary>
     public void UpdateMainCamera()
     {
         _mainCam = Camera.main;
-        Debug.Log("[CameraManager] UpdateMainCamera() È£ÃâµÊ ¡æ MainCamera °»½Å");
+        Debug.Log("[CameraManager] UpdateMainCamera() í˜¸ì¶œë¨ â†’ MainCamera ê°±ì‹ ");
     }
 
     /// <summary>
-    /// ¿ÜºÎ¿¡¼­ Á÷Á¢ MainCamera¸¦ ÁöÁ¤ÇÕ´Ï´Ù.
+    /// ì™¸ë¶€ì—ì„œ ì§ì ‘ MainCameraë¥¼ ì§€ì •í•©ë‹ˆë‹¤.
     /// </summary>
     public void SetMainCamera(Camera cam)
     {
         _mainCam = cam;
 
-        // CinemachineBrain ÄÄÆ÷³ÍÆ®°¡ ¾øÀ¸¸é Ãß°¡
+        // CinemachineBrain ì»´í¬ë„ŒíŠ¸ê°€ ì—†ìœ¼ë©´ ì¶”ê°€
         if (_mainCam && !_mainCam.TryGetComponent(out CinemachineBrain _))
         {
             _mainCam.gameObject.AddComponent<CinemachineBrain>();
@@ -72,7 +72,7 @@ public class CameraManager : CombinedSingleton<CameraManager>
     public bool HasCamera(string id) => _cameraDict.ContainsKey(id);
 
     /// <summary>
-    /// VirtualCamera¸¦ ID¿Í ÇÔ²² µî·ÏÇÕ´Ï´Ù.
+    /// VirtualCameraë¥¼ IDì™€ í•¨ê»˜ ë“±ë¡í•©ë‹ˆë‹¤.
     /// </summary>
     public void RegisterCamera(string id, CinemachineVirtualCamera cam)
     {
@@ -90,18 +90,18 @@ public class CameraManager : CombinedSingleton<CameraManager>
     }
 
     /// <summary>
-    /// ID·Î µî·ÏµÈ VirtualCamera¸¦ ÇØÁ¦ÇÕ´Ï´Ù.
+    /// IDë¡œ ë“±ë¡ëœ VirtualCameraë¥¼ í•´ì œí•©ë‹ˆë‹¤.
     /// </summary>
     public void UnregisterCamera(string id)
     {
         if (!_cameraDict.Remove(id)) return;
-        Debug.Log($"[CameraManager] UnregisterCamera() ¡æ Ä«¸Ş¶ó ÇØÁ¦: {id}");
+        Debug.Log($"[CameraManager] UnregisterCamera() â†’ ì¹´ë©”ë¼ í•´ì œ: {id}");
     }
 
     #endregion
 
     /// <summary>
-    /// ID¿¡ ÇØ´çÇÏ´Â VirtualCamera¸¦ ¹İÈ¯ÇÕ´Ï´Ù.
+    /// IDì— í•´ë‹¹í•˜ëŠ” VirtualCameraë¥¼ ë°˜í™˜í•©ë‹ˆë‹¤.
     /// </summary>
     public CinemachineVirtualCamera GetCamera(string id)
     {
@@ -114,19 +114,19 @@ public class CameraManager : CombinedSingleton<CameraManager>
     public string TopId => _cameraStack.Count > 0 ? _cameraStack.Peek() : null;
 
     /// <summary>
-    /// ÁöÁ¤ÇÑ Ä«¸Ş¶ó¸¦ ½ºÅÃ ÃÖ»ó´Ü¿¡ ¿Ã¸®°í ¿ì¼±¼øÀ§ 10À¸·Î ¼³Á¤ÇÕ´Ï´Ù.
+    /// ì§€ì •í•œ ì¹´ë©”ë¼ë¥¼ ìŠ¤íƒ ìµœìƒë‹¨ì— ì˜¬ë¦¬ê³  ìš°ì„ ìˆœìœ„ 10ìœ¼ë¡œ ì„¤ì •í•©ë‹ˆë‹¤.
     /// </summary>
     public void PushCamera(string id)
     {
-        Debug.Log($"[CameraManager] PushCamera() È£ÃâµÊ: {id}");
+        Debug.Log($"[CameraManager] PushCamera() í˜¸ì¶œë¨: {id}");
 
         if (!_cameraDict.ContainsKey(id))
         {
-            Debug.LogWarning($"[CameraManager] PushCamera() ¡æ {id} Ä«¸Ş¶ó°¡ Á¸ÀçÇÏÁö ¾ÊÀ½");
+            Debug.LogWarning($"[CameraManager] PushCamera() â†’ {id} ì¹´ë©”ë¼ê°€ ì¡´ì¬í•˜ì§€ ì•ŠìŒ");
             return;
         }
 
-        // ÇöÀç top ºñÈ°¼ºÈ­
+        // í˜„ì¬ top ë¹„í™œì„±í™”
         if (_cameraStack.Count > 0)
         {
             var prev = GetCamera(_cameraStack.Peek());
@@ -138,20 +138,20 @@ public class CameraManager : CombinedSingleton<CameraManager>
         var now = GetCamera(id);
         if (now) now.Priority = activePriority;
 
-        EnsureBrain(); // ÀüÈ¯ º¸ÀåÀ» À§ÇØ Brain ºÎÂø È®ÀÎ
+        EnsureBrain(); // ì „í™˜ ë³´ì¥ì„ ìœ„í•´ Brain ë¶€ì°© í™•ì¸
     }
 
     /// <summary>
-    /// ½ºÅÃ¿¡¼­ ÇöÀç Ä«¸Ş¶ó¸¦ Á¦°ÅÇÏ°í, ¹Ù·Î ¾Æ·¡ Ä«¸Ş¶ó¸¦ È°¼ºÈ­ÇÕ´Ï´Ù.
+    /// ìŠ¤íƒì—ì„œ í˜„ì¬ ì¹´ë©”ë¼ë¥¼ ì œê±°í•˜ê³ , ë°”ë¡œ ì•„ë˜ ì¹´ë©”ë¼ë¥¼ í™œì„±í™”í•©ë‹ˆë‹¤.
     /// </summary>
     public void PopCamera()
     {
-        Debug.Log("[CameraManager] PopCamera() È£ÃâµÊ");
+        Debug.Log("[CameraManager] PopCamera() í˜¸ì¶œë¨");
 
 
         if (_cameraStack.Count == 0)
         {
-            Debug.LogWarning("[CameraManager] PopCamera() ¡æ Ä«¸Ş¶ó ½ºÅÃÀÌ ºñ¾î ÀÖÀ½");
+            Debug.LogWarning("[CameraManager] PopCamera() â†’ ì¹´ë©”ë¼ ìŠ¤íƒì´ ë¹„ì–´ ìˆìŒ");
             return;
         }
 
@@ -165,15 +165,15 @@ public class CameraManager : CombinedSingleton<CameraManager>
             var top = GetCamera(_cameraStack.Peek());
             if (top) top.Priority = activePriority;
         }
-        Debug.Log($"[CameraManager] Pop ¡æ {poppedId} (nowTop: {TopId})");
+        Debug.Log($"[CameraManager] Pop â†’ {poppedId} (nowTop: {TopId})");
     }
 
     /// <summary>
-    /// ¸ğµç Ä«¸Ş¶ó ¿ì¼±¼øÀ§¸¦ 0À¸·Î ÃÊ±âÈ­ÇÏ°í ½ºÅÃÀ» ºñ¿ó´Ï´Ù.
+    /// ëª¨ë“  ì¹´ë©”ë¼ ìš°ì„ ìˆœìœ„ë¥¼ 0ìœ¼ë¡œ ì´ˆê¸°í™”í•˜ê³  ìŠ¤íƒì„ ë¹„ì›ë‹ˆë‹¤.
     /// </summary>
     public void ClearStack()
     {
-        Debug.Log("[CameraManager] ClearStack() È£ÃâµÊ");
+        Debug.Log("[CameraManager] ClearStack() í˜¸ì¶œë¨");
         foreach (var cam in _cameraDict.Values) if (cam) cam.Priority = inactivePriority;
         _cameraStack.Clear();
     }
@@ -185,7 +185,7 @@ public class CameraManager : CombinedSingleton<CameraManager>
 
     #endregion
 
-    #region Blends / Impulse (Ä«¸Ş¶ó Èçµé¸² ±â´É)
+    #region Blends / Impulse (ì¹´ë©”ë¼ í”ë“¤ë¦¼ ê¸°ëŠ¥)
 
     public void ApplyDefaultBlend(CinemachineBlendDefinition.Style style = CinemachineBlendDefinition.Style.EaseInOut,
                                   float time = 0.25f)
@@ -202,12 +202,12 @@ public class CameraManager : CombinedSingleton<CameraManager>
 
     public void PlayImpulseOnTop(float force = 1f)
     {
-        if (TopId == null) { Debug.LogWarning("[CameraManager] Impulse ¡æ no top"); return; }
+        if (TopId == null) { Debug.LogWarning("[CameraManager] Impulse â†’ no top"); return; }
         var cam = GetCamera(TopId);
         if (!cam) return;
 
         var src = cam.GetComponent<CinemachineImpulseSource>();
-        if (!src) { Debug.LogWarning($"[CameraManager] Impulse ¡æ no source on {TopId}"); return; }
+        if (!src) { Debug.LogWarning($"[CameraManager] Impulse â†’ no source on {TopId}"); return; }
 
         src.GenerateImpulseWithForce(force);
     }

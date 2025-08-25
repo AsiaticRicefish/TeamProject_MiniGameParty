@@ -9,11 +9,11 @@ using UnityEngine;
 using PhotonHashtable = ExitGames.Client.Photon.Hashtable;
 
 /// <summary>
-/// Á¨°¡ °ÔÀÓÀÇ ³×Æ®¿öÅ© µ¿±âÈ­¸¦ ´ã´çÇÏ´Â Àü¿ë ¸Å´ÏÀú
-/// - ºí·Ï Á¦°Å ¾Ö´Ï¸ŞÀÌ¼Ç
-/// - Å¸ÀÌ¹Ö °ÔÀÓ °á°ú
-/// - °ÔÀÓ »óÅÂ
-/// µîÀÇ ³×Æ®¿öÅ© Åë½ÅÀ» Photon RPC¸¦ ÅëÇØ Ã³¸®
+/// ì  ê°€ ê²Œì„ì˜ ë„¤íŠ¸ì›Œí¬ ë™ê¸°í™”ë¥¼ ë‹´ë‹¹í•˜ëŠ” ì „ìš© ë§¤ë‹ˆì €
+/// - ë¸”ë¡ ì œê±° ì• ë‹ˆë©”ì´ì…˜
+/// - íƒ€ì´ë° ê²Œì„ ê²°ê³¼
+/// - ê²Œì„ ìƒíƒœ
+/// ë“±ì˜ ë„¤íŠ¸ì›Œí¬ í†µì‹ ì„ Photon RPCë¥¼ í†µí•´ ì²˜ë¦¬
 /// <summary>
 
 [RequireComponent(typeof(PhotonView))]
@@ -21,49 +21,63 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
 {
     private PhotonView thisPhotonView;
 
-    // °üÀüÀÚ ½º³À¼¦ ´ë±â Àû¿ë ¿ë ÄÚ·çÆ¾
+    // ê´€ì „ì ìŠ¤ëƒ…ìƒ· ëŒ€ê¸° ì ìš© ìš© ì½”ë£¨í‹´
     private Coroutine _pendingApplyCo;
 
-    // Á¡¼ö °è»ê »ó¼ö
+    // ì ìˆ˜ ê³„ì‚° ìƒìˆ˜
     private const int BASE_SCORE = 10;
     private const int MAX_BONUS = 10;
 
     /// <summary>
-    /// Á¨°¡ ¾À¿¡¼­¸¸ »ì¾ÆÀÖ´Â ÀÏ½ÃÀû ½Ì±ÛÅæ
+    /// ì  ê°€ ì”¬ì—ì„œë§Œ ì‚´ì•„ìˆëŠ” ì¼ì‹œì  ì‹±ê¸€í†¤
     /// </summary>
     protected override void OnAwake()
     {
         base.isPersistent = false;
 
-        base.OnAwake();
-
-        // Áßº¹ PhotonView°¡ ºÙ¾î ÀÖÀ¸¸é Á¤¸®
-        var pvs = GetComponents<PhotonView>();
-        if (pvs.Length > 1)
+        thisPhotonView = GetComponent<PhotonView>();
+        if (thisPhotonView == null)
         {
-            for (int i = 1; i < pvs.Length; i++) Destroy(pvs[i]);
+            Debug.LogError("[JengaNetwork] PhotonView MISSING on JengaNetworkManager!");
         }
     }
 
     /// <summary>
-    /// ¸Å´ÏÀú ÃÊ±âÈ­ ÁøÀÔÁ¡
+    /// ë§¤ë‹ˆì € ì´ˆê¸°í™” ì§„ì…ì 
     /// </summary>
     public void Initialize()
     {
-//#if PHOTON_UNITY_NETWORKING_2_OR_NEWER
-//          if (PhotonNetwork.InRoom && thisPhotonView.ViewID == 0)
-//        {
-//            if (!PhotonNetwork.AllocateViewID(thisPhotonView))
-//                Debug.LogError("[NM] AllocateViewID failed. (¾À¿¡ ¹Ì¸® ¹èÄ¡ + Scene ViewID ±ÇÀå)");
-//        }
-//#endif
+        Debug.Log($"[JengaNetworkManager.Initialize] ViewID: {thisPhotonView?.ViewID}, InRoom: {PhotonNetwork.InRoom}");
+
+        // PhotonView ê²€ì¦ ê°•í™”
+        if (thisPhotonView == null)
+        {
+            Debug.LogError("[JengaNetworkManager] PhotonView is NULL - RPC will fail!");
+            return;
+        }
+
+        // ViewIDê°€ 0ì´ë©´ ì”¬ì—ì„œ ë¯¸ë¦¬ ì„¤ì •ëœ ViewID ê¶Œì¥
+        if (thisPhotonView.ViewID == 0)
+        {
+            Debug.LogError("[JengaNetworkManager] ViewID is 0! Set Scene ViewID in Inspector or use PhotonNetwork.AllocateViewID before Initialize");
+
+            // ë™ì  í• ë‹¹ ì¬ì‹œë„
+            if (PhotonNetwork.InRoom && !PhotonNetwork.AllocateViewID(thisPhotonView))
+            {
+                Debug.LogError("[JengaNetworkManager] AllocateViewID failed - RPC communication will not work");
+            }
+            else
+            {
+                Debug.Log($"[JengaNetworkManager] ViewID allocated: {thisPhotonView.ViewID}");
+            }
+        }
     }
 
 
-    #region ÇÃ·¹ÀÌ¾î °á°ú º¸°í ¡æ ¸¶½ºÅÍ
+    #region í”Œë ˆì´ì–´ ê²°ê³¼ ë³´ê³  â†’ ë§ˆìŠ¤í„°
 
     /// <summary>
-    /// Å¬¶óÀÌ¾ğÆ®°¡ ÀÚ½ÅÀÇ Çàµ¿ °á°ú(¼º°ø/½ÇÆĞ, Á¡¼ö)¸¦ ¸¶½ºÅÍ¿¡°Ô º¸°í
+    /// í´ë¼ì´ì–¸íŠ¸ê°€ ìì‹ ì˜ í–‰ë™ ê²°ê³¼(ì„±ê³µ/ì‹¤íŒ¨, ì ìˆ˜)ë¥¼ ë§ˆìŠ¤í„°ì—ê²Œ ë³´ê³ 
     /// </summary>
     public void SendPlayerActionResult(string uid, bool success, int score)
     {
@@ -71,24 +85,24 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     }
 
     /// <summary>
-    /// [RPC] ¸¶½ºÅÍ Å¬¶óÀÌ¾ğÆ®¿¡¼­ ¼ö½ÅµÈ °á°ú¸¦ GameManager¿¡ ¹İ¿µ
+    /// [RPC] ë§ˆìŠ¤í„° í´ë¼ì´ì–¸íŠ¸ì—ì„œ ìˆ˜ì‹ ëœ ê²°ê³¼ë¥¼ GameManagerì— ë°˜ì˜
     /// </summary>
     [PunRPC]
     private void ReceivePlayerActionResult(string uid, bool success, int score)
     {
-        // ¸¶½ºÅÍ Å¬¶óÀÌ¾ğÆ®¿¡¼­¸¸ ½ÇÇà
+        // ë§ˆìŠ¤í„° í´ë¼ì´ì–¸íŠ¸ì—ì„œë§Œ ì‹¤í–‰
         if (!PhotonNetwork.IsMasterClient) return;
 
-        Debug.Log($"[JengaNetwork - ReceivePlayerActionResult] °á°ú ¼ö½Å: {uid} | ¼º°ø ¿©ºÎ: {success} | Á¡¼ö: {score}");
+        Debug.Log($"[JengaNetwork - ReceivePlayerActionResult] ê²°ê³¼ ìˆ˜ì‹ : {uid} | ì„±ê³µ ì—¬ë¶€: {success} | ì ìˆ˜: {score}");
         JengaGameManager.Instance.ApplyPlayerActionResult(uid, success, score);
     }
 
     #endregion
 
-    #region °ÔÀÓ »óÅÂ µ¿±âÈ­: ¸¶½ºÅÍ ¡æ ÀüÃ¼ Å¬¶óÀÌ¾ğÆ®
+    #region ê²Œì„ ìƒíƒœ ë™ê¸°í™”: ë§ˆìŠ¤í„° â†’ ì „ì²´ í´ë¼ì´ì–¸íŠ¸
 
     /// <summary>
-    /// °ÔÀÓ »óÅÂ º¯°æÀ» ÀüÃ¼ Å¬¶óÀÌ¾ğÆ®¿¡ ¼Û½Å
+    /// ê²Œì„ ìƒíƒœ ë³€ê²½ì„ ì „ì²´ í´ë¼ì´ì–¸íŠ¸ì— ì†¡ì‹ 
     /// </summary>
     public void BroadcastGameState(JengaGameState state)
     {
@@ -118,16 +132,16 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     private void RPC_ApplyGameState(int stateInt)
     {
         var state = (JengaGameState)stateInt;
-        Debug.Log($"[NM] ApplyGameState ¡æ {state}");
+        Debug.Log($"[NM] ApplyGameState â†’ {state}");
         JengaGameManager.Instance?.ApplyGameStateChange(state);
     }
 
     #endregion
 
-    #region  Å¸ÀÌ¹Ö ¹Ì´Ï°ÔÀÓ °á°ú: Å¬¶óÀÌ¾ğÆ® ¡æ ¸¶½ºÅÍ
+    #region  íƒ€ì´ë° ë¯¸ë‹ˆê²Œì„ ê²°ê³¼: í´ë¼ì´ì–¸íŠ¸ â†’ ë§ˆìŠ¤í„°
 
     /// <summary>
-    /// Å¬¶óÀÌ¾ğÆ®°¡ Å¸ÀÌ¹Ö °ÔÀÓÀÇ °á°ú(Á¤È®µµ Æ÷ÇÔ)¸¦ ¸¶½ºÅÍ¿¡°Ô º¸°í
+    /// í´ë¼ì´ì–¸íŠ¸ê°€ íƒ€ì´ë° ê²Œì„ì˜ ê²°ê³¼(ì •í™•ë„ í¬í•¨)ë¥¼ ë§ˆìŠ¤í„°ì—ê²Œ ë³´ê³ 
     /// </summary>
     public void SendTimingResult(string uid, bool success, float accuracy)
     {
@@ -135,7 +149,7 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     }
 
     /// <summary>
-    /// [RPC] ¸¶½ºÅÍ°¡ Á¤È®µµ ±â¹İ Á¡¼ö¸¦ °è»êÇØ GameManager¿¡ ¹İ¿µ
+    /// [RPC] ë§ˆìŠ¤í„°ê°€ ì •í™•ë„ ê¸°ë°˜ ì ìˆ˜ë¥¼ ê³„ì‚°í•´ GameManagerì— ë°˜ì˜
     /// </summary>
     [PunRPC]
     private void ReceiveTimingResult(string uid, bool success, float accuracy)
@@ -148,28 +162,40 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
 
     #endregion
 
-    #region ºí·Ï Á¦°Å ¾Ö´Ï¸ŞÀÌ¼Ç µ¿±âÈ­: ¸¶½ºÅÍ ¡æ ÀüÃ¼ Å¬¶óÀÌ¾ğÆ®
+    #region ë¸”ë¡ ì œê±° ì• ë‹ˆë©”ì´ì…˜ ë™ê¸°í™”: ë§ˆìŠ¤í„° â†’ ì „ì²´ í´ë¼ì´ì–¸íŠ¸
 
-    // === ·ÎÄÃ ¡æ ¸¶½ºÅÍ: ºí·Ï Á¦°Å ¿äÃ» ===
-    // ¿äÃ»ÀÚ´Â ActorNumber·Î ½Äº°. UID ¸ÅÇÎÀÌ ÇÊ¿äÇÏ¸é ³»ºÎ¿¡¼­ º¯È¯.
+    // === ë¡œì»¬ â†’ ë§ˆìŠ¤í„°: ë¸”ë¡ ì œê±° ìš”ì²­ ===
+    // ìš”ì²­ìëŠ” ActorNumberë¡œ ì‹ë³„. UID ë§¤í•‘ì´ í•„ìš”í•˜ë©´ ë‚´ë¶€ì—ì„œ ë³€í™˜.
     public void RequestBlockRemoval_MasterAuth(int actorNumber, int blockId, int clientSuggestedScore, float clientAccuracy)
-    {
-        thisPhotonView.RPC(nameof(RPC_RequestBlockRemoval), RpcTarget.MasterClient, actorNumber, blockId, clientSuggestedScore, clientAccuracy);
+    {  
+        if (PhotonNetwork.IsMasterClient)
+        {
+            // ë§ˆìŠ¤í„°ì¼ ê²½ìš° ë°”ë¡œ ë¡œì»¬ ì²˜ë¦¬
+            ApplyBlockRemoval_OnMaster(actorNumber, blockId, clientSuggestedScore, clientAccuracy);
+        }
+        else
+        {
+            // ë¹„ë§ˆìŠ¤í„°ëŠ” ë§ˆìŠ¤í„°ì—ê²Œ ìš”ì²­
+            thisPhotonView.RPC(nameof(RPC_RequestBlockRemoval), RpcTarget.MasterClient,
+                               actorNumber, blockId, clientSuggestedScore, clientAccuracy);
+        }
     }
 
-    // === ¸¶½ºÅÍ¿¡¼­ ¼ö½Å/°ËÁõ ===
     [PunRPC]
     private void RPC_RequestBlockRemoval(int actorNumber, int blockId, int clientSuggestedScore, float clientAccuracy)
     {
-        Debug.Log($"[NET] REQ_Remove recv on Master actor={actorNumber} blockId ={blockId} acc={clientAccuracy:0.00}");
-
-        // A) ¸¶½ºÅÍ/»óÅÂ
         if (!PhotonNetwork.IsMasterClient) { Debug.LogWarning("[NET] Reject: not master"); return; }
+        ApplyBlockRemoval_OnMaster(actorNumber, blockId, clientSuggestedScore, clientAccuracy);
+    }
+
+    private void ApplyBlockRemoval_OnMaster(int actorNumber, int blockId, int clientSuggestedScore, float clientAccuracy)
+    {
+        Debug.Log($"[NET] REQ_Remove recv on Master actor={actorNumber} blockId={blockId} acc={clientAccuracy:0.00}");
 
         var gm = JengaGameManager.Instance;
         if (gm == null)
         {
-            Debug.LogWarning("[NET] GM NULL ¡æ Á¡¼ö ¹İ¿µÀº ½ºÅµÇÏ°í °ËÁõ/Àû¿ëÀº ÁøÇà");
+            Debug.LogWarning("[NET] GM NULL â†’ ì ìˆ˜ ë°˜ì˜ì€ ìŠ¤í‚µí•˜ê³  ê²€ì¦/ì ìš©ì€ ì§„í–‰");
         }
         else if (gm.currentState != JengaGameState.Playing)
         {
@@ -178,12 +204,9 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
             return;
         }
 
-
-        // --- Å¸¿ö/ºí·Ï ÇØ¼® ---
         var tm = JengaTowerManager.Instance;
         if (tm == null) { Debug.LogError("[NET] Reject: TowerManager null"); ReplyDeny(actorNumber, blockId, "towerMgr-null"); return; }
 
-        // Å¸¿ö/ºí·Ï Á¶È¸
         var tower = tm.GetPlayerTower(actorNumber);
         if (tower == null)
         {
@@ -191,7 +214,6 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
             ReplyDeny(actorNumber, blockId, "tower-null");
             return;
         }
-
 
         var block = tower?.GetBlockById(blockId);
         if (block == null)
@@ -210,8 +232,6 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
             return;
         }
 
-
-        // C) Á¦°Å °¡´É¼º °ËÁõ (Ä³½Ã vs ±ÔÄ¢)
         bool removableCache = tower.GetRemovableBlocks().Contains(block);
         bool removableRule = tower.CanRemoveBlock(block);
 
@@ -229,11 +249,10 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
             }
         }
 
-        // D) Á¡¼ö °è»ê(¼­¹ö °áÁ¤)
         int bonus = Mathf.Clamp(Mathf.RoundToInt(clientAccuracy * MAX_BONUS), 0, MAX_BONUS);
         int finalScore = BASE_SCORE + bonus;
 
-        Debug.Log($"[NET] OK ¡æ Broadcast Apply owner={actorNumber} blockId={blockId} score={finalScore}");
+        Debug.Log($"[NET] OK â†’ Broadcast Apply owner={actorNumber} blockId={blockId} score={finalScore}");
         thisPhotonView.RPC(nameof(RPC_ApplyBlockRemoval), RpcTarget.All, actorNumber, blockId, true, finalScore, true);
     }
 
@@ -241,37 +260,32 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     private void RPC_ApplyBlockRemoval(int ownerActorNumber, int blockId, bool withAnimation, int score, bool isSuccess = true)
     {
         Debug.Log($"[NET] APPLY_Remove recv owner={ownerActorNumber} blockId={blockId} withAnim={withAnimation} succ={isSuccess}");
-        // 1) ½ÇÁ¦ Á¦°Å ¹İ¿µ
+        
+        // ì‹¤ì œ ì œê±° ë°˜ì˜
         var tower = JengaTowerManager.Instance?.GetPlayerTower(ownerActorNumber);
-        var block = tower?.GetBlockById(blockId);
 
-        if (block != null && withAnimation)
+        if (tower == null)
         {
-            block.RemoveWithAnimation(isSuccess); // isSuccess ÆÄ¶ó¹ÌÅÍ Àü´Ş
-        }
-        else
-        {
-            tower?.ApplyBlockRemoval(blockId, withAnimation, isSuccess);
+            Debug.LogError($"[NET] tower NULL for actor={ownerActorNumber}");
+            return;
         }
 
-        // 2) Á¡¼ö ¹İ¿µÀº ¸¶½ºÅÍ¸¸ Áı°è
+        tower.ApplyBlockRemoval(blockId, withAnimation, isSuccess);
+
+        // ì ìˆ˜ ë°˜ì˜ì€ ë§ˆìŠ¤í„°ë§Œ ì§‘ê³„
         if (PhotonNetwork.IsMasterClient)
         {
-            // ActorNumber ¡æ UID º¯È¯ÀÌ ÇÊ¿äÇÏ´Ù¸é PlayerListÀÇ CustomProperties["uid"] ÂüÁ¶
+            // ActorNumber â†’ UID ë³€í™˜ì´ í•„ìš”í•˜ë‹¤ë©´ PlayerListì˜ CustomProperties["uid"] ì°¸ì¡°
             string uid = TryGetUidFromActor(ownerActorNumber);
             if (!string.IsNullOrEmpty(uid))
             {
                 JengaGameManager.Instance?.ApplyPlayerActionResult(uid, success: true, scoreGained: score);
             }
         }
-
-        // 3) °øÅë ¿¬Ãâ/»ç¿îµå/UI
-        // JengaUIManager
-        // JengaSoundManager
     }
 
     /// <summary>
-    /// °ÅÀı ½Ã ¿äÃ»ÀÚ¿¡°Ô¸¸ ÅëÁö ¡æ Å¬¶ó¿¡¼­ pending Àá±İ ÇØÁ¦/Åä½ºÆ® Ç¥½Ã µî¿¡ »ç¿ë
+    /// ê±°ì ˆ ì‹œ ìš”ì²­ìì—ê²Œë§Œ í†µì§€ â†’ í´ë¼ì—ì„œ pending ì ê¸ˆ í•´ì œ/í† ìŠ¤íŠ¸ í‘œì‹œ ë“±ì— ì‚¬ìš©
     /// </summary>
     private void ReplyDeny(int actorNumber, int blockId, string reason)
     {
@@ -288,7 +302,7 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     }
 
     /// <summary>
-    /// ActorNumber ¡æ UID ¸ÅÇÎ
+    /// ActorNumber â†’ UID ë§¤í•‘
     /// </summary>
     private string TryGetUidFromActor(int actorNumber)
     {
@@ -299,7 +313,7 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     }
 
     /// <summary>
-    /// (À¯Æ¿) ¸¶½ºÅÍ°¡ Æ¯Á¤ Á¦°Å »óÅÂ¸¦ °­Á¦ µ¿±âÈ­
+    /// (ìœ í‹¸) ë§ˆìŠ¤í„°ê°€ íŠ¹ì • ì œê±° ìƒíƒœë¥¼ ê°•ì œ ë™ê¸°í™”
     /// <summary>
     public void SyncBlockRemovalForOwner(int actorNumber, int blockId, bool withAnimation)
     {
@@ -309,43 +323,178 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
 
     #endregion
 
-    #region Å¸¿ö ºØ±« ¾Ë¸²
+    #region íƒ€ì›Œ ë¶•ê´´ ì•Œë¦¼
 
-    // Å¬¶óÀÌ¾ğÆ® ¡æ ¸¶½ºÅÍ: "ÀÌ »ç¶÷ÀÇ Å¸¿ö¸¦ ºØ±«½ÃÄÑ ÁÖ¼¼¿ä"
+    // í´ë¼ì´ì–¸íŠ¸ â†’ ë§ˆìŠ¤í„°: "ì´ ì‚¬ëŒì˜ íƒ€ì›Œë¥¼ ë¶•ê´´ì‹œì¼œ ì£¼ì„¸ìš”"
     public void RequestTowerCollapse_MasterAuth(int ownerActorNumber)
     {
-        thisPhotonView.RPC(nameof(RPC_RequestTowerCollapse_Master), RpcTarget.MasterClient, ownerActorNumber);
+        Debug.Log($"[JengaNetwork] RequestTowerCollapse_MasterAuth called. actor={ownerActorNumber}, IsMaster={PhotonNetwork.IsMasterClient}");
+
+        if (PhotonNetwork.IsMasterClient)
+        {
+            // ë§ˆìŠ¤í„°ë©´ ë°”ë¡œ ì²˜ë¦¬
+            ProcessTowerCollapseRequest(ownerActorNumber);
+        }
+        else
+        {
+            // ë¹„ë§ˆìŠ¤í„°ë©´ ë§ˆìŠ¤í„°ì—ê²Œ RPC ìš”ì²­
+            if (thisPhotonView == null)
+            {
+                Debug.LogError("[JengaNetwork] PhotonView is NULL in RequestTowerCollapse_MasterAuth");
+                return;
+            }
+
+            Debug.Log($"[JengaNetwork] Sending collapse request to master for actor {ownerActorNumber}");
+            thisPhotonView.RPC(nameof(RPC_RequestTowerCollapse_Master), RpcTarget.MasterClient, ownerActorNumber);
+        }
+    }
+
+    // <summary>
+    /// ë§ˆìŠ¤í„°ì—ì„œ íƒ€ì›Œ ë¶•ê´´ ìš”ì²­ ì²˜ë¦¬
+    /// </summary>
+    private void ProcessTowerCollapseRequest(int ownerActorNumber)
+    {
+        Debug.Log($"[JengaNetwork] Processing tower collapse request for actor {ownerActorNumber}");
+
+        // TowerManager/íƒ€ì›Œ ì¡´ì¬ ê²€ì¦
+        var tm = JengaTowerManager.Instance;
+        if (tm == null)
+        {
+            Debug.LogError("[JengaNetwork] JengaTowerManager.Instance is NULL");
+            return;
+        }
+
+        var tower = tm.GetPlayerTower(ownerActorNumber);
+        if (tower == null)
+        {
+            var uid = tm.GetOwnerUidByActor(ownerActorNumber);
+            Debug.LogError($"[JengaNetwork] Tower not found for actor={ownerActorNumber}, uid={uid ?? "(null)"}");
+            return;
+        }
+
+        Debug.Log($"[JengaNetwork] Broadcasting tower collapse for actor={ownerActorNumber}");
+
+        // ëª¨ë“  í´ë¼ì´ì–¸íŠ¸ì—ê²Œ ë¶•ê´´ ì ìš© ë¸Œë¡œë“œìºìŠ¤íŠ¸
+        thisPhotonView.RPC(nameof(RPC_ApplyTowerCollapse_All), RpcTarget.All, ownerActorNumber);
     }
 
     [PunRPC]
     private void RPC_RequestTowerCollapse_Master(int ownerActorNumber, PhotonMessageInfo info)
     {
-        if (!PhotonNetwork.IsMasterClient) return;
+        Debug.Log($"[JengaNetwork] RPC_RequestTowerCollapse_Master received from {info.Sender.ActorNumber} for actor {ownerActorNumber}");
 
-        thisPhotonView.RPC(nameof(RPC_ApplyTowerCollapse_All), RpcTarget.All, ownerActorNumber);
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            Debug.LogWarning("[JengaNetwork] Received collapse request but not master");
+            return;
+        }
+
+        ProcessTowerCollapseRequest(ownerActorNumber);
     }
 
-    // ÀüÃ¼ Àû¿ë: ¸ğµç Å¬¶ó¿¡¼­ °°Àº ÄÚµå·Î ½ÇÁ¦ ºØ±« ½ÇÇà
+    // RPC_ApplyTowerCollapse_Allì€ ê¸°ì¡´ê³¼ ë™ì¼í•˜ë˜ ë¡œê·¸ ì¶”ê°€
     [PunRPC]
     private void RPC_ApplyTowerCollapse_All(int ownerActorNumber)
     {
-        var tower = JengaTowerManager.Instance?.GetPlayerTower(ownerActorNumber);
-        
-        if (tower == null) return;
+        Debug.Log($"[JengaNetwork] RPC_ApplyTowerCollapse_All received for actor={ownerActorNumber}");
 
+        var tower = JengaTowerManager.Instance?.GetPlayerTower(ownerActorNumber);
+
+        if (tower == null)
+        {
+            Debug.LogError($"[JengaNetwork] tower NULL for actor={ownerActorNumber} in RPC_ApplyTowerCollapse_All");
+            return;
+        }
+
+        Debug.Log($"[JengaNetwork] Triggering collapse animation for actor={ownerActorNumber}");
+
+        // ë¶•ê´´ ì• ë‹ˆë©”ì´ì…˜ ì‹¤í–‰
         JengaTowerManager.Instance.WithSuppressedCollapse(() =>
         {
             tower.TriggerCollapseOnce();
         });
 
-        JengaGameManager.Instance?.OnTowerCollapsed(ownerActorNumber);
+        // ê²Œì„ ë¡œì§ ì²˜ë¦¬ (ë§ˆìŠ¤í„°ë§Œ)
+        if (PhotonNetwork.IsMasterClient)
+        {
+            Debug.Log($"[JengaNetwork] Notifying GameManager of collapse for actor={ownerActorNumber}");
+            JengaGameManager.Instance?.OnTowerCollapsed(ownerActorNumber);
+        }
     }
 
     #endregion
 
-    #region °üÀüÀÚ(·¹ÀÌÆ® Á¶ÀÎ) µ¿±âÈ­: ½º³À¼¦
+    #region íƒ€ì´ë¨¸ ë™ê¸°í™”: ë§ˆìŠ¤í„° â†’ ì „ì²´ í´ë¼ì´ì–¸íŠ¸
+
     /// <summary>
-    /// »õ ÇÃ·¹ÀÌ¾î ÀÔÀå ½Ã(¸¶½ºÅÍ¿¡¼­¸¸) ÇöÀç ½º³À¼¦ Àü¼Û
+    /// ë§ˆìŠ¤í„°ì—ì„œ ëª¨ë“  í´ë¼ì´ì–¸íŠ¸ì—ê²Œ í˜„ì¬ ë‚¨ì€ ì‹œê°„ì„ ë™ê¸°í™”
+    /// </summary>
+    public void BroadcastTimeSync(float remainingTime)
+    {
+        if (!PhotonNetwork.IsMasterClient) return;
+
+        thisPhotonView.RPC(nameof(RPC_SyncTime), RpcTarget.All, remainingTime);
+    }
+
+    [PunRPC]
+    private void RPC_SyncTime(float syncedTime)
+    {
+        JengaGameManager.Instance?.SyncRemainingTime(syncedTime);
+    }
+
+    #endregion
+
+    #region ì¹´ìš´íŠ¸ë‹¤ìš´ ë™ê¸°í™”: ë§ˆìŠ¤í„° â†’ ì „ì²´ í´ë¼ì´ì–¸íŠ¸
+
+    /// <summary>
+    /// ë§ˆìŠ¤í„°ì—ì„œ ëª¨ë“  í´ë¼ì´ì–¸íŠ¸ì—ê²Œ ì¹´ìš´íŠ¸ë‹¤ìš´ ì‹œì‘ ì‹ í˜¸ ì†¡ì‹ 
+    /// </summary>
+    public void BroadcastStartCountdown(float countdownDuration)
+    {
+        if (!PhotonNetwork.IsMasterClient) return;
+
+        Debug.Log($"[JengaNetwork] Broadcasting countdown start: {countdownDuration}s");
+        thisPhotonView.RPC(nameof(RPC_StartCountdown), RpcTarget.All, countdownDuration);
+    }
+
+    /// <summary>
+    /// [RPC] ëª¨ë“  í´ë¼ì´ì–¸íŠ¸ì—ì„œ ë™ì‹œì— ì¹´ìš´íŠ¸ë‹¤ìš´ ì‹œì‘
+    /// </summary>
+    [PunRPC]
+    private void RPC_StartCountdown(float duration)
+    {
+        Debug.Log($"[JengaNetwork] Received countdown start RPC: {duration}s");
+
+        // UI ë§¤ë‹ˆì €ì—ê²Œ ì¹´ìš´íŠ¸ë‹¤ìš´ ì‹œì‘ ì•Œë¦¼
+        JengaUIManager.Instance?.StartCountdown(duration);
+    }
+
+    /// <summary>
+    /// ë§ˆìŠ¤í„°ì—ì„œ ì¹´ìš´íŠ¸ë‹¤ìš´ ì™„ë£Œ í›„ ê²Œì„ ì‹œì‘ ì‹ í˜¸ ì†¡ì‹ 
+    /// </summary>
+    public void BroadcastCountdownComplete()
+    {
+        if (!PhotonNetwork.IsMasterClient) return;
+
+        thisPhotonView.RPC(nameof(RPC_CountdownComplete), RpcTarget.All);
+    }
+
+    /// <summary>
+    /// [RPC] ì¹´ìš´íŠ¸ë‹¤ìš´ ì™„ë£Œ ì²˜ë¦¬
+    /// </summary>
+    [PunRPC]
+    private void RPC_CountdownComplete()
+    {
+        Debug.Log("[JengaNetwork] Received countdown complete RPC");
+        // UIì—ì„œ ì¹´ìš´íŠ¸ë‹¤ìš´ ìˆ¨ê¸°ê¸°
+        JengaUIManager.Instance?.HideCountdown();
+    }
+
+    #endregion
+
+    #region ê´€ì „ì(ë ˆì´íŠ¸ ì¡°ì¸) ë™ê¸°í™”: ìŠ¤ëƒ…ìƒ·
+    /// <summary>
+    /// ìƒˆ í”Œë ˆì´ì–´ ì…ì¥ ì‹œ(ë§ˆìŠ¤í„°ì—ì„œë§Œ) í˜„ì¬ ìŠ¤ëƒ…ìƒ· ì „ì†¡
     /// </summary>
     public override void OnPlayerEnteredRoom(Player newPlayer)
     {
@@ -355,7 +504,7 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     }
 
     /// <summary>
-    /// (¿É¼Ç) Á¶ÀÎ Á÷ÈÄ º»ÀÎÀÌ ¸í½ÃÀûÀ¸·Î ½º³À¼¦ ¿äÃ»ÇÏ°í ½ÍÀ» ¶§ È£Ãâ
+    /// (ì˜µì…˜) ì¡°ì¸ ì§í›„ ë³¸ì¸ì´ ëª…ì‹œì ìœ¼ë¡œ ìŠ¤ëƒ…ìƒ· ìš”ì²­í•˜ê³  ì‹¶ì„ ë•Œ í˜¸ì¶œ
     /// </summary>
     public void RequestSnapshotFromMaster()
     {
@@ -363,7 +512,7 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     }
 
     /// <summary>
-    /// [RPC] ½º³À¼¦ ¿äÃ» ¼ö½Å(¸¶½ºÅÍ)
+    /// [RPC] ìŠ¤ëƒ…ìƒ· ìš”ì²­ ìˆ˜ì‹ (ë§ˆìŠ¤í„°)
     /// </summary>
     [PunRPC]
     private void RPC_RequestSnapshot(int requesterActorNumber)
@@ -373,7 +522,7 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     }
 
     /// <summary>
-    /// ¸¶½ºÅÍ ¡æ Æ¯Á¤ ÇÃ·¹ÀÌ¾î: ½º³À¼¦ Àü¼Û(ÇöÀç±îÁö Á¦°ÅµÈ ºí·Ï ¸ñ·Ï)
+    /// ë§ˆìŠ¤í„° â†’ íŠ¹ì • í”Œë ˆì´ì–´: ìŠ¤ëƒ…ìƒ· ì „ì†¡(í˜„ì¬ê¹Œì§€ ì œê±°ëœ ë¸”ë¡ ëª©ë¡)
     /// </summary>
     public void SendSnapshotTo(int targetActorNumber)
     {
@@ -383,7 +532,7 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
         var target = PhotonNetwork.CurrentRoom?.GetPlayer(targetActorNumber);
         if (target == null)
         {
-            Debug.LogWarning($"[JengaNetwork - SendSnapshotTo] ½ÇÆĞ: ´ë»ó ¾øÀ½ actor = {targetActorNumber}");
+            Debug.LogWarning($"[JengaNetwork - SendSnapshotTo] ì‹¤íŒ¨: ëŒ€ìƒ ì—†ìŒ actor = {targetActorNumber}");
             return;
         }
 
@@ -391,18 +540,18 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     }
 
     /// <summary>
-    /// [RPC] ½º³À¼¦ ¼ö½Å(°üÀüÀÚ/·¹ÀÌÆ® Á¶ÀÎ)
+    /// [RPC] ìŠ¤ëƒ…ìƒ· ìˆ˜ì‹ (ê´€ì „ì/ë ˆì´íŠ¸ ì¡°ì¸)
     /// </summary>
     [PunRPC]
     private void RPC_ReceiveSnapshot(PhotonHashtable table)
     {
-        // ¸Å´ÏÀú ¶Ç´Â Å¸¿ö°¡ ¾ÆÁ÷ ÁØºñ ÀüÀÌ¸é ÁØºñµÉ ¶§±îÁö ´ë±â Àû¿ë
+        // ë§¤ë‹ˆì € ë˜ëŠ” íƒ€ì›Œê°€ ì•„ì§ ì¤€ë¹„ ì „ì´ë©´ ì¤€ë¹„ë  ë•Œê¹Œì§€ ëŒ€ê¸° ì ìš©
         if (_pendingApplyCo != null) StopCoroutine(_pendingApplyCo);
         _pendingApplyCo = StartCoroutine(CoApplySnapshotWhenReady(table));
     }
 
     /// <summary>
-    /// (¸¶½ºÅÍ) ÇöÀç Á¦°Å »óÅÂ¸¦ Photon Hashtable·Î Á÷·ÄÈ­
+    /// (ë§ˆìŠ¤í„°) í˜„ì¬ ì œê±° ìƒíƒœë¥¼ Photon Hashtableë¡œ ì§ë ¬í™”
     ///  key: actorNumber(int), value: removedBlockIds(int[])
     /// </summary>
     private PhotonHashtable BuildSnapshotHashtable()
@@ -413,7 +562,7 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
         PhotonHashtable table = new PhotonHashtable();
         foreach (var kv in snap)
         {
-            // PUN Á÷·ÄÈ­ È£È¯À» À§ÇØ int[] º¸Àå
+            // PUN ì§ë ¬í™” í˜¸í™˜ì„ ìœ„í•´ int[] ë³´ì¥
             int[] arr = kv.Value is int[] a ? a : kv.Value.ToArray();
             table[kv.Key] = arr;
         }
@@ -421,11 +570,11 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     }
 
     /// <summary>
-    /// Å¸¿ö ¸Å´ÏÀú°¡ ÁØºñµÉ ¶§±îÁö ´ë±â ÈÄ ½º³À¼¦ Àû¿ë
+    /// íƒ€ì›Œ ë§¤ë‹ˆì €ê°€ ì¤€ë¹„ë  ë•Œê¹Œì§€ ëŒ€ê¸° í›„ ìŠ¤ëƒ…ìƒ· ì ìš©
     /// </summary>
     private IEnumerator CoApplySnapshotWhenReady(PhotonHashtable table)
     {
-        // ¸Å´ÏÀú Á¸Àç & ÃÖ¼Ò ÇÑ ¹ø Initialize°¡ ³¡³µ´Ù°í °¡Á¤µÇ´Â ÇÁ·¹ÀÓ±îÁö ´ë±â
+        // ë§¤ë‹ˆì € ì¡´ì¬ & ìµœì†Œ í•œ ë²ˆ Initializeê°€ ëë‚¬ë‹¤ê³  ê°€ì •ë˜ëŠ” í”„ë ˆì„ê¹Œì§€ ëŒ€ê¸°
         while (JengaTowerManager.Instance == null)
             yield return null;
 
@@ -434,7 +583,7 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     }
 
     /// <summary>
-    /// ¼ö½ÅÇÑ ½º³À¼¦À» ·ÎÄÃ Å¸¿ö¿¡ Àû¿ë
+    /// ìˆ˜ì‹ í•œ ìŠ¤ëƒ…ìƒ·ì„ ë¡œì»¬ íƒ€ì›Œì— ì ìš©
     /// </summary>
     private void ApplySnapshotHashtable(PhotonHashtable table)
     {
@@ -448,7 +597,7 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
         }
 
         JengaTowerManager.Instance?.ApplySnapshot(dict);
-        Debug.Log($"[JengaNetwork - ApplySnapshotHashtable] ½º³À¼¦ Àû¿ë ¿Ï·á (actors = {dict.Count})");
+        Debug.Log($"[JengaNetwork - ApplySnapshotHashtable] ìŠ¤ëƒ…ìƒ· ì ìš© ì™„ë£Œ (actors = {dict.Count})");
     }
 
     #endregion
