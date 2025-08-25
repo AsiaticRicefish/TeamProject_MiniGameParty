@@ -8,5 +8,5 @@ using System;
 public class ShootingPlayerData
 {
     public int score = 0;           //점수를 통한 순위 계산
-    public int myTurnIndex = -1;
+    public int myTurnIndex = -1;    //턴이 0번 부터 시작
 }

@@ -91,6 +91,10 @@ namespace ShootingScene
         //���� �� ���� ��ü Ŭ���̾�Ʈ�� ����
         private void BroadcastCurrentTurn()
         {
+            /*
+            RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.Turn, this.currentTurnIndex);
+            RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.Round, this.currentRound);
+            */
             photonView.RPC(nameof(RPC_SetCurrentTurn), RpcTarget.All, this.currentTurnIndex, this.currentRound);
         }
         

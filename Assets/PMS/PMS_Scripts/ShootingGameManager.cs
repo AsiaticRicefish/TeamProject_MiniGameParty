@@ -39,7 +39,11 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
             string uid = photonPlayer.CustomProperties["uid"] as string;
 
             // UID를 기반으로 PlayerManager에서 해당 플레이어의 GamePlayer 객체를 가져옴
-            var gamePlayer = PlayerManager.Instance.GetPlayer(uid);
+            //var gamePlayer = PlayerManager.Instance.GetPlayer(uid);
+
+            // CreateOrGetPlayer를 사용하여 플레이어가 없으면 자동 생성
+            var gamePlayer = PlayerManager.Instance.CreateOrGetPlayer(uid, photonPlayer.NickName);
+
             if (gamePlayer != null)
             {
                 // GamePlayer에 미니게임 전용 데이터 생성 - ShootingPlayerData
