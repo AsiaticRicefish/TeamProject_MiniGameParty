@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 public class TimingGame : MonoBehaviour
@@ -39,12 +40,22 @@ public class TimingGame : MonoBehaviour
         float x = Mathf.PingPong(_pingPongTimer / _speed, 1f);
         _slider.value = Mathf.Lerp(0f, 100f, x);
 
-        //TODO 김승태 : 화면 터치 관련 로직(임시), 모바일 버전 터치로 변경 필요.
-        if (Input.GetMouseButtonDown(0))
-        {
-            //사운드 삽입하기.
-            var (ok, acc) = Calculate();
-            GameEnd(ok, ok ? acc : 0f);
+        bool tapped = false;
+
+#if ENABLE_INPUT_SYSTEM
+        // Unity Input System (패키지 기반)
+        tapped = (Mouse.current?.leftButton.wasPressedThisFrame == true)
+              || (Touchscreen.current?.primaryTouch.press.wasPressedThisFrame == true);
+#else
+    // 구 Input 시스템 (UnityEngine.Input)
+    tapped = Input.GetMouseButtonDown(0)
+          || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began);
+#endif
+
+        if (tapped) 
+        { 
+            var (ok, acc) = Calculate(); 
+            GameEnd(ok, ok ? acc : 0f); 
         }
     }
 
@@ -97,7 +108,7 @@ public class TimingGame : MonoBehaviour
         gameObject.SetActive(true);
 
         _timeText.text = Mathf.CeilToInt(_remainTime).ToString();
-        StartCoroutine(IE_CountDown());
+       // StartCoroutine(IE_CountDown());
 
         Debug.Log($"현재 속도 {_speed} 현재 영역 {_zoneWRate}");
     }
@@ -118,6 +129,8 @@ public class TimingGame : MonoBehaviour
 
         _successZone.gameObject.SetActive(true);
     }
+
+    public IEnumerator IE_CountDownPublic() => IE_CountDown(); // JengaTimingManager에서 코루틴이 접근하도록 수정
 
     /// <summary>
     /// 카운트 다운 진행
@@ -178,10 +191,10 @@ public class TimingGame : MonoBehaviour
         Debug.Log($"성공 여부 : {isSuccess}, 정확도 : {accuracy}");
 
         _sliderGo.SetActive(false);
-        StartCoroutine(IE_PanelCount(isSuccess));
+        StartCoroutine(IE_PanelCount(isSuccess, accuracy));
 
         //이벤트 퍼블리싱
-        OnFinished?.Invoke(isSuccess, accuracy);
+        // OnFinished?.Invoke(isSuccess, accuracy);
     }
 
     /// <summary>
@@ -189,7 +202,7 @@ public class TimingGame : MonoBehaviour
     /// </summary>
     /// <param name="isSuccess">타이밍 미니게임 성공 여부</param>
     /// <returns></returns>
-    IEnumerator IE_PanelCount(bool isSuccess)
+    IEnumerator IE_PanelCount(bool isSuccess, float accuracy)
     {
         _finishPanel.SetActive(true);
         if (isSuccess)
@@ -209,8 +222,15 @@ public class TimingGame : MonoBehaviour
         _finishPanel.SetActive(false);
         _finishText.text = "";
 
+        // UI 정리
+        _finishPanel.SetActive(false);
+        _finishText.text = "";
+
         //비활성화(테스트를 위해 잠시 비활성화)
         gameObject.SetActive(false);
+
+        // 결과 이벤트 발행(연출이 끝난 뒤)
+        OnFinished?.Invoke(isSuccess, accuracy);
     }
 
     /// <summary>

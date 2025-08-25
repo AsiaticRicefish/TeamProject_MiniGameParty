@@ -38,10 +38,14 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
     protected override void OnAwake()
     {
         base.isPersistent = false;
+        base.OnAwake();
     }
 
     public void Initialize()
     {
+        // 먼저 모든 Photon 플레이어가 PlayerManager에 등록되도록 보장
+        PlayerManager.Instance.EnsureAllPhotonPlayersRegistered();
+
         InitializePlayers(); // 플레이어 정보 세팅
         currentState = JengaGameState.Waiting;
         remainingTime = gameTime;
@@ -57,8 +61,18 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
             // PhotonNetwork.PlayerList에서 꺼낸 플레이어 객체의 CustomProperties에서 uid (Firebase UID)를 추출
             string uid = photonPlayer.CustomProperties["uid"] as string;
 
-            // UID를 기반으로 PlayerManager에서 해당 플레이어의 GamePlayer 객체를 가져옴
-            var gamePlayer = PlayerManager.Instance.GetPlayer(uid);
+            if (string.IsNullOrEmpty(uid))
+            {
+                Debug.LogWarning($"[JengaGameManager - InitializePlayers] Player {photonPlayer.NickName} has no UID in CustomProperties");
+                continue;
+            }
+
+            //// UID를 기반으로 PlayerManager에서 해당 플레이어의 GamePlayer 객체를 가져옴
+            //var gamePlayer = PlayerManager.Instance.GetPlayer(uid);
+
+            // CreateOrGetPlayer를 사용하여 플레이어가 없으면 자동 생성
+            var gamePlayer = PlayerManager.Instance.CreateOrGetPlayer(uid, photonPlayer.NickName);
+
             if (gamePlayer != null)
             {
                 // GamePlayer에 미니게임 전용 데이터인 JengaPlayerData를 새로 만들어 할당
@@ -74,12 +88,14 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
                 playerScores[uid] = 0;
                 // 아직 게임을 끝내지 않았다는 의미로 playerFinished 플래그를 false로 설정
                 playerFinished[uid] = false;
+                Debug.Log($"[JengaGameManager - InitializePlayers] Successfully initialized player: {uid} ({photonPlayer.NickName})");
             }
             else
             {
                 Debug.LogError($"[JengaGameManager - InitializePlayers] {uid}에 해당하는 GamePlayer를 찾을 수 없음");
             }
         }
+        Debug.Log($"[JengaGameManager - InitializePlayers] Initialized {players.Count} players");
     }
 
     public void StartGame()
@@ -89,13 +105,28 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
             Debug.LogError("[JengaGameManager.StartGame] NetworkManager is NULL");
             return;
         }
-        // 상태 변경은 네트워크 매니저를 통해 전파
+
+        if (!PhotonNetwork.IsMasterClient) return;
+
+        if (currentState == JengaGameState.Playing || currentState == JengaGameState.Finished)
+        {
+            Debug.Log("[JGM] Skip: already started/finished");
+            return;
+        }
+
+        Debug.Log("[JGM] All checks passed - proceeding to start game");
+
+        // 1) 마스터 로컬 먼저 Playing 세팅
+        Debug.Log("[JGM] Step 1: ApplyGameStateChange(Playing)");
+        ApplyGameStateChange(JengaGameState.Playing);
+
+        // 2) 전체에 전파
+        Debug.Log("[JGM] Step 2: BroadcastGameState(Playing)");
         JengaNetworkManager.Instance.BroadcastGameState(JengaGameState.Playing);
 
-        // 모든 플레이어가 동시에 게임 시작
+        // 3) 타이머는 마스터만 가동
+        Debug.Log("[JGM] Step 3: StartCoroutine(GameTimer)");
         StartCoroutine(GameTimer());
-
-        Debug.Log(" [JengaGameManager - StartGame] 모든 플레이어 젠가 게임 동시 시작!");
     }
 
     /// <summary>
@@ -292,7 +323,6 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         if (!players.TryGetValue(uid, out var pdata))
         {
             Debug.LogWarning($"[JengaGameManager.OnTowerCollapsed] Player not registered. uid={uid}. Auto-registering as spectator.");
-
             return;
         }
 
