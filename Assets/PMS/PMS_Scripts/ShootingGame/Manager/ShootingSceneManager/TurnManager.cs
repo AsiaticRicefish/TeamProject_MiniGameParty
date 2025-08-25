@@ -4,15 +4,15 @@ using UnityEngine;
 using DesignPattern;
 using Photon.Pun;
 
-//´Ù¸¥ °÷¿¡¼­µµ ÅÏ¸Å´ÏÀú°¡ ÀÖÀ» ¼ö ÀÖÀ¸´Ï±ñ namespaceÃ³¸® 
+//ï¿½Ù¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ï¸Å´ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ï¿½ namespaceÃ³ï¿½ï¿½ 
 namespace ShootingScene
 {
     [RequireComponent(typeof(PhotonView))]
-    //¿øÇü ¿¬°á ¸®½ºÆ® »ç¿ë  ³¡ -> ½ÃÀÛÀÇ ÀÌµ¿
+    //ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½  ï¿½ï¿½ -> ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½
     public class TurnManager : PunSingleton<TurnManager>, IGameComponent
     {
         //private List<int> turnOrder = new List<int>();
-        private int currentTurnIndex = 0; // ¾ÆÁ÷ ÅÏ ½ÃÀÛ Àü
+        private int currentTurnIndex = 0; // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½
 
         protected override void OnAwake()
         {
@@ -21,17 +21,17 @@ namespace ShootingScene
 
         public void Initialize()
         {
-            Debug.Log("[ShootingScene/TurnManager] - ½´ÆÃ °ÔÀÓ TurnManager ÃÊ±âÈ­");
+            Debug.Log("[ShootingScene/TurnManager] - ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ TurnManager ï¿½Ê±ï¿½È­");
         }
 
-        //¿ÜºÎ¿¡¼­ »ç¿ë - ÃßÈÄ Card¿¡¼­ ÀúÀåµÈ List¿¡ µû¸¥ ÅÏ ¼ÂÆÃ
+        //ï¿½ÜºÎ¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ Cardï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ Listï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         /*public void SetupTurn(List<int> sortedList)
         {
-            //ÃßÈÄ CardManager¿¡¼­ ¹Þ¾Æ¿Â Turn Á¤º¸¸¦ Åä´ë·Î playerList ¼³°èÇÏ±â
+            //ï¿½ï¿½ï¿½ï¿½ CardManagerï¿½ï¿½ï¿½ï¿½ ï¿½Þ¾Æ¿ï¿½ Turn ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ playerList ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ï¿½
             if (!PhotonNetwork.IsMasterClient) return;
 
             turnOrder.Clear();
-            turnOrder.AddRange(sortedList);  // Ä«µå »Ì±â °á°ú ¹Ý¿µ
+            turnOrder.AddRange(sortedList);  // Ä«ï¿½ï¿½ ï¿½Ì±ï¿½ ï¿½ï¿½ï¿½ ï¿½Ý¿ï¿½
 
             if (turnOrder.Count == 0) return;
 
@@ -39,37 +39,40 @@ namespace ShootingScene
             //BroadcastCurrentTurn(turnOrder[currentTurnIndex]);
         }*/
 
-        //Å×½ºÆ® ÄÚµå - ÀÓ½Ã·Î ¸ðµç ÇÃ·¹ÀÌ¾î¸¦ µÚÁ®¼­ TurnIndex¸¦ ¼øÂ÷ÀûÀ¸·Î ºÎ¿©
+        //ï¿½×½ï¿½Æ® ï¿½Úµï¿½ - ï¿½Ó½Ã·ï¿½ ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾î¸¦ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ TurnIndexï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Î¿ï¿½
         public void TestSetupTurn()
         {
             if (!PhotonNetwork.IsMasterClient) return;
 
-            int index = 1;
-
-            foreach (var player in ShootingGameManager.Instance.players)
+            int idx = 0; // 0-based
+            foreach (var kv in ShootingGameManager.Instance.players)
             {
-                player.Value.myTurnIndex = index;
-                index++;
+                kv.Value.myTurnIndex = idx++;
             }
-
-            // Ã¹ ÅÏÀº 0¹ø ÇÃ·¹ÀÌ¾î
             currentTurnIndex = 0;
-            //BroadcastCurrentTurn(turnOrder[currentTurnIndex]);
+            BroadcastCurrentTurn(currentTurnIndex);
         }
 
-        // TurnManager (¸¶½ºÅÍ¸¸ °ü¸®)
+        // TurnManager (ï¿½ï¿½ï¿½ï¿½ï¿½Í¸ï¿½ ï¿½ï¿½ï¿½ï¿½)
         public void NextTurn()
         {
             if (!PhotonNetwork.IsMasterClient) return;
 
-            currentTurnIndex = (currentTurnIndex + 1) % PhotonNetwork.CurrentRoom.PlayerCount;                  // TODO - Magic Number 4 -> ÇöÀç ¹æÀÇ °ÔÀÓ ÇÃ·¹ÀÌ¸¦ ÇÏ°í ÀÖ´Â ÇÃ·¹ÀÌ¾îÀÇ ¼ö
+            currentTurnIndex = (currentTurnIndex + 1) % PhotonNetwork.CurrentRoom.PlayerCount;                  // TODO - Magic Number 4 -> ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¸ï¿½ ï¿½Ï°ï¿½ ï¿½Ö´ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ï¿½ï¿½ ï¿½ï¿½
             BroadcastCurrentTurn(currentTurnIndex);
         }
 
-        //ÇöÀç ÅÏ Á¤º¸ ÀüÃ¼ Å¬¶óÀÌ¾ðÆ®¿¡ Àü´Þ
+        //ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¼ Å¬ï¿½ï¿½ï¿½Ì¾ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         private void BroadcastCurrentTurn(int currentTurnIndex)
         {
             photonView.RPC(nameof(RPC_SetCurrentTurn), RpcTarget.All, currentTurnIndex);
+        }
+        
+        public void StartFirstTurn()
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+            currentTurnIndex = 0;                 // 0ë²ˆë¶€í„° ì‹œìž‘
+            BroadcastCurrentTurn(currentTurnIndex);
         }
 
         [PunRPC]
@@ -78,14 +81,14 @@ namespace ShootingScene
             string myUid = PMS_Util.PMS_Util.GetMyUid();
             if (string.IsNullOrEmpty(myUid))
             {
-                Debug.LogWarning("[TurnManager] - UID¸¦ Ã£Áö ¸øÇß½À´Ï´Ù.");
+                Debug.LogWarning("[TurnManager] - UIDï¿½ï¿½ Ã£ï¿½ï¿½ ï¿½ï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½.");
                 return;
             }
 
             GamePlayer myPlayer = PlayerManager.Instance.GetPlayer(myUid);
             if (myPlayer == null)
             {
-                Debug.LogWarning("[TurnManager] - Player °´Ã¼¸¦ Ã£Áö ¸øÇß½À´Ï´Ù.");
+                Debug.LogWarning("[TurnManager] - Player ï¿½ï¿½Ã¼ï¿½ï¿½ Ã£ï¿½ï¿½ ï¿½ï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½.");
                 return;
             }
 
@@ -95,12 +98,12 @@ namespace ShootingScene
 
             if (isMyTurn)
             {
-                Debug.Log("³» ÅÏ ½ÃÀÛ!");
+                Debug.Log("ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½!");
                 InputManager.Instance.EnableInput();
             }
             else
             {
-                Debug.Log("´Ù¸¥ »ç¶÷ ÅÏÀÔ´Ï´Ù");
+                Debug.Log("ï¿½Ù¸ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ô´Ï´ï¿½");
                 InputManager.Instance.DisableInput();
             }
         }

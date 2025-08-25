@@ -192,8 +192,8 @@ public class CardManager : MonoBehaviourPunCallbacks
                 { KEY_STATE, (byte)LobbyState.Done }
             });
 
-            // 다음 씬 전환
-            PhotonNetwork.LoadLevel(nextSceneName);
+            
+            photonView.RPC(nameof(RPC_OnTurnOrderReady), RpcTarget.AllBuffered, order);
         }
         else
         {
@@ -222,6 +222,35 @@ public class CardManager : MonoBehaviourPunCallbacks
         }
 
         RefreshInteractables();
+    }
+    
+    [PunRPC]
+    private void RPC_OnTurnOrderReady(int[] actorOrder)
+    {
+        // 1) 내 턴 인덱스 계산(0-based)
+        int myActor = PhotonNetwork.LocalPlayer.ActorNumber;
+        int myTurnIndex = System.Array.IndexOf(actorOrder, myActor);
+
+        // 2) 로컬 PlayerData에 반영
+        string myUid = PMS_Util.PMS_Util.GetMyUid();
+        var myPlayer = PlayerManager.Instance.GetPlayer(myUid);
+        if (myPlayer != null && myTurnIndex >= 0)
+        {
+            myPlayer.ShootingData.myTurnIndex = myTurnIndex;
+            Debug.Log($"[CardManager] 내 턴 인덱스 확정: {myTurnIndex}");
+        }
+
+        // 3) 카드 UI 비활성/숨김 (선택 UI 닫기)
+        foreach (var c in _cards) c.gameObject.SetActive(false);
+        // 필요 시 카드 부모 패널도 끄기
+        if (cardParent != null) cardParent.gameObject.SetActive(false);
+
+        // 4) 마스터만 첫 턴 시작
+        if (PhotonNetwork.IsMasterClient)
+        {
+            // 0번 인덱스부터 시작
+            ShootingScene.TurnManager.Instance.StartFirstTurn();
+        }
     }
     #endregion
 

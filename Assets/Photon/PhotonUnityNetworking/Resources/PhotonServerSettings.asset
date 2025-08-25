@@ -61,6 +61,7 @@ MonoBehaviour:
   - RPC_OnPickUpdated
   - RPC_RevealAll
   - RPC_TryPick
+  - RPC_SetCurrentTurn
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1
