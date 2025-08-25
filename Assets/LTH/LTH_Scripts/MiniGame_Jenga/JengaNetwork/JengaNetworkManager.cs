@@ -35,7 +35,7 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     {
         base.isPersistent = false;
 
-        thisPhotonView = GetComponent<PhotonView>();
+        base.OnAwake();
 
         // 중복 PhotonView가 붙어 있으면 정리
         var pvs = GetComponents<PhotonView>();
@@ -50,13 +50,13 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     /// </summary>
     public void Initialize()
     {
-#if PHOTON_UNITY_NETWORKING_2_OR_NEWER
-          if (PhotonNetwork.InRoom && thisPhotonView.ViewID == 0)
-        {
-            if (!PhotonNetwork.AllocateViewID(thisPhotonView))
-                Debug.LogError("[NM] AllocateViewID failed. (씬에 미리 배치 + Scene ViewID 권장)");
-        }
-#endif
+//#if PHOTON_UNITY_NETWORKING_2_OR_NEWER
+//          if (PhotonNetwork.InRoom && thisPhotonView.ViewID == 0)
+//        {
+//            if (!PhotonNetwork.AllocateViewID(thisPhotonView))
+//                Debug.LogError("[NM] AllocateViewID failed. (씬에 미리 배치 + Scene ViewID 권장)");
+//        }
+//#endif
     }
 
 

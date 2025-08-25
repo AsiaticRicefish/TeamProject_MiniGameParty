@@ -38,6 +38,7 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
     protected override void OnAwake()
     {
         base.isPersistent = false;
+        base.OnAwake();
     }
 
     public void Initialize()

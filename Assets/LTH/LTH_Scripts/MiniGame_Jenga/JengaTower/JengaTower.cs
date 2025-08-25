@@ -45,6 +45,23 @@ public class JengaTower : MonoBehaviour
     public event Action<int> OnBlockRemoved;
     public event Action OnTowerCollapsed;
 
+    public bool CanRemoveBlock(JengaBlock b)
+    {
+        if (b == null || b.IsRemoved) return false;
+        int topAlive = GetTopAliveLayer();
+        if (!allowTopRemoval && topAlive >= 0)
+        {
+            int firstProtected = Mathf.Max(0, topAlive - (topSafeLayers - 1));
+            if (b.Layer >= firstProtected && b.Layer <= topAlive)
+                return false;
+        }
+
+        if (!_blocksByLayer.TryGetValue(b.Layer, out var list)) return false;
+        int alive = 0;
+        foreach (var x in list) if (!x.IsRemoved) alive++;
+        return alive >= 2;
+    }
+
     public void InitializeOwner(int actorNumber, string uid)
     {
         ownerActorNumber = actorNumber;
@@ -102,8 +119,8 @@ public class JengaTower : MonoBehaviour
     public List<JengaBlock> GetRemovableBlocks()
         => _removableCache.Where(b => !b.IsRemoved).ToList();
 
-    public void ApplyBlockRemoval(int blockId, bool withAnimation)
-        => RemoveBlockInternal(blockId, withAnimation, raiseEvent: false);
+    public void ApplyBlockRemoval(int blockId, bool withAnimation, bool isSuccess = true)
+        => RemoveBlockInternal(blockId, withAnimation, raiseEvent: false, isSuccess);
 
     public void RemoveBlock(int blockId, bool withAnimation = true)
         => RemoveBlockInternal(blockId, withAnimation, raiseEvent: true);
@@ -125,7 +142,7 @@ public class JengaTower : MonoBehaviour
     {
         int remain = GetRemainingBlocks();
         float density = (float)remain / Mathf.Max(1, allBlocks.Count);
-        int top = GetTopCompleteLayer();
+        int top = GetTopAliveLayer();
         float topBonus = (top + 1f) / Mathf.Max(1, towerHeight);
         return Mathf.Clamp01(0.7f * density + 0.3f * topBonus);
     }
@@ -294,7 +311,7 @@ public class JengaTower : MonoBehaviour
         return isHorizontal ? new Vector3(offset, 0f, 0f) : new Vector3(0f, 0f, offset);
     }
 
-    private void RemoveBlockInternal(int blockId, bool withAnimation, bool raiseEvent)
+    private void RemoveBlockInternal(int blockId, bool withAnimation, bool raiseEvent, bool isSuccess = true)
     {
         var block = (blockId >= 0 && blockId < allBlocks.Count) ? allBlocks[blockId] : null;
         if (block == null || block.IsRemoved) return;
@@ -317,50 +334,49 @@ public class JengaTower : MonoBehaviour
         _removableCache.Clear();
         if (towerHeight <= 0) return;
 
-        int maxLayer = _blocksByLayer.Keys.Count > 0 ? _blocksByLayer.Keys.Max() : 0;
+        int topAlive = GetTopAliveLayer();
 
-        int protectedFrom = allowTopRemoval ? int.MaxValue : Mathf.Max(0, maxLayer - topSafeLayers + 1);
-
-        for (int layer = 1; layer < towerHeight; layer++)
+        bool IsProtected(int layer)
         {
-            if (layer >= protectedFrom) continue;
+            if (allowTopRemoval) return false;
+            if (topAlive < 0) return false;
+            int firstProtected = Mathf.Max(0, topAlive - (topSafeLayers - 1));
+            return layer >= firstProtected && layer <= topAlive;
+        }
+
+        for (int layer = 0; layer < towerHeight; layer++)
+        {
             if (!_blocksByLayer.TryGetValue(layer, out var list)) continue;
+            if (IsProtected(layer)) continue;
 
-            var alive = list.Where(b => !b.IsRemoved).ToList();
-            if (alive.Count >= 2)
-                _removableCache.AddRange(alive);
+            int alive = 0;
+            foreach (var b in list) if (!b.IsRemoved) alive++;
+            if (alive >= 2)
+                foreach (var b in list) if (!b.IsRemoved) _removableCache.Add(b);
         }
 
-        if (allowTopRemoval)
+        if (forceRelaxIfEmpty && _removableCache.Count == 0 && topAlive >= 0)
         {
-            int top = GetTopCompleteLayer();
-            if (top >= 0 && _blocksByLayer.TryGetValue(top, out var topList))
+            for (int layer = topAlive; layer >= 0; layer--)
             {
-                var alive = topList.Where(b => !b.IsRemoved).ToList();
-                if (alive.Count >= 2)
-                    _removableCache.AddRange(alive);
-            }
-        }
-
-        if (forceRelaxIfEmpty && _removableCache.Count == 0)
-        {
-            foreach (var kv in _blocksByLayer)
-            {
-                var alive = kv.Value.Where(b => !b.IsRemoved).ToList();
-                if (alive.Count >= 2) _removableCache.AddRange(alive);
+                if (!_blocksByLayer.TryGetValue(layer, out var list)) continue;
+                int alive = 0;
+                foreach (var b in list) if (!b.IsRemoved) alive++;
+                if (alive >= 2)
+                {
+                    foreach (var b in list) if (!b.IsRemoved) _removableCache.Add(b);
+                    break;
+                }
             }
         }
     }
 
-    private int GetTopCompleteLayer()
+    private int GetTopAliveLayer()
     {
         for (int layer = towerHeight - 1; layer >= 0; layer--)
         {
             if (_blocksByLayer.TryGetValue(layer, out var list))
-            {
-                int alive = list.Count(b => !b.IsRemoved);
-                if (alive == 3) return layer;
-            }
+                if (list.Any(b => !b.IsRemoved)) return layer;
         }
         return -1;
     }
@@ -388,7 +404,7 @@ public class JengaTower : MonoBehaviour
         return true;
     }
 
-    private void TriggerCollapseOnce()
+    public void TriggerCollapseOnce()
     {
         if (_isCollapsed) return;
         _isCollapsed = true;
@@ -398,30 +414,49 @@ public class JengaTower : MonoBehaviour
 
     private IEnumerator CollapseAnimation()
     {
+        // 타워 루트를 기울이기
+        float tiltAngle = UnityEngine.Random.Range(15f, 25f);
+        Vector3 tiltAxis = new Vector3(
+            UnityEngine.Random.Range(-1f, 1f),
+            0f,
+            UnityEngine.Random.Range(-1f, 1f)
+        ).normalized;
+
+        // 타워 전체를 천천히 기울이기
+        float duration = 1f;
+        Quaternion startRot = transform.rotation;
+        Quaternion targetRot = Quaternion.AngleAxis(tiltAngle, tiltAxis) * startRot;
+
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            transform.rotation = Quaternion.Lerp(startRot, targetRot, elapsed / duration);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        // 이제 모든 블록을 물리 적용 (중력만으로)
         foreach (var block in allBlocks.Where(b => !b.IsRemoved))
         {
             if (block.TryGetComponent<Rigidbody>(out var rb))
             {
                 rb.isKinematic = false;
-                rb.AddForce(UnityEngine.Random.insideUnitSphere * 5f, ForceMode.Impulse);
-                rb.AddTorque(UnityEngine.Random.insideUnitSphere * 2f, ForceMode.Impulse);
             }
-            yield return new WaitForSeconds(0.03f);
+            yield return new WaitForSeconds(0.02f);
         }
 
         yield return new WaitForSeconds(5f);
+
         foreach (var block in allBlocks)
+        {
             if (block) block.gameObject.SetActive(false);
+        }
     }
 
-#if UNITY_EDITOR
-    private void OnDrawGizmosSelected()
+    public void ConfigureTopProtection(bool allowTopRemoval, int topSafeLayers = 1)
     {
-        Gizmos.color = Color.cyan;
-        Gizmos.DrawWireCube(
-            transform.position + Vector3.up * (towerHeight * blockHeight * 0.5f),
-            new Vector3(blockWidth * 3f + 0.2f, towerHeight * blockHeight, blockWidth * 3f + 0.2f)
-        );
+        this.allowTopRemoval = allowTopRemoval;
+        this.topSafeLayers = Mathf.Max(0, topSafeLayers);
+        RebuildRemovableCache(false);
     }
-#endif
 }
