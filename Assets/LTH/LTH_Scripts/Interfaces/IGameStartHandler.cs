@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// °ÔÀÓ ½ÃÀÛ ½Ã È£ÃâµÇ´Â ÀÎÅÍÆäÀÌ½º
+/// ê²Œì„ ì‹œì‘ ì‹œ í˜¸ì¶œë˜ëŠ” ì¸í„°í˜ì´ìŠ¤
 /// </summary>
 public interface IGameStartHandler
 {
-    void OnGameStart(); // °ÔÀÓ ½ÃÀÛ ¾Ë¸²
+    void OnGameStart(); // ê²Œì„ ì‹œì‘ ì•Œë¦¼
 }

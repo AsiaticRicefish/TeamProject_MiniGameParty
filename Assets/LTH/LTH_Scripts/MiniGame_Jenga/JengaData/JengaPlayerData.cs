@@ -4,9 +4,9 @@ using System;
 using UnityEngine;
 
 /// <summary>
-/// ¹Ì´Ï°ÔÀÓ Jenga¿¡¼­ °¢ ÇÃ·¹ÀÌ¾îÀÇ µ¥ÀÌÅÍ¸¦ ÀúÀåÇÏ´Â Å¬·¡½º
-/// GamePlayer¿¡´Â ±âº»ÀûÀÎ Á¤º¸(UID, ´Ğ³×ÀÓ µî)°¡ ÀúÀåµÇ°í,
-/// °¢ ¹Ì´Ï°ÔÀÓ ´ç »ç¿ëµÇ´Â µ¥ÀÌÅÍ´Â µû·Î ºĞ¸®ÇÏ´Â °ÍÀÌ ÁÁÀ» °Í °°¾Æ »ı¼ºÇÑ Å¬·¡½º
+/// ë¯¸ë‹ˆê²Œì„ Jengaì—ì„œ ê° í”Œë ˆì´ì–´ì˜ ë°ì´í„°ë¥¼ ì €ì¥í•˜ëŠ” í´ë˜ìŠ¤
+/// GamePlayerì—ëŠ” ê¸°ë³¸ì ì¸ ì •ë³´(UID, ë‹‰ë„¤ì„ ë“±)ê°€ ì €ì¥ë˜ê³ ,
+/// ê° ë¯¸ë‹ˆê²Œì„ ë‹¹ ì‚¬ìš©ë˜ëŠ” ë°ì´í„°ëŠ” ë”°ë¡œ ë¶„ë¦¬í•˜ëŠ” ê²ƒì´ ì¢‹ì„ ê²ƒ ê°™ì•„ ìƒì„±í•œ í´ë˜ìŠ¤
 /// </summary>
 
 [Serializable]
@@ -16,9 +16,9 @@ public class JengaPlayerData
     public bool isAlive = true;
     public bool isFinished = false;
 
-    public Vector3 towerPosition; // °³º° Å¸¿ö À§Ä¡
+    public Vector3 towerPosition; // ê°œë³„ íƒ€ì›Œ ìœ„ì¹˜
     public Vector3 lastTouchPosition;
 
-    public float gameStartTime; // °ÔÀÓ ½ÃÀÛ ½Ã°£ (¼øÀ§ °è»ê¿ë)
-    public float lastSuccessTime; // ¸¶Áö¸· ºí·Ï ¼º°ø ½Ã°£ (or ÃÑ ¼Ò¿ä ½Ã°£)
+    public float gameStartTime; // ê²Œì„ ì‹œì‘ ì‹œê°„ (ìˆœìœ„ ê³„ì‚°ìš©)
+    public float lastSuccessTime; // ë§ˆì§€ë§‰ ë¸”ë¡ ì„±ê³µ ì‹œê°„ (or ì´ ì†Œìš” ì‹œê°„)
 }

@@ -8,23 +8,23 @@ using UnityEngine;
 [RequireComponent(typeof(PhotonView))]
 public abstract class BaseGameSceneController : MonoBehaviourPun
 {
-    [Header("ÃÊ±âÈ­ ¼³Á¤")]
-    [SerializeField] protected float initTimeout = 30f; // WaitForAllPlayersLoaded()¿¡¼­ »ç¿ëÇÏ´Â ¾ÈÀüÀåÄ¡
+    [Header("ì´ˆê¸°í™” ì„¤ì •")]
+    [SerializeField] protected float initTimeout = 30f; // WaitForAllPlayersLoaded()ì—ì„œ ì‚¬ìš©í•˜ëŠ” ì•ˆì „ì¥ì¹˜
     [SerializeField] protected bool showDebugLogs = true;
 
-    [Header("µ¿±âÈ­ ¼³Á¤")]
+    [Header("ë™ê¸°í™” ì„¤ì •")]
     [SerializeField] protected float syncCheckInterval = 0.1f;
 
-    // ÇÏÀ§ Å¬·¡½º¿¡¼­ ±¸ÇöÇØ¾ß ÇÒ Ãß»ó ¼Ó¼º/¸Ş¼­µåµé
+    // í•˜ìœ„ í´ë˜ìŠ¤ì—ì„œ êµ¬í˜„í•´ì•¼ í•  ì¶”ìƒ ì†ì„±/ë©”ì„œë“œë“¤
     protected abstract string GameType { get; }
     protected abstract IEnumerator WaitForManagersAwake();
     protected abstract IEnumerator InitializeSequentialManagers();
     protected abstract IEnumerator InitializeParallelManagers();
 
-    // °ÔÀÓ ½ÃÀÛ ½Ã È£ÃâµÊ. UI Ç¥½Ã, ÇÃ·¹ÀÌ¾î È°¼ºÈ­ µî ½ÇÁ¦ °ÔÀÓ ½ÃÀÛ ÁØºñ¸¦ ¿©±â¼­ ¼öÇà
+    // ê²Œì„ ì‹œì‘ ì‹œ í˜¸ì¶œë¨. UI í‘œì‹œ, í”Œë ˆì´ì–´ í™œì„±í™” ë“± ì‹¤ì œ ê²Œì„ ì‹œì‘ ì¤€ë¹„ë¥¼ ì—¬ê¸°ì„œ ìˆ˜í–‰
     protected abstract void NotifyGameStart();
 
-    // µ¿±âÈ­¿ë º¯¼ö
+    // ë™ê¸°í™”ìš© ë³€ìˆ˜
     private HashSet<int> loadedPlayers = new();
     private HashSet<int> initializedPlayers = new();
     private bool isInitializing = false;
@@ -43,16 +43,16 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
 
     private IEnumerator Co_StartWhenInRoom()
     {
-        // ¿¬°á & ·ëÀÔÀå±îÁö ´ë±â
+        // ì—°ê²° & ë£¸ì…ì¥ê¹Œì§€ ëŒ€ê¸°
         yield return new WaitUntil(() => PhotonNetwork.IsConnected && PhotonNetwork.InRoom);
 
-        // PhotonView ÁØºñ ¿©ºÎ Ã¼Å© (Scene¿¡ ¹Ì¸® ÀÖ´Â ºä¶ó¸é º¸Åë ÀÚµ¿ ÇÒ´çµÇÁö¸¸, 0ÀÌ¸é RPC ±İÁö)
+        // PhotonView ì¤€ë¹„ ì—¬ë¶€ ì²´í¬ (Sceneì— ë¯¸ë¦¬ ìˆëŠ” ë·°ë¼ë©´ ë³´í†µ ìë™ í• ë‹¹ë˜ì§€ë§Œ, 0ì´ë©´ RPC ê¸ˆì§€)
         if (photonView == null || photonView.ViewID == 0)
         {
 #if PHOTON_UNITY_NETWORKING_2_OR_NEWER
         if (!PhotonNetwork.AllocateViewID(photonView))
         {
-            Debug.LogError("[Jenga] PhotonView ViewID=0 ¡æ AllocateViewID ½ÇÆĞ. ¾À ¹èÄ¡ ¶Ç´Â ³×Æ®¿öÅ© ÀÎ½ºÅÏ½º·Î »ı¼ºÇØ¾ß ÇÕ´Ï´Ù.");
+            Debug.LogError("[Jenga] PhotonView ViewID=0 â†’ AllocateViewID ì‹¤íŒ¨. ì”¬ ë°°ì¹˜ ë˜ëŠ” ë„¤íŠ¸ì›Œí¬ ì¸ìŠ¤í„´ìŠ¤ë¡œ ìƒì„±í•´ì•¼ í•©ë‹ˆë‹¤.");
             yield break;
         }
 #else
@@ -73,11 +73,11 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
         }
         catch (Exception e)
         {
-            Debug.LogError($"[{GameType}Controller] RPC È£Ãâ ½ÇÆĞ: {methodName} ¡æ {e.Message}");
+            Debug.LogError($"[{GameType}Controller] RPC í˜¸ì¶œ ì‹¤íŒ¨: {methodName} â†’ {e.Message}");
         }
     }
 
-    // ÀüÃ¼ ÃÊ±âÈ­ °úÁ¤À» °ü¸®
+    // ì „ì²´ ì´ˆê¸°í™” ê³¼ì •ì„ ê´€ë¦¬
     private IEnumerator SafeInitialize()
     {
         if (isInitializing) yield break;
@@ -85,36 +85,36 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
 
         Debug.Log($"[{GameType}] === SafeInitialize START ===");
 
-        // 1´Ü°è: ³»°¡ ¾À ·Îµù ¿Ï·áÇß´Ù°í ¾Ë¸²
+        // 1ë‹¨ê³„: ë‚´ê°€ ì”¬ ë¡œë”© ì™„ë£Œí–ˆë‹¤ê³  ì•Œë¦¼
         Debug.Log($"[{GameType}] Step 1: Sending OnPlayerSceneLoaded");
         SendRPCSafely(nameof(OnPlayerSceneLoaded), PhotonNetwork.LocalPlayer.ActorNumber);
 
-        // 2´Ü°è: ¸ğµç ÇÃ·¹ÀÌ¾î ¾À ·Îµù ¿Ï·á ´ë±â
+        // 2ë‹¨ê³„: ëª¨ë“  í”Œë ˆì´ì–´ ì”¬ ë¡œë”© ì™„ë£Œ ëŒ€ê¸°
         Debug.Log($"[{GameType}] Step 2: WaitForAllPlayersLoaded");
         yield return StartCoroutine(WaitForAllPlayersLoaded());
 
-        // 3´Ü°è: ¸Å´ÏÀúµé Awake ¿Ï·á ´ë±â
+        // 3ë‹¨ê³„: ë§¤ë‹ˆì €ë“¤ Awake ì™„ë£Œ ëŒ€ê¸°
         Debug.Log($"[{GameType}] Step 3: WaitForManagersAwake");
         yield return StartCoroutine(WaitForManagersAwake());
 
-        // 4´Ü°è: ¼øÂ÷ ÃÊ±âÈ­ (ÀÇÁ¸¼º ÀÖ´Â °Íµé)
+        // 4ë‹¨ê³„: ìˆœì°¨ ì´ˆê¸°í™” (ì˜ì¡´ì„± ìˆëŠ” ê²ƒë“¤)
         Debug.Log($"[{GameType}] Step 4: InitializeSequentialManagers");
         yield return StartCoroutine(InitializeSequentialManagers());
 
-        // 5´Ü°è: º´·Ä ÃÊ±âÈ­ (µ¶¸³ÀûÀÎ °Íµé)
+        // 5ë‹¨ê³„: ë³‘ë ¬ ì´ˆê¸°í™” (ë…ë¦½ì ì¸ ê²ƒë“¤)
         Debug.Log($"[{GameType}] Step 5: InitializeParallelManagers");
         yield return StartCoroutine(InitializeParallelManagers());
 
-        // 6´Ü°è: ³»°¡ ÃÊ±âÈ­ ¿Ï·áÇß´Ù°í ¾Ë¸²
+        // 6ë‹¨ê³„: ë‚´ê°€ ì´ˆê¸°í™” ì™„ë£Œí–ˆë‹¤ê³  ì•Œë¦¼
         Debug.Log($"[{GameType}] Step 6: Sending OnPlayerInitialized");
         SendRPCSafely(nameof(OnPlayerInitialized), PhotonNetwork.LocalPlayer.ActorNumber);
 
-        // 7´Ü°è: ¸ğµç ÇÃ·¹ÀÌ¾î ÃÊ±âÈ­ ¿Ï·á ´ë±â
+        // 7ë‹¨ê³„: ëª¨ë“  í”Œë ˆì´ì–´ ì´ˆê¸°í™” ì™„ë£Œ ëŒ€ê¸°
         Debug.Log($"[{GameType}] Step 7: WaitForAllPlayersInitialized - WAITING...");
         yield return StartCoroutine(WaitForAllPlayersInitialized());
         Debug.Log($"[{GameType}] Step 7: WaitForAllPlayersInitialized - COMPLETED");
 
-        // 8´Ü°è: °ÔÀÓ ½ÃÀÛ
+        // 8ë‹¨ê³„: ê²Œì„ ì‹œì‘
         Debug.Log($"[{GameType}] Step 8: Game Start (isMaster: {PhotonNetwork.IsMasterClient})");
         if (PhotonNetwork.IsMasterClient)
         {
@@ -125,30 +125,30 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
         isInitializing = false;
     }
 
-    #region ÇÃ·¹ÀÌ¾î µ¿±âÈ­ RPC
-    // °¢ ÇÃ·¹ÀÌ¾î°¡ ¾À ·Îµù ¿Ï·áÇßÀ½À» ¸ğµç ÇÃ·¹ÀÌ¾î¿¡°Ô ¾Ë¸²
-    // È£Ãâ ½ÃÁ¡: SafeInitialize() 1´Ü°è¿¡¼­ ÀÚµ¿ È£Ãâ
-    // loadedPlayers ÁıÇÕ¿¡ ÇÃ·¹ÀÌ¾î ID Ãß°¡
+    #region í”Œë ˆì´ì–´ ë™ê¸°í™” RPC
+    // ê° í”Œë ˆì´ì–´ê°€ ì”¬ ë¡œë”© ì™„ë£Œí–ˆìŒì„ ëª¨ë“  í”Œë ˆì´ì–´ì—ê²Œ ì•Œë¦¼
+    // í˜¸ì¶œ ì‹œì : SafeInitialize() 1ë‹¨ê³„ì—ì„œ ìë™ í˜¸ì¶œ
+    // loadedPlayers ì§‘í•©ì— í”Œë ˆì´ì–´ ID ì¶”ê°€
     [PunRPC]
     public void OnPlayerSceneLoaded(int playerId)
     {
         loadedPlayers.Add(playerId);
-        Debug.Log($"ÇÃ·¹ÀÌ¾î {playerId} ·Îµù ¿Ï·á ({loadedPlayers.Count}/{PhotonNetwork.CurrentRoom.PlayerCount})");
+        Debug.Log($"í”Œë ˆì´ì–´ {playerId} ë¡œë”© ì™„ë£Œ ({loadedPlayers.Count}/{PhotonNetwork.CurrentRoom.PlayerCount})");
     }
 
-    // °¢ ÇÃ·¹ÀÌ¾î°¡ ¸Å´ÏÀú ÃÊ±âÈ­ ¿Ï·áÇßÀ½À» ¾Ë¸²
-    // È£Ãâ ½ÃÁ¡: ¼øÂ÷/º´·Ä ÃÊ±âÈ­ ¿Ï·á ÈÄ
-    // InitializedPlayers ÁıÇÕ¿¡ ÇÃ·¹ÀÌ¾î ID Ãß°¡
+    // ê° í”Œë ˆì´ì–´ê°€ ë§¤ë‹ˆì € ì´ˆê¸°í™” ì™„ë£Œí–ˆìŒì„ ì•Œë¦¼
+    // í˜¸ì¶œ ì‹œì : ìˆœì°¨/ë³‘ë ¬ ì´ˆê¸°í™” ì™„ë£Œ í›„
+    // InitializedPlayers ì§‘í•©ì— í”Œë ˆì´ì–´ ID ì¶”ê°€
     [PunRPC]
     public void OnPlayerInitialized(int playerId)
     {
         initializedPlayers.Add(playerId);
-        Debug.Log($"ÇÃ·¹ÀÌ¾î {playerId} ÃÊ±âÈ­ ¿Ï·á ({initializedPlayers.Count}/{PhotonNetwork.CurrentRoom.PlayerCount})");
+        Debug.Log($"í”Œë ˆì´ì–´ {playerId} ì´ˆê¸°í™” ì™„ë£Œ ({initializedPlayers.Count}/{PhotonNetwork.CurrentRoom.PlayerCount})");
     }
 
-    // ¸ğµç ÇÃ·¹ÀÌ¾î°¡ ÁØºñµÇ¸é ½ÇÁ¦ °ÔÀÓ ½ÃÀÛ ½ÅÈ£
-    // È£ÃâÀÚ: ¸¶½ºÅÍ Å¬¶óÀÌ¾ğÆ®
-    // NotifyGameStart() È£ÃâÇÏ¿© °¢ ¸Å´ÏÀúµé¿¡°Ô °ÔÀÓ ½ÃÀÛ ¾Ë¸²
+    // ëª¨ë“  í”Œë ˆì´ì–´ê°€ ì¤€ë¹„ë˜ë©´ ì‹¤ì œ ê²Œì„ ì‹œì‘ ì‹ í˜¸
+    // í˜¸ì¶œì: ë§ˆìŠ¤í„° í´ë¼ì´ì–¸íŠ¸
+    // NotifyGameStart() í˜¸ì¶œí•˜ì—¬ ê° ë§¤ë‹ˆì €ë“¤ì—ê²Œ ê²Œì„ ì‹œì‘ ì•Œë¦¼
     [PunRPC]
     public void StartGame()
     {
@@ -156,10 +156,10 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
     }
     #endregion
 
-    #region ´ë±â ·ÎÁ÷
-    private IEnumerator WaitForAllPlayersLoaded() // ¸ğµç ÇÃ·¹ÀÌ¾î°¡ ¾À ·Îµù ¿Ï·áÇÒ ¶§±îÁö ´ë±â
+    #region ëŒ€ê¸° ë¡œì§
+    private IEnumerator WaitForAllPlayersLoaded() // ëª¨ë“  í”Œë ˆì´ì–´ê°€ ì”¬ ë¡œë”© ì™„ë£Œí•  ë•Œê¹Œì§€ ëŒ€ê¸°
     {
-        Debug.Log("¸ğµç ÇÃ·¹ÀÌ¾î ·Îµù ´ë±â Áß...");
+        Debug.Log("ëª¨ë“  í”Œë ˆì´ì–´ ë¡œë”© ëŒ€ê¸° ì¤‘...");
 
         while (!PhotonNetwork.IsConnected || !PhotonNetwork.InRoom || PhotonNetwork.CurrentRoom == null)
             yield return null;
@@ -170,17 +170,17 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
             timer += syncCheckInterval;
             if (timer > initTimeout)
             {
-                Debug.LogError($"[{GameType}Controller] ÇÃ·¹ÀÌ¾î ·Îµù Å¸ÀÓ¾Æ¿ô!");
+                Debug.LogError($"[{GameType}Controller] í”Œë ˆì´ì–´ ë¡œë”© íƒ€ì„ì•„ì›ƒ!");
                 yield break;
             }
             yield return new WaitForSeconds(syncCheckInterval);
         }
-        Debug.Log("¸ğµç ÇÃ·¹ÀÌ¾î ·Îµù ¿Ï·á");
+        Debug.Log("ëª¨ë“  í”Œë ˆì´ì–´ ë¡œë”© ì™„ë£Œ");
     }
 
-    private IEnumerator WaitForAllPlayersInitialized() // ¸ğµç ÇÃ·¹ÀÌ¾î°¡ ¸Å´ÏÀú ÃÊ±âÈ­ ¿Ï·áÇÒ ¶§±îÁö ´ë±â
+    private IEnumerator WaitForAllPlayersInitialized() // ëª¨ë“  í”Œë ˆì´ì–´ê°€ ë§¤ë‹ˆì € ì´ˆê¸°í™” ì™„ë£Œí•  ë•Œê¹Œì§€ ëŒ€ê¸°
     {
-        Debug.Log("¸ğµç ÇÃ·¹ÀÌ¾î ÃÊ±âÈ­ ´ë±â Áß...");
+        Debug.Log("ëª¨ë“  í”Œë ˆì´ì–´ ì´ˆê¸°í™” ëŒ€ê¸° ì¤‘...");
 
         float timer = 0f;
         while (initializedPlayers.Count < PhotonNetwork.CurrentRoom.PlayerCount)
@@ -188,24 +188,24 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
             timer += syncCheckInterval;
             if (timer > initTimeout)
             {
-                Debug.LogError($"[{GameType}Controller] ÇÃ·¹ÀÌ¾î ÃÊ±âÈ­ Å¸ÀÓ¾Æ¿ô!");
+                Debug.LogError($"[{GameType}Controller] í”Œë ˆì´ì–´ ì´ˆê¸°í™” íƒ€ì„ì•„ì›ƒ!");
                 yield break;
             }
             yield return new WaitForSeconds(syncCheckInterval);
         }
 
-        Debug.Log("¸ğµç ÇÃ·¹ÀÌ¾î ÃÊ±âÈ­ ¿Ï·á");
+        Debug.Log("ëª¨ë“  í”Œë ˆì´ì–´ ì´ˆê¸°í™” ì™„ë£Œ");
     }
     #endregion
 
-    #region À¯Æ¿¸®Æ¼
-    // Æ¯Á¤ ¸Å´ÏÀú(½Ì±ÛÅæ)ÀÌ »ı¼ºµÉ ¶§±îÁö ´ë±â   
+    #region ìœ í‹¸ë¦¬í‹°
+    // íŠ¹ì • ë§¤ë‹ˆì €(ì‹±ê¸€í†¤)ì´ ìƒì„±ë  ë•Œê¹Œì§€ ëŒ€ê¸°   
     protected IEnumerator WaitForSingletonReady<T>() where T : MonoBehaviour
     {
         yield return new WaitUntil(() => FindObjectOfType<T>() != null);
     }
 
-    // IGameComponentµéÀ» ¼øÂ÷ÀûÀ¸·Î ¾ÈÀüÇÏ°Ô ÃÊ±âÈ­
+    // IGameComponentë“¤ì„ ìˆœì°¨ì ìœ¼ë¡œ ì•ˆì „í•˜ê²Œ ì´ˆê¸°í™”
     protected IEnumerator InitializeComponentsSafely(IEnumerable<IGameComponent> components)
     {
         foreach (var component in components)
@@ -219,29 +219,29 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
             catch (System.Exception e)
             {
                 failed = true;
-                Debug.LogError($"[{GameType}Controller] ÃÊ±âÈ­ ½ÇÆĞ {component.GetType().Name}: {e.Message}");
+                Debug.LogError($"[{GameType}Controller] ì´ˆê¸°í™” ì‹¤íŒ¨ {component.GetType().Name}: {e.Message}");
             }
 
             yield return null;
 
             if (!failed)
             {
-                Debug.Log($"¼øÂ÷ ÃÊ±âÈ­ ¿Ï·á: {component.GetType().Name}");
+                Debug.Log($"ìˆœì°¨ ì´ˆê¸°í™” ì™„ë£Œ: {component.GetType().Name}");
             }
         }
     }
 
-    // ICoroutineGameComponentµéÀ» º´·Ä·Î ¾ÈÀüÇÏ°Ô ÃÊ±âÈ­
+    // ICoroutineGameComponentë“¤ì„ ë³‘ë ¬ë¡œ ì•ˆì „í•˜ê²Œ ì´ˆê¸°í™”
     protected IEnumerator InitializeCoroutineComponentsSafely(IEnumerable<ICoroutineGameComponent> components)
     {
         var componentList = components.Where(c => c != null).ToList();
         if (componentList.Count == 0)
         {
-            Debug.Log("º´·Ä ÃÊ±âÈ­ÇÒ ÄÄÆ÷³ÍÆ®°¡ ¾ø½À´Ï´Ù.");
+            Debug.Log("ë³‘ë ¬ ì´ˆê¸°í™”í•  ì»´í¬ë„ŒíŠ¸ê°€ ì—†ìŠµë‹ˆë‹¤.");
             yield break;
         }
 
-        Debug.Log($"º´·Ä ÃÊ±âÈ­ ½ÃÀÛ: {componentList.Count}°³ ÄÄÆ÷³ÍÆ®");
+        Debug.Log($"ë³‘ë ¬ ì´ˆê¸°í™” ì‹œì‘: {componentList.Count}ê°œ ì»´í¬ë„ŒíŠ¸");
 
         var completionTracker = new Dictionary<string, bool>();
 
@@ -252,13 +252,13 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
             StartCoroutine(InitializeCoroutineComponentSafelyWithTracker(component, componentName, completionTracker));
         }
 
-        // ¸ğµç ÄÄÆ÷³ÍÆ® ¿Ï·á±îÁö ´ë±â
+        // ëª¨ë“  ì»´í¬ë„ŒíŠ¸ ì™„ë£Œê¹Œì§€ ëŒ€ê¸°
         while (completionTracker.Values.Any(completed => !completed))
         {
             yield return new WaitForSeconds(0.1f);
         }
 
-        Debug.Log("¸ğµç º´·Ä ÃÊ±âÈ­ ¿Ï·á");
+        Debug.Log("ëª¨ë“  ë³‘ë ¬ ì´ˆê¸°í™” ì™„ë£Œ");
     }
 
     private IEnumerator InitializeCoroutineComponentSafelyWithTracker(ICoroutineGameComponent component, string componentName, Dictionary<string, bool> tracker)
@@ -271,8 +271,8 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
         }
         catch (System.Exception e)
         {
-            Debug.LogError($"[{GameType}Controller] º´·Ä ÃÊ±âÈ­ ÁØºñ ½ÇÆĞ {componentName}: {e.Message}");
-            tracker[componentName] = true; // ½ÇÆĞÇØµµ ¿Ï·á·Î Ã³¸®
+            Debug.LogError($"[{GameType}Controller] ë³‘ë ¬ ì´ˆê¸°í™” ì¤€ë¹„ ì‹¤íŒ¨ {componentName}: {e.Message}");
+            tracker[componentName] = true; // ì‹¤íŒ¨í•´ë„ ì™„ë£Œë¡œ ì²˜ë¦¬
             yield break;
         }
 
@@ -298,14 +298,14 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
 
         if (errorOccurred)
         {
-            Debug.LogError($"[{GameType}Controller] º´·Ä ÃÊ±âÈ­ ½ÇÆĞ {componentName}: {error.Message}");
+            Debug.LogError($"[{GameType}Controller] ë³‘ë ¬ ì´ˆê¸°í™” ì‹¤íŒ¨ {componentName}: {error.Message}");
         }
         else
         {
-            Debug.Log($"º´·Ä ÃÊ±âÈ­ ¿Ï·á: {componentName}");
+            Debug.Log($"ë³‘ë ¬ ì´ˆê¸°í™” ì™„ë£Œ: {componentName}");
         }
 
-        tracker[componentName] = true; // ¼º°ø/½ÇÆĞ °ü°è¾øÀÌ ¿Ï·á Ç¥½Ã
+        tracker[componentName] = true; // ì„±ê³µ/ì‹¤íŒ¨ ê´€ê³„ì—†ì´ ì™„ë£Œ í‘œì‹œ
     }
     #endregion
 }

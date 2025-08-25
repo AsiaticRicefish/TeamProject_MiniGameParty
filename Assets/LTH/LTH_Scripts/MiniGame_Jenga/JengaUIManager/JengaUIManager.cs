@@ -7,63 +7,63 @@ using System.Collections;
 
 public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
 {
-    [Header("UI ¿ä¼Ò")]
-    [SerializeField] private TMP_Text timerText; // Å¸ÀÌ¸Ó ±â´É UI
+    [Header("UI ìš”ì†Œ")]
+    [SerializeField] private TMP_Text timerText; // íƒ€ì´ë¨¸ ê¸°ëŠ¥ UI
 
-    [Header("Ä«¿îÆ®´Ù¿î UI")]
-    [SerializeField] private GameObject countdownPanel;      // Ä«¿îÆ®´Ù¿î ÆĞ³Î
-    [SerializeField] private TMP_Text countdownText;         // Ä«¿îÆ®´Ù¿î ÅØ½ºÆ® (3, 2, 1, START!)
+    [Header("ì¹´ìš´íŠ¸ë‹¤ìš´ UI")]
+    [SerializeField] private GameObject countdownPanel;      // ì¹´ìš´íŠ¸ë‹¤ìš´ íŒ¨ë„
+    [SerializeField] private TMP_Text countdownText;         // ì¹´ìš´íŠ¸ë‹¤ìš´ í…ìŠ¤íŠ¸ (3, 2, 1, START!)
 
     protected override void OnAwake()
     {
-        base.isPersistent = false; // Á¨°¡ ¾À¿¡¼­¸¸ »ç¿ë
+        base.isPersistent = false; // ì  ê°€ ì”¬ì—ì„œë§Œ ì‚¬ìš©
         base.OnAwake();
     }
 
     public void Initialize()
     {
-        Debug.Log("[JengaUIManager - Initialize] UI ¸Å´ÏÀú ÃÊ±âÈ­ ½ÃÀÛ");
+        Debug.Log("[JengaUIManager - Initialize] UI ë§¤ë‹ˆì € ì´ˆê¸°í™” ì‹œì‘");
 
-        // °ÔÀÓ ¸Å´ÏÀúÀÇ ½Ã°£ ¾÷µ¥ÀÌÆ® ÀÌº¥Æ® ±¸µ¶
+        // ê²Œì„ ë§¤ë‹ˆì €ì˜ ì‹œê°„ ì—…ë°ì´íŠ¸ ì´ë²¤íŠ¸ êµ¬ë…
         if (JengaGameManager.Instance != null)
         {
             JengaGameManager.Instance.OnTimeUpdated += UpdateTimerUI;
-            JengaGameManager.Instance.OnGameStateChanged += OnGameStateChanged; // °ÔÀÓ »óÅÂ º¯°æ ÀÌº¥Æ® ±¸µ¶
+            JengaGameManager.Instance.OnGameStateChanged += OnGameStateChanged; // ê²Œì„ ìƒíƒœ ë³€ê²½ ì´ë²¤íŠ¸ êµ¬ë…
 
-            // ÃÊ±â ½Ã°£ ¼³Á¤
+            // ì´ˆê¸° ì‹œê°„ ì„¤ì •
             UpdateTimerUI(JengaGameManager.Instance.GetRemainingTime());
-            Debug.Log("[JengaUIManager - Initialize] ÀÌº¥Æ® ±¸µ¶ ¿Ï·á");
+            Debug.Log("[JengaUIManager - Initialize] ì´ë²¤íŠ¸ êµ¬ë… ì™„ë£Œ");
         }
         else
         {
-            Debug.LogWarning("[JengaUIManager - Initialize] JengaGameManager.Instance°¡ nullÀÔ´Ï´Ù.");
+            Debug.LogWarning("[JengaUIManager - Initialize] JengaGameManager.Instanceê°€ nullì…ë‹ˆë‹¤.");
         }
 
-        // UI ¿ä¼Òµé ÃÊ±â »óÅÂ ¼³Á¤
+        // UI ìš”ì†Œë“¤ ì´ˆê¸° ìƒíƒœ ì„¤ì •
         InitializeUI();
 
-        Debug.Log("[JengaUIManager - Initialize] UI ¸Å´ÏÀú ÃÊ±âÈ­ ¿Ï·á");
+        Debug.Log("[JengaUIManager - Initialize] UI ë§¤ë‹ˆì € ì´ˆê¸°í™” ì™„ë£Œ");
     }
 
-    #region UI ÃÊ±â È°¼ºÈ­ »óÅÂ
+    #region UI ì´ˆê¸° í™œì„±í™” ìƒíƒœ
     /// <summary>
-    /// UI ¿ä¼Òµé ÃÊ±â »óÅÂ ¼³Á¤
+    /// UI ìš”ì†Œë“¤ ì´ˆê¸° ìƒíƒœ ì„¤ì •
     /// </summary>
     private void InitializeUI()
     {
-        // Å¸ÀÌ¸Ó ÅØ½ºÆ® È°¼ºÈ­ (°ÔÀÓ ³»³» º¸¿©¾ß ÇÔ)
+        // íƒ€ì´ë¨¸ í…ìŠ¤íŠ¸ í™œì„±í™” (ê²Œì„ ë‚´ë‚´ ë³´ì—¬ì•¼ í•¨)
         if (timerText != null)
         {
             timerText.gameObject.SetActive(true);
         }
 
-        // Ä«¿îÆ®´Ù¿î ÆĞ³Î ºñÈ°¼ºÈ­ (ÇÊ¿äÇÒ ¶§¸¸ È°¼ºÈ­)
+        // ì¹´ìš´íŠ¸ë‹¤ìš´ íŒ¨ë„ ë¹„í™œì„±í™” (í•„ìš”í•  ë•Œë§Œ í™œì„±í™”)
         if (countdownPanel != null)
         {
             countdownPanel.SetActive(false);
         }
 
-        // Ä«¿îÆ®´Ù¿î ÅØ½ºÆ®µµ ¹Ì¸® ¼³Á¤
+        // ì¹´ìš´íŠ¸ë‹¤ìš´ í…ìŠ¤íŠ¸ë„ ë¯¸ë¦¬ ì„¤ì •
         if (countdownText != null)
         {
             countdownText.gameObject.SetActive(true);
@@ -71,27 +71,27 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
     }
     #endregion
 
-    #region Ä«¿îÆ®´Ù¿î UI
+    #region ì¹´ìš´íŠ¸ë‹¤ìš´ UI
     /// <summary>
-    /// °ÔÀÓ »óÅÂ º¯°æ ½Ã È£ÃâµÇ´Â ÀÌº¥Æ® ÇÚµé·¯
+    /// ê²Œì„ ìƒíƒœ ë³€ê²½ ì‹œ í˜¸ì¶œë˜ëŠ” ì´ë²¤íŠ¸ í•¸ë“¤ëŸ¬
     /// </summary>
     private void OnGameStateChanged(JengaGameState newState)
     {
         switch (newState)
         {
             case JengaGameState.Playing:
-                // °ÔÀÓ ½ÃÀÛ ½Ã Ä«¿îÆ®´Ù¿î UI ¼û±è (È¤½Ã ³²¾ÆÀÖÀ» °æ¿ì¸¦ ´ëºñ)
+                // ê²Œì„ ì‹œì‘ ì‹œ ì¹´ìš´íŠ¸ë‹¤ìš´ UI ìˆ¨ê¹€ (í˜¹ì‹œ ë‚¨ì•„ìˆì„ ê²½ìš°ë¥¼ ëŒ€ë¹„)
                 HideCountdown();
                 break;
 
             case JengaGameState.Finished:
-                // °ÔÀÓ Á¾·á ½Ã Ã³¸®
+                // ê²Œì„ ì¢…ë£Œ ì‹œ ì²˜ë¦¬
                 break;
         }
     }
 
     /// <summary>
-    /// ³×Æ®¿öÅ©¸¦ ÅëÇØ µ¿±âÈ­µÈ Ä«¿îÆ®´Ù¿î ½ÃÀÛ (¸ğµç Å¬¶óÀÌ¾ğÆ®¿¡¼­ µ¿½Ã ½ÇÇà)
+    /// ë„¤íŠ¸ì›Œí¬ë¥¼ í†µí•´ ë™ê¸°í™”ëœ ì¹´ìš´íŠ¸ë‹¤ìš´ ì‹œì‘ (ëª¨ë“  í´ë¼ì´ì–¸íŠ¸ì—ì„œ ë™ì‹œ ì‹¤í–‰)
     /// </summary>
     public void StartCountdown(float duration)
     {
@@ -103,7 +103,7 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
     }
 
     /// <summary>
-    /// Ä«¿îÆ®´Ù¿î UI ¼û±â±â
+    /// ì¹´ìš´íŠ¸ë‹¤ìš´ UI ìˆ¨ê¸°ê¸°
     /// </summary>
     public void HideCountdown()
     {
@@ -114,13 +114,13 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
     }
 
     /// <summary>
-    /// µ¿±âÈ­µÈ Ä«¿îÆ®´Ù¿î ÄÚ·çÆ¾
+    /// ë™ê¸°í™”ëœ ì¹´ìš´íŠ¸ë‹¤ìš´ ì½”ë£¨í‹´
     /// </summary>
     private IEnumerator CountdownCoroutine(float duration)
     {
         int countdown = Mathf.RoundToInt(duration);
 
-        // ¼ıÀÚ Ä«¿îÆ®´Ù¿î (3, 2, 1)
+        // ìˆ«ì ì¹´ìš´íŠ¸ë‹¤ìš´ (3, 2, 1)
         while (countdown > 0)
         {
             countdownText.text = countdown.ToString();
@@ -130,7 +130,7 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
             countdown--;
         }
 
-        // "START!" Ç¥½Ã
+        // "START!" í‘œì‹œ
         countdownText.text = "START!";
         StartCoroutine(ScaleAnimation(countdownText.transform));
 
@@ -138,7 +138,7 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
     }
 
     /// <summary>
-    /// °£´ÜÇÑ ½ºÄÉÀÏ ¾Ö´Ï¸ŞÀÌ¼Ç (ÀÓ½Ã·Î ¸¸µç ÄÚµå·Î Á¦°ÅÇÏ°Å³ª ´ëÆø ¼öÁ¤ ¿¹Á¤)
+    /// ê°„ë‹¨í•œ ìŠ¤ì¼€ì¼ ì• ë‹ˆë©”ì´ì…˜ (ì„ì‹œë¡œ ë§Œë“  ì½”ë“œë¡œ ì œê±°í•˜ê±°ë‚˜ ëŒ€í­ ìˆ˜ì • ì˜ˆì •)
     /// </summary>
     private IEnumerator ScaleAnimation(Transform target)
     {
@@ -147,7 +147,7 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
         Vector3 originalScale = target.localScale;
         Vector3 largeScale = originalScale * 1.2f;
 
-        // Ä¿Áö±â
+        // ì»¤ì§€ê¸°
         float elapsed = 0f;
         while (elapsed < 0.2f)
         {
@@ -156,7 +156,7 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
             yield return null;
         }
 
-        // ¿ø·¡ Å©±â·Î
+        // ì›ë˜ í¬ê¸°ë¡œ
         elapsed = 0f;
         while (elapsed < 0.3f)
         {
@@ -170,7 +170,7 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
 
     #endregion
 
-    #region Å¸ÀÌ¸Ó UI
+    #region íƒ€ì´ë¨¸ UI
     private void UpdateTimerUI(float remainingTime)
     {
         if (timerText != null && JengaGameManager.Instance != null)
@@ -183,7 +183,7 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
 
     protected override void OnDestroy()
     {
-        // ¸Ş¸ğ¸® ´©¼ö ¹æÁö¸¦ À§ÇÑ ÀÌº¥Æ® ±¸µ¶ ÇØÁ¦
+        // ë©”ëª¨ë¦¬ ëˆ„ìˆ˜ ë°©ì§€ë¥¼ ìœ„í•œ ì´ë²¤íŠ¸ êµ¬ë… í•´ì œ
         if (JengaGameManager.Instance != null)
         {
             JengaGameManager.Instance.OnTimeUpdated -= UpdateTimerUI;

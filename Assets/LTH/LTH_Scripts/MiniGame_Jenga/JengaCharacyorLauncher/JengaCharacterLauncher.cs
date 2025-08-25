@@ -5,29 +5,29 @@ using Photon.Pun;
 using System;
 
 /// <summary>
-/// Å¸ÀÌ¹Ö °á°ú¿¡ µû¶ó Ä³¸¯ÅÍ¸¦ ¹ß»çÇÏ¿© Á¨°¡ ºí·ÏÀ» ¹Ì´Â ¿¬Ãâ ´ã´ç
+/// íƒ€ì´ë° ê²°ê³¼ì— ë”°ë¼ ìºë¦­í„°ë¥¼ ë°œì‚¬í•˜ì—¬ ì  ê°€ ë¸”ë¡ì„ ë¯¸ëŠ” ì—°ì¶œ ë‹´ë‹¹
 /// </summary>
 public class JengaCharacterLauncher : MonoBehaviour
 {
-    [Header("Ä³¸¯ÅÍ ¼³Á¤")]
-    [SerializeField] private GameObject characterPrefab; // ±âº» Ä³¸¯ÅÍ
-    [SerializeField] private Transform launchPoint; // ¹ß»ç ½ÃÀÛ À§Ä¡
+    [Header("ìºë¦­í„° ì„¤ì •")]
+    [SerializeField] private GameObject characterPrefab; // ê¸°ë³¸ ìºë¦­í„°
+    [SerializeField] private Transform launchPoint; // ë°œì‚¬ ì‹œì‘ ìœ„ì¹˜
     [SerializeField] private float launchSpeed = 10f;
-    [SerializeField] private float launchArcHeight = 2f; // Æ÷¹°¼± ³ôÀÌ
+    [SerializeField] private float launchArcHeight = 2f; // í¬ë¬¼ì„  ë†’ì´
 
-    [Header("¿¬Ãâ ¼³Á¤")]
+    [Header("ì—°ì¶œ ì„¤ì •")]
     [SerializeField] private float successImpactForce = 8f;
-    [SerializeField] private float failureDelay = 1f; // ½ÇÆĞ ½Ã Å¸¿ö ºØ±«±îÁö Áö¿¬½Ã°£
+    [SerializeField] private float failureDelay = 1f; // ì‹¤íŒ¨ ì‹œ íƒ€ì›Œ ë¶•ê´´ê¹Œì§€ ì§€ì—°ì‹œê°„
 
-    // ÇÃ·¹ÀÌ¾îº° Ä³¸¯ÅÍ ÇÁ¸®ÆÕ ¸ÅÇÎ
+    // í”Œë ˆì´ì–´ë³„ ìºë¦­í„° í”„ë¦¬íŒ¹ ë§¤í•‘
     private Dictionary<string, GameObject> playerCharacterPrefabs = new();
 
     public void Initialize(int ownerActorNumber)
     {
-        // ÇÃ·¹ÀÌ¾îº° Ä³¸¯ÅÍ ÇÁ¸®ÆÕ ·Îµå
+        // í”Œë ˆì´ì–´ë³„ ìºë¦­í„° í”„ë¦¬íŒ¹ ë¡œë“œ
         LoadPlayerCharacterPrefabs();
 
-        // ¹ß»ç ÁöÁ¡ ¼³Á¤ (Å¸¿ö ¾ÕÂÊ)
+        // ë°œì‚¬ ì§€ì  ì„¤ì • (íƒ€ì›Œ ì•ìª½)
         if (launchPoint == null)
         {
             var launchGO = new GameObject("LaunchPoint");
@@ -38,7 +38,7 @@ public class JengaCharacterLauncher : MonoBehaviour
     }
 
     /// <summary>
-    /// Å¸ÀÌ¹Ö °á°ú¿¡ µû¸¥ Ä³¸¯ÅÍ ¹ß»ç
+    /// íƒ€ì´ë° ê²°ê³¼ì— ë”°ë¥¸ ìºë¦­í„° ë°œì‚¬
     /// </summary>
     public void LaunchCharacter(JengaBlock targetBlock, bool success, float accuracy, Action onComplete = null)
     {
@@ -47,19 +47,19 @@ public class JengaCharacterLauncher : MonoBehaviour
 
     private IEnumerator LaunchCharacterCoroutine(JengaBlock targetBlock, bool success, float accuracy, Action onComplete)
     {
-        // 1. Ä³¸¯ÅÍ »ı¼º
+        // 1. ìºë¦­í„° ìƒì„±
         var characterPrefab = GetCharacterPrefabForPlayer(targetBlock.OwnerUid);
         var character = Instantiate(characterPrefab, launchPoint.position, launchPoint.rotation);
 
-        // 2. ¸ñÇ¥ ÁöÁ¡ ¼³Á¤
+        // 2. ëª©í‘œ ì§€ì  ì„¤ì •
         Vector3 targetPos = success ?
             GetSuccessTargetPosition(targetBlock) :
             GetFailureTargetPosition(targetBlock);
 
-        // 3. ¹ß»ç ¾Ö´Ï¸ŞÀÌ¼Ç
+        // 3. ë°œì‚¬ ì• ë‹ˆë©”ì´ì…˜
         yield return StartCoroutine(AnimateCharacterFlight(character, targetPos, success));
 
-        // 4. Ãæµ¹ ¿¬Ãâ
+        // 4. ì¶©ëŒ ì—°ì¶œ
         if (success)
         {
             yield return StartCoroutine(HandleSuccessImpact(character, targetBlock, accuracy));
@@ -69,7 +69,7 @@ public class JengaCharacterLauncher : MonoBehaviour
             yield return StartCoroutine(HandleFailureImpact(character, targetBlock));
         }
 
-        // 5. Á¤¸®
+        // 5. ì •ë¦¬
         Destroy(character, 2f);
         onComplete?.Invoke();
     }
@@ -77,20 +77,20 @@ public class JengaCharacterLauncher : MonoBehaviour
     private IEnumerator AnimateCharacterFlight(GameObject character, Vector3 targetPos, bool success)
     {
         Vector3 startPos = character.transform.position;
-        float duration = success ? 1.5f : 1.2f; // ¼º°ø ½Ã ´õ Á¤È®ÇÑ ±ËÀû
+        float duration = success ? 1.5f : 1.2f; // ì„±ê³µ ì‹œ ë” ì •í™•í•œ ê¶¤ì 
         float elapsed = 0f;
 
         while (elapsed < duration)
         {
             float t = elapsed / duration;
 
-            // Æ÷¹°¼± ±ËÀû °è»ê
+            // í¬ë¬¼ì„  ê¶¤ì  ê³„ì‚°
             Vector3 currentPos = Vector3.Lerp(startPos, targetPos, t);
             currentPos.y += Mathf.Sin(t * Mathf.PI) * launchArcHeight;
 
             character.transform.position = currentPos;
 
-            // ºñÇà ¹æÇâÀ¸·Î È¸Àü
+            // ë¹„í–‰ ë°©í–¥ìœ¼ë¡œ íšŒì „
             Vector3 direction = (targetPos - startPos).normalized;
             character.transform.rotation = Quaternion.LookRotation(direction);
 
@@ -103,26 +103,26 @@ public class JengaCharacterLauncher : MonoBehaviour
 
     private IEnumerator HandleSuccessImpact(GameObject character, JengaBlock targetBlock, float accuracy)
     {
-        // Ä³¸¯ÅÍ°¡ ºí·Ï¿¡ Ãæµ¹ÇÏ¿© ¹Ğ¾î³»´Â ¿¬Ãâ
+        // ìºë¦­í„°ê°€ ë¸”ë¡ì— ì¶©ëŒí•˜ì—¬ ë°€ì–´ë‚´ëŠ” ì—°ì¶œ
 
-        // ºí·ÏÀ» ¹Ğ¾î³»´Â ¹æÇâ °è»ê
+        // ë¸”ë¡ì„ ë°€ì–´ë‚´ëŠ” ë°©í–¥ ê³„ì‚°
         Vector3 pushDirection = GetBlockPushDirection(targetBlock);
 
-        // Á¤È®µµ¿¡ µû¸¥ Èû Á¶Àı
+        // ì •í™•ë„ì— ë”°ë¥¸ í˜ ì¡°ì ˆ
         float finalForce = successImpactForce * Mathf.Lerp(0.8f, 1.2f, accuracy);
 
-        // ºí·Ï¿¡ ¹°¸® Àû¿ë
+        // ë¸”ë¡ì— ë¬¼ë¦¬ ì ìš©
         var rb = targetBlock.GetComponent<Rigidbody>();
         if (rb)
         {
             rb.isKinematic = false;
             rb.AddForce(pushDirection * finalForce, ForceMode.Impulse);
 
-            // ¾à°£ÀÇ È¸Àü·Âµµ Ãß°¡ (ÀÚ¿¬½º·¯¿î ¿¬Ãâ)
+            // ì•½ê°„ì˜ íšŒì „ë ¥ë„ ì¶”ê°€ (ìì—°ìŠ¤ëŸ¬ìš´ ì—°ì¶œ)
             rb.AddTorque(UnityEngine.Random.insideUnitSphere * 2f, ForceMode.Impulse);
         }
 
-        // ¼º°ø ÀÌÆåÆ®/»ç¿îµå
+        // ì„±ê³µ ì´í™íŠ¸/ì‚¬ìš´ë“œ
         // JengaEffectManager.Instance?.PlaySuccessEffect(targetBlock.transform.position);
         // JengaSoundManager.Instance?.PlayBlockHitSound();
 
@@ -131,19 +131,19 @@ public class JengaCharacterLauncher : MonoBehaviour
 
     private IEnumerator HandleFailureImpact(GameObject character, JengaBlock targetBlock)
     {
-        // Ä³¸¯ÅÍ°¡ ´Ù¸¥ °÷¿¡ ºÎµúÄ¡°Å³ª ºø³ª°¡´Â ¿¬Ãâ
+        // ìºë¦­í„°ê°€ ë‹¤ë¥¸ ê³³ì— ë¶€ë”ªì¹˜ê±°ë‚˜ ë¹—ë‚˜ê°€ëŠ” ì—°ì¶œ
 
-        // ½ÇÆĞ ÀÌÆåÆ®
+        // ì‹¤íŒ¨ ì´í™íŠ¸
         // JengaEffectManager.Instance?.PlayFailureEffect(character.transform.position);
         // JengaSoundManager.Instance?.PlayMissSound();
 
         yield return new WaitForSeconds(failureDelay);
 
-        // Å¸¿ö ºØ±« Æ®¸®°Å
+        // íƒ€ì›Œ ë¶•ê´´ íŠ¸ë¦¬ê±°
         var tower = JengaTowerManager.Instance?.GetPlayerTower(targetBlock.OwnerActorNumber);
         tower?.TriggerCollapseOnce();
 
-        // ³×Æ®¿öÅ© ¾Ë¸²
+        // ë„¤íŠ¸ì›Œí¬ ì•Œë¦¼
         if (PhotonNetwork.IsMasterClient)
         {
             
@@ -152,15 +152,15 @@ public class JengaCharacterLauncher : MonoBehaviour
 
     private Vector3 GetSuccessTargetPosition(JengaBlock targetBlock)
     {
-        // ºí·Ï ¹Ù·Î ¾Õ À§Ä¡ (Á¤È®ÇÑ Å¸°İ ÁöÁ¡)
+        // ë¸”ë¡ ë°”ë¡œ ì• ìœ„ì¹˜ (ì •í™•í•œ íƒ€ê²© ì§€ì )
         Vector3 blockPos = targetBlock.transform.position;
         Vector3 launchDir = (blockPos - launchPoint.position).normalized;
-        return blockPos - launchDir * 0.5f; // ºí·Ï ¾ÕÂÊ
+        return blockPos - launchDir * 0.5f; // ë¸”ë¡ ì•ìª½
     }
 
     private Vector3 GetFailureTargetPosition(JengaBlock targetBlock)
     {
-        // ºí·ÏÀ» ºø³ª°¡´Â À§Ä¡ (·£´ıÇÏ°Ô ¾î±ß³²)
+        // ë¸”ë¡ì„ ë¹—ë‚˜ê°€ëŠ” ìœ„ì¹˜ (ëœë¤í•˜ê²Œ ì–´ê¸‹ë‚¨)
         Vector3 blockPos = targetBlock.transform.position;
         Vector3 randomOffset = new Vector3(
             UnityEngine.Random.Range(-1.5f, 1.5f),
@@ -172,24 +172,24 @@ public class JengaCharacterLauncher : MonoBehaviour
 
     private Vector3 GetBlockPushDirection(JengaBlock targetBlock)
     {
-        // Å¸¿ö Áß½É¿¡¼­ ¹Ù±ùÂÊÀ¸·Î ¹Ğ¾î³»´Â ¹æÇâ
+        // íƒ€ì›Œ ì¤‘ì‹¬ì—ì„œ ë°”ê¹¥ìª½ìœ¼ë¡œ ë°€ì–´ë‚´ëŠ” ë°©í–¥
         var tower = targetBlock.GetComponentInParent<JengaTower>();
         if (tower)
         {
             Vector3 towerToBlock = (targetBlock.transform.position - tower.transform.position).normalized;
-            towerToBlock.y = 0; // ¼öÆò ¹æÇâ¸¸
+            towerToBlock.y = 0; // ìˆ˜í‰ ë°©í–¥ë§Œ
             return towerToBlock;
         }
 
-        return Vector3.forward; // ±âº»°ª
+        return Vector3.forward; // ê¸°ë³¸ê°’
     }
 
     private void LoadPlayerCharacterPrefabs()
     {
-        // ToDo :ÇÃ·¹ÀÌ¾îº° Ä³¸¯ÅÍ ÇÁ¸®ÆÕ ·Îµå ·ÎÁ÷
-        // ¿¹: Resources Æú´õ³ª Addressable ½Ã½ºÅÛ »ç¿ë
+        // ToDo :í”Œë ˆì´ì–´ë³„ ìºë¦­í„° í”„ë¦¬íŒ¹ ë¡œë“œ ë¡œì§
+        // ì˜ˆ: Resources í´ë”ë‚˜ Addressable ì‹œìŠ¤í…œ ì‚¬ìš©
 
-        // ÀÓ½Ã Å×½ºÆ® ·ÎÁ÷
+        // ì„ì‹œ í…ŒìŠ¤íŠ¸ ë¡œì§
         playerCharacterPrefabs["player1"] = Resources.Load<GameObject>("Characters/Character1");
         playerCharacterPrefabs["player2"] = Resources.Load<GameObject>("Characters/Character2");
     }
@@ -201,6 +201,6 @@ public class JengaCharacterLauncher : MonoBehaviour
         {
             return prefab;
         }
-        return characterPrefab; // ±âº» Ä³¸¯ÅÍ
+        return characterPrefab; // ê¸°ë³¸ ìºë¦­í„°
     }
 }
