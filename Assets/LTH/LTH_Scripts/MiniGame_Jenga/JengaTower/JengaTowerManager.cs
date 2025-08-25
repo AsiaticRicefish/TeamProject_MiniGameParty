@@ -20,20 +20,37 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
     [Header("타워 설정")]
     [SerializeField] private GameObject blockPrefab;
     [SerializeField] private int towerHeight = 13;
-
-    [Header("배치")]
-    [SerializeField] private Transform towersParent;
-    [SerializeField]
-    private Vector3[] fixedPositions = 
-    {
-        new (-8, 0,  8),
-        new ( 8, 0,  8),
-        new (-8, 0, -8),
-        new ( 8, 0, -8),
-    };
     #endregion
 
+    [Header("배치(아레나 앵커)")]
+    [Tooltip("개별 아레나의 TowerAnchor들을 등록 (Arena_i/TowerAnchor)")]
+    [SerializeField] private List<Transform> arenaTowerAnchors = new(); // 인스펙터에 드래그 등록
+
+    [Tooltip("Instantiate 시 타워를 앵커 하위로 붙일지 여부")]
+    [SerializeField] private bool parentTowerUnderAnchor = true;
+
+    [SerializeField] private string[] arenaLayerNames = { "Arena_0", "Arena_1", "Arena_2", "Arena_3" };
+
+    [Tooltip("아레나 트리 전체를 감싸는 루트. 비어 있으면 자동 생성")]
+    [SerializeField] private Transform towersParent;
+
     private readonly Dictionary<int, JengaTower> _playerTowers = new(); // ActorNumber → Tower
+
+    // 룸 커스텀 프로퍼티 키 (관전자/재접속 대비 슬롯 고정)
+    private const string ROOMKEY_SLOTS = "JG_SLOTS";
+
+    // 네트워크 적용 중 이벤트 재브로드캐스트 방지 플래그
+    private bool _suppressCollapseBroadcast;
+
+    public void WithSuppressedCollapse(Action action)
+    {
+        _suppressCollapseBroadcast = true;
+        action?.Invoke();
+        _suppressCollapseBroadcast = false;
+    }
+
+    public bool IsSuppressingCollapse => _suppressCollapseBroadcast;
+
 
     protected override void OnAwake()
     {
@@ -49,15 +66,18 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
 
     public void Initialize()
     {
+        // 마스터에서만 슬롯맵 고정(오프라인/비마스터는 읽기만)
+        EnsureSlotMap();
         CreateAllPlayerTowers();
         Debug.Log("[JengaTowerManager] 초기화 완료 - 개별 타워 생성");
     }
 
+    #region Tower Creation
     private void CreateAllPlayerTowers()
     {
         _playerTowers.Clear();
 
-        // 슬롯 맵: 시작 시점에 확정된 순서(관전자 포함 이슈 방지)
+        // 슬롯 맵: 시작 시점에 확정된 순서 (관전자 포함 이슈 방지)
         var slotActors = GetSlotMap(); // int[] actorNumbers
 
         for (int i = 0; i < slotActors.Length; i++)
@@ -65,13 +85,18 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
             var actorNumber = slotActors[i];
             var p = PhotonNetwork.PlayerList.FirstOrDefault(x => x.ActorNumber == actorNumber);
             if (p == null) continue; // 떠난 플레이어 등
+
             CreatePlayerTower(actorNumber, i, TryGetUid(p));
         }
     }
 
-    private void CreatePlayerTower(int actorNumber, int index, string ownerUid)
+    private void CreatePlayerTower(int actorNumber, int slotIndex, string ownerUid)
     {
-        var pos = GetPlayerTowerPosition(index);
+        // 앵커 기준 위치/회전
+        var anchor = GetPlayerTowerAnchor(slotIndex);
+        var pos = anchor ? anchor.position : Vector3.zero;
+        var rot = anchor ? anchor.rotation : Quaternion.identity;
+        var parent = parentTowerUnderAnchor && anchor ? anchor : towersParent;
 
         GameObject towerRootGO;
         JengaTower tower;
@@ -79,49 +104,59 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
         if (buildMode == BuildMode.Prefab)
         {
             // 완성된 타워 프리팹을 그대로 소환
-            towerRootGO = Instantiate(towerPrefab, pos, Quaternion.identity, towersParent);
+            towerRootGO = Instantiate(towerPrefab, pos, rot, parent);
             towerRootGO.name = $"JengaTower_Player{actorNumber}";
             tower = towerRootGO.GetComponent<JengaTower>() ?? towerRootGO.AddComponent<JengaTower>();
 
             tower.InitializeOwner(actorNumber, ownerUid);
             tower.InitializeFromExistingHierarchy();
+
+            ApplyArenaLayer(towerRootGO, slotIndex);
         }
         else
         {
             // 기존 프로시저럴 방식 유지
             towerRootGO = new GameObject($"JengaTower_Player{actorNumber}");
             towerRootGO.transform.SetParent(towersParent, false);
-            towerRootGO.transform.position = pos;
+            towerRootGO.transform.SetPositionAndRotation(pos, rot);
 
             tower = towerRootGO.AddComponent<JengaTower>();
             tower.InitializeOwner(actorNumber, ownerUid);
             tower.Initialize(blockPrefab, towerHeight);
+
+            ApplyArenaLayer(towerRootGO, slotIndex);
         }
 
+        // 붕괴 이벤트 → 네트워크 통지(마스터만)
         tower.OnTowerCollapsed += () =>
-        {
-            if (PhotonNetwork.IsMasterClient)
-            {
-                JengaNetworkManager.Instance.NotifyTowerCollapsed(actorNumber);
-            }
-        };
+    {
+        if (!PhotonNetwork.IsMasterClient) return;
+        if (IsSuppressingCollapse) return;
+
+        JengaNetworkManager.Instance.RequestTowerCollapse_MasterAuth(actorNumber);
+    };
 
         _playerTowers[actorNumber] = tower;
+        tower.ConfigureTopProtection(allowTopRemoval: false, topSafeLayers: 1);
+
     }
+    #endregion
 
-    // 슬롯 맵(참가자 고정) 저장/조회: 관전자 모드 대비 필수
-    // 키는 프로젝트 맥락에 맞게 바꿔도 됨
-    private const string ROOMKEY_SLOTS = "JG_SLOTS";
-
+    #region Slot Map (Room Properties)
     private void EnsureSlotMap()
     {
         if (!PhotonNetwork.IsMasterClient) return;
+
         var room = PhotonNetwork.CurrentRoom;
         if (room == null) return;
 
         if (!room.CustomProperties.ContainsKey(ROOMKEY_SLOTS))
         {
-            var ordered = PhotonNetwork.PlayerList.OrderBy(p => p.ActorNumber).Select(p => p.ActorNumber).ToArray();
+            var ordered = PhotonNetwork.PlayerList
+                 .OrderBy(p => p.ActorNumber)
+                 .Select(p => p.ActorNumber)
+                 .ToArray();
+
             var h = new ExitGames.Client.Photon.Hashtable { [ROOMKEY_SLOTS] = ordered };
             room.SetCustomProperties(h);
         }
@@ -130,11 +165,39 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
     private int[] GetSlotMap()
     {
         var room = PhotonNetwork.CurrentRoom;
-        if (room != null && room.CustomProperties.TryGetValue(ROOMKEY_SLOTS, out var obj) && obj is int[] arr)
-            return arr;
+        if (room != null && room.CustomProperties.TryGetValue(ROOMKEY_SLOTS, out var obj))
+        {
+            if (obj is int[] arrInt) return arrInt;
+            if (obj is object[] arrObj) return arrObj.Select(o => Convert.ToInt32(o)).ToArray();
+        }
 
-        // 룸이 없거나(오프라인) 저장이 안 되어 있으면 현재 리스트로 대체
-        return PhotonNetwork.PlayerList.OrderBy(p => p.ActorNumber).Select(p => p.ActorNumber).ToArray();
+        return PhotonNetwork.PlayerList
+            .OrderBy(p => p.ActorNumber)
+            .Select(p => p.ActorNumber)
+            .ToArray();
+    }
+
+    /// <summary>
+    /// ActorNumber → 슬롯 인덱스
+    /// </summary>
+    public int GetSlotIndexOf(int actorNumber)
+    {
+        var map = GetSlotMap();
+        for (int i = 0; i < map.Length; i++)
+            if (map[i] == actorNumber) return i;
+        return 0;
+    }
+    #endregion
+
+    #region Anchors & Utilities
+    private Transform GetPlayerTowerAnchor(int slotIndex)
+    {
+        if (arenaTowerAnchors != null && arenaTowerAnchors.Count > 0)
+        {
+            var idx = Mathf.Abs(slotIndex) % arenaTowerAnchors.Count;
+            return arenaTowerAnchors[idx];
+        }
+        return null;
     }
 
     private static string TryGetUid(Photon.Realtime.Player p)
@@ -146,19 +209,14 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
         }
         return null;
     }
+    #endregion
 
-    private Vector3 GetPlayerTowerPosition(int index)
-    {
-        if (fixedPositions is { Length: > 0 })
-            return fixedPositions[index % fixedPositions.Length];
-        return Vector3.zero;
-    }
-
+    #region Public API
     public JengaTower GetPlayerTower(int actorNumber) =>
         _playerTowers.TryGetValue(actorNumber, out var t) ? t : null;
 
     public string GetOwnerUidByActor(int actorNumber) =>
-        _playerTowers.TryGetValue(actorNumber, out var t) ? t.ownerUid : null;
+    _playerTowers.TryGetValue(actorNumber, out var t) ? t.ownerUid : null;
 
     public void RemovePlayerBlock(int actorNumber, int blockId, bool withAnimation = true)
     {
@@ -185,5 +243,24 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
     {
         foreach (var kv in snapshot)
             GetPlayerTower(kv.Key)?.ApplyRemovedBlocks(kv.Value, withAnimation: false);
+    }
+    #endregion
+
+    private void ApplyArenaLayer(GameObject root, int slotIndex)
+    {
+        var name = arenaLayerNames[slotIndex % arenaLayerNames.Length];
+        int layer = LayerMask.NameToLayer(name);
+
+        if (layer < 0) return;
+
+        SetLayerRecursively(root, layer);
+    }
+
+    private static void SetLayerRecursively(GameObject go, int layer)
+    {
+        go.layer = layer;
+
+        foreach (Transform c in go.transform)
+            SetLayerRecursively(c.gameObject, layer);
     }
 }

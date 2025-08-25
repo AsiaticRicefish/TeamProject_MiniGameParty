@@ -1,5 +1,5 @@
 using UnityEngine;
-using LDH_Utils;
+using LDH_Util;
 
 namespace LDH_UI
 {
