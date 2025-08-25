@@ -2,9 +2,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using DesignPattern;
+using MiniGameJenga;
 using Photon.Pun;
 using UnityEngine;
-using MiniGameJenga;
 
 [RequireComponent(typeof(PhotonView))]
 [DisallowMultipleComponent]
@@ -61,6 +62,7 @@ public class JengaSceneController : BaseGameSceneController
             JengaNetworkManager.Instance,     // 네트워크 먼저
             JengaGameManager.Instance,        // 게임 로직
             JengaTowerManager.Instance,       // 타워 생성
+            JengaUIManager.Instance,          // UI 매니저
         };
 
         yield return StartCoroutine(InitializeComponentsSafely(sequentialComponents));
@@ -141,6 +143,35 @@ public class JengaSceneController : BaseGameSceneController
         }
 
         Debug.Log($"=== [Scene] NotifyGameStart END ===");
+    }
+
+    private void OnDestroy()
+    {
+        // 씬 전환 전 젠가 관련 매니저들 명시적 해제
+        if (JengaGameManager.Instance != null)
+        {
+            CombinedSingleton<JengaGameManager>.Release();
+        }
+        
+        if (JengaTowerManager.Instance != null)
+        {
+            CombinedSingleton<JengaTowerManager>.Release();
+        }
+        
+        if (JengaNetworkManager.Instance != null)
+        {
+            PunSingleton<JengaNetworkManager>.Release();
+        }
+        
+        if (JengaTimingManager.Instance != null)
+        {
+            CombinedSingleton<JengaTimingManager>.Release();
+        }
+        
+        if (JengaUIManager.Instance != null)
+        {
+            CombinedSingleton<JengaUIManager>.Release();
+        }
     }
 
 
