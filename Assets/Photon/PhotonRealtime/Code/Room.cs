@@ -304,7 +304,9 @@ namespace Photon.Realtime
         /// <summary>Define if actor or room properties with null values are removed on the server or kept.</summary>
         public bool DeleteNullProperties { get; private set; }
 
-        #if SERVERSDK
+        public int CreatedAt { get; set; }
+
+#if SERVERSDK
         /// <summary>Define if rooms should have unique UserId per actor and that UserIds are used instead of actor number in rejoin.</summary>
         public bool CheckUserOnJoin { get; private set; }
         #endif
