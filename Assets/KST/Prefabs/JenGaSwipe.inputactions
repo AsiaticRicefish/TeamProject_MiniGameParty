@@ -1,0 +1,55 @@
+{
+    "version": 1,
+    "name": "JenGaSwipe",
+    "maps": [
+        {
+            "name": "Pointer",
+            "id": "c8f91740-b251-4517-8802-8f3d3631d622",
+            "actions": [
+                {
+                    "name": "Pointer",
+                    "type": "PassThrough",
+                    "id": "8d97f13b-a294-4f3c-bc28-34e4cbb1fe36",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Press",
+                    "type": "Button",
+                    "id": "0e3af758-8175-4809-90ff-f3416fbc2268",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "063d137b-f4c1-4113-ba12-4ca1e8828ed2",
+                    "path": "<Pointer>/position",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Pointer",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "fa03abd2-0511-4156-9b48-3f1ec798d8f0",
+                    "path": "<Pointer>/press",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Press",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}
