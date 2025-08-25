@@ -1,0 +1,11 @@
+제가 쓰고있는 Roomproperty 목록 - Shooting Game Property Keys 스크립트에 존재 
+추후 더 사용시 해당 스크립트에 추가
+
+public const string State = "STGame_State";
+public const string Turn = "STGame_Turn";
+public const string PlayerScore_Prefix = "STGame_Score_Player_"; // STGame_Score_Player_ + uid
+
+
+제가 사용하고 있는 PlayerProperty
+
+아직 없음 
