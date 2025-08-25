@@ -120,5 +120,24 @@ namespace PMS_Util
             }
             return null;
         }
+
+        public static string GetMyUid()
+        {
+            //연결 안 됨 or 연결됐지만 Room에 존재하지 않음
+            if (!PhotonNetwork.IsConnected || (!PhotonNetwork.InRoom))
+            {
+                Debug.Log("현재 해당 클라이언트는 체크를 확인 할 수 없는 상태입니다.");
+                return null;
+            }
+            
+            object uidObj = Photon.Pun.PhotonNetwork.LocalPlayer.CustomProperties["uid"];
+            if (uidObj == null)
+            {
+                Debug.LogError("[GetMyUid] UID를 가져올 수 없습니다!");
+                return null;
+            }
+
+            return uidObj.ToString();
+        }
     }
 }

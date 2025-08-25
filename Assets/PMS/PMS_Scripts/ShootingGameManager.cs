@@ -44,7 +44,8 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
                 // GamePlayer에 미니게임 전용 데이터 생성 - ShootingPlayerData
                 gamePlayer.ShootingData = new ShootingPlayerData
                 {
-                    score = 0
+                    score = 0,
+                    myTurnIndex = -1
                 };
 
                 // ShootingGame 딕셔너리에 플레이어들을 uid 저장
