@@ -6,16 +6,17 @@ public class GamePlayState : ShootingGameState
 {
     public override void Enter()
     {
-        Debug.Log("[ShootingGameState] - CardSelect 상태에 진입");
-        //플레이어 입력 가능하도록 처리
-        //InputManager.Instance.EnableInput();
+        Debug.Log("[ShootingGameState] - GamePlayState Enter");
     }
     public override void Update()
     {
+        if(ShootingGameManager.Instance.CurrentRound < ShootingGameManager.Instance.MaxRounds)
+        {
 
+        }
     }
     public override void Exit()
     {
-        Debug.Log("[ShootingGameState] - CardSelect 상태에서 벗어남");
+        Debug.Log("[ShootingGameState] - GamePlayState Exit");
     }
 }

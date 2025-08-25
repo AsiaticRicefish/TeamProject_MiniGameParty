@@ -17,6 +17,7 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
 
     public int CurrentRound { get; private set; } = 0;
     public int MaxRounds { get; private set; } = 3;
+
     protected override void OnAwake()
     {
         base.isPersistent = false;          //슈팅 게임 안에서만 존재 

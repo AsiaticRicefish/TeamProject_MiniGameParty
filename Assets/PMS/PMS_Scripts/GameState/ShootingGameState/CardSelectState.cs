@@ -1,22 +1,28 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Photon.Pun;
 using ShootingScene;
 
 public class CardSelectState : ShootingGameState
 {
+    private bool hasBroadcasted = false;
     public override void Enter()
     {
-        Debug.Log("[ShootingGameState] - CardSelect 상태에 진입");
-        //플레이어 입력 가능하도록 처리
-        //InputManager.Instance.EnableInput();
+        Debug.Log("[ShootingGameState] - CardSelectState Enter");
+        //CardUI가 나타나도록
     }
     public override void Update() 
     { 
-
+        if(!hasBroadcasted && PhotonNetwork.IsMasterClient && true) //ShootingGameManager.Instance.IsTurnSetup
+        {
+            RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "GamePlayState");
+            hasBroadcasted = true;
+        }
     }
     public override void Exit() 
     {
-        Debug.Log("[ShootingGameState] - CardSelect 상태에서 벗어남");
+        Debug.Log("[ShootingGameState] - CardSelectState Exit");
+        //CardUI가 사라지도록
     }
 }

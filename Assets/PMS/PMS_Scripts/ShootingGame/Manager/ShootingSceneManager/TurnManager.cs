@@ -8,11 +8,12 @@ using Photon.Pun;
 namespace ShootingScene
 {
     [RequireComponent(typeof(PhotonView))]
-    //원형 연결 리스트 사용  끝 -> 시작의 이동
     public class TurnManager : PunSingleton<TurnManager>, IGameComponent
     {
         //private List<int> turnOrder = new List<int>();
         private int currentTurnIndex = 0; // 아직 턴 시작 전
+        private int currentRound = 1;     // 현재 라운드
+        private int totalRounds = 3;      // 반복할 총 라운드 수
 
         protected override void OnAwake()
         {
@@ -25,19 +26,20 @@ namespace ShootingScene
         }
 
         //외부에서 사용 - 추후 Card에서 저장된 List에 따른 턴 셋팅
-        /*public void SetupTurn(List<int> sortedList)
+        public void SetupTurn()     //List<int> sorted;
         {
             //추후 CardManager에서 받아온 Turn 정보를 토대로 playerList 설계하기
             if (!PhotonNetwork.IsMasterClient) return;
 
-            turnOrder.Clear();
+            /*turnOrder.Clear();
             turnOrder.AddRange(sortedList);  // 카드 뽑기 결과 반영
 
-            if (turnOrder.Count == 0) return;
+            if (turnOrder.Count == 0) return;*/
 
             currentTurnIndex = 1;
-            //BroadcastCurrentTurn(turnOrder[currentTurnIndex]);
-        }*/
+            currentRound = 1;
+            BroadcastCurrentTurn();
+        }
 
         //테스트 코드 - 임시로 모든 플레이어를 뒤져서 TurnIndex를 순차적으로 부여
         public void TestSetupTurn()
@@ -52,9 +54,10 @@ namespace ShootingScene
                 index++;
             }
 
-            // 첫 턴은 0번 플레이어
-            currentTurnIndex = 0;
-            //BroadcastCurrentTurn(turnOrder[currentTurnIndex]);
+            // 첫 턴은 1번 플레이어
+            currentTurnIndex = 1;
+            currentRound = 1;
+            BroadcastCurrentTurn();
         }
 
         // TurnManager (마스터만 관리)
@@ -62,18 +65,33 @@ namespace ShootingScene
         {
             if (!PhotonNetwork.IsMasterClient) return;
 
-            currentTurnIndex = (currentTurnIndex + 1) % PhotonNetwork.CurrentRoom.PlayerCount;                  // TODO - Magic Number 4 -> 현재 방의 게임 플레이를 하고 있는 플레이어의 수
-            BroadcastCurrentTurn(currentTurnIndex);
+            currentTurnIndex++;
+
+            // 현재 라운드 끝났는지 체크
+            if (currentTurnIndex > PhotonNetwork.CurrentRoom.PlayerCount) // 턴 인덱스가 1부터 시작, 추후 유저가 나가면 문제가 생기는데 리스트를 만들어야하나?
+            {
+                currentTurnIndex = 1; // 다시 1번부터 시작
+                currentRound++;
+
+                if (currentRound > totalRounds)
+                {
+                    Debug.Log("[TurnManager] 모든 라운드 종료!");
+                    // TODO - 게임 종료 처리 또는 다음 상태로 전환
+                    return;
+                }
+            }
+
+            BroadcastCurrentTurn();
         }
 
         //현재 턴 정보 전체 클라이언트에 전달
-        private void BroadcastCurrentTurn(int currentTurnIndex)
+        private void BroadcastCurrentTurn()
         {
-            photonView.RPC(nameof(RPC_SetCurrentTurn), RpcTarget.All, currentTurnIndex);
+            photonView.RPC(nameof(RPC_SetCurrentTurn), RpcTarget.All, this.currentTurnIndex, this.currentRound);
         }
 
         [PunRPC]
-        private void RPC_SetCurrentTurn(int turnIndex)
+        private void RPC_SetCurrentTurn(int turnIndex,int roundIndex )
         {
             string myUid = PMS_Util.PMS_Util.GetMyUid();
             if (string.IsNullOrEmpty(myUid))
@@ -91,7 +109,7 @@ namespace ShootingScene
 
             bool isMyTurn = (turnIndex == myPlayer.ShootingData.myTurnIndex);
 
-            Debug.Log($"[TurnManager] - CurrentTurn={turnIndex}, MyTurnIndex={myPlayer.ShootingData.myTurnIndex}, IsMyTurn={isMyTurn}");
+            Debug.Log($"[TurnManager] 라운드 {roundIndex}, CurrentTurn={turnIndex}, 내 턴={isMyTurn}");
 
             if (isMyTurn)
             {
