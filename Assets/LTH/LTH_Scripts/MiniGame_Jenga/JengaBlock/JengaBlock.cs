@@ -190,6 +190,8 @@ public class JengaBlock : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
 
         if (!success)
         {
+            Debug.Log($"[JengaBlock] Timing FAIL blockId={BlockId} ownerActor={OwnerActorNumber} acc={accuracy:F2}");
+
             // 타이밍 실패 시 타워 붕괴
             var tower = JengaTowerManager.Instance?.GetPlayerTower(OwnerActorNumber);
             if (tower != null)
@@ -198,10 +200,9 @@ public class JengaBlock : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
                 JengaNetworkManager.Instance?.RequestTowerCollapse_MasterAuth(OwnerActorNumber);
             }
             return;
-            // JengaSoundManager.Instance?.PlayTimingFailSound();
         }
 
-        // JengaSoundManager.Instance?.PlayTimingSuccessSound();
+        // 성공 처리: 블록 제거 ‘요청’만 마스터에게 보냄
         _pendingRemoval = true;
 
         var playerId = PhotonNetwork.LocalPlayer.ActorNumber;
@@ -214,6 +215,7 @@ public class JengaBlock : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
         JengaNetworkManager.Instance?.RequestBlockRemoval_MasterAuth(
             OwnerActorNumber, BlockId, totalScore, accuracy
         );
+        Debug.Log($"[JengaBlock] Timing SUCCESS blockId={BlockId} ownerActor={OwnerActorNumber} score={totalScore} acc={accuracy:F2}");
     }
     #endregion
 
