@@ -29,8 +29,6 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/MiniGameJengaScene.unity
     guid: 221c75271dfd06f408256b27231ef1a6
-    path: Assets/LDH/LDH_Scenes/LDH_MainScene.unity
-    guid: 8470b0a4543174bf481c315db7289d70
   - enabled: 1
     path: Assets/LDH/LDH_Scenes/LDH_TestGameScene.unity
     guid: 459b2f6fa8ef9477b9a98d2fddd50ba8
