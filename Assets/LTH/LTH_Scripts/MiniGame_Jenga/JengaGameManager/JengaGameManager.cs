@@ -25,6 +25,13 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
     public JengaGameState currentState = JengaGameState.Waiting;
     public float remainingTime; // 남은 시간
 
+    [Header("카운트다운 설정")]
+    [SerializeField] private float countdownDuration = 3f; // 카운트다운 시간
+    [SerializeField] private bool useCountdown = true; // 카운트다운 사용 여부
+
+    [Header("UI 이벤트")]
+    public Action<float> OnTimeUpdated;
+
     // 이벤트
     public Action<JengaGameState> OnGameStateChanged;       // 게임 상태 변경 이벤트
     public Action<string, bool, int> OnPlayerAction;        // 플레이어ID, 성공여부, 점수
@@ -51,8 +58,16 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         remainingTime = gameTime;
 
         Debug.Log("[JengaGameManager - Initialize] 초기화 완료");
+
+        // 초기화 완료 후 카운트다운 시작 (마스터만)
+        if (PhotonNetwork.IsMasterClient)
+        {
+            // 약간의 지연 후 카운트다운 시작 (다른 매니저들 초기화 완료 대기)
+            StartCoroutine(DelayedCountdownStart());
+        }
     }
 
+    #region 플레이어 초기화
     private void InitializePlayers()
     {
         // 현재 방에 접속해 있는 모든 Photon 플레이어 목록을 순회
@@ -97,6 +112,7 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         }
         Debug.Log($"[JengaGameManager - InitializePlayers] Initialized {players.Count} players");
     }
+    #endregion
 
     public void StartGame()
     {
@@ -106,28 +122,99 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
             return;
         }
 
-        if (!PhotonNetwork.IsMasterClient) return;
-
-        if (currentState == JengaGameState.Playing || currentState == JengaGameState.Finished)
+        if (!PhotonNetwork.IsMasterClient)
         {
-            Debug.Log("[JGM] Skip: already started/finished");
+            Debug.Log("[JengaGameManager.StartGame] Not master client - waiting for state broadcast");
             return;
         }
 
-        Debug.Log("[JGM] All checks passed - proceeding to start game");
+        if (currentState == JengaGameState.Playing || currentState == JengaGameState.Finished)
+        {
+            Debug.Log("[JengaGameManager] Skip: already started/finished");
+            return;
+        }
 
         // 1) 마스터 로컬 먼저 Playing 세팅
-        Debug.Log("[JGM] Step 1: ApplyGameStateChange(Playing)");
+        Debug.Log("[JengaGameManager] Step 1: ApplyGameStateChange(Playing)");
         ApplyGameStateChange(JengaGameState.Playing);
 
         // 2) 전체에 전파
-        Debug.Log("[JGM] Step 2: BroadcastGameState(Playing)");
+        Debug.Log("[JengaGameManager] Step 2: BroadcastGameState(Playing)");
         JengaNetworkManager.Instance.BroadcastGameState(JengaGameState.Playing);
 
-        // 3) 타이머는 마스터만 가동
-        Debug.Log("[JGM] Step 3: StartCoroutine(GameTimer)");
+        // 3) 타이머는 카운트다운이 완전히 끝난 후에만 시작
+        Debug.Log("[JengaGameManager] Step 3: StartCoroutine(GameTimer)");
+        if (!useCountdown)
+        {
+            StartCoroutine(GameTimer());
+        }
+    }
+
+    #region 카운트다운 관련
+    /// <summary>
+    /// 약간의 지연 후 카운트다운 시작
+    /// </summary>
+    private IEnumerator DelayedCountdownStart()
+    {
+        yield return new WaitForSeconds(0.5f); // 0.5초 대기
+        StartGameWithCountdown();
+    }
+
+
+    /// <summary>
+    /// 게임 초기화 완료 후 카운트다운 시작 (마스터만 호출)
+    /// </summary>
+    public void StartGameWithCountdown()
+    {
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            Debug.Log("[JengaGameManager] Not master client - waiting for countdown broadcast");
+            return;
+        }
+
+        if (currentState == JengaGameState.Finished)
+        {
+            Debug.Log("[JengaGameManager] Skip countdown: game already finished");
+            return;
+        }
+
+        // 바로 Playing 상태로 변경
+        ApplyGameStateChange(JengaGameState.Playing);
+        JengaNetworkManager.Instance?.BroadcastGameState(JengaGameState.Playing);
+
+        if (useCountdown)
+        {
+            Debug.Log("[JengaGameManager] Starting countdown...");
+
+            // 네트워크 매니저를 통해 모든 클라이언트에게 카운트다운 시작 신호
+            JengaNetworkManager.Instance?.BroadcastStartCountdown(countdownDuration);
+
+            // 카운트다운 완료 후 게임 시작을 위한 코루틴
+            StartCoroutine(CountdownToGameStart());
+        }
+        else
+        {
+            // 카운트다운 없이 바로 게임 시작
+            StartGame();
+        }
+    }
+
+    /// <summary>
+    /// 카운트다운 완료를 기다린 후 게임 시작
+    /// </summary>
+    private IEnumerator CountdownToGameStart()
+    {
+        // 카운트다운 시간만큼 대기
+        yield return new WaitForSeconds(countdownDuration + 1f); // +1초는 "START!" 표시 시간
+
+        // 모든 클라이언트에게 카운트다운 완료 알림
+        JengaNetworkManager.Instance?.BroadcastCountdownComplete();
+
+        // 타이머 시작
         StartCoroutine(GameTimer());
     }
+
+    #endregion
 
     /// <summary>
     /// 동기화된 게임 상태를 내부에 적용하고 이벤트로 알림
@@ -175,6 +262,7 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         // 아니면 타임업으로만 종료
         if (playerFinished.Values.All(f => f))
         {
+            Debug.Log("[JengaGameManager] All players eliminated - ending game early");
             EndGame();
         }
     }
@@ -252,15 +340,30 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
     }
 
     /// <summary>
+    /// 네트워크를 통해 동기화된 시간을 적용하고 UI 업데이트
+    /// </summary>
+    public void SyncRemainingTime(float syncedTime)
+    {
+        remainingTime = syncedTime;
+        OnTimeUpdated?.Invoke(remainingTime);
+    }
+
+    /// <summary>
     /// 게임 타이머
     /// </summary>
-    private IEnumerator GameTimer()
+    public IEnumerator GameTimer()
     {
         while (remainingTime > 0 && currentState == JengaGameState.Playing)
         {
             // 매 프레임이 아닌 1초마다 remainingTime-- 감소
             yield return new WaitForSeconds(1f);
             remainingTime--;
+
+            // 마스터에서만 네트워크 동기화 실행 (시간이 서로 다르면 안됨)
+            if (PhotonNetwork.IsMasterClient)
+            {
+                JengaNetworkManager.Instance?.BroadcastTimeSync(remainingTime);
+            }
         }
 
         // 시간이 다 되면 EndGame() 호출
@@ -268,6 +371,17 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         {
             EndGame();
         }
+    }
+
+    // UI에서 현재 남은 시간을 가져올 수 있는 퍼블릭 메서드
+    public float GetRemainingTime() => remainingTime;
+    public string GetFormattedTime()
+    {
+        // 반올림으로 더 정확한 시간 표시
+        int totalSeconds = Mathf.RoundToInt(remainingTime);
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+        return $"{minutes:00}:{seconds:00}";
     }
 
     private Vector3 GetPlayerTowerPosition(string playerId)

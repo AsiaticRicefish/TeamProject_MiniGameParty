@@ -35,13 +35,10 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     {
         base.isPersistent = false;
 
-        base.OnAwake();
-
-        // 중복 PhotonView가 붙어 있으면 정리
-        var pvs = GetComponents<PhotonView>();
-        if (pvs.Length > 1)
+        thisPhotonView = GetComponent<PhotonView>();
+        if (thisPhotonView == null)
         {
-            for (int i = 1; i < pvs.Length; i++) Destroy(pvs[i]);
+            Debug.LogError("[JengaNetwork] PhotonView MISSING on JengaNetworkManager!");
         }
     }
 
@@ -50,13 +47,30 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     /// </summary>
     public void Initialize()
     {
-//#if PHOTON_UNITY_NETWORKING_2_OR_NEWER
-//          if (PhotonNetwork.InRoom && thisPhotonView.ViewID == 0)
-//        {
-//            if (!PhotonNetwork.AllocateViewID(thisPhotonView))
-//                Debug.LogError("[NM] AllocateViewID failed. (씬에 미리 배치 + Scene ViewID 권장)");
-//        }
-//#endif
+        Debug.Log($"[JengaNetworkManager.Initialize] ViewID: {thisPhotonView?.ViewID}, InRoom: {PhotonNetwork.InRoom}");
+
+        // PhotonView 검증 강화
+        if (thisPhotonView == null)
+        {
+            Debug.LogError("[JengaNetworkManager] PhotonView is NULL - RPC will fail!");
+            return;
+        }
+
+        // ViewID가 0이면 씬에서 미리 설정된 ViewID 권장
+        if (thisPhotonView.ViewID == 0)
+        {
+            Debug.LogError("[JengaNetworkManager] ViewID is 0! Set Scene ViewID in Inspector or use PhotonNetwork.AllocateViewID before Initialize");
+
+            // 동적 할당 재시도
+            if (PhotonNetwork.InRoom && !PhotonNetwork.AllocateViewID(thisPhotonView))
+            {
+                Debug.LogError("[JengaNetworkManager] AllocateViewID failed - RPC communication will not work");
+            }
+            else
+            {
+                Debug.Log($"[JengaNetworkManager] ViewID allocated: {thisPhotonView.ViewID}");
+            }
+        }
     }
 
 
@@ -153,18 +167,30 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     // === 로컬 → 마스터: 블록 제거 요청 ===
     // 요청자는 ActorNumber로 식별. UID 매핑이 필요하면 내부에서 변환.
     public void RequestBlockRemoval_MasterAuth(int actorNumber, int blockId, int clientSuggestedScore, float clientAccuracy)
-    {
-        thisPhotonView.RPC(nameof(RPC_RequestBlockRemoval), RpcTarget.MasterClient, actorNumber, blockId, clientSuggestedScore, clientAccuracy);
+    {  
+        if (PhotonNetwork.IsMasterClient)
+        {
+            // 마스터일 경우 바로 로컬 처리
+            ApplyBlockRemoval_OnMaster(actorNumber, blockId, clientSuggestedScore, clientAccuracy);
+        }
+        else
+        {
+            // 비마스터는 마스터에게 요청
+            thisPhotonView.RPC(nameof(RPC_RequestBlockRemoval), RpcTarget.MasterClient,
+                               actorNumber, blockId, clientSuggestedScore, clientAccuracy);
+        }
     }
 
-    // === 마스터에서 수신/검증 ===
     [PunRPC]
     private void RPC_RequestBlockRemoval(int actorNumber, int blockId, int clientSuggestedScore, float clientAccuracy)
     {
-        Debug.Log($"[NET] REQ_Remove recv on Master actor={actorNumber} blockId ={blockId} acc={clientAccuracy:0.00}");
-
-        // A) 마스터/상태
         if (!PhotonNetwork.IsMasterClient) { Debug.LogWarning("[NET] Reject: not master"); return; }
+        ApplyBlockRemoval_OnMaster(actorNumber, blockId, clientSuggestedScore, clientAccuracy);
+    }
+
+    private void ApplyBlockRemoval_OnMaster(int actorNumber, int blockId, int clientSuggestedScore, float clientAccuracy)
+    {
+        Debug.Log($"[NET] REQ_Remove recv on Master actor={actorNumber} blockId={blockId} acc={clientAccuracy:0.00}");
 
         var gm = JengaGameManager.Instance;
         if (gm == null)
@@ -178,12 +204,9 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
             return;
         }
 
-
-        // --- 타워/블록 해석 ---
         var tm = JengaTowerManager.Instance;
         if (tm == null) { Debug.LogError("[NET] Reject: TowerManager null"); ReplyDeny(actorNumber, blockId, "towerMgr-null"); return; }
 
-        // 타워/블록 조회
         var tower = tm.GetPlayerTower(actorNumber);
         if (tower == null)
         {
@@ -191,7 +214,6 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
             ReplyDeny(actorNumber, blockId, "tower-null");
             return;
         }
-
 
         var block = tower?.GetBlockById(blockId);
         if (block == null)
@@ -210,8 +232,6 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
             return;
         }
 
-
-        // C) 제거 가능성 검증 (캐시 vs 규칙)
         bool removableCache = tower.GetRemovableBlocks().Contains(block);
         bool removableRule = tower.CanRemoveBlock(block);
 
@@ -229,7 +249,6 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
             }
         }
 
-        // D) 점수 계산(서버 결정)
         int bonus = Mathf.Clamp(Mathf.RoundToInt(clientAccuracy * MAX_BONUS), 0, MAX_BONUS);
         int finalScore = BASE_SCORE + bonus;
 
@@ -241,20 +260,19 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     private void RPC_ApplyBlockRemoval(int ownerActorNumber, int blockId, bool withAnimation, int score, bool isSuccess = true)
     {
         Debug.Log($"[NET] APPLY_Remove recv owner={ownerActorNumber} blockId={blockId} withAnim={withAnimation} succ={isSuccess}");
-        // 1) 실제 제거 반영
+        
+        // 실제 제거 반영
         var tower = JengaTowerManager.Instance?.GetPlayerTower(ownerActorNumber);
-        var block = tower?.GetBlockById(blockId);
 
-        if (block != null && withAnimation)
+        if (tower == null)
         {
-            block.RemoveWithAnimation(isSuccess); // isSuccess 파라미터 전달
-        }
-        else
-        {
-            tower?.ApplyBlockRemoval(blockId, withAnimation, isSuccess);
+            Debug.LogError($"[NET] tower NULL for actor={ownerActorNumber}");
+            return;
         }
 
-        // 2) 점수 반영은 마스터만 집계
+        tower.ApplyBlockRemoval(blockId, withAnimation, isSuccess);
+
+        // 점수 반영은 마스터만 집계
         if (PhotonNetwork.IsMasterClient)
         {
             // ActorNumber → UID 변환이 필요하다면 PlayerList의 CustomProperties["uid"] 참조
@@ -264,10 +282,6 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
                 JengaGameManager.Instance?.ApplyPlayerActionResult(uid, success: true, scoreGained: score);
             }
         }
-
-        // 3) 공통 연출/사운드/UI
-        // JengaUIManager
-        // JengaSoundManager
     }
 
     /// <summary>
@@ -314,31 +328,166 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     // 클라이언트 → 마스터: "이 사람의 타워를 붕괴시켜 주세요"
     public void RequestTowerCollapse_MasterAuth(int ownerActorNumber)
     {
-        thisPhotonView.RPC(nameof(RPC_RequestTowerCollapse_Master), RpcTarget.MasterClient, ownerActorNumber);
+        Debug.Log($"[JengaNetwork] RequestTowerCollapse_MasterAuth called. actor={ownerActorNumber}, IsMaster={PhotonNetwork.IsMasterClient}");
+
+        if (PhotonNetwork.IsMasterClient)
+        {
+            // 마스터면 바로 처리
+            ProcessTowerCollapseRequest(ownerActorNumber);
+        }
+        else
+        {
+            // 비마스터면 마스터에게 RPC 요청
+            if (thisPhotonView == null)
+            {
+                Debug.LogError("[JengaNetwork] PhotonView is NULL in RequestTowerCollapse_MasterAuth");
+                return;
+            }
+
+            Debug.Log($"[JengaNetwork] Sending collapse request to master for actor {ownerActorNumber}");
+            thisPhotonView.RPC(nameof(RPC_RequestTowerCollapse_Master), RpcTarget.MasterClient, ownerActorNumber);
+        }
+    }
+
+    // <summary>
+    /// 마스터에서 타워 붕괴 요청 처리
+    /// </summary>
+    private void ProcessTowerCollapseRequest(int ownerActorNumber)
+    {
+        Debug.Log($"[JengaNetwork] Processing tower collapse request for actor {ownerActorNumber}");
+
+        // TowerManager/타워 존재 검증
+        var tm = JengaTowerManager.Instance;
+        if (tm == null)
+        {
+            Debug.LogError("[JengaNetwork] JengaTowerManager.Instance is NULL");
+            return;
+        }
+
+        var tower = tm.GetPlayerTower(ownerActorNumber);
+        if (tower == null)
+        {
+            var uid = tm.GetOwnerUidByActor(ownerActorNumber);
+            Debug.LogError($"[JengaNetwork] Tower not found for actor={ownerActorNumber}, uid={uid ?? "(null)"}");
+            return;
+        }
+
+        Debug.Log($"[JengaNetwork] Broadcasting tower collapse for actor={ownerActorNumber}");
+
+        // 모든 클라이언트에게 붕괴 적용 브로드캐스트
+        thisPhotonView.RPC(nameof(RPC_ApplyTowerCollapse_All), RpcTarget.All, ownerActorNumber);
     }
 
     [PunRPC]
     private void RPC_RequestTowerCollapse_Master(int ownerActorNumber, PhotonMessageInfo info)
     {
-        if (!PhotonNetwork.IsMasterClient) return;
+        Debug.Log($"[JengaNetwork] RPC_RequestTowerCollapse_Master received from {info.Sender.ActorNumber} for actor {ownerActorNumber}");
 
-        thisPhotonView.RPC(nameof(RPC_ApplyTowerCollapse_All), RpcTarget.All, ownerActorNumber);
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            Debug.LogWarning("[JengaNetwork] Received collapse request but not master");
+            return;
+        }
+
+        ProcessTowerCollapseRequest(ownerActorNumber);
     }
 
-    // 전체 적용: 모든 클라에서 같은 코드로 실제 붕괴 실행
+    // RPC_ApplyTowerCollapse_All은 기존과 동일하되 로그 추가
     [PunRPC]
     private void RPC_ApplyTowerCollapse_All(int ownerActorNumber)
     {
-        var tower = JengaTowerManager.Instance?.GetPlayerTower(ownerActorNumber);
-        
-        if (tower == null) return;
+        Debug.Log($"[JengaNetwork] RPC_ApplyTowerCollapse_All received for actor={ownerActorNumber}");
 
+        var tower = JengaTowerManager.Instance?.GetPlayerTower(ownerActorNumber);
+
+        if (tower == null)
+        {
+            Debug.LogError($"[JengaNetwork] tower NULL for actor={ownerActorNumber} in RPC_ApplyTowerCollapse_All");
+            return;
+        }
+
+        Debug.Log($"[JengaNetwork] Triggering collapse animation for actor={ownerActorNumber}");
+
+        // 붕괴 애니메이션 실행
         JengaTowerManager.Instance.WithSuppressedCollapse(() =>
         {
             tower.TriggerCollapseOnce();
         });
 
-        JengaGameManager.Instance?.OnTowerCollapsed(ownerActorNumber);
+        // 게임 로직 처리 (마스터만)
+        if (PhotonNetwork.IsMasterClient)
+        {
+            Debug.Log($"[JengaNetwork] Notifying GameManager of collapse for actor={ownerActorNumber}");
+            JengaGameManager.Instance?.OnTowerCollapsed(ownerActorNumber);
+        }
+    }
+
+    #endregion
+
+    #region 타이머 동기화: 마스터 → 전체 클라이언트
+
+    /// <summary>
+    /// 마스터에서 모든 클라이언트에게 현재 남은 시간을 동기화
+    /// </summary>
+    public void BroadcastTimeSync(float remainingTime)
+    {
+        if (!PhotonNetwork.IsMasterClient) return;
+
+        thisPhotonView.RPC(nameof(RPC_SyncTime), RpcTarget.All, remainingTime);
+    }
+
+    [PunRPC]
+    private void RPC_SyncTime(float syncedTime)
+    {
+        JengaGameManager.Instance?.SyncRemainingTime(syncedTime);
+    }
+
+    #endregion
+
+    #region 카운트다운 동기화: 마스터 → 전체 클라이언트
+
+    /// <summary>
+    /// 마스터에서 모든 클라이언트에게 카운트다운 시작 신호 송신
+    /// </summary>
+    public void BroadcastStartCountdown(float countdownDuration)
+    {
+        if (!PhotonNetwork.IsMasterClient) return;
+
+        Debug.Log($"[JengaNetwork] Broadcasting countdown start: {countdownDuration}s");
+        thisPhotonView.RPC(nameof(RPC_StartCountdown), RpcTarget.All, countdownDuration);
+    }
+
+    /// <summary>
+    /// [RPC] 모든 클라이언트에서 동시에 카운트다운 시작
+    /// </summary>
+    [PunRPC]
+    private void RPC_StartCountdown(float duration)
+    {
+        Debug.Log($"[JengaNetwork] Received countdown start RPC: {duration}s");
+
+        // UI 매니저에게 카운트다운 시작 알림
+        JengaUIManager.Instance?.StartCountdown(duration);
+    }
+
+    /// <summary>
+    /// 마스터에서 카운트다운 완료 후 게임 시작 신호 송신
+    /// </summary>
+    public void BroadcastCountdownComplete()
+    {
+        if (!PhotonNetwork.IsMasterClient) return;
+
+        thisPhotonView.RPC(nameof(RPC_CountdownComplete), RpcTarget.All);
+    }
+
+    /// <summary>
+    /// [RPC] 카운트다운 완료 처리
+    /// </summary>
+    [PunRPC]
+    private void RPC_CountdownComplete()
+    {
+        Debug.Log("[JengaNetwork] Received countdown complete RPC");
+        // UI에서 카운트다운 숨기기
+        JengaUIManager.Instance?.HideCountdown();
     }
 
     #endregion
