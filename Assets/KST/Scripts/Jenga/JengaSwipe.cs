@@ -1,62 +1,92 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Collider))]
+[RequireComponent(typeof(PlayerInput))]
 public class JengaSwipe : MonoBehaviour
 {
-    [SerializeField] float _speed;
+    [SerializeField] float _speed =0.1f; //드래그 시 회전 속도
     [SerializeField] float _clickPx = 8f; //해당 픽셀 이하 이동이면 클릭으로 판정
     [SerializeField] float _clickTime = 0.1f; //해당 시간 이하동안 터치 시 클릭으로 판정
 
-    bool _blockInput = false;
-    Vector3 prevPos;
-    Vector3 pressPos;
-    float pressTime;
+    bool _blockInput = false; //UI 클릭 시 true -> 입력 방지
+    bool _isPress = false; // 눌림 여부
+    Vector3 prevPos; //직전 좌표
+    Vector3 pressPos; //처음 누른 좌표
+    float pressTime; //눌린 시간
 
-    //누를 때
-    void OnMouseDown()
+    /// <summary>
+    /// 눌림 발생 시 호출
+    /// </summary>
+    public void OnPress(InputAction.CallbackContext callback)
     {
-        //UI위를 클릭했을 경우.
-        if (EventSystem.current && EventSystem.current.IsPointerOverGameObject())
+        if (callback.started) //눌린 순간
         {
-            _blockInput = true;
-            return;
+            if (IsOnUI()) //UI 위가 눌렸을 경우
+            {
+                _blockInput = true;
+                _isPress = false;
+                return;
+            }
+
+            _blockInput = false;
+            _isPress = true;
+
+            var pos = Pointer.current.position.ReadValue(); //현재 포인터 좌표(누르기 시작한 위치)
+
+            //초기화
+            pressPos = pos; 
+            prevPos = pos; 
+            pressTime = Time.unscaledTime;
         }
-        pressPos = prevPos = Input.mousePosition;
-        pressTime = Time.unscaledTime;
+        else if (callback.canceled) // 뗄 때
+        {
+            if (_blockInput)
+            {
+                _blockInput = false;
+                return;
+            }
+
+            if (!_isPress) return;
+            _isPress = false;
+
+            var pos = Pointer.current.position.ReadValue(); //현재 포인터 좌표(손을 뗀 위치)
+
+            float distance = Vector2.Distance(pos, pressPos);//손을 뗀 위치 ~ 누르기 시작했던 위치 거리
+            float time = Time.unscaledTime - pressTime; //눌린 시간
+
+            //클릭 최소 거리와 클릭 최소 시간 만족 시
+            if (distance <= _clickPx && time <= _clickTime)
+            {
+                Debug.Log("클릭판정 처리");
+            }
+        }
     }
 
-    //드래그 중 일 때
-    void OnMouseDrag()
+    /// <summary>
+    /// 드래그 시 호출
+    /// </summary>
+    public void OnPointer(InputAction.CallbackContext callback)
     {
-        if (_blockInput) return;
+        if (!_isPress || _blockInput) return;
 
-        Vector3 currentPos = Input.mousePosition;
-        float movement = (currentPos.x - pressPos.x) * _speed;
+        Vector2 pos = callback.ReadValue<Vector2>();  //현재 포인터 좌표
 
+        float movement = (pos.x - prevPos.x) * _speed;
         transform.Rotate(Vector3.up, -movement);
 
-        prevPos = currentPos;
+        prevPos = pos; //직전 좌표 갱신
     }
 
-    //뗄 때
-    void OnMouseUp()
+    /// <summary>
+    /// 현재 포인터가 UI 위에 있는지 판정
+    /// </summary>
+    /// <returns></returns>
+    bool IsOnUI()
     {
-        if (_blockInput)
-        {
-            _blockInput = false;
-            return;
-        }
+        if (!EventSystem.current) return false;
 
-        Vector3 currentPos = Input.mousePosition;
-
-        float distance = Vector2.Distance((Vector2)currentPos, (Vector2)pressPos);
-        float time = Time.unscaledTime - pressTime;
-
-        bool isClicked = distance <= _clickPx && time <= _clickTime;
-
-        if (isClicked)
-            Debug.Log("클릭 됐습니다.");
+        return EventSystem.current.IsPointerOverGameObject();
     }
-
 }
