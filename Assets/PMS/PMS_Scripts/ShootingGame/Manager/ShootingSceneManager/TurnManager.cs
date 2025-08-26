@@ -30,6 +30,7 @@ namespace ShootingScene
             Debug.Log("[ShootingScene/TurnManager] - TurnManager 초기화 완료");
         }
 
+        //마스터 클라이언트만 호출하도록
         public void SetupTurn()     //List<int> sorted;
         {
             Debug.Log("[TurnManager] SetupTurn 호출됨");
@@ -43,10 +44,7 @@ namespace ShootingScene
             currentTurnIndex = 1;
             currentRound = 1;
 
-            if (PhotonNetwork.IsMasterClient)
-            {
-                RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "GamePlayState");
-            }
+            RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "GamePlayState");
 
             //BroadcastCurrentTurn();
         }

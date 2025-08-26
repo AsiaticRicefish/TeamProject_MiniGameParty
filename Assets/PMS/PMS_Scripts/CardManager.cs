@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using DesignPattern;
 using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
@@ -15,7 +16,7 @@ using Random = System.Random;
 /// - 전원 선택 시 일괄 공개 → 오름차순으로 turnOrder 계산
 /// - 다음 씬으로 동기 전환
 /// </summary>
-public class CardManager : MonoBehaviourPunCallbacks
+public class CardManager : PunSingleton<CardManager>
 {
     [Header("Prefabs & Layout")]
     [SerializeField] private Transform cardParent;   // 카드를 놓을 Grid/HorizontalLayout
@@ -35,6 +36,8 @@ public class CardManager : MonoBehaviourPunCallbacks
     private List<ShootingScene.CardUI> _cards = new();
     private int[] _deckValues; // 섞인 숫자들
     private int[] _owners;     // 각 index의 소유자 ActorNumber, 미선택 -1
+
+    public bool allPicked = false;
 
     private void Start()
     {
@@ -171,7 +174,7 @@ public class CardManager : MonoBehaviourPunCallbacks
         PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable { { KEY_CARD_OWNERS, _owners } });
 
         // 모두 선택했는지 확인
-        bool allPicked = _owners.All(o => o != -1);
+        allPicked = _owners.All(o => o != -1);
         if (allPicked)
         {
             // 상태 전환
@@ -189,7 +192,7 @@ public class CardManager : MonoBehaviourPunCallbacks
             PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable
             {
                 { KEY_TURN_ORDER, order },
-                { KEY_STATE, (byte)LobbyState.Done }
+                { KEY_STATE, (byte)LobbyState.Done } 
             });
 
             
@@ -236,7 +239,7 @@ public class CardManager : MonoBehaviourPunCallbacks
         var myPlayer = PlayerManager.Instance.GetPlayer(myUid);
         if (myPlayer != null && myTurnIndex >= 0)
         {
-            myPlayer.ShootingData.myTurnIndex = myTurnIndex;
+            myPlayer.ShootingData.myTurnIndex = myTurnIndex + 1;
             Debug.Log($"[CardManager] 내 턴 인덱스 확정: {myTurnIndex}");
         }
 

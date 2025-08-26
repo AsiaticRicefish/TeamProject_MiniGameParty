@@ -6,6 +6,7 @@ using ShootingScene;
 
 public class CardSelectState : ShootingGameState
 {
+    private bool flag = true;
     public override void Enter()
     {
         Debug.Log("[ShootingGameState] - CardSelectState Enter");
@@ -14,10 +15,11 @@ public class CardSelectState : ShootingGameState
     }
     public override void Update() 
     {
-        /*if(true) //다 눌렀을 때 플레이어들이 
+        if(flag && CardManager.Instance.allPicked) //다 눌렀을 때 플레이어들이 
         {
             TurnManager.Instance.SetupTurn();
-        }*/
+            flag = false;
+        }
     }
     public override void Exit() 
     {
