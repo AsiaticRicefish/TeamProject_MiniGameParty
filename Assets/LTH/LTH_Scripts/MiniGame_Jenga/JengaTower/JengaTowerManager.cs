@@ -10,36 +10,36 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
 {
     public enum BuildMode { Procedural, Prefab }
 
-    [Header("Å¸¿ö ¸ğµå")]
+    [Header("íƒ€ì›Œ ëª¨ë“œ")]
     [SerializeField] private BuildMode buildMode = BuildMode.Procedural;
 
-    [Header("ÇÁ¸®ÆÕ ¸ğµå")]
-    [SerializeField] private GameObject towerPrefab; // ¡ç ¿Ï¼ºµÈ Å¸¿ö ÇÁ¸®ÆÕ(ÀÚ½Äµé¿¡ JengaBlock ºÙ¾î ÀÖÀ½)
+    [Header("í”„ë¦¬íŒ¹ ëª¨ë“œ")]
+    [SerializeField] private GameObject towerPrefab; // â† ì™„ì„±ëœ íƒ€ì›Œ í”„ë¦¬íŒ¹(ìì‹ë“¤ì— JengaBlock ë¶™ì–´ ìˆìŒ)
 
-    #region Å¸¿ö Á÷Á¢ »ı¼º (»ç¿ë ¾ÈÇÔ)
-    [Header("Å¸¿ö ¼³Á¤")]
+    #region íƒ€ì›Œ ì§ì ‘ ìƒì„± (ì‚¬ìš© ì•ˆí•¨)
+    [Header("íƒ€ì›Œ ì„¤ì •")]
     [SerializeField] private GameObject blockPrefab;
     [SerializeField] private int towerHeight = 13;
     #endregion
 
-    [Header("¹èÄ¡(¾Æ·¹³ª ¾ŞÄ¿)")]
-    [Tooltip("°³º° ¾Æ·¹³ªÀÇ TowerAnchorµéÀ» µî·Ï (Arena_i/TowerAnchor)")]
-    [SerializeField] private List<Transform> arenaTowerAnchors = new(); // ÀÎ½ºÆåÅÍ¿¡ µå·¡±× µî·Ï
+    [Header("ë°°ì¹˜(ì•„ë ˆë‚˜ ì•µì»¤)")]
+    [Tooltip("ê°œë³„ ì•„ë ˆë‚˜ì˜ TowerAnchorë“¤ì„ ë“±ë¡ (Arena_i/TowerAnchor)")]
+    [SerializeField] private List<Transform> arenaTowerAnchors = new(); // ì¸ìŠ¤í™í„°ì— ë“œë˜ê·¸ ë“±ë¡
 
-    [Tooltip("Instantiate ½Ã Å¸¿ö¸¦ ¾ŞÄ¿ ÇÏÀ§·Î ºÙÀÏÁö ¿©ºÎ")]
+    [Tooltip("Instantiate ì‹œ íƒ€ì›Œë¥¼ ì•µì»¤ í•˜ìœ„ë¡œ ë¶™ì¼ì§€ ì—¬ë¶€")]
     [SerializeField] private bool parentTowerUnderAnchor = true;
 
     [SerializeField] private string[] arenaLayerNames = { "Arena_0", "Arena_1", "Arena_2", "Arena_3" };
 
-    [Tooltip("¾Æ·¹³ª Æ®¸® ÀüÃ¼¸¦ °¨½Î´Â ·çÆ®. ºñ¾î ÀÖÀ¸¸é ÀÚµ¿ »ı¼º")]
+    [Tooltip("ì•„ë ˆë‚˜ íŠ¸ë¦¬ ì „ì²´ë¥¼ ê°ì‹¸ëŠ” ë£¨íŠ¸. ë¹„ì–´ ìˆìœ¼ë©´ ìë™ ìƒì„±")]
     [SerializeField] private Transform towersParent;
 
-    private readonly Dictionary<int, JengaTower> _playerTowers = new(); // ActorNumber ¡æ Tower
+    private readonly Dictionary<int, JengaTower> _playerTowers = new(); // ActorNumber â†’ Tower
 
-    // ·ë Ä¿½ºÅÒ ÇÁ·ÎÆÛÆ¼ Å° (°üÀüÀÚ/ÀçÁ¢¼Ó ´ëºñ ½½·Ô °íÁ¤)
+    // ë£¸ ì»¤ìŠ¤í…€ í”„ë¡œí¼í‹° í‚¤ (ê´€ì „ì/ì¬ì ‘ì† ëŒ€ë¹„ ìŠ¬ë¡¯ ê³ ì •)
     private const string ROOMKEY_SLOTS = "JG_SLOTS";
 
-    // ³×Æ®¿öÅ© Àû¿ë Áß ÀÌº¥Æ® Àçºê·ÎµåÄ³½ºÆ® ¹æÁö ÇÃ·¡±×
+    // ë„¤íŠ¸ì›Œí¬ ì ìš© ì¤‘ ì´ë²¤íŠ¸ ì¬ë¸Œë¡œë“œìºìŠ¤íŠ¸ ë°©ì§€ í”Œë˜ê·¸
     private bool _suppressCollapseBroadcast;
 
     public void WithSuppressedCollapse(Action action)
@@ -56,7 +56,7 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
     {
         base.isPersistent = false;
 
-        // ºÎ¸ğ Æ®·£½ºÆûÀÌ ºñ¾î ÀÖÀ¸¸é ¾ÈÀüÇÏ°Ô ÇÏ³ª ¸¸µé¾î µĞ´Ù
+        // ë¶€ëª¨ íŠ¸ëœìŠ¤í¼ì´ ë¹„ì–´ ìˆìœ¼ë©´ ì•ˆì „í•˜ê²Œ í•˜ë‚˜ ë§Œë“¤ì–´ ë‘”ë‹¤
         if (towersParent == null)
         {
             var go = new GameObject("JengaTowersRoot");
@@ -66,10 +66,10 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
 
     public void Initialize()
     {
-        // ¸¶½ºÅÍ¿¡¼­¸¸ ½½·Ô¸Ê °íÁ¤(¿ÀÇÁ¶óÀÎ/ºñ¸¶½ºÅÍ´Â ÀĞ±â¸¸)
+        // ë§ˆìŠ¤í„°ì—ì„œë§Œ ìŠ¬ë¡¯ë§µ ê³ ì •(ì˜¤í”„ë¼ì¸/ë¹„ë§ˆìŠ¤í„°ëŠ” ì½ê¸°ë§Œ)
         EnsureSlotMap();
         CreateAllPlayerTowers();
-        Debug.Log("[JengaTowerManager] ÃÊ±âÈ­ ¿Ï·á - °³º° Å¸¿ö »ı¼º");
+        Debug.Log("[JengaTowerManager] ì´ˆê¸°í™” ì™„ë£Œ - ê°œë³„ íƒ€ì›Œ ìƒì„±");
     }
 
     #region Tower Creation
@@ -77,14 +77,14 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
     {
         _playerTowers.Clear();
 
-        // ½½·Ô ¸Ê: ½ÃÀÛ ½ÃÁ¡¿¡ È®Á¤µÈ ¼ø¼­ (°üÀüÀÚ Æ÷ÇÔ ÀÌ½´ ¹æÁö)
+        // ìŠ¬ë¡¯ ë§µ: ì‹œì‘ ì‹œì ì— í™•ì •ëœ ìˆœì„œ (ê´€ì „ì í¬í•¨ ì´ìŠˆ ë°©ì§€)
         var slotActors = GetSlotMap(); // int[] actorNumbers
 
         for (int i = 0; i < slotActors.Length; i++)
         {
             var actorNumber = slotActors[i];
             var p = PhotonNetwork.PlayerList.FirstOrDefault(x => x.ActorNumber == actorNumber);
-            if (p == null) continue; // ¶°³­ ÇÃ·¹ÀÌ¾î µî
+            if (p == null) continue; // ë– ë‚œ í”Œë ˆì´ì–´ ë“±
 
             CreatePlayerTower(actorNumber, i, TryGetUid(p));
         }
@@ -92,7 +92,7 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
 
     private void CreatePlayerTower(int actorNumber, int slotIndex, string ownerUid)
     {
-        // ¾ŞÄ¿ ±âÁØ À§Ä¡/È¸Àü
+        // ì•µì»¤ ê¸°ì¤€ ìœ„ì¹˜/íšŒì „
         var anchor = GetPlayerTowerAnchor(slotIndex);
         var pos = anchor ? anchor.position : Vector3.zero;
         var rot = anchor ? anchor.rotation : Quaternion.identity;
@@ -103,7 +103,7 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
 
         if (buildMode == BuildMode.Prefab)
         {
-            // ¿Ï¼ºµÈ Å¸¿ö ÇÁ¸®ÆÕÀ» ±×´ë·Î ¼ÒÈ¯
+            // ì™„ì„±ëœ íƒ€ì›Œ í”„ë¦¬íŒ¹ì„ ê·¸ëŒ€ë¡œ ì†Œí™˜
             towerRootGO = Instantiate(towerPrefab, pos, rot, parent);
             towerRootGO.name = $"JengaTower_Player{actorNumber}";
             tower = towerRootGO.GetComponent<JengaTower>() ?? towerRootGO.AddComponent<JengaTower>();
@@ -115,7 +115,7 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
         }
         else
         {
-            // ±âÁ¸ ÇÁ·Î½ÃÀú·² ¹æ½Ä À¯Áö
+            // ê¸°ì¡´ í”„ë¡œì‹œì €ëŸ´ ë°©ì‹ ìœ ì§€
             towerRootGO = new GameObject($"JengaTower_Player{actorNumber}");
             towerRootGO.transform.SetParent(towersParent, false);
             towerRootGO.transform.SetPositionAndRotation(pos, rot);
@@ -127,7 +127,7 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
             ApplyArenaLayer(towerRootGO, slotIndex);
         }
 
-        // ºØ±« ÀÌº¥Æ® ¡æ ³×Æ®¿öÅ© ÅëÁö(¸¶½ºÅÍ¸¸)
+        // ë¶•ê´´ ì´ë²¤íŠ¸ â†’ ë„¤íŠ¸ì›Œí¬ í†µì§€(ë§ˆìŠ¤í„°ë§Œ)
         tower.OnTowerCollapsed += () =>
     {
         if (!PhotonNetwork.IsMasterClient) return;
@@ -150,16 +150,45 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
         var room = PhotonNetwork.CurrentRoom;
         if (room == null) return;
 
-        if (!room.CustomProperties.ContainsKey(ROOMKEY_SLOTS))
+        // ê¸°ì¡´ ìŠ¬ë¡¯ë§µì´ ìˆëŠ”ì§€ í™•ì¸í•˜ê³ , í˜„ì¬ í”Œë ˆì´ì–´ì™€ ë§ì§€ ì•Šìœ¼ë©´ ê°±ì‹ 
+        bool needsUpdate = false;
+
+        if (room.CustomProperties.TryGetValue(ROOMKEY_SLOTS, out var existingObj))
+        {
+            var existingSlots = ConvertToIntArray(existingObj);
+            var currentActors = PhotonNetwork.PlayerList.Select(p => p.ActorNumber).OrderBy(x => x).ToArray();
+
+            // ê¸°ì¡´ ìŠ¬ë¡¯ê³¼ í˜„ì¬ í”Œë ˆì´ì–´ê°€ ë‹¤ë¥´ë©´ ì—…ë°ì´íŠ¸ í•„ìš”
+            if (!existingSlots.OrderBy(x => x).SequenceEqual(currentActors))
+            {
+                needsUpdate = true;
+                Debug.Log($"[JengaTowerManager] Slot map mismatch - updating. Existing: [{string.Join(",", existingSlots)}], Current: [{string.Join(",", currentActors)}]");
+            }
+        }
+        else
+        {
+            needsUpdate = true;
+            Debug.Log("[JengaTowerManager] No existing slot map - creating new one");
+        }
+
+        if (needsUpdate)
         {
             var ordered = PhotonNetwork.PlayerList
-                 .OrderBy(p => p.ActorNumber)
-                 .Select(p => p.ActorNumber)
-                 .ToArray();
+                .OrderBy(p => p.ActorNumber)
+                .Select(p => p.ActorNumber)
+                .ToArray();
 
             var h = new ExitGames.Client.Photon.Hashtable { [ROOMKEY_SLOTS] = ordered };
             room.SetCustomProperties(h);
+            Debug.Log($"[JengaTowerManager] Updated slot map: [{string.Join(",", ordered)}]");
         }
+    }
+
+    private int[] ConvertToIntArray(object obj)
+    {
+        if (obj is int[] arrInt) return arrInt;
+        if (obj is object[] arrObj) return arrObj.Select(o => Convert.ToInt32(o)).ToArray();
+        return new int[0];
     }
 
     private int[] GetSlotMap()
@@ -178,7 +207,7 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
     }
 
     /// <summary>
-    /// ActorNumber ¡æ ½½·Ô ÀÎµ¦½º
+    /// ActorNumber â†’ ìŠ¬ë¡¯ ì¸ë±ìŠ¤
     /// </summary>
     public int GetSlotIndexOf(int actorNumber)
     {

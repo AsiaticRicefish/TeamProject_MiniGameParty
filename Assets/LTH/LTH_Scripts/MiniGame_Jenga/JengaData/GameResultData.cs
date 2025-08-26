@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-///  ¸ŞÀÎ °ÔÀÓ°úÀÇ ¿¬µ¿À» À§ÇÑ µ¥ÀÌÅÍ Å¬·¡½º
+///  ë©”ì¸ ê²Œì„ê³¼ì˜ ì—°ë™ì„ ìœ„í•œ ë°ì´í„° í´ë˜ìŠ¤
 /// </summary>
 public static class GameResultData
 {

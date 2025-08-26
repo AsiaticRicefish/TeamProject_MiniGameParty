@@ -66,6 +66,9 @@ MonoBehaviour:
   - RPC_RequestTowerCollapse_Master
   - RPC_SetReadyBySlot
   - RPC_CompletePicking
+  - RPC_SyncTime
+  - RPC_CountdownComplete
+  - RPC_StartCountdown
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

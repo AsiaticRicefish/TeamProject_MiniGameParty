@@ -4,7 +4,7 @@ using UnityEngine;
 using Photon.Pun;
 
 /// <summary>
-/// Photon Äİ¹é ¼ö½ÅÀÌ °¡´ÉÇÑ ½Ì±ÛÅæ (DontDestroyOnLoad ¿©ºÎ ¼±ÅÃ °¡´É)
+/// Photon ì½œë°± ìˆ˜ì‹ ì´ ê°€ëŠ¥í•œ ì‹±ê¸€í†¤ (DontDestroyOnLoad ì—¬ë¶€ ì„ íƒ ê°€ëŠ¥)
 /// </summary>
 
 namespace DesignPattern
@@ -13,7 +13,7 @@ namespace DesignPattern
     {
         private static T _instance;
 
-        [Tooltip("true: ¾À ÀÌµ¿ ½Ã À¯Áö / false: ¾À¸¶´Ù »õ·Î »ı¼ºµÊ")]
+        [Tooltip("true: ì”¬ ì´ë™ ì‹œ ìœ ì§€ / false: ì”¬ë§ˆë‹¤ ìƒˆë¡œ ìƒì„±ë¨")]
         protected bool isPersistent = true;
 
         public static T Instance

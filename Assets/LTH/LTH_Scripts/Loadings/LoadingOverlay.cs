@@ -17,7 +17,7 @@ public class LoadingOverlay : MonoBehaviour
 
     private void Awake()
     {
-        // ÃÊ±â ºñÈ°¼º
+        // ì´ˆê¸° ë¹„í™œì„±
         if (canvasGroup) { canvasGroup.alpha = 0f; canvasGroup.blocksRaycasts = false; canvasGroup.interactable = false; }
         if (progressBar) progressBar.value = 0f;
         if (statusText) statusText.text = "";

@@ -4,5 +4,5 @@ using UnityEngine;
 
 public interface IGameComponent
 {
-    void Initialize(); // ¼øÂ÷ ÃÊ±âÈ­ (³×Æ®¿öÅ© µî)
+    void Initialize(); // ìˆœì°¨ ì´ˆê¸°í™” (ë„¤íŠ¸ì›Œí¬ ë“±)
 }

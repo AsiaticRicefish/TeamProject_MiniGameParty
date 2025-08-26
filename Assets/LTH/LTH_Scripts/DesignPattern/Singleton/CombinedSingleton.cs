@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Àü¿ª/¾À ½Ì±ÛÅæ ÅëÇÕ ±¸Á¶
-/// isPersistent = true ¡æ DontDestroyOnLoad ´ë»ó
-/// isPersistent = false ¡æ ¾À Á¾·á ½Ã ÆÄ±«µÊ
+/// ì „ì—­/ì”¬ ì‹±ê¸€í†¤ í†µí•© êµ¬ì¡°
+/// isPersistent = true â†’ DontDestroyOnLoad ëŒ€ìƒ
+/// isPersistent = false â†’ ì”¬ ì¢…ë£Œ ì‹œ íŒŒê´´ë¨
 /// </summary>
 
 namespace DesignPattern
@@ -14,7 +14,7 @@ namespace DesignPattern
     {
         private static T _instance;
 
-        [Tooltip("true: ¾À ÀÌµ¿ ½Ã À¯Áö / false: ¾À¸¶´Ù »õ·Î »ı¼ºµÊ")]
+        [Tooltip("true: ì”¬ ì´ë™ ì‹œ ìœ ì§€ / false: ì”¬ë§ˆë‹¤ ìƒˆë¡œ ìƒì„±ë¨")]
         protected bool isPersistent = true;
 
         public static T Instance
@@ -23,7 +23,7 @@ namespace DesignPattern
             {
                 if (_instance == null)
                 {
-                    // ÀÚµ¿À¸·Î ¾À¿¡¼­ Ã£¾Æ¼­ ÇÒ´ç
+                    // ìë™ìœ¼ë¡œ ì”¬ì—ì„œ ì°¾ì•„ì„œ í• ë‹¹
                     _instance = FindObjectOfType<T>();
                 }
                 return _instance;
@@ -32,7 +32,7 @@ namespace DesignPattern
 
         protected virtual void Awake()
         {
-            // °ÔÀÓ¿ÀºêÁ§Æ®°¡ »ı¼ºµÇ¸é ÀÚµ¿À¸·Î ½Ì±ÛÅæ µî·Ï
+            // ê²Œì„ì˜¤ë¸Œì íŠ¸ê°€ ìƒì„±ë˜ë©´ ìë™ìœ¼ë¡œ ì‹±ê¸€í†¤ ë“±ë¡
             if (_instance != null && _instance != this)
             {
                 Destroy(gameObject);
@@ -46,16 +46,16 @@ namespace DesignPattern
                 DontDestroyOnLoad(gameObject);
             }
 
-            OnAwake(); // ¼±ÅÃ ±¸Çö °¡´É
+            OnAwake(); // ì„ íƒ êµ¬í˜„ ê°€ëŠ¥
         }
 
         /// <summary>
-        /// ÇÊ¿äÇÑ °æ¿ì ÇÏÀ§ Å¬·¡½º¿¡¼­ Awake ÀÌÈÄ ·ÎÁ÷ ±¸Çö
+        /// í•„ìš”í•œ ê²½ìš° í•˜ìœ„ í´ë˜ìŠ¤ì—ì„œ Awake ì´í›„ ë¡œì§ êµ¬í˜„
         /// </summary>
         protected virtual void OnAwake() { }
 
         /// <summary>
-        /// °­Á¦·Î ¾ø¾Ö¾ß ÇÒ ¶§ È£Ãâ (°ÔÀÓ Á¾·á³ª ·Î±×¾Æ¿ô)
+        /// ê°•ì œë¡œ ì—†ì• ì•¼ í•  ë•Œ í˜¸ì¶œ (ê²Œì„ ì¢…ë£Œë‚˜ ë¡œê·¸ì•„ì›ƒ)
         /// <summary>
         public static void Release()
         {

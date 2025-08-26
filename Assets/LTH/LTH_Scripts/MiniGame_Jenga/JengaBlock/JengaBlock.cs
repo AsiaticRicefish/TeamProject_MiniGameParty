@@ -7,33 +7,33 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 
 /// <summary>
-/// ´ÜÀÏ ºí·ÏÀÇ ÀÔ·Â/Ç¥Çö/¿äÃ»¸¸ ´ã´ç
-/// - ¼±ÅÃ(1Â÷ Å¬¸¯), Å¸ÀÌ¹Ö ½ÃÀÛ(2Â÷ Å¬¸¯) ¿äÃ»
-/// - Å¸ÀÌ¹Ö °á°ú ¼ö½Å ¡æ ¸¶½ºÅÍ¿¡ Á¦°Å ¿äÃ»
-/// - ½ÇÁ¦ Á¦°Å Àû¿ëÀº ³×Æ®¿öÅ© ºê·ÎµåÄ³½ºÆ® ¼ö½Å ½Ã ½ÇÇà
+/// ë‹¨ì¼ ë¸”ë¡ì˜ ì…ë ¥/í‘œí˜„/ìš”ì²­ë§Œ ë‹´ë‹¹
+/// - ì„ íƒ(1ì°¨ í´ë¦­), íƒ€ì´ë° ì‹œì‘(2ì°¨ í´ë¦­) ìš”ì²­
+/// - íƒ€ì´ë° ê²°ê³¼ ìˆ˜ì‹  â†’ ë§ˆìŠ¤í„°ì— ì œê±° ìš”ì²­
+/// - ì‹¤ì œ ì œê±° ì ìš©ì€ ë„¤íŠ¸ì›Œí¬ ë¸Œë¡œë“œìºìŠ¤íŠ¸ ìˆ˜ì‹  ì‹œ ì‹¤í–‰
 /// </summary>
 
 [Serializable]
 public class JengaBlock : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler
 {
-    #region ½Äº°/»óÅÂ
+    #region ì‹ë³„/ìƒíƒœ
     public int BlockId { get; private set; }
     public int Layer { get; private set; }
     public int IndexInLayer { get; private set; }
     public bool IsRemoved { get; private set; }
 
-    // ¼ÒÀ¯ÀÚ Ç¥ÁØÈ­: ³×Æ®¿öÅ© Å¸±êÆÃÀº ActorNumber, °ÔÀÓ ·ÎÁ÷ Å°´Â UID
+    // ì†Œìœ ì í‘œì¤€í™”: ë„¤íŠ¸ì›Œí¬ íƒ€ê¹ƒíŒ…ì€ ActorNumber, ê²Œì„ ë¡œì§ í‚¤ëŠ” UID
     public int OwnerActorNumber { get; private set; }
     public string OwnerUid { get; private set; }
     #endregion
 
-    #region ÀÔ·Â »óÅÂ
-    private bool _isSelected = false;     // 1Â÷(¼±ÅÃ) / 2Â÷(Å¸ÀÌ¹Ö ½ÃÀÛ) Å¬¸¯ ±¸ºĞ
-    private bool _interactable = true;   // »óÅÂ¿¡ µû¶ó ¿ÜºÎ¿¡¼­ Á¦¾î
-    private bool _busy = false;         // Å¸ÀÌ¹Ö ÁøÇà Áß¿£ Ãß°¡ ÀÔ·Â Àá±İ
+    #region ì…ë ¥ ìƒíƒœ
+    private bool _isSelected = false;     // 1ì°¨(ì„ íƒ) / 2ì°¨(íƒ€ì´ë° ì‹œì‘) í´ë¦­ êµ¬ë¶„
+    private bool _interactable = true;   // ìƒíƒœì— ë”°ë¼ ì™¸ë¶€ì—ì„œ ì œì–´
+    private bool _busy = false;         // íƒ€ì´ë° ì§„í–‰ ì¤‘ì—” ì¶”ê°€ ì…ë ¥ ì ê¸ˆ
     #endregion
 
-    #region ¹°¸®/·»´õ Ä³½Ã
+    #region ë¬¼ë¦¬/ë Œë” ìºì‹œ
     private Rigidbody _rb;
     private Collider _col;
     private Renderer _renderer;
@@ -42,18 +42,18 @@ public class JengaBlock : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
     private static readonly int COLOR_ID = Shader.PropertyToID("_Color");
     #endregion
 
-    #region ¿ÜºÎ ÀÌº¥Æ®
-    public static event Action<JengaBlock> OnAnyBlockSelected;      // 1Â÷ Å¬¸¯
-    public static event Action<JengaBlock> OnAnyBlockTimingStart;   // 2Â÷ Å¬¸¯
+    #region ì™¸ë¶€ ì´ë²¤íŠ¸
+    public static event Action<JengaBlock> OnAnyBlockSelected;      // 1ì°¨ í´ë¦­
+    public static event Action<JengaBlock> OnAnyBlockTimingStart;   // 2ì°¨ í´ë¦­
     #endregion
 
-    private bool _pendingRemoval = false; // Á¦°Å ¿äÃ» sent, ¼­¹ö ½ÂÀÎ ´ë±â
+    private bool _pendingRemoval = false; // ì œê±° ìš”ì²­ sent, ì„œë²„ ìŠ¹ì¸ ëŒ€ê¸°
     private void Awake()
     {
         if (_mpb == null) _mpb = new MaterialPropertyBlock();
     }
 
-    // ÇÊ¿äÇÑ ÃÖ¼Ò ±¸¼º(Rigidbody/Collider/Renderer)ÀÌ ¾ø´Ù¸é ¾ÈÀüÇÏ°Ô º¸°­
+    // í•„ìš”í•œ ìµœì†Œ êµ¬ì„±(Rigidbody/Collider/Renderer)ì´ ì—†ë‹¤ë©´ ì•ˆì „í•˜ê²Œ ë³´ê°•
     private void EnsureCaches()
     {
         if (_rb == null) _rb = GetComponent<Rigidbody>() ?? gameObject.AddComponent<Rigidbody>();
@@ -82,7 +82,7 @@ public class JengaBlock : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
         }
     }
 
-    // ÅÏ ÀüÈ¯/°ÔÀÓ »óÅÂ¿¡ µû¶ó ¿ÜºÎ¿¡¼­ È£Ãâ
+    // í„´ ì „í™˜/ê²Œì„ ìƒíƒœì— ë”°ë¼ ì™¸ë¶€ì—ì„œ í˜¸ì¶œ
     public void SetInteractable(bool canInteract)
     {
         _interactable = canInteract && !IsRemoved;
@@ -92,18 +92,18 @@ public class JengaBlock : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
     #region Pointer Handlers
 
     /// <summary>
-    /// Á¨°¡ Å¬¸¯ ½Ã Ã³¸®
-    /// 1Â÷ Å¬¸¯: ºí·Ï ¼±ÅÃ
-    /// 2Â÷ Å¬¸¯: Å¸ÀÌ¹Ö ½ÃÀÛ
+    /// ì  ê°€ í´ë¦­ ì‹œ ì²˜ë¦¬
+    /// 1ì°¨ í´ë¦­: ë¸”ë¡ ì„ íƒ
+    /// 2ì°¨ í´ë¦­: íƒ€ì´ë° ì‹œì‘
     /// </summary>
-    public void OnPointerClick(PointerEventData eventData) // Å¬¸¯/ÅÇ ¿Ï·á ÀÌº¥Æ®
+    public void OnPointerClick(PointerEventData eventData) // í´ë¦­/íƒ­ ì™„ë£Œ ì´ë²¤íŠ¸
     {
         if (!_interactable || _busy || _pendingRemoval || IsRemoved) return; 
 
-        // Å¸ÀÌ¹Ö ¸Å´ÏÀú°¡ ÀÌ¹Ì ½ÇÇà ÁßÀÌ¸é ¹«½Ã
+        // íƒ€ì´ë° ë§¤ë‹ˆì €ê°€ ì´ë¯¸ ì‹¤í–‰ ì¤‘ì´ë©´ ë¬´ì‹œ
         if (JengaTimingManager.Instance._isTimingActive) return;
 
-        // ³» Å¸¿öÀÇ ºí·Ï¸¸ Á¶ÀÛ °¡´É
+        // ë‚´ íƒ€ì›Œì˜ ë¸”ë¡ë§Œ ì¡°ì‘ ê°€ëŠ¥
         if (OwnerActorNumber != PhotonNetwork.LocalPlayer.ActorNumber) return;
 
         var tower = JengaTowerManager.Instance?.GetPlayerTower(OwnerActorNumber);
@@ -112,31 +112,31 @@ public class JengaBlock : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
         if (!tower.CanRemoveBlock(this)) return;
 
 
-        // Á¦°Å °¡´É ºí·ÏÀÎÁö °Ë»ç
+        // ì œê±° ê°€ëŠ¥ ë¸”ë¡ì¸ì§€ ê²€ì‚¬
         var canRemove = tower.GetRemovableBlocks().Contains(this);
         if (!canRemove) return;
 
         if (!_isSelected)
         {
-            // 1Â÷ Å¬¸¯: ¼±ÅÃ
+            // 1ì°¨ í´ë¦­: ì„ íƒ
             _isSelected = true;
             Highlight(true);
-            OnAnyBlockSelected?.Invoke(this); // UI: ´Ù½Ã Å¬¸¯ÇÏ¸é Å¸ÀÌ¹Ö ½ÃÀÛ
-            // ToDo : Å¬¸¯ ½Ã »ç¿îµå Àç»ı
+            OnAnyBlockSelected?.Invoke(this); // UI: ë‹¤ì‹œ í´ë¦­í•˜ë©´ íƒ€ì´ë° ì‹œì‘
+            // ToDo : í´ë¦­ ì‹œ ì‚¬ìš´ë“œ ì¬ìƒ
         }
         else
         {
-            // 2Â÷ Å¬¸¯: Å¸ÀÌ¹Ö ·ÎÁ÷ ½ÃÀÛ
-            if (_busy || IsRemoved) return; // ÀÌ¹Ì Å¸ÀÌ¹Ö ÁßÀÌ°Å³ª Á¦°ÅµÈ ºí·ÏÀº ¹«½Ã
+            // 2ì°¨ í´ë¦­: íƒ€ì´ë° ë¡œì§ ì‹œì‘
+            if (_busy || IsRemoved) return; // ì´ë¯¸ íƒ€ì´ë° ì¤‘ì´ê±°ë‚˜ ì œê±°ëœ ë¸”ë¡ì€ ë¬´ì‹œ
             _isSelected = false;
             Highlight(false);
-            OnAnyBlockTimingStart?.Invoke(this); // JengaTimingManager¿¡¼­ Å¸ÀÌ¹Ö UI ½ÃÀÛ
+            OnAnyBlockTimingStart?.Invoke(this); // JengaTimingManagerì—ì„œ íƒ€ì´ë° UI ì‹œì‘
 
             _busy = true;
         }
     }
 
-    public void OnPointerDown(PointerEventData eventData) // ¸¶¿ì½º Å¬¸¯ ½ÃÀÛ / ÅÍÄ¡ ½ÃÀÛ
+    public void OnPointerDown(PointerEventData eventData) // ë§ˆìš°ìŠ¤ í´ë¦­ ì‹œì‘ / í„°ì¹˜ ì‹œì‘
     {
         if (!_interactable || _busy || _pendingRemoval || IsRemoved) return;
         if (OwnerActorNumber != PhotonNetwork.LocalPlayer.ActorNumber) return;
@@ -151,7 +151,7 @@ public class JengaBlock : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
         }
     }
 
-    public void OnPointerUp(PointerEventData eventData) // ¸¶¿ì½º ¹öÆ° ¶À / ÅÍÄ¡ Á¾·á
+    public void OnPointerUp(PointerEventData eventData) // ë§ˆìš°ìŠ¤ ë²„íŠ¼ ë—Œ / í„°ì¹˜ ì¢…ë£Œ
     {
         if (!_isSelected) Highlight(false);
     }
@@ -176,11 +176,11 @@ public class JengaBlock : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
     #endregion
 
 
-    #region Å¸ÀÌ¹Ö ¿Ï·á Äİ¹é ¡æ ¸¶½ºÅÍ ½ÂÀÎ ¿äÃ»
+    #region íƒ€ì´ë° ì™„ë£Œ ì½œë°± â†’ ë§ˆìŠ¤í„° ìŠ¹ì¸ ìš”ì²­
     /// <summary>
-    /// Å¸ÀÌ¹Ö ¸Å´ÏÀú¿¡¼­ È£ÃâµÇ´Â Äİ¹é
-    /// - ¿©±â¼­´Â Á¡¼ö °£ÀÌ °è»ê¸¸ ÇÏ°í, ¡°¸¶½ºÅÍ¿¡ Á¦°Å ¿äÃ»¡±¸¸ º¸³½´Ù.
-    /// - ÃÖÁ¾ Àû¿ë(Á¦°Å/¾Ö´Ï)Àº ¸¶½ºÅÍ ½ÂÀÎ ÈÄ ºê·ÎµåÄ³½ºÆ®¿¡¼­ Ã³¸®.
+    /// íƒ€ì´ë° ë§¤ë‹ˆì €ì—ì„œ í˜¸ì¶œë˜ëŠ” ì½œë°±
+    /// - ì—¬ê¸°ì„œëŠ” ì ìˆ˜ ê°„ì´ ê³„ì‚°ë§Œ í•˜ê³ , â€œë§ˆìŠ¤í„°ì— ì œê±° ìš”ì²­â€ë§Œ ë³´ë‚¸ë‹¤.
+    /// - ìµœì¢… ì ìš©(ì œê±°/ì• ë‹ˆ)ì€ ë§ˆìŠ¤í„° ìŠ¹ì¸ í›„ ë¸Œë¡œë“œìºìŠ¤íŠ¸ì—ì„œ ì²˜ë¦¬.
     /// </summary>
     public void ApplyTimingResult(bool success, float accuracy)
     {
@@ -190,18 +190,19 @@ public class JengaBlock : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
 
         if (!success)
         {
-            // Å¸ÀÌ¹Ö ½ÇÆĞ ½Ã Å¸¿ö ºØ±«
+            Debug.Log($"[JengaBlock] Timing FAIL blockId={BlockId} ownerActor={OwnerActorNumber} acc={accuracy:F2}");
+
+            // íƒ€ì´ë° ì‹¤íŒ¨ ì‹œ íƒ€ì›Œ ë¶•ê´´
             var tower = JengaTowerManager.Instance?.GetPlayerTower(OwnerActorNumber);
             if (tower != null)
             {
-                // ½ÇÆĞ »ç½ÇÀ» ¸¶½ºÅÍ¿¡°Ô ¿äÃ» (´©±¸ Å¸¿öÀÎÁöµµ ÇÔ²²)
+                // ì‹¤íŒ¨ ì‚¬ì‹¤ì„ ë§ˆìŠ¤í„°ì—ê²Œ ìš”ì²­ (ëˆ„êµ¬ íƒ€ì›Œì¸ì§€ë„ í•¨ê»˜)
                 JengaNetworkManager.Instance?.RequestTowerCollapse_MasterAuth(OwnerActorNumber);
             }
             return;
-            // JengaSoundManager.Instance?.PlayTimingFailSound();
         }
 
-        // JengaSoundManager.Instance?.PlayTimingSuccessSound();
+        // ì„±ê³µ ì²˜ë¦¬: ë¸”ë¡ ì œê±° â€˜ìš”ì²­â€™ë§Œ ë§ˆìŠ¤í„°ì—ê²Œ ë³´ëƒ„
         _pendingRemoval = true;
 
         var playerId = PhotonNetwork.LocalPlayer.ActorNumber;
@@ -210,14 +211,15 @@ public class JengaBlock : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
         int bonusScore = Mathf.RoundToInt(Mathf.Clamp01(accuracy) * 10f);
         int totalScore = baseScore + bonusScore;
 
-        // ¸¶½ºÅÍ ½ÂÀÎ ·çÆ®·Î º¯°æ
+        // ë§ˆìŠ¤í„° ìŠ¹ì¸ ë£¨íŠ¸ë¡œ ë³€ê²½
         JengaNetworkManager.Instance?.RequestBlockRemoval_MasterAuth(
             OwnerActorNumber, BlockId, totalScore, accuracy
         );
+        Debug.Log($"[JengaBlock] Timing SUCCESS blockId={BlockId} ownerActor={OwnerActorNumber} score={totalScore} acc={accuracy:F2}");
     }
     #endregion
 
-    #region ³×Æ®¿öÅ© ¼ö½Å ½Ã ½ÇÁ¦ Àû¿ë (JengaNetworkManager.RPC_ApplyBlockRemoval¿¡¼­ È£Ãâ)
+    #region ë„¤íŠ¸ì›Œí¬ ìˆ˜ì‹  ì‹œ ì‹¤ì œ ì ìš© (JengaNetworkManager.RPC_ApplyBlockRemovalì—ì„œ í˜¸ì¶œ)
     public void RemoveWithAnimation(bool isSuccess = true)
     {
         Debug.Log($"[Block] RemoveWithAnimation enter id={BlockId} isRemoved={IsRemoved} active={gameObject.activeSelf}");
@@ -245,11 +247,11 @@ public class JengaBlock : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
 
     private IEnumerator RemoveAnimationSuccess()
     {
-        // ÀÓ½Ã: °£´ÜÇÏ°Ô ¹Ù·Î »ç¶óÁö±â
+        // ì„ì‹œ: ê°„ë‹¨í•˜ê²Œ ë°”ë¡œ ì‚¬ë¼ì§€ê¸°
         yield return new WaitForSeconds(0.1f);
         gameObject.SetActive(false);
 
-        // ToDo : ³ªÁß¿¡ Ä³¸¯ÅÍ ¹ß»ç ¿¬Ãâ·Î ±³Ã¼ ¿¹Á¤
+        // ToDo : ë‚˜ì¤‘ì— ìºë¦­í„° ë°œì‚¬ ì—°ì¶œë¡œ êµì²´ ì˜ˆì •
     }
 
     private IEnumerator RemoveAnimationFail()
@@ -268,7 +270,7 @@ public class JengaBlock : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
     }
     #endregion
 
-    #region ½Ã°¢ º¸Á¶
+    #region ì‹œê° ë³´ì¡°
     private void Highlight(bool on)
     {
         if (_renderer == null) return;

@@ -4,5 +4,5 @@ using UnityEngine;
 
 public interface ICoroutineGameComponent
 {
-    IEnumerator InitializeCoroutine(); // º´·Ä ÃÊ±âÈ­ (UI, »ç¿îµå µî)
+    IEnumerator InitializeCoroutine(); // ë³‘ë ¬ ì´ˆê¸°í™” (UI, ì‚¬ìš´ë“œ ë“±)
 }
