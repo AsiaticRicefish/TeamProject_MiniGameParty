@@ -17,7 +17,7 @@ public class GamePlayState : ShootingGameState
     {
         if(ShootingGameManager.Instance.CurrentRound < ShootingGameManager.Instance.MaxRounds)
         {
-
+            TurnManager.Instance.StartTurnCorutine(10.0f);
         }
     }
     public override void Exit()

@@ -16,7 +16,10 @@ namespace ShootingScene
         //private List<int> turnOrder = new List<int>();
         private int currentTurnIndex = 0; 
         private int currentRound = 1;    
-        private int totalRounds = 3;     
+        private int totalRounds = 3;
+
+        public bool IsTurnEnd;
+        private Coroutine TurnCorutine;
 
         public event Action<UnimoEgg> OnTurnChanged;        
 
@@ -86,8 +89,8 @@ namespace ShootingScene
 
                 if (currentRound > totalRounds)
                 {
-                    Debug.Log("[TurnManager] - 게임 종료!");
-                    // TODO - 게임 종료 관련 추가
+                    Debug.Log("[TurnManager] - 마스터 클라이언트만 보임 / 게임 종료!");
+                    //ShootingGameManager.Instance.ChangeState
                     return;
                 }
             }
@@ -159,6 +162,19 @@ namespace ShootingScene
             GameObject eggObj = PhotonNetwork.Instantiate("UnimoEggPrefab", eggSpawnPoint.position, Quaternion.identity);
             currentUnimoEgg = eggObj.GetComponent<UnimoEgg>();
             currentUnimoEgg.ShooterUid = uid;
+        }
+
+        public void StartTurnCorutine(float delay)
+        {
+            if (TurnCorutine != null) return;
+            TurnCorutine = StartCoroutine(TurnChangeDelay(delay));
+        }
+
+        private IEnumerator TurnChangeDelay(float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            NextTurn();
+            TurnCorutine = null;
         }
     }
 }
