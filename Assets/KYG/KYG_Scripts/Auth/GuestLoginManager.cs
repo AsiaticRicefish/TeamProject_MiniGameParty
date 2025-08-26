@@ -12,27 +12,28 @@ using UnityEngine.SceneManagement;
 namespace KYG.Auth
 {
     /// <summary>
-    /// 닉네임만 받아 Firebase 익명 로그인 + Photon 접속까지 처리하는 매니저
+    /// 닉네임만 받아 Firebase 익명 로그인 + Photon 접속 + 로비 씬 전환까지 처리
+    /// - Firebase 의존성 체크 완료 전에는 어떠한 Firebase API도 호출하지 않음(예외 방지)
+    /// - Photon 연결 후 Master → Lobby Join → 자동 씬 이동(옵션)
     /// </summary>
     public class GuestLoginManager : MonoBehaviourPunCallbacks
     {
         public static GuestLoginManager Instance { get; private set; }
 
-        [Header("UI References")]
-        [SerializeField] private string defaultRegion = "asia"; // Photon Region (예: "asia", "kr"가 없으면 "asia" 권장)
-        
-        
+        [Header("Photon")]
+        [SerializeField] private string defaultRegion = "asia"; // "asia" 권장
+
         [Header("Scene")]
-        [SerializeField] private bool autoLoadLobbyScene = true;   // 로비 참여 시 자동 로비 씬 이동 여부
-        [SerializeField] private string lobbySceneName = "LDH_MainScene";  // 로비 씬 이름
-        
+        [SerializeField] private bool autoLoadLobbyScene = true;     // 로비 참여 시 자동 로비 씬 이동
+        [SerializeField] private string lobbySceneName = "LDH_MainScene";
+
         private FirebaseAuth _auth;
         private FirebaseUser _user;
 
         public bool IsFirebaseReady { get; private set; }
         public bool IsPhotonConnected => PhotonNetwork.IsConnected;
-        
-        // 중복 로딩 방지용 플래그
+
+        // 중복 씬 로딩 방지
         private bool _isLoadingScene = false;
 
         private void Awake()
@@ -44,7 +45,7 @@ namespace KYG.Auth
 
         private void Start()
         {
-            // Firebase 의존성 확인 및 초기화
+            // ✅ Firebase 의존성 확인 및 초기화
             FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
             {
                 if (task.Result == DependencyStatus.Available)
@@ -59,19 +60,27 @@ namespace KYG.Auth
                 }
             });
 
-            // Photon 기본 옵션
+            // Photon 설정
             PhotonNetwork.AutomaticallySyncScene = true;
             PhotonNetwork.GameVersion = Application.version; // 같은 버전끼리 매칭
         }
 
         /// <summary>
         /// 외부(UI)에서 닉네임을 받아 전체 로그인 플로우 실행
+        /// Firebase 준비 완료까지 잠깐 대기하여 "CheckDependencies running" 예외를 방지.
         /// </summary>
         public async void LoginAsGuestWithNickname(string nickname)
         {
+            // ✅ Firebase 준비될 때까지 대기(최대 6초)
+            int guard = 0;
+            while (!IsFirebaseReady && guard < 120)
+            {
+                await Task.Delay(50);
+                guard++;
+            }
             if (!IsFirebaseReady)
             {
-                Debug.LogError("[GuestLogin] Firebase not ready yet.");
+                Debug.LogError("[GuestLogin] Firebase not ready yet (timeout).");
                 return;
             }
 
@@ -89,8 +98,8 @@ namespace KYG.Auth
                 _user = _auth.CurrentUser;
                 if (_user == null)
                 {
-                    var result = await _auth.SignInAnonymouslyAsync(); // AuthResult 리턴
-                    _user = result.User; // 실제 FirebaseUser 가져오기
+                    var result = await _auth.SignInAnonymouslyAsync(); // AuthResult
+                    _user = result.User; // 실제 FirebaseUser
                     Debug.Log($"[GuestLogin] Firebase anonymous UID: {_user.UserId}");
                 }
                 else
@@ -102,14 +111,13 @@ namespace KYG.Auth
                 await SetFirebaseDisplayNameIfNeeded(_user, nickname);
 
                 // Photon 접속 설정
-                PhotonNetwork.NickName = nickname;              // 방/게임 내 표시명
+                PhotonNetwork.NickName = nickname;                       // 방/게임 내 표시명
                 PhotonNetwork.AuthValues = new AuthenticationValues(_user.UserId); // 고유 식별자(UID)
 
-                // 리전+세팅으로 접속
+                // 리전 고정(원하면 주석 해제/조정)
                 var settings = PhotonNetwork.PhotonServerSettings.AppSettings;
-                // 특정 리전을 강제하고 싶으면 아래 두 줄 사용
                 settings.FixedRegion = defaultRegion; // "asia" 권장
-                // settings.BestRegionSummaryFromStorage = null; // 베스트 리전 저장치 무시하고 고정 리전 사용
+                // settings.BestRegionSummaryFromStorage = null; // 베스트 리전 저장치 무시
 
                 if (!PhotonNetwork.IsConnected)
                 {
@@ -119,6 +127,8 @@ namespace KYG.Auth
                 else
                 {
                     Debug.Log("[GuestLogin] Already connected to Photon.");
+                    // 이미 연결되어 있다면 바로 로비 참가 시도
+                    PhotonNetwork.JoinLobby();
                 }
             }
             catch (Exception e)
@@ -130,7 +140,6 @@ namespace KYG.Auth
         private string SanitizeNickname(string input)
         {
             if (string.IsNullOrWhiteSpace(input)) return null;
-            // 공백/제어문자 제거, 길이 제한 등 최소 필터
             var trimmed = input.Trim();
             if (trimmed.Length > 16) trimmed = trimmed.Substring(0, 16);
             return trimmed;
@@ -138,9 +147,7 @@ namespace KYG.Auth
 
         private async Task SetFirebaseDisplayNameIfNeeded(FirebaseUser user, string nickname)
         {
-            // 이미 동일하면 스킵
             if (!string.IsNullOrEmpty(user.DisplayName) && user.DisplayName == nickname) return;
-
             var profile = new UserProfile { DisplayName = nickname };
             await user.UpdateUserProfileAsync(profile);
             await user.ReloadAsync(); // 캐시 갱신
@@ -151,9 +158,7 @@ namespace KYG.Auth
         public override void OnConnectedToMaster()
         {
             Debug.Log("[GuestLogin] Photon Connected to Master.");
-            // 필요 시 로비 참여/빠른 매칭
             PhotonNetwork.JoinLobby(); // 간단히 로비 참여
-            // 또는 바로 Quick Match 로직 호출
         }
 
         public override void OnDisconnected(DisconnectCause cause)
@@ -164,13 +169,10 @@ namespace KYG.Auth
         public override void OnJoinedLobby()
         {
             Debug.Log("[GuestLogin] Joined Lobby.");
-            
-            // 로비 참여 시 로비 씬으로 이동
-            if (autoLoadLobbyScene)
-                LoadLobbySceneIfNeeded();
+            if (autoLoadLobbyScene) LoadLobbySceneIfNeeded();
         }
         #endregion
-        
+
         #region Scene Helpers
         /// <summary>
         /// 현재 씬이 로비 씬이 아니고, 빌드에 등록되어 있다면 로비 씬으로 전환
