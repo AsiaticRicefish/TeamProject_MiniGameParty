@@ -204,6 +204,13 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
     {
         yield return new WaitUntil(() => FindObjectOfType<T>() != null);
     }
+    
+    // 타입을 매개변수로 받는 오버로드 메서드 추가
+    protected IEnumerator WaitForSingletonReady(Type type)
+    {
+        yield return new WaitUntil(() => FindObjectOfType(type) != null);
+    }
+
 
     // IGameComponent들을 순차적으로 안전하게 초기화
     protected IEnumerator InitializeComponentsSafely(IEnumerable<IGameComponent> components)
