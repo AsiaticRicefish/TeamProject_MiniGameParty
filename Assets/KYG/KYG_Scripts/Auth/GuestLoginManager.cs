@@ -24,7 +24,7 @@ namespace KYG.Auth
         
         [Header("Scene")]
         [SerializeField] private bool autoLoadLobbyScene = true;   // 로비 참여 시 자동 로비 씬 이동 여부
-        [SerializeField] private string lobbySceneName = "LobbyScene";  // 로비 씬 이름
+        [SerializeField] private string lobbySceneName = "LDH_MainScene";  // 로비 씬 이름
         
         private FirebaseAuth _auth;
         private FirebaseUser _user;
