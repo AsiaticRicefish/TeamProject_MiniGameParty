@@ -16,6 +16,11 @@ public class JengaSwipe : MonoBehaviour
     [SerializeField] float _clickPx = 8f; //해당 픽셀 이하 이동이면 클릭으로 판정
     [SerializeField] float _clickTime = 0.1f; //해당 시간 이하동안 터치 시 클릭으로 판정
 
+
+    [SerializeField] private LayerMask _jengaMask;
+    [SerializeField] MarkerMover _marker;
+    [SerializeField] CameraController _camcon;
+
     bool _blockInput = false; //UI 클릭 시 true -> 입력 방지
     bool _isPress = false; // 눌림 여부
     Vector2 prevPos; //직전 좌표
@@ -33,6 +38,8 @@ public class JengaSwipe : MonoBehaviour
     /// </summary>
     public void OnPress(InputAction.CallbackContext callback)
     {
+        if (IsOnUI()) return;
+
         if (callback.started) //눌린 순간
         {
             _blockInput = false;
@@ -67,6 +74,19 @@ public class JengaSwipe : MonoBehaviour
             if (distance <= _clickPx && time <= _clickTime)
             {
                 Debug.Log("클릭판정 처리");
+
+                Ray ray = Camera.main.ScreenPointToRay(pos);
+
+                // 자식 젠가 레이어를 따로 설정하여 해당 레이어마스크를 레이캐스트로 판별
+                if (Physics.Raycast(ray, out var hit, Mathf.Infinity, _jengaMask))
+                {
+                    var jenga = hit.collider.transform; //해당 젠가 위치
+                    _marker.PlaceAtBlockFront(jenga); 
+                    _camcon.Focus(_marker.transform);
+
+                    return;
+                }
+
             }
         }
     }
@@ -144,7 +164,6 @@ public class JengaSwipe : MonoBehaviour
         Vector2 pos = Pointer.current != null ? Pointer.current.position.ReadValue() :
         Touchscreen.current != null ? Touchscreen.current.primaryTouch.position.ReadValue() :
         Vector2.zero;
-
 
         var eventData = new PointerEventData(EventSystem.current) { position = pos };
 
