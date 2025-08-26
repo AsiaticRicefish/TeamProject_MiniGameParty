@@ -5,7 +5,6 @@ using UnityEngine;
 using DesignPattern;
 using Photon.Pun;
 
-//�ٸ� �������� �ϸŴ����� ���� �� �����ϱ� namespaceó�� 
 namespace ShootingScene
 {
     [RequireComponent(typeof(PhotonView))]
@@ -57,7 +56,7 @@ namespace ShootingScene
         {
             Debug.Log("[TurnManager] TestSetupTurn 호출됨");
 
-            int idx = 1; // 0-based
+            int idx = 1; // 1-based
             foreach (var kv in ShootingGameManager.Instance.players)
             {
                 kv.Value.myTurnIndex = idx++;

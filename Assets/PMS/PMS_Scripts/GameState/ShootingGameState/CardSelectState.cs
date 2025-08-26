@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
@@ -9,14 +9,19 @@ public class CardSelectState : ShootingGameState
     public override void Enter()
     {
         Debug.Log("[ShootingGameState] - CardSelectState Enter");
-        TurnManager.Instance.TestSetupTurn();
+        //TurnManager.Instance.SetupTurn();
+        //TurnManager.Instance.TestSetupTurn();
     }
     public override void Update() 
     {
+        /*if(true) //ë‹¤ ëˆŒë €ì„ ë•Œ í”Œë ˆì´ì–´ë“¤ì´ 
+        {
+            TurnManager.Instance.SetupTurn();
+        }*/
     }
     public override void Exit() 
     {
         Debug.Log("[ShootingGameState] - CardSelectState Exit");
-        //CardUI°¡ »ç¶óÁöµµ·Ï
+        //CardUIê°€ ì‚¬ë¼ì§€ë„ë¡
     }
 }

@@ -10,7 +10,7 @@ public class UnimoEgg : MonoBehaviour
     private Vector3 startTouchPos;
     private Vector3 endTouchPos;
 
-    public string ShooterUid; // ´©°¡ ´øÁ³´ÂÁö ÀúÀå
+    public string ShooterUid; // ëˆ„ê°€ ë˜ì¡ŒëŠ”ì§€ ì €ì¥
 
     [SerializeField][Range(0.1f,15f)] private float forceMultiplier = 3f;
 
@@ -19,48 +19,48 @@ public class UnimoEgg : MonoBehaviour
         rb = GetComponent<Rigidbody>();
     }
 
-    //ÅÍÄ¡ ½ÃÀÛÇßÀ» ¶§
+    //í„°ì¹˜ ì‹œì‘í–ˆì„ ë•Œ
     public void OnTouchStart(Vector2 touchPos)
     {
-        Debug.Log("À¯´Ï¸ğ Ã£¾Æ¼­ ÅÍÄ¡ ½ÃÀÛÇÔ");
-        startTouchPos = touchPos;               //½ÃÀÛ À§Ä¡¸¦ ÀúÀå
+        Debug.Log("ìœ ë‹ˆëª¨ ì°¾ì•„ì„œ í„°ì¹˜ ì‹œì‘í•¨");
+        startTouchPos = touchPos;               //ì‹œì‘ ìœ„ì¹˜ë¥¼ ì €ì¥
         rb.isKinematic = true; 
     }
 
-    //ÅÍÄ¡ ÁßÀÏ¶§
+    //í„°ì¹˜ ì¤‘ì¼ë•Œ
     public void OnTouchMove(Vector2 touchPos)
     {
-        // È­¸é ÁÂÇ¥ÀÇ Y¸¦ ¿ùµå ÁÂÇ¥ÀÇ Z·Î º¯È¯
+        // í™”ë©´ ì¢Œí‘œì˜ Yë¥¼ ì›”ë“œ ì¢Œí‘œì˜ Zë¡œ ë³€í™˜
         //Vector3 worldPos = Camera.main.ScreenToWorldPoint(new Vector3(touchPos.x, touchPos.y, Camera.main.transform.position.y));
         //transform.position = new Vector3(worldPos.x, transform.position.y, worldPos.z);
-        //»ı°¢ÇØ º¸´Ï±ñ ÀÌµ¿À» ±»ÀÌ ¾ÈÇØµµµÈ´Ù.
+        //ìƒê°í•´ ë³´ë‹ˆê¹ ì´ë™ì„ êµ³ì´ ì•ˆí•´ë„ëœë‹¤.
     }
 
-    //ÅÍÄ¡¸¦ ¶­À» ¶§
+    //í„°ì¹˜ë¥¼ ë•Ÿì„ ë•Œ
     public void OnTouchEnd(Vector2 endtouchPos)
     {
-        //TODO - ÃßÈÄ ³ªÁß¿¡ ³õÀº ½Ã°£¸¸Å­ forceMultiplier°ªÀ» ³ô°Ô ÇÏ¿© °öÇØÁà¾ßÇÑ´Ù.
+        //TODO - ì¶”í›„ ë‚˜ì¤‘ì— ë†“ì€ ì‹œê°„ë§Œí¼ forceMultiplierê°’ì„ ë†’ê²Œ í•˜ì—¬ ê³±í•´ì¤˜ì•¼í•œë‹¤.
         rb.isKinematic = false;
 
-        //Ç×»ó Ä«¸Ş¶ó´Â x,yÁÂÇ¥ º¸´Ù Camera.main.transform.position.y ¸¸Å­ ¶³¾îÁ®ÀÖ´Ù.
+        //í•­ìƒ ì¹´ë©”ë¼ëŠ” x,yì¢Œí‘œ ë³´ë‹¤ Camera.main.transform.position.y ë§Œí¼ ë–¨ì–´ì ¸ìˆë‹¤.
         Vector3 startWorld = Camera.main.ScreenToWorldPoint(new Vector3(startTouchPos.x,startTouchPos.y,Camera.main.transform.position.y));
         Vector3 endWorld = Camera.main.ScreenToWorldPoint(new Vector3(endtouchPos.x,endtouchPos.y,Camera.main.transform.position.y));
 
-        //µÎº¤ÅÍ»çÀÌÀÇ °Å¸®¸¦ ±¸ÇÔ
+        //ë‘ë²¡í„°ì‚¬ì´ì˜ ê±°ë¦¬ë¥¼ êµ¬í•¨
         //float pullBackPower = Vector3.Distance(startWorld,endWorld);
         //Debug.Log(pullBackPower);
 
-        //µÎº¤ÅÍ »çÀÌÀÇ ¹æÇâÀ» ±¸ÇÔ -> ¿©±â¼­ dir.magnitudeÀÇ °ªÀº º¤ÅÍÀÇ Å©±â
+        //ë‘ë²¡í„° ì‚¬ì´ì˜ ë°©í–¥ì„ êµ¬í•¨ -> ì—¬ê¸°ì„œ dir.magnitudeì˜ ê°’ì€ ë²¡í„°ì˜ í¬ê¸°
         Vector3 dir = (startWorld - endWorld);
         Debug.Log(dir.magnitude);
         dir.y = 0;
 
-        //forceMultiplier - º¸Á¤°ª
+        //forceMultiplier - ë³´ì •ê°’
         rb.AddForce(dir * forceMultiplier, ForceMode.Impulse);
-        /*Vector3 dir = startTouchPos - endTouchPos; //Á¾·á -> ½ÃÀÛ ¹æÇâ º¤ÅÍ
+        /*Vector3 dir = startTouchPos - endTouchPos; //ì¢…ë£Œ -> ì‹œì‘ ë°©í–¥ ë²¡í„°
          
 
-        //ÇØ»óµµ max min ÈûÀÇ Å©±â? Æ¯Á¤Èû±îÁö¸¸ ÁÙ¼öÀÖµµ·Ï 
+        //í•´ìƒë„ max min í˜ì˜ í¬ê¸°? íŠ¹ì •í˜ê¹Œì§€ë§Œ ì¤„ìˆ˜ìˆë„ë¡ 
 
         dir = new Vector3(dir.x, 0 , dir.z);
         
@@ -71,10 +71,10 @@ public class UnimoEgg : MonoBehaviour
 
     public void Shot(Vector3 dir)
     {
-        rb.velocity = Vector3.zero; // ±âÁ¸ ¼Óµµ ÃÊ±âÈ­
+        rb.velocity = Vector3.zero; // ê¸°ì¡´ ì†ë„ ì´ˆê¸°í™”
         rb.AddForce(dir, ForceMode.Impulse);
         //rb.AddForce(dir * forceMultiplier, ForceMode.Impulse);
-        Debug.Log($"¹ß»ç ¹æÇâÀÇ ÈûÀÇ Å©±â - {dir.magnitude}");
-        //Debug.Log($"¹ß»ç ¹æÇâÀÇ ÈûÀÇ Å©±â - {dir.magnitude * forceMultiplier}");
+        Debug.Log($"ë°œì‚¬ ë°©í–¥ì˜ í˜ì˜ í¬ê¸° - {dir.magnitude}");
+        //Debug.Log($"ë°œì‚¬ ë°©í–¥ì˜ í˜ì˜ í¬ê¸° - {dir.magnitude * forceMultiplier}");
     }
 }

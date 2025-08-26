@@ -8,59 +8,61 @@ using DesignPattern;
 [DisallowMultipleComponent]
 public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameComponent, IGameStartHandler
 {
+    private CardManager CardManager;
     private ShootingGameState currentState;
 
     //public UnimoEgg currentUnimo;
 
-    public Dictionary<string, ShootingPlayerData> players = new(); // UID¸¦ key·Î °¡Áö´Â ÇÃ·¹ÀÌ¾î µ¥ÀÌÅÍ
-    private Dictionary<string, int> playerScores = new();        // ÇÃ·¹ÀÌ¾îº° Á¡¼ö
+    public Dictionary<string, ShootingPlayerData> players = new(); // UIDë¥¼ keyë¡œ ê°€ì§€ëŠ” í”Œë ˆì´ì–´ ë°ì´í„°
+    private Dictionary<string, int> playerScores = new();        // í”Œë ˆì´ì–´ë³„ ì ìˆ˜
 
     public int CurrentRound { get; private set; } = 0;
     public int MaxRounds { get; private set; } = 3;
 
     protected override void OnAwake()
     {
-        base.isPersistent = false;          //½´ÆÃ °ÔÀÓ ¾È¿¡¼­¸¸ Á¸Àç 
+        base.isPersistent = false;          //ìŠˆíŒ… ê²Œì„ ì•ˆì—ì„œë§Œ ì¡´ì¬ 
     }
 
     public void Initialize()
     {
-        Debug.Log("[ShootingGameManager] - ½´ÆÃ °ÔÀÓ ÃÊ±âÈ­");
-        InitializePlayers();                // ÇÃ·¹ÀÌ¾î Á¤º¸ ¼¼ÆÃ - µû·Î instantiate¿¡¼­ ¸¸µé ÇÊ¿ä´Â ¾øÀ½.
-        ChangeState(new InitState());       //ÀüºÎ InitState ¾À »óÅÂ
+        CardManager = GameObject.FindObjectOfType<CardManager>();
+        Debug.Log("[ShootingGameManager] - ìŠˆíŒ… ê²Œì„ ì´ˆê¸°í™”");
+        InitializePlayers();                // í”Œë ˆì´ì–´ ì •ë³´ ì„¸íŒ… - ë”°ë¡œ instantiateì—ì„œ ë§Œë“¤ í•„ìš”ëŠ” ì—†ìŒ.
+        ChangeState(new InitState());       //ì „ë¶€ InitState ì”¬ ìƒíƒœ
     }
 
     private void InitializePlayers()
     {
-        // ÇöÀç ¹æ¿¡ Á¢¼ÓÇØ ÀÖ´Â ¸ğµç Photon ÇÃ·¹ÀÌ¾î ¸ñ·ÏÀ» ¼øÈ¸
+        // í˜„ì¬ ë°©ì— ì ‘ì†í•´ ìˆëŠ” ëª¨ë“  Photon í”Œë ˆì´ì–´ ëª©ë¡ì„ ìˆœíšŒ
         foreach (var photonPlayer in PhotonNetwork.PlayerList)
         {
-            // PhotonNetwork.PlayerList¿¡¼­ ²¨³½ ÇÃ·¹ÀÌ¾î °´Ã¼ÀÇ CustomProperties¿¡¼­ uid (Firebase UID)¸¦ ÃßÃâ
+            // PhotonNetwork.PlayerListì—ì„œ êº¼ë‚¸ í”Œë ˆì´ì–´ ê°ì²´ì˜ CustomPropertiesì—ì„œ uid (Firebase UID)ë¥¼ ì¶”ì¶œ
             string uid = photonPlayer.CustomProperties["uid"] as string;
 
-            // UID¸¦ ±â¹İÀ¸·Î PlayerManager¿¡¼­ ÇØ´ç ÇÃ·¹ÀÌ¾îÀÇ GamePlayer °´Ã¼¸¦ °¡Á®¿È
+            // UIDë¥¼ ê¸°ë°˜ìœ¼ë¡œ PlayerManagerì—ì„œ í•´ë‹¹ í”Œë ˆì´ì–´ì˜ GamePlayer ê°ì²´ë¥¼ ê°€ì ¸ì˜´
             //var gamePlayer = PlayerManager.Instance.GetPlayer(uid);
 
-            // CreateOrGetPlayer¸¦ »ç¿ëÇÏ¿© ÇÃ·¹ÀÌ¾î°¡ ¾øÀ¸¸é ÀÚµ¿ »ı¼º
+            // CreateOrGetPlayerë¥¼ ì‚¬ìš©í•˜ì—¬ í”Œë ˆì´ì–´ê°€ ì—†ìœ¼ë©´ ìë™ ìƒì„±
             var gamePlayer = PlayerManager.Instance.CreateOrGetPlayer(uid, photonPlayer.NickName);
 
             if (gamePlayer != null)
             {
-                // GamePlayer¿¡ ¹Ì´Ï°ÔÀÓ Àü¿ë µ¥ÀÌÅÍ »ı¼º - ShootingPlayerData
+                // GamePlayerì— ë¯¸ë‹ˆê²Œì„ ì „ìš© ë°ì´í„° ìƒì„± - ShootingPlayerData
                 gamePlayer.ShootingData = new ShootingPlayerData
                 {
                     score = 0,
                     myTurnIndex = -1
                 };
 
-                // ShootingGame µñ¼Å³Ê¸®¿¡ ÇÃ·¹ÀÌ¾îµéÀ» uid ÀúÀå
+                // ShootingGame ë”•ì…”ë„ˆë¦¬ì— í”Œë ˆì´ì–´ë“¤ì„ uid ì €ì¥
                 players[uid] = gamePlayer.ShootingData;
-                // Á¡¼ö¸¦ ÀúÀåÇÏ´Â playerScores µñ¼Å³Ê¸®¿¡µµ ÇØ´ç UID·Î 0Á¡ µî·Ï (ÃÊ±â°ª)
+                // ì ìˆ˜ë¥¼ ì €ì¥í•˜ëŠ” playerScores ë”•ì…”ë„ˆë¦¬ì—ë„ í•´ë‹¹ UIDë¡œ 0ì  ë“±ë¡ (ì´ˆê¸°ê°’)
                 playerScores[uid] = 0;
             }
             else
             {
-                Debug.LogError($"[ShootingGameManager - InitializePlayers] {uid}¿¡ ÇØ´çÇÏ´Â GamePlayer¸¦ Ã£À» ¼ö ¾øÀ½");
+                Debug.LogError($"[ShootingGameManager - InitializePlayers] {uid}ì— í•´ë‹¹í•˜ëŠ” GamePlayerë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŒ");
             }
         }
     }
@@ -70,7 +72,7 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
         currentState?.Update();
     }
 
-    //°ÔÀÓ »óÅÂ º¯°æ (·ÎÄÃ È£Ãâ ±İÁö!!!!!!!!!!!!!!!!!!!!!!, RPC ÅëÇØ È£Ãâ)
+    //ê²Œì„ ìƒíƒœ ë³€ê²½ (ë¡œì»¬ í˜¸ì¶œ ê¸ˆì§€!!!!!!!!!!!!!!!!!!!!!!, RPC í†µí•´ í˜¸ì¶œ)
     public void ChangeState(ShootingGameState newState)
     {
         currentState?.Exit();
@@ -82,17 +84,17 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
     {
         if (JengaNetworkManager.Instance == null)
         {
-            Debug.LogError("[ShootingGameManager] - ½´ÆÃ °ÔÀÓ ½ÃÀÛ ¿À·ù, Instance°¡ »ı¼ºÀÌ ¾ÈµÊ ");
+            Debug.LogError("[ShootingGameManager] - ìŠˆíŒ… ê²Œì„ ì‹œì‘ ì˜¤ë¥˜, Instanceê°€ ìƒì„±ì´ ì•ˆë¨ ");
             return;
         }
-        //¸¶½ºÅÍ Å¬¶óÀÌ¾ğÆ®°¡ °ÔÀÓ ½ÃÀÛÀ» ¾Ë¸°´Ù.
+        //ë§ˆìŠ¤í„° í´ë¼ì´ì–¸íŠ¸ê°€ ê²Œì„ ì‹œì‘ì„ ì•Œë¦°ë‹¤.
         if (PhotonNetwork.IsMasterClient)
         {
             RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "InitState");
         }
 
-        Debug.Log("[ShootingGameManager] - ½´ÆÃ °ÔÀÓ ½ÃÀÛ!");
-        //³­ Å¸ÀÌ¸Ó°¡ ¾ø¾îµµ µÈ´Ù. 
+        Debug.Log("[ShootingGameManager] - ìŠˆíŒ… ê²Œì„ ì‹œì‘!");
+        //ë‚œ íƒ€ì´ë¨¸ê°€ ì—†ì–´ë„ ëœë‹¤. 
     }
 
     public void ChangeStateByName(string stateName)
@@ -100,11 +102,13 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
         switch (stateName)
         {
             case "InitState": ChangeState(new InitState()); break;
-            case "CardSelectState": ChangeState(new CardSelectState()); break;
+            case "CardSelectState": ChangeState(new CardSelectState());
+                CardManager.enabled = true;
+                break;
             case "GamePlayState": ChangeState(new GamePlayState()); break;
             case "CheckGameWinnderState": ChangeState(new GamePlayState()); break;
             default:
-                Debug.LogError($"[ChangeStateByName] {stateName}¿¡ ÇØ´çÇÏ´Â »óÅÂ°¡ ¾ø½À´Ï´Ù.");
+                Debug.LogError($"[ChangeStateByName] {stateName}ì— í•´ë‹¹í•˜ëŠ” ìƒíƒœê°€ ì—†ìŠµë‹ˆë‹¤.");
                 break;
         }
     }
@@ -115,12 +119,12 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
         {
             GameObject[] unimoEggList = GameObject.FindGameObjectsWithTag("UnimoEgg");
         }
-        Debug.Log("[ShootingGameManager] - ¿ì½ÂÀÚ °è»ê");
+        Debug.Log("[ShootingGameManager] - ìš°ìŠ¹ì ê³„ì‚°");
     }
 
     public void EndGame()
     {
-        Debug.Log("[ShootingGameManager] - °ÔÀÓ Á¾·á");
+        Debug.Log("[ShootingGameManager] - ê²Œì„ ì¢…ë£Œ");
     }
 
     /*[PunRPC]
@@ -131,7 +135,7 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
             case "InitState": ChangeState(new InitState()); break;
             case "CardSelectState": ChangeState(new CardSelectState()); break;
             default:
-                Debug.Log($"[ShootingGameManager - RPC_ChangeState] - {stateName}¿¡ ÇØ´çµÇ´Â »óÅÂ°¡ Á¸Àç ÇÏÁö ¾Ê½À´Ï´Ù"); break;
+                Debug.Log($"[ShootingGameManager - RPC_ChangeState] - {stateName}ì— í•´ë‹¹ë˜ëŠ” ìƒíƒœê°€ ì¡´ì¬ í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤"); break;
         }
     }*/
 }

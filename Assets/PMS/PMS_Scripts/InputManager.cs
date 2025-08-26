@@ -8,8 +8,8 @@ namespace ShootingScene
     {
         [SerializeField] private Camera mainCam;
 
-        private PlayerInput playerInput; // PlayerInput ÄÄÆ÷³ÍÆ® ÂüÁ¶ º¯¼ö
-        private InputAction touchAction; // TouchPress ¾×¼Ç ÂüÁ¶ º¯¼ö
+        private PlayerInput playerInput; // PlayerInput ì»´í¬ë„ŒíŠ¸ ì°¸ì¡° ë³€ìˆ˜
+        private InputAction touchAction; // TouchPress ì•¡ì…˜ ì°¸ì¡° ë³€ìˆ˜
 
         private UnimoEgg selectedUnimoEgg;
 
@@ -20,7 +20,7 @@ namespace ShootingScene
 
         public void Initialize()
         {
-            // PlayerInput ÄÄÆ÷³ÍÆ®¸¦ °¡Á®¿À°í, ¾×¼ÇÀ» Ã£½À´Ï´Ù.
+            // PlayerInput ì»´í¬ë„ŒíŠ¸ë¥¼ ê°€ì ¸ì˜¤ê³ , ì•¡ì…˜ì„ ì°¾ìŠµë‹ˆë‹¤.
             playerInput = GetComponent<PlayerInput>();
             if (playerInput != null)
             {
@@ -28,7 +28,7 @@ namespace ShootingScene
             }
         }
 
-        #region ½Ì±Û È¯°æ Å×½ºÆ® ÄÚµå - ÃßÈÄ ÀÚ±âÅÏÀÏ¶§ ÀÚ±â¸¸ InputÀÌ °¡´ÉÇÏµµ·Ï ¼³°è ¿¹Á¤ 
+        #region ì‹±ê¸€ í™˜ê²½ í…ŒìŠ¤íŠ¸ ì½”ë“œ - ì¶”í›„ ìê¸°í„´ì¼ë•Œ ìê¸°ë§Œ Inputì´ ê°€ëŠ¥í•˜ë„ë¡ ì„¤ê³„ ì˜ˆì • 
         private void OnEnable()
         {
             EnableInput();
@@ -36,14 +36,14 @@ namespace ShootingScene
 
         private void OnDisable()
         {
-            // ½ºÅ©¸³Æ®°¡ ºñÈ°¼ºÈ­µÉ ¶§ ÀÌº¥Æ® ±¸µ¶ ÇØÁ¦
+            // ìŠ¤í¬ë¦½íŠ¸ê°€ ë¹„í™œì„±í™”ë  ë•Œ ì´ë²¤íŠ¸ êµ¬ë… í•´ì œ
             DisableInput();
         }
         #endregion
 
         public void EnableInput()
         {
-            // TouchPress ¾×¼ÇÀÇ ÀÌº¥Æ®¸¦ ±¸µ¶
+            // TouchPress ì•¡ì…˜ì˜ ì´ë²¤íŠ¸ë¥¼ êµ¬ë…
             if (touchAction != null)
             {
                 touchAction.started += OnTouchPress;
@@ -53,7 +53,7 @@ namespace ShootingScene
             }
         }
 
-        //touchAction ºñÈ°¼ºÈ­ - Å¬¸¯¸øÇÏ°Ô ¸·À½
+        //touchAction ë¹„í™œì„±í™” - í´ë¦­ëª»í•˜ê²Œ ë§‰ìŒ
         public void DisableInput()
         {
             if (touchAction != null)
@@ -65,21 +65,21 @@ namespace ShootingScene
             }
         }
 
-        // TouchPress ÀÌº¥Æ® ¿¬°á
+        // TouchPress ì´ë²¤íŠ¸ ì—°ê²°
         public void OnTouchPress(InputAction.CallbackContext ctx)
         {
             Vector2 screenPos;
 
-            //¿Ö ÀÎÁö ¸ğ¸£°Ú´Âµ¥ pc¿¡¼­ Simulrator·Î PlayerÇÏ¸é ÀÚ²Ù ÀÌ»óÇÑµ¥ °ªÀ» µé°í¿È
+            //ì™œ ì¸ì§€ ëª¨ë¥´ê² ëŠ”ë° pcì—ì„œ Simulratorë¡œ Playerí•˜ë©´ ìê¾¸ ì´ìƒí•œë° ê°’ì„ ë“¤ê³ ì˜´
 
-            // ÅÍÄ¡ÀÎÁö ¸¶¿ì½ºÀÎÁö È®ÀÎÇØ¼­ À§Ä¡ °¡Á®¿À±â
+            // í„°ì¹˜ì¸ì§€ ë§ˆìš°ìŠ¤ì¸ì§€ í™•ì¸í•´ì„œ ìœ„ì¹˜ ê°€ì ¸ì˜¤ê¸°
             if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
             {
-                screenPos = Touchscreen.current.primaryTouch.position.ReadValue();   //Vector2 -> x,y°ª
+                screenPos = Touchscreen.current.primaryTouch.position.ReadValue();   //Vector2 -> x,yê°’
             }
             else if (Mouse.current != null)
             {
-                screenPos = Mouse.current.position.ReadValue(); //Vector2 -> x,y°ª
+                screenPos = Mouse.current.position.ReadValue(); //Vector2 -> x,yê°’
             }
             else
             {
@@ -91,7 +91,7 @@ namespace ShootingScene
             if (ctx.started)
             {
                 Debug.Log("start");
-                // ÅÍÄ¡ ½ÃÀÛ ¡æ Raycast·Î ¾Ë ¼±ÅÃ
+                // í„°ì¹˜ ì‹œì‘ â†’ Raycastë¡œ ì•Œ ì„ íƒ
                 if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, LayerMask.GetMask("UnimoEgg")))
                 {
                     selectedUnimoEgg = hit.collider.GetComponent<UnimoEgg>();
@@ -109,11 +109,11 @@ namespace ShootingScene
                 selectedUnimoEgg?.OnTouchEnd(screenPos);
                 selectedUnimoEgg = null;
 
-                //DisableInput();                         //ÇÑ¹ø ½î°í ³ª¸é ´Ù½Ã ¸ø½îµµ·Ï
+                //DisableInput();                         //í•œë²ˆ ì˜ê³  ë‚˜ë©´ ë‹¤ì‹œ ëª»ì˜ë„ë¡
 
                 if (selectedUnimoEgg == null)
                 {
-                    Debug.Log("NULLÃ³¸®¿Ï·á");
+                    Debug.Log("NULLì²˜ë¦¬ì™„ë£Œ");
                 }
 
             }
@@ -122,7 +122,7 @@ namespace ShootingScene
         public void OnTouchPosition(InputAction.CallbackContext ctx)
         {
             Vector3 touchpos = ctx.ReadValue<Vector3>();
-            // Debug.Log("ÅÍÄ¡ À§Ä¡: " + pos);
+            // Debug.Log("í„°ì¹˜ ìœ„ì¹˜: " + pos);
         }
     }
 }
