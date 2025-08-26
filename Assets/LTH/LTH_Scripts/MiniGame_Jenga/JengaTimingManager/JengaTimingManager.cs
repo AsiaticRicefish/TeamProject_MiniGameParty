@@ -25,7 +25,6 @@ namespace MiniGameJenga
         public IEnumerator InitializeCoroutine()
         {
             Debug.Log("[JengaTimingManager] Initialize - using deferred UI loading");
-            // UI 초기화는 실제 사용 시점까지 지연
             yield return null;
         }
 
@@ -114,18 +113,29 @@ namespace MiniGameJenga
             // 계층 전체 활성 보장 (부모가 꺼져 있으면 켜줌)
             ActivateHierarchy(ui.gameObject);
 
-            // 2) 최종 활성/사용 가능 여부 가드
+            // 최종 활성/사용 가능 여부 가드
             if (!ui.gameObject.activeInHierarchy || !ui.isActiveAndEnabled)
             {
                 ResetTimingState();
                 return;
             }
 
-            // 3) 이벤트 연결 + GameStart
+            // 해당 블록의 타워에서 현재 제거된 블록 개수 가져와서 적용
+            var tower = JengaTowerManager.Instance?.GetPlayerTower(block.OwnerActorNumber);
+            if (tower != null)
+            {
+                int removedCount = tower.GetRemovedBlocksCount();
+                Debug.Log($"[JengaTimingManager] 타이밍 시작 - 제거된 블록 수: {removedCount}");
+
+                // 타이밍 게임에 제거된 블록 수 기반으로 난이도 적용
+                ui.DifficultyChange(removedCount);
+            }
+
+            // 이벤트 연결 + GameStart
             ui.OnFinished += HandleTimingFinished;
             ui.GameStart();
 
-            // 4) 매니저에서 코루틴 시작
+            // 매니저에서 코루틴 시작
             _countdownCo = StartCoroutine(ui.IE_CountDownPublic());
 
             Debug.Log($"[JengaTimingManager] Timing game started for block: {block.name}");
@@ -155,7 +165,6 @@ namespace MiniGameJenga
             // 블록 처리
             _currentBlock?.ApplyTimingResult(success, accuracy);
 
-            // 상태 리셋만
             ResetTimingState();
         }
 
