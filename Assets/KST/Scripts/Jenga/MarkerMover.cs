@@ -3,13 +3,13 @@ using UnityEngine;
 public class MarkerMover : MonoBehaviour
 {
     [SerializeField] Transform marker;
-    [SerializeField] float offsetX = 0.25f; // ºí·Ï +X(Á¤¸é)À¸·Î ¾ó¸¶³ª ¶³¾îÁúÁö
-    [SerializeField] float offsetY = 0f;     // ÇÊ¿äÇÏ¸é »ìÂ¦ À§/¾Æ·¡ º¸Á¤
-    [SerializeField] float offsetZ = 0f;     // ÇÊ¿äÇÏ¸é ÁÂ/¿ì º¸Á¤
+    [SerializeField] float offsetX = 0.25f; // ë¸”ë¡ +X(ì •ë©´)ìœ¼ë¡œ ì–¼ë§ˆë‚˜ ë–¨ì–´ì§ˆì§€
+    [SerializeField] float offsetY = 0f;     // í•„ìš”í•˜ë©´ ì‚´ì§ ìœ„/ì•„ë˜ ë³´ì •
+    [SerializeField] float offsetZ = 0f;     // í•„ìš”í•˜ë©´ ì¢Œ/ìš° ë³´ì •
 
     /// <summary>
-    /// ºí·ÏÀÇ ·ÎÄÃ +X Á¤¸éÀ¸·Î (offsetX, offsetY, offsetZ)¸¸Å­ ÀÌµ¿½ÃÄÑ ¸¶Ä¿¸¦ ³õ°í,
-    /// ¸¶Ä¿ÀÇ zÃàÀÌ ºí·ÏÀÇ XÃàÀ» ¹Ù¶óº¸µµ·Ï È¸Àü.
+    /// ë¸”ë¡ì˜ ë¡œì»¬ +X ì •ë©´ìœ¼ë¡œ (offsetX, offsetY, offsetZ)ë§Œí¼ ì´ë™ì‹œì¼œ ë§ˆì»¤ë¥¼ ë†“ê³ ,
+    /// ë§ˆì»¤ì˜ zì¶•ì´ ë¸”ë¡ì˜ Xì¶•ì„ ë°”ë¼ë³´ë„ë¡ íšŒì „.
     /// </summary>
     public void PlaceAtBlockFront(Transform block)
     {
@@ -17,7 +17,7 @@ public class MarkerMover : MonoBehaviour
         Vector3 localOffset = new(offsetX, offsetY, offsetZ);
 
         marker.SetPositionAndRotation(
-            block.TransformPoint(localOffset),  // À§Ä¡: ºí·Ï ·ÎÄÃ ÁÂÇ¥ ÁöÁ¡À» ¿ùµå ÁÂÇ¥·Î º¯È¯
-            Quaternion.LookRotation(-block.right, block.up)); // È¸Àü: ¸¶Ä¿ÀÇ zÃàÀ» ºí·ÏÀÇ xÃàÀ» ¹Ù¶óº¸µµ·Ï·Î Á¤·Ä
+            block.TransformPoint(localOffset),  // ìœ„ì¹˜: ë¸”ë¡ ë¡œì»¬ ì¢Œí‘œ ì§€ì ì„ ì›”ë“œ ì¢Œí‘œë¡œ ë³€í™˜
+            Quaternion.LookRotation(-block.right, block.up)); // íšŒì „: ë§ˆì»¤ì˜ zì¶•ì„ ë¸”ë¡ì˜ xì¶•ì„ ë°”ë¼ë³´ë„ë¡ë¡œ ì •ë ¬
     }
 }

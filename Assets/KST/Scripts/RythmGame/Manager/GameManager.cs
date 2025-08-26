@@ -5,13 +5,13 @@ namespace RhythmGame
 {
     public class GameManager : CombinedSingleton<GameManager>
     {
-        // °ú¿­°ü¸®
+        // ê³¼ì—´ê´€ë¦¬
 
-        // °ÔÀÓ ½Ã°£ °ü¸®
+        // ê²Œì„ ì‹œê°„ ê´€ë¦¬
 
-        // UI °ü¸®
-        
-        //°ÔÀÓ Á¾·á °ü·Ã ÀÌº¥Æ®
+        // UI ê´€ë¦¬
+
+        //ê²Œì„ ì¢…ë£Œ ê´€ë ¨ ì´ë²¤íŠ¸
 
     }
 }

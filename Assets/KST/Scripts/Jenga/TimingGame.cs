@@ -8,24 +8,24 @@ using UnityEngine.UI;
 public class TimingGame : MonoBehaviour
 {
     //UI
-    [SerializeField] TMP_Text _timeText; //Å¸ÀÌ¸Ó ÅØ½ºÆ®
-    [SerializeField] Slider _slider; // ½½¶óÀÌ´õ
-    [SerializeField] RectTransform _successZone; // ¼º°ø ¿µ¿ª
+    [SerializeField] TMP_Text _timeText; //íƒ€ì´ë¨¸ í…ìŠ¤íŠ¸
+    [SerializeField] Slider _slider; // ìŠ¬ë¼ì´ë”
+    [SerializeField] RectTransform _successZone; // ì„±ê³µ ì˜ì—­
     [SerializeField] RectTransform _sliderRect;
-    [SerializeField] GameObject _sliderGo; // Å¸ÀÌ¹Ö ¹Ì´Ï°ÔÀÓ Wrap¿ÀºêÁ§Æ®
-    [SerializeField] GameObject _finishPanel; //¼º°ø, ½ÇÆĞ ¿©ºÎ ÆĞ³Î
+    [SerializeField] GameObject _sliderGo; // íƒ€ì´ë° ë¯¸ë‹ˆê²Œì„ Wrapì˜¤ë¸Œì íŠ¸
+    [SerializeField] GameObject _finishPanel; //ì„±ê³µ, ì‹¤íŒ¨ ì—¬ë¶€ íŒ¨ë„
     [SerializeField] TMP_Text _finishText;
 
 
-    //¼³Á¤
-    [SerializeField] float _limitTime = 5f; //Á¦ÇÑ½Ã°£ -> 5ÃÊ·Î º¯°æÇÏ±â
-    [SerializeField] float _speed = 1.6f; //º° ÀÌµ¿ ¼Óµµ
-    [SerializeField] float _zoneW; //¼º°ø Á¸ ³Êºñ
-    [SerializeField] float _zoneWRate = 0.45f; //¼º°ø Á¸ ³Êºñ ºñÀ²
-    bool _isRun = false; //°ÔÀÓ ½ÇÇà ¿©ºÎ
-    float _remainTime; // ÀÜ¿© ½Ã°£
+    //ì„¤ì •
+    [SerializeField] float _limitTime = 5f; //ì œí•œì‹œê°„ -> 5ì´ˆë¡œ ë³€ê²½í•˜ê¸°
+    [SerializeField] float _speed = 1.6f; //ë³„ ì´ë™ ì†ë„
+    [SerializeField] float _zoneW; //ì„±ê³µ ì¡´ ë„ˆë¹„
+    [SerializeField] float _zoneWRate = 0.45f; //ì„±ê³µ ì¡´ ë„ˆë¹„ ë¹„ìœ¨
+    bool _isRun = false; //ê²Œì„ ì‹¤í–‰ ì—¬ë¶€
+    float _remainTime; // ì”ì—¬ ì‹œê°„
     float _pingPongTimer;
-    public event Action<bool, float> OnFinished; //¼º°ø¿©ºÎ ÀÌº¥Æ®
+    public event Action<bool, float> OnFinished; //ì„±ê³µì—¬ë¶€ ì´ë²¤íŠ¸
 
     void Awake() =>
         Init();
@@ -34,7 +34,7 @@ public class TimingGame : MonoBehaviour
     {
         if (!_isRun) return;
 
-        //½ºÅ¸ ÀÌµ¿
+        //ìŠ¤íƒ€ ì´ë™
         _pingPongTimer += Time.deltaTime;
 
         float x = Mathf.PingPong(_pingPongTimer / _speed, 1f);
@@ -43,30 +43,30 @@ public class TimingGame : MonoBehaviour
         bool tapped = false;
 
 #if ENABLE_INPUT_SYSTEM
-        // Unity Input System (ÆĞÅ°Áö ±â¹İ)
+        // Unity Input System (íŒ¨í‚¤ì§€ ê¸°ë°˜)
         tapped = (Mouse.current?.leftButton.wasPressedThisFrame == true)
               || (Touchscreen.current?.primaryTouch.press.wasPressedThisFrame == true);
 #else
-    // ±¸ Input ½Ã½ºÅÛ (UnityEngine.Input)
+    // êµ¬ Input ì‹œìŠ¤í…œ (UnityEngine.Input)
     tapped = Input.GetMouseButtonDown(0)
           || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began);
 #endif
 
-        if (tapped) 
-        { 
-            var (ok, acc) = Calculate(); 
-            GameEnd(ok, ok ? acc : 0f); 
+        if (tapped)
+        {
+            var (ok, acc) = Calculate();
+            GameEnd(ok, ok ? acc : 0f);
         }
     }
 
     private void Init()
     {
-        //½½¶óÀÌ´õ ÃÊ±âÈ­
+        //ìŠ¬ë¼ì´ë” ì´ˆê¸°í™”
         _slider.minValue = 0f;
         _slider.maxValue = 100f;
         _slider.value = 0f;
 
-        //½½¶óÀÌ´õ ÇÚµé Å©±â(º° Å©±â) Á¶Àı
+        //ìŠ¬ë¼ì´ë” í•¸ë“¤ í¬ê¸°(ë³„ í¬ê¸°) ì¡°ì ˆ
         RectTransform handle = _slider.handleRect;
 
         float handleW = _sliderRect.rect.width * 0.15f;
@@ -74,15 +74,15 @@ public class TimingGame : MonoBehaviour
 
         handle.sizeDelta = new(handleW, handleH);
 
-        //ÅØ½ºÆ® ÃÊ±âÈ­
+        //í…ìŠ¤íŠ¸ ì´ˆê¸°í™”
         _timeText.text = "";
 
-        //¼º°ø Á¸ ÃÊ±âÈ­
+        //ì„±ê³µ ì¡´ ì´ˆê¸°í™”
         _successZone.gameObject.SetActive(false);
     }
 
     /// <summary>
-    /// ¹Ì´Ï °ÔÀÓ ½ÃÀÛ
+    /// ë¯¸ë‹ˆ ê²Œì„ ì‹œì‘
     /// </summary>
     public void GameStart()
     {
@@ -92,13 +92,13 @@ public class TimingGame : MonoBehaviour
 
         _isRun = true;
 
-        //TODO ±è½ÂÅÂ : Å¸ÀÌ¹Ö °ÔÀÓ BGM ½ÇÇà
+        //TODO ê¹€ìŠ¹íƒœ : íƒ€ì´ë° ê²Œì„ BGM ì‹¤í–‰
 
-        //¼º°ø Á¸ ¼³Á¤
+        //ì„±ê³µ ì¡´ ì„¤ì •
         _sliderGo.SetActive(true);
         SetSuccesZone();
 
-        //ÃÊ±âÈ­
+        //ì´ˆê¸°í™”
         _slider.value = 0f;
         _pingPongTimer = 0f;
         _speed = 1.6f;
@@ -108,13 +108,13 @@ public class TimingGame : MonoBehaviour
         gameObject.SetActive(true);
 
         _timeText.text = Mathf.CeilToInt(_remainTime).ToString();
-       // StartCoroutine(IE_CountDown());
+        // StartCoroutine(IE_CountDown());
 
-        Debug.Log($"ÇöÀç ¼Óµµ {_speed} ÇöÀç ¿µ¿ª {_zoneWRate}");
+        Debug.Log($"í˜„ì¬ ì†ë„ {_speed} í˜„ì¬ ì˜ì—­ {_zoneWRate}");
     }
 
     /// <summary>
-    /// ¼º°øÁ¸ ·£´ı ¹üÀ§ ¼³Á¤
+    /// ì„±ê³µì¡´ ëœë¤ ë²”ìœ„ ì„¤ì •
     /// </summary>
     void SetSuccesZone()
     {
@@ -130,12 +130,12 @@ public class TimingGame : MonoBehaviour
         _successZone.gameObject.SetActive(true);
     }
 
-    public IEnumerator IE_CountDownPublic() => IE_CountDown(); // JengaTimingManager¿¡¼­ ÄÚ·çÆ¾ÀÌ Á¢±ÙÇÏµµ·Ï ¼öÁ¤
+    public IEnumerator IE_CountDownPublic() => IE_CountDown(); // JengaTimingManagerì—ì„œ ì½”ë£¨í‹´ì´ ì ‘ê·¼í•˜ë„ë¡ ìˆ˜ì •
 
     /// <summary>
-    /// Ä«¿îÆ® ´Ù¿î ÁøÇà
+    /// ì¹´ìš´íŠ¸ ë‹¤ìš´ ì§„í–‰
     /// </summary>
-    /// <returns>¸Å ÇÁ·¹ÀÓ ¸¶´Ù</returns>
+    /// <returns>ë§¤ í”„ë ˆì„ ë§ˆë‹¤</returns>
     IEnumerator IE_CountDown()
     {
         while (_isRun && _remainTime > 0f)
@@ -144,33 +144,33 @@ public class TimingGame : MonoBehaviour
             _timeText.text = Mathf.CeilToInt(Mathf.Max(0f, _remainTime)).ToString();
             yield return null;
         }
-        //½Ã°£ ÃÊ°ú ½Ã
+        //ì‹œê°„ ì´ˆê³¼ ì‹œ
         if (_isRun) GameEnd(false, 0f);
     }
 
     /// <summary>
-    /// ½½¶óÀÌ´õ À§Ä¡ °ª¿¡ µû¸¥ ¼º°ø Á¸ ³»ºÎ ¿©ºÎ¿Í Á¤È®µµ °è»ê ·ÎÁ÷
+    /// ìŠ¬ë¼ì´ë” ìœ„ì¹˜ ê°’ì— ë”°ë¥¸ ì„±ê³µ ì¡´ ë‚´ë¶€ ì—¬ë¶€ì™€ ì •í™•ë„ ê³„ì‚° ë¡œì§
     /// </summary>
-    /// <returns>¼º°ø ¿©ºÎ ¹× Á¤È®µµ ¹İÈ¯.</returns>
+    /// <returns>ì„±ê³µ ì—¬ë¶€ ë° ì •í™•ë„ ë°˜í™˜.</returns>
     (bool isSuccess, float accuracy) Calculate()
     {
-        //½½¶óÀÌ´õ Æø(px)À» ±¸ÇÏ±â
+        //ìŠ¬ë¼ì´ë” í­(px)ì„ êµ¬í•˜ê¸°
         float width = _sliderRect.rect.width;
 
-        //½½¶óÀÌ´õ ÇÚµé À§Ä¡¸¦ ÇÈ¼¿ °ªÀ¸·Î ¸ÅÇÎ
+        //ìŠ¬ë¼ì´ë” í•¸ë“¤ ìœ„ì¹˜ë¥¼ í”½ì…€ ê°’ìœ¼ë¡œ ë§¤í•‘
         float nowPos = Mathf.Lerp(0f, width, _slider.value / 100f);
 
-        //¼º°ø Á¸ ½ÃÀÛ, ³¡ ÁöÁ¡
+        //ì„±ê³µ ì¡´ ì‹œì‘, ë ì§€ì 
         float start = _successZone.anchoredPosition.x;
         float end = start + _successZone.rect.width;
 
         bool isInside = (start <= nowPos) && (nowPos <= end);
 
         if (!isInside)
-            //°ÔÀÓ Á¾·á(½ÇÆĞ Ã³¸®)
+            //ê²Œì„ ì¢…ë£Œ(ì‹¤íŒ¨ ì²˜ë¦¬)
             return (false, 0f);
 
-        //Á¤È®µµ ÆÇÁ¤ÇÏ±â
+        //ì •í™•ë„ íŒì •í•˜ê¸°
         float center = (start + end) * 0.5f;
         float half = (end - start) * 0.5f;
         float acc = 1f - Mathf.Clamp01(Mathf.Abs(nowPos - center) / half);
@@ -179,28 +179,28 @@ public class TimingGame : MonoBehaviour
     }
 
     /// <summary>
-    /// Å¸ÀÌ¹Ö ¹Ì´Ï °ÔÀÓ Á¾·á
+    /// íƒ€ì´ë° ë¯¸ë‹ˆ ê²Œì„ ì¢…ë£Œ
     /// </summary>
-    /// <param name="isSuccess">¼º°ø ¿©ºÎ</param>
-    /// <param name="accuracy">Á¤È®µµ </param>
+    /// <param name="isSuccess">ì„±ê³µ ì—¬ë¶€</param>
+    /// <param name="accuracy">ì •í™•ë„ </param>
     void GameEnd(bool isSuccess, float accuracy)
     {
         if (!_isRun) return;
         _isRun = false;
 
-        Debug.Log($"¼º°ø ¿©ºÎ : {isSuccess}, Á¤È®µµ : {accuracy}");
+        Debug.Log($"ì„±ê³µ ì—¬ë¶€ : {isSuccess}, ì •í™•ë„ : {accuracy}");
 
         _sliderGo.SetActive(false);
         StartCoroutine(IE_PanelCount(isSuccess, accuracy));
 
-        //ÀÌº¥Æ® ÆÛºí¸®½Ì
+        //ì´ë²¤íŠ¸ í¼ë¸”ë¦¬ì‹±
         // OnFinished?.Invoke(isSuccess, accuracy);
     }
 
     /// <summary>
-    /// ¼º°ø È¤Àº ½ÇÆĞ ¿©ºÎ¸¦ ¶ç¿ì´Â UI
+    /// ì„±ê³µ í˜¹ì€ ì‹¤íŒ¨ ì—¬ë¶€ë¥¼ ë„ìš°ëŠ” UI
     /// </summary>
-    /// <param name="isSuccess">Å¸ÀÌ¹Ö ¹Ì´Ï°ÔÀÓ ¼º°ø ¿©ºÎ</param>
+    /// <param name="isSuccess">íƒ€ì´ë° ë¯¸ë‹ˆê²Œì„ ì„±ê³µ ì—¬ë¶€</param>
     /// <returns></returns>
     IEnumerator IE_PanelCount(bool isSuccess, float accuracy)
     {
@@ -208,13 +208,13 @@ public class TimingGame : MonoBehaviour
         if (isSuccess)
         {
             _finishText.text = "Success!";
-            //TODO ±è½ÂÅÂ : ¼º°ø SFX ½ÇÇà
+            //TODO ê¹€ìŠ¹íƒœ : ì„±ê³µ SFX ì‹¤í–‰
         }
         else
         {
             _finishText.text = "Fail!";
-            //TODO ±è½ÂÅÂ : ½ÇÆĞ SFX ½ÇÇà
-            //TODO ±è½ÂÅÂ : ÃßÈÄ Á¨°¡ ½ÇÆĞ ¾Ö´Ï¸ŞÀÌ¼Ç Ãß°¡.
+            //TODO ê¹€ìŠ¹íƒœ : ì‹¤íŒ¨ SFX ì‹¤í–‰
+            //TODO ê¹€ìŠ¹íƒœ : ì¶”í›„ ì  ê°€ ì‹¤íŒ¨ ì• ë‹ˆë©”ì´ì…˜ ì¶”ê°€.
         }
 
         yield return new WaitForSeconds(2f);
@@ -222,38 +222,38 @@ public class TimingGame : MonoBehaviour
         _finishPanel.SetActive(false);
         _finishText.text = "";
 
-        // UI Á¤¸®
+        // UI ì •ë¦¬
         _finishPanel.SetActive(false);
         _finishText.text = "";
 
-        //ºñÈ°¼ºÈ­(Å×½ºÆ®¸¦ À§ÇØ Àá½Ã ºñÈ°¼ºÈ­)
+        //ë¹„í™œì„±í™”(í…ŒìŠ¤íŠ¸ë¥¼ ìœ„í•´ ì ì‹œ ë¹„í™œì„±í™”)
         gameObject.SetActive(false);
 
-        // °á°ú ÀÌº¥Æ® ¹ßÇà(¿¬ÃâÀÌ ³¡³­ µÚ)
+        // ê²°ê³¼ ì´ë²¤íŠ¸ ë°œí–‰(ì—°ì¶œì´ ëë‚œ ë’¤)
         OnFinished?.Invoke(isSuccess, accuracy);
     }
 
     /// <summary>
-    /// ¼º°ø ÆÇÁ¤ ¿µ¿ª 5% °¨¼Ò(30% ÀÌÇÏ·Î °¨¼Ò ºÒ°¡)
-    /// È¤Àº ¿òÁ÷ÀÌ´Â ¿ÀºêÁ§Æ®ÀÇ ¿Õº¹ ½Ã°£ 0.2ÃÊ °¨¼Ò(1ÃÊ ÀÌÇÏ·Î °¨¼Ò ºÒ°¡)
+    /// ì„±ê³µ íŒì • ì˜ì—­ 5% ê°ì†Œ(30% ì´í•˜ë¡œ ê°ì†Œ ë¶ˆê°€)
+    /// í˜¹ì€ ì›€ì§ì´ëŠ” ì˜¤ë¸Œì íŠ¸ì˜ ì™•ë³µ ì‹œê°„ 0.2ì´ˆ ê°ì†Œ(1ì´ˆ ì´í•˜ë¡œ ê°ì†Œ ë¶ˆê°€)
     /// </summary>
-    /// <param name="level">³­ÀÌµµ ·¹º§, ³ôÀ»¼ö·Ï ´õ¿í ¾î·Á¿öÁü.</param>
+    /// <param name="level">ë‚œì´ë„ ë ˆë²¨, ë†’ì„ìˆ˜ë¡ ë”ìš± ì–´ë ¤ì›Œì§.</param>
     public void DifficultyChange(int level)
     {
         if (level < 0) return;
-        //·£´ıÀ¸·Î ¾Æ·¡ Áß ÇÏ³ª °í¸£±â
+        //ëœë¤ìœ¼ë¡œ ì•„ë˜ ì¤‘ í•˜ë‚˜ ê³ ë¥´ê¸°
         bool type = UnityEngine.Random.Range(0, 2) == 0;
         bool isChnaged = type ? DescSpeed(level) || DescZone(level) : DescZone(level) || DescSpeed(level);
 
         if (!isChnaged)
-            Debug.Log("ÃÖ°í ³­ÀÌµµÀÔ´Ï´Ù.");
+            Debug.Log("ìµœê³  ë‚œì´ë„ì…ë‹ˆë‹¤.");
     }
 
     /// <summary>
-    /// ¿Õº¹ ¼Óµµ °¨¼Ò ·ÎÁ÷
-    /// ÀÔ·Â¹ŞÀº ·¹º§¿¡ ¸Â´Â ¼Óµµ ÁöÁ¤
+    /// ì™•ë³µ ì†ë„ ê°ì†Œ ë¡œì§
+    /// ì…ë ¥ë°›ì€ ë ˆë²¨ì— ë§ëŠ” ì†ë„ ì§€ì •
     /// </summary>
-    /// <param name="level">³­ÀÌµµ ·¹º§, ³ôÀ» ¼ö·Ï ¿Õº¹ ¼Óµµ°¡ ´õ »¡¶óÁü.</param>
+    /// <param name="level">ë‚œì´ë„ ë ˆë²¨, ë†’ì„ ìˆ˜ë¡ ì™•ë³µ ì†ë„ê°€ ë” ë¹¨ë¼ì§.</param>
     /// <returns></returns>
     bool DescSpeed(int level)
     {
@@ -265,17 +265,17 @@ public class TimingGame : MonoBehaviour
         {
             _speed = after;
             Debug.Log($"after : {after} before : {before}");
-            Debug.Log($"¿Õº¹ ½Ã°£ °¨¼Ò {_speed}");
+            Debug.Log($"ì™•ë³µ ì‹œê°„ ê°ì†Œ {_speed}");
             return true;
         }
         return false;
     }
 
     /// <summary>
-    /// ÆÇÁ¤ ¿µ¿ª °¨¼Ò ·ÎÁ÷
-    /// ÀÔ·Â¹ŞÀº ·¹º§¿¡ ¸Â´Â ÆÇÁ¤¿ª¿ª ÁöÁ¤
+    /// íŒì • ì˜ì—­ ê°ì†Œ ë¡œì§
+    /// ì…ë ¥ë°›ì€ ë ˆë²¨ì— ë§ëŠ” íŒì •ì—­ì—­ ì§€ì •
     /// </summary>
-    /// <param name="level">³­ÀÌµµ ·¹º§, ³ôÀ» ¼ö·Ï ÆÇÁ¤ ¿µ¿ªÀÌ ´õ Á¼¾ÆÁü.</param>
+    /// <param name="level">ë‚œì´ë„ ë ˆë²¨, ë†’ì„ ìˆ˜ë¡ íŒì • ì˜ì—­ì´ ë” ì¢ì•„ì§.</param>
     /// <returns></returns>
     bool DescZone(int level)
     {
@@ -287,7 +287,7 @@ public class TimingGame : MonoBehaviour
         {
             _zoneWRate = after;
             Debug.Log($"after : {after} before : {before}");
-            Debug.Log($"ÆÇÁ¤ ¿µ¿ª °¨¼Ò {_zoneWRate}");
+            Debug.Log($"íŒì • ì˜ì—­ ê°ì†Œ {_zoneWRate}");
             return true;
         }
         return false;

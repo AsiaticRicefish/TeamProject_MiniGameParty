@@ -4,7 +4,7 @@ using UnityEngine;
 namespace RhythmGame
 {
     /// <summary>
-    /// Note°¡ ÇÃ·¹ÀÌ¾î ¹æÇâÀ¸·Î ÀÌµ¿ÇÑ´Ù´Â °¡Á¤À¸·Î ¸¸µç Å¬·¡½º
+    /// Noteê°€ í”Œë ˆì´ì–´ ë°©í–¥ìœ¼ë¡œ ì´ë™í•œë‹¤ëŠ” ê°€ì •ìœ¼ë¡œ ë§Œë“  í´ëž˜ìŠ¤
     /// </summary>
 
     [RequireComponent(typeof(PooledObject))]
@@ -23,9 +23,9 @@ namespace RhythmGame
         }
 
         /// <summary>
-        /// Note ¼Óµµ ¼³Á¤ ¸Þ¼­µå
+        /// Note ì†ë„ ì„¤ì • ë©”ì„œë“œ
         /// </summary>
-        /// <param name="speed">NoteÀÇ ¼Óµµ¸¦ °áÁ¤ÇÏ´Â ¸Å°³º¯¼ö</param>
+        /// <param name="speed">Noteì˜ ì†ë„ë¥¼ ê²°ì •í•˜ëŠ” ë§¤ê°œë³€ìˆ˜</param>
         public void SetSpeed(float speed) => _speed = speed;
         public void ReturnPool() => _pooled.ReturnPool();
     }

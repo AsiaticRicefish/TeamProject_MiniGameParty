@@ -3,7 +3,7 @@ using UnityEngine;
 namespace RhythmGame
 {
     /// <summary>
-    /// NoteType°ú °ü·ÃÇÏ¿© Á¤ÀÇÇÑ Å¬·¡½º
+    /// NoteTypeê³¼ ê´€ë ¨í•˜ì—¬ ì •ì˜í•œ í´ë˜ìŠ¤
     /// </summary>
     partial class Note : MonoBehaviour
     {
@@ -11,14 +11,14 @@ namespace RhythmGame
         public NoteType GetObstacleType() => _type;
 
         private NoteStatus _status;
-        public NoteStatus Status { get { return _status; }  set { _status = value; } }
+        public NoteStatus Status { get { return _status; } set { _status = value; } }
 
         /// <summary>
-        /// Àå¾Ö¹° ³ëÆ®ÀÇ Á¾·ù¿¡ µû¸¥ °ú¿­ ½ºÄÚ¾î
+        /// ì¥ì• ë¬¼ ë…¸íŠ¸ì˜ ì¢…ë¥˜ì— ë”°ë¥¸ ê³¼ì—´ ìŠ¤ì½”ì–´
         /// </summary>
         public int GetOverLoadScore()
         {
-            //¾ÆÁ÷ ÆÇÁ¤¹Ù ±ÙÃ³¿¡ Note°¡ Á¢±ÙÇÏÁö ¾Ê¾ÒÀ½¿¡µµ ÆÄ±«¸¦ ½ÃµµÇÑ´Ù¸é °ú¿­ ½ºÅÃÀÌ ½×ÀÌµµ·Ï ÇØ¾ß ÇÔ.
+            //ì•„ì§ íŒì •ë°” ê·¼ì²˜ì— Noteê°€ ì ‘ê·¼í•˜ì§€ ì•Šì•˜ìŒì—ë„ íŒŒê´´ë¥¼ ì‹œë„í•œë‹¤ë©´ ê³¼ì—´ ìŠ¤íƒì´ ìŒ“ì´ë„ë¡ í•´ì•¼ í•¨.
             if (_status == NoteStatus.None) return 1;
 
             return _type switch

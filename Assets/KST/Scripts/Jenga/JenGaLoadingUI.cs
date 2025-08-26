@@ -5,11 +5,11 @@ using UnityEngine.UI;
 
 public class JenGaLoadingUI : MonoBehaviour
 {
-    [SerializeField] GameObject loadingGo; //·Îµù ÆĞ³Î
-    [SerializeField] Image loadingImg; //·Îµù ÀÌ¹ÌÁö ¹Ù Filled, Raidal 360
+    [SerializeField] GameObject loadingGo; //ë¡œë”© íŒ¨ë„
+    [SerializeField] Image loadingImg; //ë¡œë”© ì´ë¯¸ì§€ ë°” Filled, Raidal 360
 
     /// <summary>
-    /// ·Îµù ·ÎÁ÷ ½ÃÀÛ½Ã È£ÃâÇØ¾ßÇÏ´Â ¸Ş¼­µå
+    /// ë¡œë”© ë¡œì§ ì‹œì‘ì‹œ í˜¸ì¶œí•´ì•¼í•˜ëŠ” ë©”ì„œë“œ
     /// </summary>
     public void ActiveLoading()
     {
@@ -18,7 +18,7 @@ public class JenGaLoadingUI : MonoBehaviour
     }
 
     /// <summary>
-    /// ·Îµù ·ÎÁ÷ Á¾·á½Ã È£ÃâÇØ¾ßÇÏ´Â ¸Ş¼­µå
+    /// ë¡œë”© ë¡œì§ ì¢…ë£Œì‹œ í˜¸ì¶œí•´ì•¼í•˜ëŠ” ë©”ì„œë“œ
     /// </summary>
     public void DeActiveLoading()
     {
@@ -26,9 +26,9 @@ public class JenGaLoadingUI : MonoBehaviour
     }
 
     /// <summary>
-    /// ÁøÇàµµ¿¡ µû¶ó ·Îµù¹Ù¸¦ Ã¤¿ì´Â ¿ªÇÒ
+    /// ì§„í–‰ë„ì— ë”°ë¼ ë¡œë”©ë°”ë¥¼ ì±„ìš°ëŠ” ì—­í• 
     /// 
-    /// ¿¹½Ã ) JenGaLoadingUI.SetProgress(PhotonNetwork.LevelLoadingProgress)
+    /// ì˜ˆì‹œ ) JenGaLoadingUI.SetProgress(PhotonNetwork.LevelLoadingProgress)
     /// </summary>
     /// <param name="amount"></param>
     public void SetProgress(float amount)
@@ -37,7 +37,7 @@ public class JenGaLoadingUI : MonoBehaviour
         loadingImg.fillAmount = amount;
     }
 
-    //Å×½ºÆ® ÄÚµå
+    //í…ŒìŠ¤íŠ¸ ì½”ë“œ
     /*
     void Start()
     {

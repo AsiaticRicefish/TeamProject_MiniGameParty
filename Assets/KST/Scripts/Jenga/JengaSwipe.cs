@@ -11,21 +11,21 @@ using UnityEngine.UIElements;
 public class JengaSwipe : MonoBehaviour
 {
 
-    //È¸Àü °ü·Ã
-    [SerializeField] float _speed = 0.1f; //µå·¡±× ½Ã È¸Àü ¼Óµµ
-    [SerializeField] float _clickPx = 8f; //ÇØ´ç ÇÈ¼¿ ÀÌÇÏ ÀÌµ¿ÀÌ¸é Å¬¸¯À¸·Î ÆÇÁ¤
-    [SerializeField] float _clickTime = 0.1f; //ÇØ´ç ½Ã°£ ÀÌÇÏµ¿¾È ÅÍÄ¡ ½Ã Å¬¸¯À¸·Î ÆÇÁ¤
+    //íšŒì „ ê´€ë ¨
+    [SerializeField] float _speed = 0.1f; //ë“œë˜ê·¸ ì‹œ íšŒì „ ì†ë„
+    [SerializeField] float _clickPx = 8f; //í•´ë‹¹ í”½ì…€ ì´í•˜ ì´ë™ì´ë©´ í´ë¦­ìœ¼ë¡œ íŒì •
+    [SerializeField] float _clickTime = 0.1f; //í•´ë‹¹ ì‹œê°„ ì´í•˜ë™ì•ˆ í„°ì¹˜ ì‹œ í´ë¦­ìœ¼ë¡œ íŒì •
 
 
     [SerializeField] private LayerMask _jengaMask;
     [SerializeField] MarkerMover _marker;
     [SerializeField] CameraController _camcon;
 
-    bool _blockInput = false; //UI Å¬¸¯ ½Ã true -> ÀÔ·Â ¹æÁö
-    bool _isPress = false; // ´­¸² ¿©ºÎ
-    Vector2 prevPos; //Á÷Àü ÁÂÇ¥
-    Vector2 pressPos; //Ã³À½ ´©¸¥ ÁÂÇ¥
-    float pressTime; //´­¸° ½Ã°£
+    bool _blockInput = false; //UI í´ë¦­ ì‹œ true -> ì…ë ¥ ë°©ì§€
+    bool _isPress = false; // ëˆŒë¦¼ ì—¬ë¶€
+    Vector2 prevPos; //ì§ì „ ì¢Œí‘œ
+    Vector2 pressPos; //ì²˜ìŒ ëˆ„ë¥¸ ì¢Œí‘œ
+    float pressTime; //ëˆŒë¦° ì‹œê°„
     Collider _collider;
 
     void Awake()
@@ -34,27 +34,27 @@ public class JengaSwipe : MonoBehaviour
     }
 
     /// <summary>
-    /// ´­¸² ¹ß»ı ½Ã È£Ãâ
+    /// ëˆŒë¦¼ ë°œìƒ ì‹œ í˜¸ì¶œ
     /// </summary>
     public void OnPress(InputAction.CallbackContext callback)
     {
         if (IsOnUI()) return;
 
-        if (callback.started) //´­¸° ¼ø°£
+        if (callback.started) //ëˆŒë¦° ìˆœê°„
         {
             _blockInput = false;
             _isPress = false;
 
-            var pos = Pointer.current.position.ReadValue(); //ÇöÀç Æ÷ÀÎÅÍ ÁÂÇ¥(´©¸£±â ½ÃÀÛÇÑ À§Ä¡)
+            var pos = Pointer.current.position.ReadValue(); //í˜„ì¬ í¬ì¸í„° ì¢Œí‘œ(ëˆ„ë¥´ê¸° ì‹œì‘í•œ ìœ„ì¹˜)
 
-            //ÃÊ±âÈ­
+            //ì´ˆê¸°í™”
             pressPos = pos;
             prevPos = pos;
             pressTime = Time.unscaledTime;
 
             BlockInput(pos);
         }
-        else if (callback.canceled) // ¶¿ ¶§
+        else if (callback.canceled) // ë—„ ë•Œ
         {
             if (_blockInput)
             {
@@ -65,23 +65,23 @@ public class JengaSwipe : MonoBehaviour
             if (!_isPress) return;
             _isPress = false;
 
-            var pos = Pointer.current.position.ReadValue(); //ÇöÀç Æ÷ÀÎÅÍ ÁÂÇ¥(¼ÕÀ» ¶¾ À§Ä¡)
+            var pos = Pointer.current.position.ReadValue(); //í˜„ì¬ í¬ì¸í„° ì¢Œí‘œ(ì†ì„ ë—€ ìœ„ì¹˜)
 
-            float distance = Vector2.Distance(pos, pressPos);//¼ÕÀ» ¶¾ À§Ä¡ ~ ´©¸£±â ½ÃÀÛÇß´ø À§Ä¡ °Å¸®
-            float time = Time.unscaledTime - pressTime; //´­¸° ½Ã°£
+            float distance = Vector2.Distance(pos, pressPos);//ì†ì„ ë—€ ìœ„ì¹˜ ~ ëˆ„ë¥´ê¸° ì‹œì‘í–ˆë˜ ìœ„ì¹˜ ê±°ë¦¬
+            float time = Time.unscaledTime - pressTime; //ëˆŒë¦° ì‹œê°„
 
-            //Å¬¸¯ ÃÖ¼Ò °Å¸®¿Í Å¬¸¯ ÃÖ¼Ò ½Ã°£ ¸¸Á· ½Ã
+            //í´ë¦­ ìµœì†Œ ê±°ë¦¬ì™€ í´ë¦­ ìµœì†Œ ì‹œê°„ ë§Œì¡± ì‹œ
             if (distance <= _clickPx && time <= _clickTime)
             {
-                Debug.Log("Å¬¸¯ÆÇÁ¤ Ã³¸®");
+                Debug.Log("í´ë¦­íŒì • ì²˜ë¦¬");
 
                 Ray ray = Camera.main.ScreenPointToRay(pos);
 
-                // ÀÚ½Ä Á¨°¡ ·¹ÀÌ¾î¸¦ µû·Î ¼³Á¤ÇÏ¿© ÇØ´ç ·¹ÀÌ¾î¸¶½ºÅ©¸¦ ·¹ÀÌÄ³½ºÆ®·Î ÆÇº°
+                // ìì‹ ì  ê°€ ë ˆì´ì–´ë¥¼ ë”°ë¡œ ì„¤ì •í•˜ì—¬ í•´ë‹¹ ë ˆì´ì–´ë§ˆìŠ¤í¬ë¥¼ ë ˆì´ìºìŠ¤íŠ¸ë¡œ íŒë³„
                 if (Physics.Raycast(ray, out var hit, Mathf.Infinity, _jengaMask))
                 {
-                    var jenga = hit.collider.transform; //ÇØ´ç Á¨°¡ À§Ä¡
-                    _marker.PlaceAtBlockFront(jenga); 
+                    var jenga = hit.collider.transform; //í•´ë‹¹ ì  ê°€ ìœ„ì¹˜
+                    _marker.PlaceAtBlockFront(jenga);
                     _camcon.Focus(_marker.transform);
 
                     return;
@@ -92,28 +92,28 @@ public class JengaSwipe : MonoBehaviour
     }
 
     /// <summary>
-    /// µå·¡±× ½Ã È£Ãâ
+    /// ë“œë˜ê·¸ ì‹œ í˜¸ì¶œ
     /// </summary>
     public void OnPointer(InputAction.CallbackContext callback)
     {
         if (!_isPress || _blockInput) return;
 
-        Vector2 pos = callback.ReadValue<Vector2>();  //ÇöÀç Æ÷ÀÎÅÍ ÁÂÇ¥
+        Vector2 pos = callback.ReadValue<Vector2>();  //í˜„ì¬ í¬ì¸í„° ì¢Œí‘œ
 
         float movement = (pos.x - prevPos.x) * _speed;
         transform.Rotate(Vector3.up, -movement);
 
-        prevPos = pos; //Á÷Àü ÁÂÇ¥ °»½Å
+        prevPos = pos; //ì§ì „ ì¢Œí‘œ ê°±ì‹ 
     }
 
     /// <summary>
-    /// ÇöÀç Æ÷ÀÎÅÍ°¡ UI À§¿¡ ÀÖ´ÂÁö ÆÇÁ¤
+    /// í˜„ì¬ í¬ì¸í„°ê°€ UI ìœ„ì— ìˆëŠ”ì§€ íŒì •
     /// </summary>
     void BlockInput(Vector2 pos)
     {
         if (IsOnUI())
         {
-            Debug.Log("UI À§ ÀÔ·ÂÀÔ´Ï´Ù.");
+            Debug.Log("UI ìœ„ ì…ë ¥ì…ë‹ˆë‹¤.");
 
             _blockInput = true;
             _isPress = false;
@@ -121,9 +121,9 @@ public class JengaSwipe : MonoBehaviour
             return;
         }
 
-        if (!IsHit(pos)) //Á¨°¡ ¿ÀºêÁ§Æ®¸¦ ´©¸£Áö ¾Ê¾ÒÀ» °æ¿ì
+        if (!IsHit(pos)) //ì  ê°€ ì˜¤ë¸Œì íŠ¸ë¥¼ ëˆ„ë¥´ì§€ ì•Šì•˜ì„ ê²½ìš°
         {
-            Debug.Log("ÀÌ ¿ÀºêÁ§Æ®¸¦ ´©¸£Áö ¾Ê¾Ò½À´Ï´Ù");
+            Debug.Log("ì´ ì˜¤ë¸Œì íŠ¸ë¥¼ ëˆ„ë¥´ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤");
 
             _blockInput = true;
             _isPress = false;
@@ -136,7 +136,7 @@ public class JengaSwipe : MonoBehaviour
     }
 
     /// <summary>
-    /// ·¹ÀÌÄ³½ºÆ®¸¦ È°¿ëÇÏ¿© ÇØ´ç Á¨°¡¸¦ ´©¸£°í ÀÖ´ÂÁö ÆÇÁ¤
+    /// ë ˆì´ìºìŠ¤íŠ¸ë¥¼ í™œìš©í•˜ì—¬ í•´ë‹¹ ì  ê°€ë¥¼ ëˆ„ë¥´ê³  ìˆëŠ”ì§€ íŒì •
     /// </summary>
     bool IsHit(Vector2 pos)
     {
@@ -154,23 +154,23 @@ public class JengaSwipe : MonoBehaviour
     }
 
     /// <summary>
-    /// ÇØ´ç ÁÂÇ¥¿¡ UI ¿©ºÎ È®ÀÎ
+    /// í•´ë‹¹ ì¢Œí‘œì— UI ì—¬ë¶€ í™•ì¸
     /// </summary>
     bool IsOnUI()
     {
         if (!EventSystem.current) return false;
 
-        //ÇöÀç ÁÂÇ¥ ¾ò±â
+        //í˜„ì¬ ì¢Œí‘œ ì–»ê¸°
         Vector2 pos = Pointer.current != null ? Pointer.current.position.ReadValue() :
         Touchscreen.current != null ? Touchscreen.current.primaryTouch.position.ReadValue() :
         Vector2.zero;
 
         var eventData = new PointerEventData(EventSystem.current) { position = pos };
 
-        //ÇØ´ç ÁÂÇ¥·Î ui ·¹ÀÌÄ³½ºÆ® ¼öÇà °á°ú
+        //í•´ë‹¹ ì¢Œí‘œë¡œ ui ë ˆì´ìºìŠ¤íŠ¸ ìˆ˜í–‰ ê²°ê³¼
         var results = new List<RaycastResult>();
         EventSystem.current.RaycastAll(eventData, results);
-        //UI°¡ ÇÑ °³ ÀÌ»ó °ËÃâ µÇ¸é true ¹İÈ¯
+        //UIê°€ í•œ ê°œ ì´ìƒ ê²€ì¶œ ë˜ë©´ true ë°˜í™˜
         return results.Count > 0;
     }
 }
