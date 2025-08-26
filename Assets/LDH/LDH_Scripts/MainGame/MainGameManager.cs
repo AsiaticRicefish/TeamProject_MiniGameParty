@@ -171,7 +171,7 @@ namespace LDH_MainGame
                     int mask = GetRoomProperty(RoomProps.ReadyMask, 0);
                     // Ready UI 갱신 (마스크 바뀔 때)
                     if (_readyPanel != null)
-                        RebuildPanel();
+                        _readyPanel?.UpdateReadyByMask(mask);
                 }
             }
         }
@@ -470,10 +470,22 @@ namespace LDH_MainGame
             }
 
             bool now = GetPlayerReadyState(slot);
-            
-            photonView.RPC(nameof(RPC_SetReadyBySlot), RpcTarget.MasterClient, slot, !now);
+
+            //더블 클릭 방지
+            _readyPanel[slot].SetReadyButtonInteractable(false);
+
+            if (IsMaster)
+            {
+                RPC_SetReadyBySlot(slot, !now);
+            }
+            else
+            {
+                photonView.RPC(nameof(RPC_SetReadyBySlot), RpcTarget.MasterClient, slot, !now);
+            }
+          
             
         }
+        
 
         [PunRPC]
         private void RPC_SetReadyBySlot(int slotIndex, bool isReady)
@@ -484,8 +496,10 @@ namespace LDH_MainGame
             mask = isReady ? (mask | bit) : (mask & ~bit);
             
             SetRoomProperties(RoomProps.ReadyMask, mask);
+            _readyPanel[slotIndex].SetReadyButtonInteractable(true);
+            
         }
-
+        
         #endregion
 
         private bool AllPlayersReady(int mask)

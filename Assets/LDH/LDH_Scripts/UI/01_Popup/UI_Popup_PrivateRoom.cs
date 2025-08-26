@@ -3,6 +3,7 @@ using LDH_Util;
 using Photon.Realtime;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.UI;
 
 namespace LDH_UI
@@ -80,7 +81,17 @@ namespace LDH_UI
             Debug.Log(this[slotIdx]==null);
             this[slotIdx].ApplyPlayer(isReady, isLocal, isMaster);
         }
-        
+
+
+        public void UpdateReadyByMask(int mask)
+        {
+            foreach (var panel in PlayerPanels)
+            {
+                int slot = panel.SlotIndex;
+                bool isReady = (mask & (1 << slot)) != 0;
+                panel.SetReadyVisual(isReady); 
+            }
+        }
         #endregion
         
     
