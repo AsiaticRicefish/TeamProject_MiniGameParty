@@ -117,7 +117,24 @@ namespace ShootingScene
                 return;
             }
 
+            //화면 밖 좌표 방어
+            if (float.IsNaN(screenPos.x) || float.IsNaN(screenPos.y) ||
+                screenPos.x < 0 || screenPos.x > Screen.width ||
+                screenPos.y < 0 || screenPos.y > Screen.height)
+            {
+                Debug.LogWarning($"잘못된 터치 좌표: {screenPos}");
+                return;
+            }
+
+            if (mainCam == null)
+            {
+                Debug.LogError("MainCam이 설정되어 있지 않습니다!");
+                return;
+            }
+
             Ray ray = mainCam.ScreenPointToRay(screenPos);
+
+            Debug.Log(screenPos);
 
             if (ctx.started)
             {

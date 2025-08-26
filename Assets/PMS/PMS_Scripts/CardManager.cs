@@ -246,11 +246,11 @@ public class CardManager : MonoBehaviourPunCallbacks
         if (cardParent != null) cardParent.gameObject.SetActive(false);
 
         // 4) 마스터만 첫 턴 시작
-        if (PhotonNetwork.IsMasterClient)
+        /*if (PhotonNetwork.IsMasterClient)
         {
             // 0번 인덱스부터 시작
             ShootingScene.TurnManager.Instance.StartFirstTurn();
-        }
+        }*/
     }
     #endregion
 
