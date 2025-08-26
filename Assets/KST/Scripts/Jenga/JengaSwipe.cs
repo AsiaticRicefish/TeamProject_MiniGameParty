@@ -122,7 +122,7 @@ public class JengaSwipe : MonoBehaviour
     {
         if (!float.IsFinite(pos.x) || !float.IsFinite(pos.y))
             return false;
-            
+
         pos.x = Mathf.Clamp(pos.x, 0f, Screen.width);
         pos.y = Mathf.Clamp(pos.y, 0f, Screen.height);
 
