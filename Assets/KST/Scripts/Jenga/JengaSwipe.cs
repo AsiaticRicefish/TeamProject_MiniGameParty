@@ -97,7 +97,7 @@ public class JengaSwipe : MonoBehaviour
 
             _blockInput = true;
             _isPress = false;
-            
+
             return;
         }
 
@@ -120,6 +120,12 @@ public class JengaSwipe : MonoBehaviour
     /// </summary>
     bool IsHit(Vector2 pos)
     {
+        if (!float.IsFinite(pos.x) || !float.IsFinite(pos.y))
+            return false;
+            
+        pos.x = Mathf.Clamp(pos.x, 0f, Screen.width);
+        pos.y = Mathf.Clamp(pos.y, 0f, Screen.height);
+
         Ray ray = Camera.main.ScreenPointToRay(pos);
         if (Physics.Raycast(ray, out var hit, Mathf.Infinity))
             return hit.collider == _collider;
@@ -139,8 +145,8 @@ public class JengaSwipe : MonoBehaviour
         Touchscreen.current != null ? Touchscreen.current.primaryTouch.position.ReadValue() :
         Vector2.zero;
 
-        
-        var eventData = new PointerEventData(EventSystem.current) { position = pos};
+
+        var eventData = new PointerEventData(EventSystem.current) { position = pos };
 
         //해당 좌표로 ui 레이캐스트 수행 결과
         var results = new List<RaycastResult>();
