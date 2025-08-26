@@ -31,6 +31,8 @@ public class DirectionSign : MonoBehaviour
 
     private void Update()
     {
+        if (TurnManager.Instance.currentUnimoEgg == null) return;
+
         if (isSwing)
         {
             // forward ±‚¡ÿ

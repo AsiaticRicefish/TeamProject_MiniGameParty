@@ -24,6 +24,7 @@ public class ShootingSceneController : BaseGameSceneController
         yield return WaitForSingletonReady<TurnManager>();
         //카드 매니저 추가 
         yield return WaitForSingletonReady<CardManager>();
+        yield return WaitForSingletonReady<Test_ShotFollowCamera>();
 
         Debug.Log("모든 ShootingGameScene 매니저 Awake완료");
     }

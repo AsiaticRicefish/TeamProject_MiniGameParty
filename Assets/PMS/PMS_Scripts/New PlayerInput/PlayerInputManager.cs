@@ -9,7 +9,7 @@ namespace ShootingScene
 {
     public class PlayerInputManager : CombinedSingleton<PlayerInputManager>,IGameComponent
     {
-        [SerializeField] private Camera mainCam;
+        [SerializeField] private Camera mainCam;      
 
         private PlayerInput playerInput; // PlayerInput 컴포넌트 참조 변수
         private InputAction touchAction; // TouchPress 액션 참조 변수

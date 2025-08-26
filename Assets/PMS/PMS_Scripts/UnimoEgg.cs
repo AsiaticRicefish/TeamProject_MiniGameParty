@@ -1,5 +1,5 @@
 using UnityEngine;
-
+using ShootingScene;
 [RequireComponent(typeof(Rigidbody))]
 public class UnimoEgg : MonoBehaviour
 {
@@ -76,5 +76,6 @@ public class UnimoEgg : MonoBehaviour
         //rb.AddForce(dir * forceMultiplier, ForceMode.Impulse);
         Debug.Log($"발사 방향의 힘의 크기 - {dir.magnitude}");
         //Debug.Log($"발사 방향의 힘의 크기 - {dir.magnitude * forceMultiplier}");
+        Test_ShotFollowCamera.Instance.StartFollow(gameObject);
     }
 }

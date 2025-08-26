@@ -2,7 +2,7 @@ using DesignPattern;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace ShootingScene
+namespace PMS_Legacy
 {
     public class InputManager : CombinedSingleton<InputManager>, IGameComponent
     {
