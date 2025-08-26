@@ -73,6 +73,7 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
     }
 
     //게임 상태 변경 (로컬 호출 금지!!!!!!!!!!!!!!!!!!!!!!, RPC 통해 호출)
+    //예외 : 콜백을 받지 못했을때 맨처음
     public void ChangeState(ShootingGameState newState)
     {
         currentState?.Exit();
