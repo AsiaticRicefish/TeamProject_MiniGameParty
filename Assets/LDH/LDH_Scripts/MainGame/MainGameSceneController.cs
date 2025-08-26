@@ -32,8 +32,12 @@ namespace LDH_MainGame
 
         private void Awake()
         {
+            //todo: 로딩 패널 켜는 시점 옮기기(로비 씬에서 켜기)
             _uiLoading = Manager.UI.CreatePopupUI<UI_Loading>();
             Manager.UI.ShowPopupUI(_uiLoading).Forget();
+            
+           
+            
         }
 
         /// <summary>

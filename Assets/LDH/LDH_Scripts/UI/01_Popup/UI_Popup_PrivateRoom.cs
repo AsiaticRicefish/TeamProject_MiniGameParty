@@ -38,8 +38,8 @@ namespace LDH_UI
             base.Init();
             
             //외부는 UI_Base의 OnClosedRequested를 구독해서 처리
-            exitButton.onClick.RemoveAllListeners();
-            exitButton.onClick.AddListener(RequestClose);
+            exitButton?.onClick.RemoveAllListeners();
+            exitButton?.onClick.AddListener(RequestClose);
         }
 
         #region UI Control API
@@ -50,6 +50,7 @@ namespace LDH_UI
         /// <param name="roomCode"></param>
         public void SetRoomCode(string roomCode)
         {
+            if(roomCodeText == null) return;
             roomCodeText.text = roomCode;
         }
 
@@ -71,6 +72,13 @@ namespace LDH_UI
                     
                 }
             }
+        }
+
+        public void SetPlayerPanel(int slotIdx, bool isReady, bool isLocal, bool isMaster)
+        {
+            Debug.Log(slotIdx);
+            Debug.Log(this[slotIdx]==null);
+            this[slotIdx].ApplyPlayer(isReady, isLocal, isMaster);
         }
         
         #endregion

@@ -143,7 +143,7 @@ PrefabInstance:
     - target: {fileID: 873450919960001178, guid: b4f2cd633f84448609793082bcf66d70,
         type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0.97117877
+      value: 0.9605263
       objectReference: {fileID: 0}
     - target: {fileID: 873450919960001178, guid: b4f2cd633f84448609793082bcf66d70,
         type: 3}
@@ -253,7 +253,7 @@ PrefabInstance:
     - target: {fileID: 6885039544089571689, guid: b4f2cd633f84448609793082bcf66d70,
         type: 3}
       propertyPath: m_Name
-      value: '@UI_Root'
+      value: '@UIRoot'
       objectReference: {fileID: 0}
     - target: {fileID: 8510048701061075239, guid: b4f2cd633f84448609793082bcf66d70,
         type: 3}
@@ -287,6 +287,12 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 1728771077026297341}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &2288906943861033857 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 593912886323854972, guid: b4f2cd633f84448609793082bcf66d70,
+    type: 3}
+  m_PrefabInstance: {fileID: 1728771077026297341}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &5220031363367224468 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6885039544089571689, guid: b4f2cd633f84448609793082bcf66d70,
@@ -308,3 +314,4 @@ MonoBehaviour:
   _topArea: {fileID: 4490151434234183166}
   _centerArea: {fileID: 3202950448125577439}
   _bottomArea: {fileID: 7089794959587675146}
+  _defaultArea: {fileID: 2288906943861033857}
