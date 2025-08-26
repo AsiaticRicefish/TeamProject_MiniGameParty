@@ -23,9 +23,12 @@ namespace LDH_MainGame
         // public List<MiniGameResultsStore> resultDB;
         private UI_Popup_PrivateRoom _readyPanel;
         private UI_GameInfo _gameInfoPanel;
+        private int _localSlot = -1;
+        private bool _readyChangeRequest = false;
         
         [Header("Player")]
         private GamePlayer[] _gamePlayers;
+        
         
         [Header("씬 이동")]
         [SerializeField] private string mainSceneName = "MainScene"; 
@@ -62,13 +65,13 @@ namespace LDH_MainGame
         {
             isPersistent = false;
             MainGameSceneController.Instance.Register(gameObject);
+            PhotonNetwork.AutomaticallySyncScene = false;
             base.OnAwake();
         }
 
         public void Initialize()
         {
             Util_LDH.ConsoleLog(this, "MainGameManager 초기화 로직 실행");
-            CurrentRound = 1;
             // 커스텀 프로퍼티 초기화
             SetRoomProperties(MainState.Init, "_", 0);
         }
@@ -78,7 +81,8 @@ namespace LDH_MainGame
             Util_LDH.ConsoleLog(this, "게임을 시작합니다. (Enter 'Picking' State)");
             
 
-
+            CurrentRound = 1;
+            
             OnGameStart?.Invoke();
             OnRoundChanged?.Invoke(CurrentRound);
             
@@ -172,6 +176,11 @@ namespace LDH_MainGame
                     // Ready UI 갱신 (마스크 바뀔 때)
                     if (_readyPanel != null)
                         _readyPanel?.UpdateReadyByMask(mask);
+                    if (_readyChangeRequest && _localSlot >= 0)
+                    {
+                        _readyPanel[_localSlot]?.SetReadyButtonInteractable(true);
+                        _readyChangeRequest = false;
+                    }
                 }
             }
         }
@@ -337,7 +346,6 @@ namespace LDH_MainGame
                 yield break;
             }
             
-            Debug.Log(_currentMiniGame.sceneName);
             yield return MiniGameLoader.LoadAdditive(registry.GetSceneName(_currentMiniGame.id), null);
             
             
@@ -460,26 +468,32 @@ namespace LDH_MainGame
                 
                 //초대 기능은 모두 막기
                 _readyPanel[slotIdx].SetInviteActive(false);
+
+                if (pl.IsLocal) _localSlot = slotIdx;
                 
             }
         }
 
         private void OnClickReady(int slot)
         {
-            if ((int)PhotonNetwork.LocalPlayer.CustomProperties[PlayerProps.SlotIndex] != slot)
-            {
-                Util_LDH.ConsoleLogWarning(this, "Ready toggle ignored! 내 슬롯 아님!");
-                return;
-            }
-
+            Debug.Log("=========on click ready 호출 ================");
+            if (_localSlot != slot) return; // 내 슬롯 아니면 무시
+            if (_readyChangeRequest) return;     // 연타 방지
+            
             bool now = GetPlayerReadyState(slot);
-
-            //더블 클릭 방지
-            _readyPanel[slot].SetReadyButtonInteractable(false);
+            bool isReady= !now;
+            
+            // 연타 방지 처리 --------
+            _readyChangeRequest = true;
+            _readyPanel[slot].SetReadyButtonInteractable(false); // 로컬에서만 자기 버튼 잠금
+            
 
             if (IsMaster)
             {
-                RPC_SetReadyBySlot(slot, !now);
+                int mask = GetRoomProperty(RoomProps.ReadyMask, 0);
+                int bit = 1 << slot;
+                mask = isReady ? (mask | bit) : (mask & ~bit);
+                SetRoomProperties(RoomProps.ReadyMask, mask); 
             }
             else
             {
@@ -497,9 +511,7 @@ namespace LDH_MainGame
             int mask = GetRoomProperty(RoomProps.ReadyMask, 0);
             int bit = 1 << slotIndex;
             mask = isReady ? (mask | bit) : (mask & ~bit);
-            
             SetRoomProperties(RoomProps.ReadyMask, mask);
-            _readyPanel[slotIndex].SetReadyButtonInteractable(true);
             
         }
         

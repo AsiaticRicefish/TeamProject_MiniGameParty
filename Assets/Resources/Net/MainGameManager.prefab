@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 3378326789874204908}
   - component: {fileID: 3476464749144145000}
   - component: {fileID: 1290548882566247855}
+  - component: {fileID: 2750379478678518143}
   m_Layer: 0
   m_Name: MainGameManager
   m_TagString: Untagged
@@ -74,6 +75,18 @@ MonoBehaviour:
   <TotalRound>k__BackingField: 0
   <CurrentRound>k__BackingField: 0
   <IsGameFinish>k__BackingField: 0
+--- !u!114 &2750379478678518143
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1782207714747279333}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7379d8afc7b746e4bfbac58e60ceeba7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &4163732838003876761
 GameObject:
   m_ObjectHideFlags: 0

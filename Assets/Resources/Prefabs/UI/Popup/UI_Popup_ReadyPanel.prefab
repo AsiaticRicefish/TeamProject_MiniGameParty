@@ -610,6 +610,11 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4894621992287821719, guid: 82ce834bbee0c4d4eaf1a9fde17f8fe9,
+        type: 3}
+      propertyPath: m_RaycastTarget
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5038754922508635918, guid: 82ce834bbee0c4d4eaf1a9fde17f8fe9,
         type: 3}
       propertyPath: m_Pivot.x

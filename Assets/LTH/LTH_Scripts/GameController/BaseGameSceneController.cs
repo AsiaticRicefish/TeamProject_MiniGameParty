@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using LDH.LDH_Scripts.Network;
 using Photon.Pun;
 using UnityEngine;
 
@@ -92,6 +93,13 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
         // 2단계: 모든 플레이어 씬 로딩 완료 대기
         Debug.Log($"[{GameType}] Step 2: WaitForAllPlayersLoaded");
         yield return StartCoroutine(WaitForAllPlayersLoaded());
+        
+        // 추가) 포톤뷰 조정이 필요하면 포톤뷰 조정 처리
+        Debug.Log($"[{GameType}] Step 2.5 : Photon View 조정");
+        if (PhotonViewCoordinator.Instance != null)
+        {
+            yield return new WaitUntil(() => PhotonViewCoordinator.Instance.IsComplete);
+        }
 
         // 3단계: 매니저들 Awake 완료 대기
         Debug.Log($"[{GameType}] Step 3: WaitForManagersAwake");
