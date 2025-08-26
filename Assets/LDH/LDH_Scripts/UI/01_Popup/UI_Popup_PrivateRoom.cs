@@ -63,15 +63,12 @@ namespace LDH_UI
         {
             if(playerPanels== null) return;
 
-            foreach (var playerPanel in playerPanels)
+            for (int i = 0; i < playerPanels.Length; i++)
             {
-                
-                for (int i = 0; i < playerPanels.Length; i++)
-                {
-                    playerPanels[i].Setup(i);
-                    playerPanels[i].SetEmpty(canInvite);
-                    
-                }
+                var p = playerPanels[i];
+                if (!p) continue;
+                p.Setup(i);
+                p.SetEmpty(canInvite);
             }
         }
 

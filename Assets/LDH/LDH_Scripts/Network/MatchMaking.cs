@@ -220,11 +220,12 @@ namespace Network
         public override void OnJoinedRoom()
         {
             Debug.Log($"[NetworkManager] {PhotonNetwork.CurrentRoom.Name} 방에 입장했습니다.");
-
+            
+            PhotonNetwork.AutomaticallySyncScene = autoSyncScene;
+            
             JoinedRoom?.Invoke();
             RoomPlayerCountChanged?.Invoke(PhotonNetwork.CurrentRoom.PlayerCount, PhotonNetwork.CurrentRoom.MaxPlayers);
         }
-        
               
         // 랜덤 룸 입장 실패 (빠른 매칭)
         public override void OnJoinRandomFailed(short returnCode, string message)
