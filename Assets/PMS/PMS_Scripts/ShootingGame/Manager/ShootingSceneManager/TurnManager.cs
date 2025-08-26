@@ -10,8 +10,8 @@ namespace ShootingScene
     [RequireComponent(typeof(PhotonView))]
     public class TurnManager : PunSingleton<TurnManager>, IGameComponent
     {
-        public Transform eggSpawnPoint; 
-        public UnimoEgg currentUnimoEgg;
+        //public Transform eggSpawnPoint; 
+        //public UnimoEgg currentUnimoEgg;
 
         //private List<int> turnOrder = new List<int>();
         private int currentTurnIndex = 0; 
@@ -39,17 +39,11 @@ namespace ShootingScene
             Debug.Log("[TurnManager] SetupTurn 호출됨");
             if (!PhotonNetwork.IsMasterClient) return;
 
-            /*turnOrder.Clear();
-            turnOrder.AddRange(sortedList);  
 
-            if (turnOrder.Count == 0) return;*/
-
-            currentTurnIndex = 1;
+            currentTurnIndex = 0;
             currentRound = 1;
 
             RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "GamePlayState");
-
-            //BroadcastCurrentTurn();
         }
 
         //테스트용 코드
@@ -68,33 +62,28 @@ namespace ShootingScene
             currentTurnIndex = 1;
             currentRound = 1;
 
-
-            if (PhotonNetwork.IsMasterClient)
-            {
-                RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "GamePlayState");
-            }
-            //BroadcastCurrentTurn();
+            RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "GamePlayState");
         }
 
         public void NextTurn()
         {
             if (!PhotonNetwork.IsMasterClient) return;
 
-            currentTurnIndex++;
+            // 현재 턴 알 비활성화
+            EggManager.Instance.photonView.RPC("ClearCurrentEgg", RpcTarget.All);
 
+            currentTurnIndex++;
             if (currentTurnIndex > PhotonNetwork.CurrentRoom.PlayerCount) // PhotonNetwork.CurrentRoom.PlayerCount 추후 변경
             {
                 currentTurnIndex = 1; //1이 시작
                 currentRound++;
-
                 if (currentRound > totalRounds)
                 {
                     Debug.Log("[TurnManager] - 마스터 클라이언트만 보임 / 게임 종료!");
-                    //ShootingGameManager.Instance.ChangeState
+                    // TODO : 게임종료처리
                     return;
                 }
             }
-
             BroadcastCurrentTurn();
         }
 
@@ -104,9 +93,23 @@ namespace ShootingScene
             RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.Turn, this.currentTurnIndex);
             RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.Round, this.currentRound);
             */
+            // 마스터 클라이언트만 알 관리
             photonView.RPC(nameof(RPC_SetCurrentTurn), RpcTarget.All, this.currentTurnIndex, this.currentRound);
         }
-        
+
+        // 턴 인덱스로 플레이어 UID 찾기 (헬퍼 메서드)
+        private string GetPlayerUidByTurnIndex(int turnIndex)
+        {
+            foreach (var kv in ShootingGameManager.Instance.players)
+            {
+                if (kv.Value.myTurnIndex == turnIndex)
+                {
+                    return kv.Key;
+                }
+            }
+            return null;
+        }
+
         public void StartFirstTurn()
         {
             if (!PhotonNetwork.IsMasterClient) return;
@@ -138,8 +141,8 @@ namespace ShootingScene
             if (isMyTurn)
             {
                 Debug.Log("내 턴 입니다!");
-                SpawnEggForMe(myUid);
                 PlayerInputManager.Instance.EnableInput();
+                EggManager.Instance.SpawnEgg(myUid);
             }
             else
             {
@@ -147,21 +150,6 @@ namespace ShootingScene
                 PlayerInputManager.Instance.DisableInput();
                 Debug.Log($"[TurnManager] - {myPlayer.ShootingData.myTurnIndex}");
             }
-
-            OnTurnChanged?.Invoke(currentUnimoEgg);
-        }
-
-        private void SpawnEggForMe(string uid)
-        {
-            if (currentUnimoEgg != null)
-            {
-                Debug.Log("[TurnManager] 이미 알이 존재합니다. 스폰하지 않음.");
-                return;
-            }
-
-            GameObject eggObj = PhotonNetwork.Instantiate("UnimoEggPrefab", eggSpawnPoint.position, Quaternion.identity);
-            currentUnimoEgg = eggObj.GetComponent<UnimoEgg>();
-            currentUnimoEgg.ShooterUid = uid;
         }
 
         public void StartTurnCorutine(float delay)
@@ -176,5 +164,44 @@ namespace ShootingScene
             NextTurn();
             TurnCorutine = null;
         }
+
+        /*private void SpawnEgg(string uid)
+        {
+            if (currentUnimoEgg != null)
+            {
+                Debug.Log("[TurnManager] 이미 알이 존재합니다. 스폰하지 않음.");
+                return;
+            }
+
+            GameObject eggObj = PhotonNetwork.Instantiate("UnimoEggPrefab", eggSpawnPoint.position, Quaternion.identity);
+            UnimoEgg newEgg = eggObj.GetComponent<UnimoEgg>();
+            newEgg.ShooterUid = uid;
+
+            // 2. 내 턴 알 참조 업데이트
+            currentUnimoEgg = newEgg;
+
+            // 3. 모든 클라이언트에 ViewID 전달
+            photonView.RPC(nameof(RPC_SetCurrentEggView), RpcTarget.Others, newEgg.photonView.ViewID);
+        }
+
+        [PunRPC]
+        public void NullToCurrentUnimo()
+        {
+            if (currentUnimoEgg != null)
+            {
+                currentUnimoEgg = null;
+            }
+        }
+
+        [PunRPC]
+        public void RPC_SetCurrentEggView(int viewID)
+        {
+            if (currentUnimoEgg == null)
+            {
+                // 다른 클라이언트는 ViewID로 currentUnimoEgg 연결
+                currentUnimoEgg = PhotonView.Find(viewID).GetComponent<UnimoEgg>();
+            }
+        }
+        */
     }
 }

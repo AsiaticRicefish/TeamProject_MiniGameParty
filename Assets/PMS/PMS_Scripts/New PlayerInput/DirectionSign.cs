@@ -7,8 +7,8 @@ using ShootingScene;
 public class DirectionSign : MonoBehaviour
 {
     [Header("Direction Settings")]
-    public float angleRange = 100f;   // ÃÑ °¢µµ (¿¹: 100µµ)
-    public float angleSpeed = 30f;     // ÁÂ¿ì ÀÌµ¿ ¼Óµµ
+    public float angleRange = 100f;   // ì´ ê°ë„ (ì˜ˆ: 100ë„)
+    public float angleSpeed = 30f;     // ì¢Œìš° ì´ë™ ì†ë„
 
     [Header("Charge Settings")]
     public float chargeMin = 0f;
@@ -16,7 +16,7 @@ public class DirectionSign : MonoBehaviour
     //public float chargeSpeed = 10f;
 
     [Header("References")]
-    public Transform firePoint;       // ¹ß»ç À§Ä¡
+    public Transform firePoint;       // ë°œì‚¬ ìœ„ì¹˜
     public GameObject projectilePrefab;
     public Slider chargeSlider;
 
@@ -26,58 +26,63 @@ public class DirectionSign : MonoBehaviour
     private float chargePower;
 
     private bool isPress = false;
-    private float pressStartTime;   // ´©¸¥ ½ÃÁ¡ ±â·Ï
+    private float pressStartTime;   // ëˆ„ë¥¸ ì‹œì  ê¸°ë¡
     private bool isAngleCheck = false;
 
     private void Update()
     {
-        if (TurnManager.Instance.currentUnimoEgg == null) return;
+        if (EggManager.Instance.currentUnimoEgg == null) return;
+
+        // ì•ˆì „í•˜ê²Œ ì°¸ì¡°
+        UnimoEgg currentEgg = EggManager.Instance.currentUnimoEgg;
+        if (currentEgg == null) return;
 
         if (isSwing)
         {
-            // forward ±âÁØ
+            // forward ê¸°ì¤€
             //Vector3 forward = ShootingGameManager.Instance.currentUnimo.transform.forward;          
-            Vector3 forward = TurnManager.Instance.currentUnimoEgg.transform.forward;
+            Vector3 forward = currentEgg.transform.forward;
 
-            // ½Ã°£¿¡ µû¶ó -1 ~ 1·Î ¹İº¹µÇ´Â °ª
+            // ì‹œê°„ì— ë”°ë¼ -1 ~ 1ë¡œ ë°˜ë³µë˜ëŠ” ê°’
             float t = Mathf.Sin(Time.time * speed);
 
-            // -maxAngle ~ maxAngle ¹üÀ§ÀÇ °¢µµ
+            // -maxAngle ~ maxAngle ë²”ìœ„ì˜ ê°ë„
             float angle = t * maxAngle;
 
-            // È¸ÀüµÈ ¹æÇâ ±¸ÇÏ±â
+            // íšŒì „ëœ ë°©í–¥ êµ¬í•˜ê¸°
             currentDir = Quaternion.AngleAxis(angle, Vector3.up) * forward;
 
-            // ¿ŞÂÊ 50µµ ¹æÇâ
+            // ì™¼ìª½ 50ë„ ë°©í–¥
             Vector3 leftDir = Quaternion.AngleAxis(-50f, Vector3.up) * forward;
 
-            // ¿À¸¥ÂÊ 50µµ ¹æÇâ
+            // ì˜¤ë¥¸ìª½ 50ë„ ë°©í–¥
             Vector3 rightDir = Quaternion.AngleAxis(50f, Vector3.up) * forward;
 
-            // µğ¹ö±× ¶óÀÎ È®ÀÎ
+            // ë””ë²„ê·¸ ë¼ì¸ í™•ì¸
             //Debug.DrawRay(player.position, forward * 5, Color.white);  // forward
-            Debug.DrawRay(TurnManager.Instance.currentUnimoEgg.transform.position, leftDir * 5, Color.red);    // left 50µµ
-            Debug.DrawRay(TurnManager.Instance.currentUnimoEgg.transform.position, rightDir * 5, Color.blue);  // right 50µµ
+            Debug.DrawRay(currentEgg.transform.position, leftDir * 5, Color.red);    // left 50ë„
+            Debug.DrawRay(currentEgg.transform.position, rightDir * 5, Color.blue);  // right 50ë„
 
-            //¿òÁ÷ÀÌ´Â Ray
-            Debug.DrawRay(TurnManager.Instance.currentUnimoEgg.transform.position, currentDir * lineLength, Color.yellow);
+            //ì›€ì§ì´ëŠ” Ray
+            Debug.DrawRay(currentEgg.transform.position, currentDir * lineLength, Color.yellow);
         }
 
         if (isPress)
         {
-            Debug.DrawRay(TurnManager.Instance.currentUnimoEgg.transform.position, currentDir * lineLength, Color.yellow);
-            // period = ÇÑ »çÀÌÅ¬ ½Ã°£ (0¡æMax¡æ0)
+            // period = í•œ ì‚¬ì´í´ ì‹œê°„ (0â†’Maxâ†’0)
             float chargePeriod = 4f;
-            // ´©¸¥ ÈÄ °æ°ú½Ã°£
+            // ëˆ„ë¥¸ í›„ ê²½ê³¼ì‹œê°„
             float elapsed = Time.time - pressStartTime;
 
             //chargePower = Mathf.PingPong(elapsed * chargeSpeed, 1f) * chargeMax;
             float t = Mathf.PingPong(elapsed / (chargePeriod / 2f), 1f);
             chargePower = t * chargeMax;
 
-            // Slider Ç¥½Ã
+            // Slider í‘œì‹œ
             if (chargeSlider != null)
                 chargeSlider.value = chargePower / chargeMax;
+
+            Debug.DrawRay(currentEgg.transform.position, currentDir * lineLength, Color.yellow);
         }
     }
 
@@ -88,46 +93,48 @@ public class DirectionSign : MonoBehaviour
         if (chargeSlider != null)
             chargeSlider.value = 0f;
 
-        pressStartTime = Time.time; // ½ÃÀÛ ½Ã°¢ ÀúÀå
+        pressStartTime = Time.time; // ì‹œì‘ ì‹œê° ì €ì¥
         chargePower = 0f;  
         isPress = true;
 
-        /*// ½ºÅ©¸° ¡æ ¿ùµå º¯È¯
+        /*// ìŠ¤í¬ë¦° â†’ ì›”ë“œ ë³€í™˜
         Vector3 worldPos = Camera.main.ScreenToWorldPoint(new Vector3(touchPos.x, touchPos.y, Camera.main.transform.position.y));
 
-        // ¹æÇâ º¤ÅÍ °è»ê
+        // ë°©í–¥ ë²¡í„° ê³„ì‚°
         Vector3 start = ShootingGameManager.Instance.currentUnimo.transform.position;
         Vector3 dir = worldPos - start;
-        dir.y = 0f; // y´Â ¹«½Ã (XZ Æò¸é¸¸ °í·Á)
+        dir.y = 0f; // yëŠ” ë¬´ì‹œ (XZ í‰ë©´ë§Œ ê³ ë ¤)
         dir.Normalize();*/
 
-        // ¹æÇâ ½Ã°¢È­
+        // ë°©í–¥ ì‹œê°í™”
         //Debug.DrawRay(startPos, dir.normalized * 5.0f, Color.blue, 3.0f);
 
-        Debug.Log("¹æÇâÇ¥½ÃµîÀ» Å¬¸¯ÇÔ");
+        Debug.Log("ë°©í–¥í‘œì‹œë“±ì„ í´ë¦­í•¨");
     }
 
     public void OnTouch(float Timer)
     {
         if (isAngleCheck)
         {
-            Debug.Log("¹æÇâÇ¥½ÃµîÀ» Å¬¸¯Áß");
+            Debug.Log("ë°©í–¥í‘œì‹œë“±ì„ í´ë¦­ì¤‘");
         }
     }
 
     public void OnTouchEnd()
     {
-        if (isAngleCheck)
-        {
-            Debug.Log($"ÈûÀÇ Å©±â {chargePower}");
-            Debug.Log("¹æÇâÇ¥½Ãµî¿¡¼­ ¼ÕÀ» ¶«");
-            TurnManager.Instance.currentUnimoEgg.Shot(dir * chargePower);
-            //´ÙÀÛ¾÷ÈÄ¿¡
-            ResetData();
+        if (!isAngleCheck) return;
 
-            if (chargeSlider != null)
-                chargeSlider.value = 0f;
-        }
+        Debug.Log($"í˜ì˜ í¬ê¸° {chargePower}");
+        Debug.Log("ë°©í–¥í‘œì‹œë“±ì—ì„œ ì†ì„ ë•œ");
+
+        UnimoEgg currentEgg = EggManager.Instance.currentUnimoEgg;
+        if (currentEgg == null) return;
+
+        currentEgg.Shot(dir * chargePower);
+
+        ResetData();
+        if (chargeSlider != null)
+            chargeSlider.value = 0f;
     }
 
     private void ResetData()
@@ -135,6 +142,7 @@ public class DirectionSign : MonoBehaviour
         chargePower = 0;
         isPress = false;
         isAngleCheck = false;
+        dir = Vector3.zero;
     }
 
     private bool CheckAngle(Vector2 touchPos)
@@ -149,13 +157,13 @@ public class DirectionSign : MonoBehaviour
 
         dir = currentDir;
 
-        Vector3 forward = TurnManager.Instance.currentUnimoEgg.transform.forward;
+        Vector3 forward = EggManager.Instance.currentUnimoEgg.transform.forward;
 
         float angle = Vector3.Angle(forward, dir);
 
-        if (angle > angleRange/2) // Çã¿ë °¢µµ
+        if (angle > angleRange/2) // í—ˆìš© ê°ë„
         {
-            Debug.Log("°¢µµ ¹üÀ§ ¹ş¾î³²");
+            Debug.Log("ê°ë„ ë²”ìœ„ ë²—ì–´ë‚¨");
             return false;
         }
 
@@ -163,10 +171,10 @@ public class DirectionSign : MonoBehaviour
         return true;
     }
 
-    [SerializeField] private Transform player; // ÇÃ·¹ÀÌ¾î ±âÁØ Transform
-    [SerializeField] private float maxAngle = 50f;  // ¿ŞÂÊ/¿À¸¥ÂÊ ÃÖ´ë °¢µµ
-    [SerializeField] private float speed = 2f;      // ¿òÁ÷ÀÌ´Â ¼Óµµ
-    [SerializeField] private float lineLength = 5f; // µğ¹ö±× ¶óÀÎ ±æÀÌ
+    [SerializeField] private Transform player; // í”Œë ˆì´ì–´ ê¸°ì¤€ Transform
+    [SerializeField] private float maxAngle = 50f;  // ì™¼ìª½/ì˜¤ë¥¸ìª½ ìµœëŒ€ ê°ë„
+    [SerializeField] private float speed = 2f;      // ì›€ì§ì´ëŠ” ì†ë„
+    [SerializeField] private float lineLength = 5f; // ë””ë²„ê·¸ ë¼ì¸ ê¸¸ì´
 
     private bool isSwing = true;
     private Vector3 currentDir;

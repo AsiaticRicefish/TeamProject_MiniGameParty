@@ -69,6 +69,14 @@ MonoBehaviour:
   - RPC_SyncTime
   - RPC_CountdownComplete
   - RPC_StartCountdown
+  - NullToCurrentUnimo
+  - SetCurrentUnimo
+  - RPC_SetCurrentEggView
+  - RPC_ActivateEgg
+  - RPC_DeactivateEgg
+  - RPC_SetupPlayerPool
+  - ClearCurrentEgg
+  - RPC_Shot
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

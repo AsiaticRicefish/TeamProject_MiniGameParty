@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
@@ -10,7 +10,7 @@ public class GamePlayState : ShootingGameState
         Debug.Log("[ShootingGameState] - GamePlayState Enter");
         if (PhotonNetwork.IsMasterClient)
         {
-            TurnManager.Instance.BroadcastCurrentTurn();
+            TurnManager.Instance.NextTurn();
         }
     }
     public override void Update()

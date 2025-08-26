@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
@@ -25,6 +25,7 @@ public class ShootingSceneController : BaseGameSceneController
         //카드 매니저 추가 
         yield return WaitForSingletonReady<CardManager>();
         yield return WaitForSingletonReady<Test_ShotFollowCamera>();
+        yield return WaitForSingletonReady<EggManager>();
 
         Debug.Log("모든 ShootingGameScene 매니저 Awake완료");
     }
@@ -41,6 +42,7 @@ public class ShootingSceneController : BaseGameSceneController
             ShootingGameManager.Instance,
             PlayerInputManager.Instance,
             TurnManager.Instance,
+            EggManager.Instance,
         };
 
         yield return StartCoroutine(InitializeComponentsSafely(sequentialComponents));
