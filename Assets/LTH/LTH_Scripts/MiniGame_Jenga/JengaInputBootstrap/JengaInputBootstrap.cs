@@ -10,9 +10,9 @@ public class JengaInputBootstrap : MonoBehaviour
     static void Init()
     {
 #if ENABLE_INPUT_SYSTEM
-        // ¿¡µğÅÍ/PC¿¡¼­ ¸¶¿ì½º¸¦ ÅÍÄ¡Ã³·³ »ç¿ë
+        // ì—ë””í„°/PCì—ì„œ ë§ˆìš°ìŠ¤ë¥¼ í„°ì¹˜ì²˜ëŸ¼ ì‚¬ìš©
         TouchSimulation.Enable();
-        // ¸ÖÆ¼ÅÍÄ¡ Á¤È®µµ Çâ»ó
+        // ë©€í‹°í„°ì¹˜ ì •í™•ë„ í–¥ìƒ
         EnhancedTouchSupport.Enable();
 #endif
     }

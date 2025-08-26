@@ -5,25 +5,25 @@ using Photon.Pun;
 using UnityEngine;
 
 /// <summary>
-/// Firebase UID ±âÁØÀ¸·Î °¢ ÇÃ·¹ÀÌ¾îÀÇ GamePlayer ÀÎ½ºÅÏ½º¸¦ µî·Ï/Á¶È¸ÇÏ´Â Àü¿ª °ü¸® ½Ì±ÛÅæ
+/// Firebase UID ê¸°ì¤€ìœ¼ë¡œ ê° í”Œë ˆì´ì–´ì˜ GamePlayer ì¸ìŠ¤í„´ìŠ¤ë¥¼ ë“±ë¡/ì¡°íšŒí•˜ëŠ” ì „ì—­ ê´€ë¦¬ ì‹±ê¸€í†¤
 /// </summary>
 
 public class PlayerManager : CombinedSingleton<PlayerManager>
 {
-    // Key: string ÇüÅÂÀÇ Firebase UID
-    // Value: GamePlayer ÀÎ½ºÅÏ½º
+    // Key: string í˜•íƒœì˜ Firebase UID
+    // Value: GamePlayer ì¸ìŠ¤í„´ìŠ¤
     private Dictionary<string, GamePlayer> players = new();
 
     public IReadOnlyDictionary<string, GamePlayer> Players => players;
 
 
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î µî·Ï ¸Ş¼­µå
-    /// id´Â UID, nicknameÀº Ç¥½Ã¿ë Photon ´Ğ³×ÀÓ
+    /// í”Œë ˆì´ì–´ ë“±ë¡ ë©”ì„œë“œ
+    /// idëŠ” UID, nicknameì€ í‘œì‹œìš© Photon ë‹‰ë„¤ì„
     /// </summary>
     public void RegisterPlayer(string id, string nickname)
     {
-        if (!players.ContainsKey(id)) // Áßº¹ µî·Ï ¹æÁö
+        if (!players.ContainsKey(id)) // ì¤‘ë³µ ë“±ë¡ ë°©ì§€
         {
             GameObject playerObj = new GameObject($"GamePlayer_{nickname}");
             var gamePlayer = playerObj.AddComponent<GamePlayer>();
@@ -39,8 +39,8 @@ public class PlayerManager : CombinedSingleton<PlayerManager>
     }
 
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î¸¦ »ı¼ºÇÏ°Å³ª ±âÁ¸ ÇÃ·¹ÀÌ¾î¸¦ ¹İÈ¯
-    /// ¾øÀ¸¸é ÀÚµ¿À¸·Î »ı¼ºÇØ¼­ µî·Ï ÈÄ ¹İÈ¯
+    /// í”Œë ˆì´ì–´ë¥¼ ìƒì„±í•˜ê±°ë‚˜ ê¸°ì¡´ í”Œë ˆì´ì–´ë¥¼ ë°˜í™˜
+    /// ì—†ìœ¼ë©´ ìë™ìœ¼ë¡œ ìƒì„±í•´ì„œ ë“±ë¡ í›„ ë°˜í™˜
     /// </summary>
     public GamePlayer CreateOrGetPlayer(string id, string nickname = "Unknown")
     {
@@ -49,14 +49,14 @@ public class PlayerManager : CombinedSingleton<PlayerManager>
             return existingPlayer;
         }
 
-        // ÇÃ·¹ÀÌ¾î°¡ ¾øÀ¸¸é »õ·Î »ı¼º
+        // í”Œë ˆì´ì–´ê°€ ì—†ìœ¼ë©´ ìƒˆë¡œ ìƒì„±
         RegisterPlayer(id, nickname);
         return players[id];
     }
 
 
     /// <summary>
-    /// Æ¯Á¤ ÇÃ·¹ÀÌ¾îÀÇ µ¥ÀÌÅÍ¸¦ UID ±âÁØÀ¸·Î °¡Á®¿È
+    /// íŠ¹ì • í”Œë ˆì´ì–´ì˜ ë°ì´í„°ë¥¼ UID ê¸°ì¤€ìœ¼ë¡œ ê°€ì ¸ì˜´
     /// </summary>
     public GamePlayer GetPlayer(string id)
     {
@@ -65,8 +65,8 @@ public class PlayerManager : CombinedSingleton<PlayerManager>
     }
 
     /// <summary>
-    /// ÇöÀç ¹æ¿¡ ÀÖ´Â ¸ğµç Photon ÇÃ·¹ÀÌ¾î¸¦ PlayerManager¿¡ µî·Ï
-    /// Á¨°¡ °ÔÀÓ ½ÃÀÛ Àü¿¡ È£ÃâÇÏ¿© ¸ğµç ÇÃ·¹ÀÌ¾î°¡ µî·ÏµÇµµ·Ï º¸Àå
+    /// í˜„ì¬ ë°©ì— ìˆëŠ” ëª¨ë“  Photon í”Œë ˆì´ì–´ë¥¼ PlayerManagerì— ë“±ë¡
+    /// ì  ê°€ ê²Œì„ ì‹œì‘ ì „ì— í˜¸ì¶œí•˜ì—¬ ëª¨ë“  í”Œë ˆì´ì–´ê°€ ë“±ë¡ë˜ë„ë¡ ë³´ì¥
     /// </summary>
     public void EnsureAllPhotonPlayersRegistered()
     {
@@ -88,7 +88,7 @@ public class PlayerManager : CombinedSingleton<PlayerManager>
     }
 
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î Á¦°Å
+    /// í”Œë ˆì´ì–´ ì œê±°
     /// </summary>
     public void RemovePlayer(string id)
     {
@@ -104,7 +104,7 @@ public class PlayerManager : CombinedSingleton<PlayerManager>
     }
 
     /// <summary>
-    /// ¸ğµç ÇÃ·¹ÀÌ¾î Á¤¸® (¾À ÀüÈ¯ ½Ã ÇÊ¿äÇÏ¸é)
+    /// ëª¨ë“  í”Œë ˆì´ì–´ ì •ë¦¬ (ì”¬ ì „í™˜ ì‹œ í•„ìš”í•˜ë©´)
     /// </summary>
     public void ClearAllPlayers()
     {
@@ -120,8 +120,8 @@ public class PlayerManager : CombinedSingleton<PlayerManager>
     }
 
     /// <summary>
-    /// Firebase UID¸¦ ±âÁØÀ¸·Î ÇöÀç Å¬¶óÀÌ¾ğÆ®ÀÇ GamePlayer µ¥ÀÌÅÍ¸¦ Á¶È¸
-    /// FirebaseAuthManager´Â ¿¹½ÃÀÌ¸ç, ´Ù¸¥ Å¬·¡½ºÀÌ¸é ¼öÁ¤ÇÏ¿© ÀÛ¾÷ÇÏ½Ã¸é µË´Ï´Ù.
+    /// Firebase UIDë¥¼ ê¸°ì¤€ìœ¼ë¡œ í˜„ì¬ í´ë¼ì´ì–¸íŠ¸ì˜ GamePlayer ë°ì´í„°ë¥¼ ì¡°íšŒ
+    /// FirebaseAuthManagerëŠ” ì˜ˆì‹œì´ë©°, ë‹¤ë¥¸ í´ë˜ìŠ¤ì´ë©´ ìˆ˜ì •í•˜ì—¬ ì‘ì—…í•˜ì‹œë©´ ë©ë‹ˆë‹¤.
     /// </summary>
     // public GamePlayer LocalPlayer => GetPlayer(FirebaseAuthManager.UserUID);
 }

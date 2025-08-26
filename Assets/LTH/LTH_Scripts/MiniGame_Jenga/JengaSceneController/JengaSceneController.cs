@@ -2,9 +2,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using DesignPattern;
+using MiniGameJenga;
 using Photon.Pun;
 using UnityEngine;
-using MiniGameJenga;
 
 [RequireComponent(typeof(PhotonView))]
 [DisallowMultipleComponent]
@@ -29,17 +30,17 @@ public class JengaSceneController : BaseGameSceneController
         _only = this;
 
         if (!loading) loading = FindObjectOfType<LoadingOverlay>(true);
-        loading?.Show("ÃÊ±âÈ­ ÁØºñ Áß...", 0.05f);
+        loading?.Show("ì´ˆê¸°í™” ì¤€ë¹„ ì¤‘...", 0.05f);
     }
 
     protected override IEnumerator WaitForManagersAwake()
     {
-        // ¸ğµç ÇÃ·¹ÀÌ¾î°¡ uid ¼ÂÆÃµÉ ¶§±îÁö Àá±ñ ´ë±â
-        loading?.Set("ÇÃ·¹ÀÌ¾î µ¿±âÈ­ È®ÀÎ Áß...", 0.10f);
+        // ëª¨ë“  í”Œë ˆì´ì–´ê°€ uid ì…‹íŒ…ë  ë•Œê¹Œì§€ ì ê¹ ëŒ€ê¸°
+        loading?.Set("í”Œë ˆì´ì–´ ë™ê¸°í™” í™•ì¸ ì¤‘...", 0.10f);
         yield return WaitForAllPlayerUids(5f);
 
-        // °¢ ¸Å´ÏÀúµéÀÌ Awake¿¡¼­ »ı¼ºµÇ±â¸¦ ±â´Ù¸²
-        loading?.Set("¸Å´ÏÀú ÁØºñ Áß...", 0.20f);
+        // ê° ë§¤ë‹ˆì €ë“¤ì´ Awakeì—ì„œ ìƒì„±ë˜ê¸°ë¥¼ ê¸°ë‹¤ë¦¼
+        loading?.Set("ë§¤ë‹ˆì € ì¤€ë¹„ ì¤‘...", 0.20f);
         yield return WaitForSingletonReady<JengaGameManager>();
         loading?.Set(progress: 0.30f);
         yield return WaitForSingletonReady<JengaNetworkManager>();
@@ -47,20 +48,21 @@ public class JengaSceneController : BaseGameSceneController
         yield return WaitForSingletonReady<JengaTowerManager>();
         loading?.Set(progress: 0.50f);
 
-        Debug.Log("Á¨°¡ ¸Å´ÏÀúµé Awake ¿Ï·á");
+        Debug.Log("ì  ê°€ ë§¤ë‹ˆì €ë“¤ Awake ì™„ë£Œ");
     }
 
     protected override IEnumerator InitializeSequentialManagers()
     {
-        // ¼øÂ÷ ÃÊ±âÈ­
-        loading?.Set("ÇÙ½É ½Ã½ºÅÛ ÃÊ±âÈ­ (1/2)...", 0.55f);
+        // ìˆœì°¨ ì´ˆê¸°í™”
+        loading?.Set("í•µì‹¬ ì‹œìŠ¤í…œ ì´ˆê¸°í™” (1/2)...", 0.55f);
 
-        // ¼øÂ÷ÀûÀ¸·Î ÃÊ±âÈ­ÇØ¾ß ÇÒ ¸Å´ÏÀúµé
+        // ìˆœì°¨ì ìœ¼ë¡œ ì´ˆê¸°í™”í•´ì•¼ í•  ë§¤ë‹ˆì €ë“¤
         var sequentialComponents = new IGameComponent[]
         {
-            JengaNetworkManager.Instance,     // ³×Æ®¿öÅ© ¸ÕÀú
-            JengaGameManager.Instance,        // °ÔÀÓ ·ÎÁ÷
-            JengaTowerManager.Instance,       // Å¸¿ö »ı¼º
+            JengaNetworkManager.Instance,     // ë„¤íŠ¸ì›Œí¬ ë¨¼ì €
+            JengaGameManager.Instance,        // ê²Œì„ ë¡œì§
+            JengaTowerManager.Instance,       // íƒ€ì›Œ ìƒì„±
+            JengaUIManager.Instance,          // UI ë§¤ë‹ˆì €
         };
 
         yield return StartCoroutine(InitializeComponentsSafely(sequentialComponents));
@@ -72,13 +74,13 @@ public class JengaSceneController : BaseGameSceneController
     {
         Debug.Log("[Scene] InitializeParallelManagers START");
 
-        // º´·Ä ÃÊ±âÈ­
-        loading?.Set("º¸Á¶ ½Ã½ºÅÛ ÃÊ±âÈ­ (2/2)...", 0.85f);
+        // ë³‘ë ¬ ì´ˆê¸°í™”
+        loading?.Set("ë³´ì¡° ì‹œìŠ¤í…œ ì´ˆê¸°í™” (2/2)...", 0.85f);
 
-        // º´·Ä·Î ÃÊ±âÈ­ÇØµµ µÇ´Â ¸Å´ÏÀúµé
+        // ë³‘ë ¬ë¡œ ì´ˆê¸°í™”í•´ë„ ë˜ëŠ” ë§¤ë‹ˆì €ë“¤
         var parallelComponents = new ICoroutineGameComponent[]
         {
-           JengaTimingManager.Instance      // Å¸ÀÌ¹Ö ½Ã½ºÅÛ ÁØºñ
+           JengaTimingManager.Instance      // íƒ€ì´ë° ì‹œìŠ¤í…œ ì¤€ë¹„
         };
 
         Debug.Log("[Scene] About to call InitializeCoroutineComponentsSafely");
@@ -88,7 +90,7 @@ public class JengaSceneController : BaseGameSceneController
         loading?.Set(progress: 0.95f);
         Debug.Log($"[Scene] Before failsafe check - _startNotified: {_startNotified}");
 
-        // ÆäÀÏ¼¼ÀÌÇÁ: ¿©±â¼­ ÇÑ ¹ø ´õ Á÷Á¢ ½ÃÀÛ È£Ãâ
+        // í˜ì¼ì„¸ì´í”„: ì—¬ê¸°ì„œ í•œ ë²ˆ ë” ì§ì ‘ ì‹œì‘ í˜¸ì¶œ
         if (!_startNotified)
         {
             Debug.Log("[Scene] Failsafe start after parallel init - calling NotifyGameStart()");
@@ -119,7 +121,7 @@ public class JengaSceneController : BaseGameSceneController
 
         try
         {
-            loading?.Set("½ÃÀÛ ÁØºñ ¿Ï·á!", 1.0f);
+            loading?.Set("ì‹œì‘ ì¤€ë¹„ ì™„ë£Œ!", 1.0f);
 
             if (PhotonNetwork.IsMasterClient)
             {
@@ -143,6 +145,35 @@ public class JengaSceneController : BaseGameSceneController
         Debug.Log($"=== [Scene] NotifyGameStart END ===");
     }
 
+    private void OnDestroy()
+    {
+        // ì”¬ ì „í™˜ ì „ ì  ê°€ ê´€ë ¨ ë§¤ë‹ˆì €ë“¤ ëª…ì‹œì  í•´ì œ
+        if (JengaGameManager.Instance != null)
+        {
+            CombinedSingleton<JengaGameManager>.Release();
+        }
+        
+        if (JengaTowerManager.Instance != null)
+        {
+            CombinedSingleton<JengaTowerManager>.Release();
+        }
+        
+        if (JengaNetworkManager.Instance != null)
+        {
+            PunSingleton<JengaNetworkManager>.Release();
+        }
+        
+        if (JengaTimingManager.Instance != null)
+        {
+            CombinedSingleton<JengaTimingManager>.Release();
+        }
+        
+        if (JengaUIManager.Instance != null)
+        {
+            CombinedSingleton<JengaUIManager>.Release();
+        }
+    }
+
 
     private IEnumerator ForceStartAfterDelay()
     {
@@ -159,7 +190,7 @@ public class JengaSceneController : BaseGameSceneController
         }
     }
 
-    // --- À¯Æ¿: ¸ğµç ÇÃ·¹ÀÌ¾î°¡ uid ¼¼ÆÃµÉ ¶§±îÁö ´ë±â ---
+    // --- ìœ í‹¸: ëª¨ë“  í”Œë ˆì´ì–´ê°€ uid ì„¸íŒ…ë  ë•Œê¹Œì§€ ëŒ€ê¸° ---
     private IEnumerator WaitForAllPlayerUids(float timeoutSec = 5f)
     {
         float end = Time.time + timeoutSec;

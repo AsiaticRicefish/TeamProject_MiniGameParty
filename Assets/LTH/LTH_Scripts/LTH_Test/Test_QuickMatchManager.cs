@@ -30,15 +30,15 @@ public class Test_QuickMatchManager : MonoBehaviourPunCallbacks
     [SerializeField] private bool verboseLog = true;
 
     private Coroutine startRoutine;
-    private bool connecting;                 // ¸ÅÄ¡¸ŞÀÌÅ· ¹öÆ° ¿¬Å¸ ¹æÁö
-    private string lastTriedRoomName;        // CreateRoom Àç½Ãµµ¿ë
+    private bool connecting;                 // ë§¤ì¹˜ë©”ì´í‚¹ ë²„íŠ¼ ì—°íƒ€ ë°©ì§€
+    private string lastTriedRoomName;        // CreateRoom ì¬ì‹œë„ìš©
 
     private void Awake()
     {
         PhotonNetwork.AutomaticallySyncScene = true;
         PhotonNetwork.GameVersion = gameVersion;
 
-        // ¹öÆ°ÀÌ ¿¬°áµÇ¾î ÀÖÀ¸¸é Å¬¸¯ ÀÌº¥Æ® ¹ÙÀÎµù(¿É¼Ç)
+        // ë²„íŠ¼ì´ ì—°ê²°ë˜ì–´ ìˆìœ¼ë©´ í´ë¦­ ì´ë²¤íŠ¸ ë°”ì¸ë”©(ì˜µì…˜)
         if (quickMatchButton)
         {
             quickMatchButton.onClick.RemoveListener(OnClick_QuickMatch);
@@ -83,13 +83,13 @@ public class Test_QuickMatchManager : MonoBehaviourPunCallbacks
         if (PhotonNetwork.IsConnectedAndReady)
         {
             SetStatus("Already connected. Joining room...");
-            EnsureAuthAndNickEarly();    // °¡´ÉÇÏ¸é Á¶ÀÎ Àü¿¡ ¼³Á¤
+            EnsureAuthAndNickEarly();    // ê°€ëŠ¥í•˜ë©´ ì¡°ì¸ ì „ì— ì„¤ì •
             TryJoinOrCreate();
         }
         else
         {
             SetStatus("Connecting to Master...");
-            EnsureAuthAndNickEarly();    // ¿¬°á Àü¿¡ AuthValues/NickName ¼±¼¼ÆÃ
+            EnsureAuthAndNickEarly();    // ì—°ê²° ì „ì— AuthValues/NickName ì„ ì„¸íŒ…
             PhotonNetwork.ConnectUsingSettings();
         }
     }
@@ -117,7 +117,7 @@ public class Test_QuickMatchManager : MonoBehaviourPunCallbacks
 
     public override void OnCreateRoomFailed(short returnCode, string message)
     {
-        SetStatus($"Create failed: {message} ¡æ retry after backoff");
+        SetStatus($"Create failed: {message} â†’ retry after backoff");
         StartCoroutine(CoRetryCreateAfterBackoff());
     }
 
@@ -130,11 +130,11 @@ public class Test_QuickMatchManager : MonoBehaviourPunCallbacks
     {
         SetStatus($"Joined: {PhotonNetwork.CurrentRoom.Name} ({PhotonNetwork.CurrentRoom.PlayerCount}/{PhotonNetwork.CurrentRoom.MaxPlayers})");
 
-        EnsureLocalCustomProps(); // cp["uid"], cp["nickname"] ¼¼ÆÃ(Á¶ÀÎ Á÷ÈÄ º¸°­)
+        EnsureLocalCustomProps(); // cp["uid"], cp["nickname"] ì„¸íŒ…(ì¡°ì¸ ì§í›„ ë³´ê°•)
         DumpRoomState();
 
-        TryStartGate();           // ¸¶½ºÅÍ°¡ ½ÃÀÛ °ÔÀÌÆ® ÁøÀÔ
-        connecting = false;       // Á¶ÀÎ ¼º°ø ½Ã ¹öÆ° ¾ğ¶ô
+        TryStartGate();           // ë§ˆìŠ¤í„°ê°€ ì‹œì‘ ê²Œì´íŠ¸ ì§„ì…
+        connecting = false;       // ì¡°ì¸ ì„±ê³µ ì‹œ ë²„íŠ¼ ì–¸ë½
     }
 
     public override void OnPlayerEnteredRoom(Player newPlayer)
@@ -157,7 +157,7 @@ public class Test_QuickMatchManager : MonoBehaviourPunCallbacks
 
     public override void OnMasterClientSwitched(Player newMasterClient)
     {
-        SetStatus($"Master switched ¡æ {newMasterClient.NickName}");
+        SetStatus($"Master switched â†’ {newMasterClient.NickName}");
         TryStartGate();
     }
 
@@ -179,7 +179,7 @@ public class Test_QuickMatchManager : MonoBehaviourPunCallbacks
     #region Join/Create flow
     private void TryJoinOrCreate()
     {
-        // ¸ÅÄ¡¸ŞÀÌÅ· API´Â ¿ÀÁ÷ Äİ¹é Ã¼ÀÎ¿¡¼­¸¸ È£Ãâ(´Ù¸¥ ½ºÅ©¸³Æ®¿¡¼­ È£Ãâ ±İÁö!)
+        // ë§¤ì¹˜ë©”ì´í‚¹ APIëŠ” ì˜¤ì§ ì½œë°± ì²´ì¸ì—ì„œë§Œ í˜¸ì¶œ(ë‹¤ë¥¸ ìŠ¤í¬ë¦½íŠ¸ì—ì„œ í˜¸ì¶œ ê¸ˆì§€!)
         if (!PhotonNetwork.IsConnectedAndReady)
         {
             SetStatus("Not ready for matchmaking yet.");
@@ -211,7 +211,7 @@ public class Test_QuickMatchManager : MonoBehaviourPunCallbacks
         if (useRandomRoom) CreateRoomRandom();
         else
         {
-            // °íÁ¤¹æÀÎµ¥ Ãæµ¹³ª¸é Á¢¹Ì»ç ºÙ¿© Àç½Ãµµ
+            // ê³ ì •ë°©ì¸ë° ì¶©ëŒë‚˜ë©´ ì ‘ë¯¸ì‚¬ ë¶™ì—¬ ì¬ì‹œë„
             lastTriedRoomName = $"{fixedRoomName}_{Random.Range(100, 999)}";
             var opt = new RoomOptions { MaxPlayers = maxPlayers, IsOpen = true, IsVisible = true };
             PhotonNetwork.CreateRoom(lastTriedRoomName, opt, TypedLobby.Default);
@@ -229,15 +229,15 @@ public class Test_QuickMatchManager : MonoBehaviourPunCallbacks
 
     private IEnumerator CoStartWhenReady()
     {
-        // 1) ÀÎ¿ø ÃæÁ·
+        // 1) ì¸ì› ì¶©ì¡±
         while (PhotonNetwork.CurrentRoom == null ||
                PhotonNetwork.CurrentRoom.PlayerCount < minPlayersToStart)
             yield return null;
 
-        // 2) ¸ğµç ÇÃ·¹ÀÌ¾îÀÇ uid ¼¼ÆÃ ´ë±â(Å¸ÀÓ¾Æ¿ô Çã¿ë)
+        // 2) ëª¨ë“  í”Œë ˆì´ì–´ì˜ uid ì„¸íŒ… ëŒ€ê¸°(íƒ€ì„ì•„ì›ƒ í—ˆìš©)
         yield return CoWaitAllPlayerUids(uidWaitTimeoutSec);
 
-        // 3) ¾À ·Îµå(¸¶½ºÅÍ¸¸)
+        // 3) ì”¬ ë¡œë“œ(ë§ˆìŠ¤í„°ë§Œ)
         if (PhotonNetwork.IsMasterClient && !string.IsNullOrEmpty(gameSceneName))
         {
             SetStatus("Loading game scene...");
@@ -268,13 +268,13 @@ public class Test_QuickMatchManager : MonoBehaviourPunCallbacks
     #region Identity helpers
     private void EnsureAuthAndNickEarly()
     {
-        // ¿¬°á Àü¿¡ AuthValues/NickNameÀ» ¼¼ÆÃÇÏ¸é handshake¿¡ ¹İ¿µµÊ
+        // ì—°ê²° ì „ì— AuthValues/NickNameì„ ì„¸íŒ…í•˜ë©´ handshakeì— ë°˜ì˜ë¨
         string uid = null;
         try { uid = FirebaseAuth.DefaultInstance?.CurrentUser?.UserId; } catch { /* no-op */ }
 
         if (string.IsNullOrEmpty(uid))
         {
-            // Photon AuthValues ¶Ç´Â ±âÁ¸ NickNameÀ» Æú¹éÀ¸·Î »ç¿ë
+            // Photon AuthValues ë˜ëŠ” ê¸°ì¡´ NickNameì„ í´ë°±ìœ¼ë¡œ ì‚¬ìš©
             uid = !string.IsNullOrEmpty(PhotonNetwork.AuthValues?.UserId)
                 ? PhotonNetwork.AuthValues.UserId
                 : (string.IsNullOrEmpty(PhotonNetwork.NickName) ? null : PhotonNetwork.NickName);
@@ -289,7 +289,7 @@ public class Test_QuickMatchManager : MonoBehaviourPunCallbacks
 
     private void EnsureLocalCustomProps()
     {
-        // Á¶ÀÎ Á÷ÈÄ¿¡µµ cp¿¡ uid/nicknameÀÌ ¾øÀ¸¸é º¸°­
+        // ì¡°ì¸ ì§í›„ì—ë„ cpì— uid/nicknameì´ ì—†ìœ¼ë©´ ë³´ê°•
         var uid = PhotonNetwork.AuthValues?.UserId;
         if (string.IsNullOrEmpty(uid)) uid = PhotonNetwork.NickName;
 

@@ -10,7 +10,7 @@ namespace MiniGameJenga
         [SerializeField] private TimingGame timingUI;
         private Coroutine _countdownCo;
 
-        private JengaBlock _currentBlock;           // ÇöÀç Å¸ÀÌ¹Ö ÁßÀÎ ºí·Ï
+        private JengaBlock _currentBlock;           // í˜„ì¬ íƒ€ì´ë° ì¤‘ì¸ ë¸”ë¡
         public bool _isTimingActive;
 
         protected override void OnAwake()
@@ -19,13 +19,13 @@ namespace MiniGameJenga
         }
 
         /// <summary>
-        /// º´·Ä ÃÊ±âÈ­ ÆÄÀÌÇÁ¶óÀÎ¿¡¼­ È£ÃâµÊ
-        /// UI¸¦ °­Á¦·Î Ã£Áö ¾Ê°í Áö¿¬ ÃÊ±âÈ­ ¹æ½Ä »ç¿ë
+        /// ë³‘ë ¬ ì´ˆê¸°í™” íŒŒì´í”„ë¼ì¸ì—ì„œ í˜¸ì¶œë¨
+        /// UIë¥¼ ê°•ì œë¡œ ì°¾ì§€ ì•Šê³  ì§€ì—° ì´ˆê¸°í™” ë°©ì‹ ì‚¬ìš©
         /// </summary>
         public IEnumerator InitializeCoroutine()
         {
             Debug.Log("[JengaTimingManager] Initialize - using deferred UI loading");
-            // UI ÃÊ±âÈ­´Â ½ÇÁ¦ »ç¿ë ½ÃÁ¡±îÁö Áö¿¬
+            // UI ì´ˆê¸°í™”ëŠ” ì‹¤ì œ ì‚¬ìš© ì‹œì ê¹Œì§€ ì§€ì—°
             yield return null;
         }
 
@@ -41,7 +41,7 @@ namespace MiniGameJenga
         }
 
         /// <summary>
-        /// TimingGame UI¸¦ ¾ÈÀüÇÏ°Ô °¡Á®¿À´Â Áö¿¬ ÃÊ±âÈ­ ¸Ş¼­µå
+        /// TimingGame UIë¥¼ ì•ˆì „í•˜ê²Œ ê°€ì ¸ì˜¤ëŠ” ì§€ì—° ì´ˆê¸°í™” ë©”ì„œë“œ
         /// </summary>
         private TimingGame GetOrFindTimingUI()
         {
@@ -61,7 +61,7 @@ namespace MiniGameJenga
         }
 
         /// <summary>
-        /// ºí·ÏÀÇ Å¸ÀÌ¹Ö °ÔÀÓ ½ÃÀÛ ¿äÃ» Ã³¸®
+        /// ë¸”ë¡ì˜ íƒ€ì´ë° ê²Œì„ ì‹œì‘ ìš”ì²­ ì²˜ë¦¬
         /// </summary>
         private void HandleTimingStart(JengaBlock block)
         {
@@ -78,7 +78,7 @@ namespace MiniGameJenga
         }
 
         /// <summary>
-        /// Å¸ÀÌ¹Ö °ÔÀÓÀ» ½ÃÀÛÇÒ ¼ö ÀÖ´ÂÁö °Ë»ç
+        /// íƒ€ì´ë° ê²Œì„ì„ ì‹œì‘í•  ìˆ˜ ìˆëŠ”ì§€ ê²€ì‚¬
         /// </summary>
         private bool CanStartTiming(JengaBlock block)
         {
@@ -104,28 +104,28 @@ namespace MiniGameJenga
         }
 
         /// <summary>
-        /// Å¸ÀÌ¹Ö °ÔÀÓ ½ÃÀÛ Ã³¸®
+        /// íƒ€ì´ë° ê²Œì„ ì‹œì‘ ì²˜ë¦¬
         /// </summary>
         private void StartTimingGame(JengaBlock block, TimingGame ui)
         {
             _currentBlock = block;
             _isTimingActive = true;
 
-            // °èÃş ÀüÃ¼ È°¼º º¸Àå (ºÎ¸ğ°¡ ²¨Á® ÀÖÀ¸¸é ÄÑÁÜ)
+            // ê³„ì¸µ ì „ì²´ í™œì„± ë³´ì¥ (ë¶€ëª¨ê°€ êº¼ì ¸ ìˆìœ¼ë©´ ì¼œì¤Œ)
             ActivateHierarchy(ui.gameObject);
 
-            // 2) ÃÖÁ¾ È°¼º/»ç¿ë °¡´É ¿©ºÎ °¡µå
+            // 2) ìµœì¢… í™œì„±/ì‚¬ìš© ê°€ëŠ¥ ì—¬ë¶€ ê°€ë“œ
             if (!ui.gameObject.activeInHierarchy || !ui.isActiveAndEnabled)
             {
                 ResetTimingState();
                 return;
             }
 
-            // 3) ÀÌº¥Æ® ¿¬°á + GameStart
+            // 3) ì´ë²¤íŠ¸ ì—°ê²° + GameStart
             ui.OnFinished += HandleTimingFinished;
             ui.GameStart();
 
-            // 4) ¸Å´ÏÀú¿¡¼­ ÄÚ·çÆ¾ ½ÃÀÛ
+            // 4) ë§¤ë‹ˆì €ì—ì„œ ì½”ë£¨í‹´ ì‹œì‘
             _countdownCo = StartCoroutine(ui.IE_CountDownPublic());
 
             Debug.Log($"[JengaTimingManager] Timing game started for block: {block.name}");
@@ -133,10 +133,10 @@ namespace MiniGameJenga
 
         private static void ActivateHierarchy(GameObject go)
         {
-            // ÀÚ±â ÀÚ½Å
+            // ìê¸° ìì‹ 
             if (!go.activeSelf) go.SetActive(true);
 
-            // ºÎ¸ğ Ã¼ÀÎ ¸ğµÎ È°¼ºÈ­
+            // ë¶€ëª¨ ì²´ì¸ ëª¨ë‘ í™œì„±í™”
             var p = go.transform.parent;
             while (p != null)
             {
@@ -146,21 +146,21 @@ namespace MiniGameJenga
         }
 
         /// <summary>
-        /// Å¸ÀÌ¹Ö °ÔÀÓ ¿Ï·á Ã³¸®
+        /// íƒ€ì´ë° ê²Œì„ ì™„ë£Œ ì²˜ë¦¬
         /// </summary>
         private void HandleTimingFinished(bool success, float accuracy)
         {
             Debug.Log($"[JengaTimingManager] Timing finished - Success: {success}, Accuracy: {accuracy:F2}");
 
-            // ºí·Ï Ã³¸®
+            // ë¸”ë¡ ì²˜ë¦¬
             _currentBlock?.ApplyTimingResult(success, accuracy);
 
-            // »óÅÂ ¸®¼Â¸¸
+            // ìƒíƒœ ë¦¬ì…‹ë§Œ
             ResetTimingState();
         }
 
         /// <summary>
-        /// TimingUI Á¤¸® ¹× ÀÌº¥Æ® ÇØÁ¦
+        /// TimingUI ì •ë¦¬ ë° ì´ë²¤íŠ¸ í•´ì œ
         /// </summary>
         private void CleanupTimingUI()
         {
@@ -174,7 +174,7 @@ namespace MiniGameJenga
         }
 
         /// <summary>
-        /// TimingUI ÀÌº¥Æ® ÇØÁ¦ (OnDisable¿¡¼­ »ç¿ë)
+        /// TimingUI ì´ë²¤íŠ¸ í•´ì œ (OnDisableì—ì„œ ì‚¬ìš©)
         /// </summary>
         private void UnsubscribeFromTimingUI()
         {
@@ -185,7 +185,7 @@ namespace MiniGameJenga
         }
 
         /// <summary>
-        /// Å¸ÀÌ¹Ö »óÅÂ ÃÊ±âÈ­
+        /// íƒ€ì´ë° ìƒíƒœ ì´ˆê¸°í™”
         /// </summary>
         private void ResetTimingState()
         {
@@ -194,17 +194,17 @@ namespace MiniGameJenga
         }
 
         /// <summary>
-        /// ÇöÀç Å¸ÀÌ¹Ö °ÔÀÓÀÌ È°¼º »óÅÂÀÎÁö È®ÀÎ
+        /// í˜„ì¬ íƒ€ì´ë° ê²Œì„ì´ í™œì„± ìƒíƒœì¸ì§€ í™•ì¸
         /// </summary>
         public bool IsTimingActive => _isTimingActive;
 
         /// <summary>
-        /// ÇöÀç Å¸ÀÌ¹Ö ÁßÀÎ ºí·Ï ¹İÈ¯ (ÀĞ±â Àü¿ë)
+        /// í˜„ì¬ íƒ€ì´ë° ì¤‘ì¸ ë¸”ë¡ ë°˜í™˜ (ì½ê¸° ì „ìš©)
         /// </summary>
         public JengaBlock CurrentTimingBlock => _currentBlock;
 
         /// <summary>
-        /// Å¸ÀÌ¹Ö °ÔÀÓÀ» °­Á¦·Î Áß´Ü (ÇÊ¿ä½Ã »ç¿ë)
+        /// íƒ€ì´ë° ê²Œì„ì„ ê°•ì œë¡œ ì¤‘ë‹¨ (í•„ìš”ì‹œ ì‚¬ìš©)
         /// </summary>
         public void CancelTiming()
         {
@@ -217,7 +217,7 @@ namespace MiniGameJenga
 
 #if UNITY_EDITOR
         /// <summary>
-        /// ¿¡µğÅÍ¿¡¼­ TimingUI ¼öµ¿ ¼³Á¤¿ë (Inspector¿¡¼­ µå·¡±×&µå·Ó)
+        /// ì—ë””í„°ì—ì„œ TimingUI ìˆ˜ë™ ì„¤ì •ìš© (Inspectorì—ì„œ ë“œë˜ê·¸&ë“œë¡­)
         /// </summary>
         [ContextMenu("Find TimingGame UI")]
         public void EditorFindTimingUI()

@@ -3,38 +3,38 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// °¢ ÇÃ·¹ÀÌ¾îÀÇ °ÔÀÓ ³» »óÅÂ(UID, ´Ğ³×ÀÓ, ÅÏ, À§Ä¡, ½Â¸® ¿©ºÎ µî)¸¦ ÀúÀåÇÏ°í °ü¸®
+/// ê° í”Œë ˆì´ì–´ì˜ ê²Œì„ ë‚´ ìƒíƒœ(UID, ë‹‰ë„¤ì„, í„´, ìœ„ì¹˜, ìŠ¹ë¦¬ ì—¬ë¶€ ë“±)ë¥¼ ì €ì¥í•˜ê³  ê´€ë¦¬
 /// --------------------------------------------------------------------------------
-/// °¢ ÇÃ·¹ÀÌ¾îÀÇ °íÀ¯ ½Äº° Á¤º¸(Firebase UID, ´Ğ³×ÀÓ) º¸°ü
-/// °ÔÀÓ ¼¼¼Ç ÁßÀÇ »óÅÂ °ü¸® (ÅÏ ¿©ºÎ, ÁØºñ ¿©ºÎ, º¸µå À§Ä¡ µî)
-/// ¹Ì´Ï°ÔÀÓ ¹× ¸ŞÀÎ¸Ê °á°ú ÀúÀå (½Â¸® ¿©ºÎ, ½Â¼ö µî)
-/// °ÔÀÓ Èå¸§ Á¦¾î ·ÎÁ÷¿¡¼­ ±âÁØ Á¤º¸·Î È°¿ëµÊ
+/// ê° í”Œë ˆì´ì–´ì˜ ê³ ìœ  ì‹ë³„ ì •ë³´(Firebase UID, ë‹‰ë„¤ì„) ë³´ê´€
+/// ê²Œì„ ì„¸ì…˜ ì¤‘ì˜ ìƒíƒœ ê´€ë¦¬ (í„´ ì—¬ë¶€, ì¤€ë¹„ ì—¬ë¶€, ë³´ë“œ ìœ„ì¹˜ ë“±)
+/// ë¯¸ë‹ˆê²Œì„ ë° ë©”ì¸ë§µ ê²°ê³¼ ì €ì¥ (ìŠ¹ë¦¬ ì—¬ë¶€, ìŠ¹ìˆ˜ ë“±)
+/// ê²Œì„ íë¦„ ì œì–´ ë¡œì§ì—ì„œ ê¸°ì¤€ ì •ë³´ë¡œ í™œìš©ë¨
 /// </summary>
 
 
 public class GamePlayer : MonoBehaviour
 {
-    #region ÇÃ·¹ÀÌ¾îÀÇ °íÀ¯ Á¤º¸
+    #region í”Œë ˆì´ì–´ì˜ ê³ ìœ  ì •ë³´
     public string PlayerId { get; private set; }    // Firebase UID
-    public string Nickname { get; private set; }    // ÇÃ·¹ÀÌ¾î ´Ğ³×ÀÓ (Photon)
+    public string Nickname { get; private set; }    // í”Œë ˆì´ì–´ ë‹‰ë„¤ì„ (Photon)
     #endregion
 
-    #region ÇÃ·¹ÀÌ¾î »óÅÂ Á¤º¸
-    public bool IsReady { get; private set; }       // ÇöÀç ÇÃ·¹ÀÌ¾î °ÔÀÓ ÀÔÀå ÁØºñ »óÅÂ
-    public bool IsTurn { get; private set; }        // ÇöÀç ÇÃ·¹ÀÌ¾îÀÇ ÅÏ ¿©ºÎ
+    #region í”Œë ˆì´ì–´ ìƒíƒœ ì •ë³´
+    public bool IsReady { get; private set; }       // í˜„ì¬ í”Œë ˆì´ì–´ ê²Œì„ ì…ì¥ ì¤€ë¹„ ìƒíƒœ
+    public bool IsTurn { get; private set; }        // í˜„ì¬ í”Œë ˆì´ì–´ì˜ í„´ ì—¬ë¶€
     #endregion
 
-    public bool WinThisMiniGame { get; set; }       // ¹Ì´Ï°ÔÀÓ¿¡¼­ ½Â¸® ¿©ºÎ
+    public bool WinThisMiniGame { get; set; }       // ë¯¸ë‹ˆê²Œì„ì—ì„œ ìŠ¹ë¦¬ ì—¬ë¶€
 
-    public int BoardPosition { get; set; }          // ÇöÀç º¸µå¿¡¼­ÀÇ À§Ä¡ (0ºÎÅÍ ½ÃÀÛ, 0Àº ½ÃÀÛÁ¡)
+    public int BoardPosition { get; set; }          // í˜„ì¬ ë³´ë“œì—ì„œì˜ ìœ„ì¹˜ (0ë¶€í„° ì‹œì‘, 0ì€ ì‹œì‘ì )
 
-    #region ¹Ì´Ï°ÔÀÓ °ü·Ã µ¥ÀÌÅÍ
+    #region ë¯¸ë‹ˆê²Œì„ ê´€ë ¨ ë°ì´í„°
     public JengaPlayerData JengaData { get; set; }
     public ShootingPlayerData ShootingData { get; set; }
     #endregion
 
 
-    // ÀüÃ¼ °ÔÀÓ¿¡¼­ ÀÌ±ä È½¼ö (ÀÌ°Ç ¼øÀ§ Á¤·ÄÀÌ³ª ÃßÈÄ¿¡ ·©Å©¿¡ »ç¿ëÇÏ´Â °æ¿ì »ç¿ë)
+    // ì „ì²´ ê²Œì„ì—ì„œ ì´ê¸´ íšŸìˆ˜ (ì´ê±´ ìˆœìœ„ ì •ë ¬ì´ë‚˜ ì¶”í›„ì— ë­í¬ì— ì‚¬ìš©í•˜ëŠ” ê²½ìš° ì‚¬ìš©)
     public int WinCount { get; set; }
 
     public void Init(string id, string nickname)
@@ -49,6 +49,6 @@ public class GamePlayer : MonoBehaviour
         BoardPosition = 0;
         WinThisMiniGame = false;
 
-        JengaData = new JengaPlayerData(); // ¹Ì´Ï°ÔÀÓ µ¥ÀÌÅÍ ÃÊ±âÈ­
+        JengaData = new JengaPlayerData(); // ë¯¸ë‹ˆê²Œì„ ë°ì´í„° ì´ˆê¸°í™”
     }
 }
