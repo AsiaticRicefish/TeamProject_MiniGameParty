@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Linq;
 using LDH_MainGame;
 using Managers;
@@ -14,8 +15,11 @@ namespace LDH.LDH_Scripts.Test
         
         
 
-        private void Start()
+        private IEnumerator Start()
         {
+            yield return new WaitUntil(() => MainGameManager.Instance != null);
+
+            
             MainGameManager.Instance.OnGameStart += () =>
             {
                 SetLogText("Game Start!");

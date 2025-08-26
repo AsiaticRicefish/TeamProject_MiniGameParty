@@ -90,6 +90,7 @@ namespace LDH_UI
                 int slot = panel.SlotIndex;
                 bool isReady = (mask & (1 << slot)) != 0;
                 panel.SetReadyVisual(isReady); 
+                
             }
         }
         #endregion

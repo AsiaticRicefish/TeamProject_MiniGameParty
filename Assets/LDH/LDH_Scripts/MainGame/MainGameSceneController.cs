@@ -14,19 +14,22 @@ namespace LDH_MainGame
 {
     public class MainGameSceneController : BaseGameSceneController
     {
+        public static MainGameSceneController Instance { get; private set; }
         protected override string GameType => "Main";
 
-        [Header("초기화 대상 (IGameComponent, ICouroutineGameComponent)")] 
+        [Header("초기화 대상 (IGameComponent, ICouroutineGameComponent)")] [SerializeField]
+        private string[] roomObjectPaths;
+
         [SerializeField] private GameObject[] initializeObjects;
-        
+
         private readonly List<IGameComponent> _sequential = new();
         private readonly List<ICoroutineGameComponent> _parallel = new();
         private readonly Dictionary<IGameComponent, Type> _seqTypeMap = new(); // 선택
         private readonly Dictionary<ICoroutineGameComponent, Type> _parTypeMap = new(); // 선택
-        
+
 
         private UI_Loading _uiLoading;
-        
+
 
         #region 초기화 구현(BasSceneController Implement)
 
@@ -35,9 +38,9 @@ namespace LDH_MainGame
             //todo: 로딩 패널 켜는 시점 옮기기(로비 씬에서 켜기)
             _uiLoading = Manager.UI.CreatePopupUI<UI_Loading>();
             Manager.UI.ShowPopupUI(_uiLoading).Forget();
-            
-           
-            
+
+            if (Instance == null)
+                Instance = this;
         }
 
         /// <summary>
@@ -51,9 +54,12 @@ namespace LDH_MainGame
             //플레이어 UID가 있는지 확인 (임시 메서드)
             yield return WaitForAllPlayerUids(5f);
 
+            //룸 오브젝트 생성
+            yield return StartCoroutine(CreateRoomObjects());
+
             //타입 체크 및 type list 초기화
             yield return StartCoroutine(SetInitializeList());
-            
+
             // 초기화가 필요한 대상(매니저 등 initializeTargets에 있는 요소들)이 생성될 때까지 대기  
             foreach (var seqType in _seqTypeMap.Values)
             {
@@ -73,7 +79,6 @@ namespace LDH_MainGame
         {
             Util_LDH.ConsoleLog(this, "SequenctialManager 초기화를 시작합니다.");
             yield return StartCoroutine(InitializeComponentsSafely(_sequential));
-            
         }
 
         protected override IEnumerator InitializeParallelManagers()
@@ -86,10 +91,10 @@ namespace LDH_MainGame
         {
             // 모든 초기화가 완료되고 게임 시작을 알림
             Util_LDH.ConsoleLog(this, "모든 초기화가 완료되었습니다. 게임을 시작합니다.");
-            
+
             // 로딩 패널을 꺼주기
             Manager.UI.CloseTopPopupUI();
-            
+
             //메인 게임 매니저가 게임을 시작
             MainGameManager.Instance.StartGame();
         }
@@ -118,8 +123,8 @@ namespace LDH_MainGame
         }
 
         #endregion
-        
-        
+
+
         #region Editor / Type Setting / Type Util
 
         private void OnValidate()
@@ -134,6 +139,7 @@ namespace LDH_MainGame
                     Debug.LogWarning($"{go.name} : IGameComponent/ICoroutineGameComponent 구현체가 없음", go);
             }
         }
+
         private IEnumerator SetInitializeList()
         {
             _sequential.Clear();
@@ -141,32 +147,51 @@ namespace LDH_MainGame
             _seqTypeMap.Clear();
             _parTypeMap.Clear();
             
-            var seqHashSet = new HashSet<object>();
-            var parHashSet = new HashSet<object>();
-
             foreach (var go in initializeObjects)
             {
-                foreach (var mb in go.GetComponents<MonoBehaviour>())
-                {
-                    
-                    if (mb is IGameComponent seq && seqHashSet.Add(seq))
-                    {
-                        _sequential.Add(seq);
-                        _seqTypeMap[seq] = seq.GetType();
-                    }
-
-                    if (mb is ICoroutineGameComponent par && parHashSet.Add(par))
-                    {
-                        _parallel.Add(par);
-                        _parTypeMap[par] = par.GetType();
-                    }
-                }
+                Register(go);
             }
             
             Util_LDH.ConsoleLog(this, "초기화 대상 리스트, 맵 세팅 완료");
             yield return null;
         }
-        
-        #endregion
+
+        private IEnumerator CreateRoomObjects()
+        {
+            if (PhotonNetwork.IsMasterClient)
+            {
+                foreach (var path in roomObjectPaths)
+                {
+                    var roomObject = PhotonNetwork.InstantiateRoomObject(path, Vector3.zero, Quaternion.identity);
+                }
+            }
+
+            yield return null;
+        }
+
+
+        public void Register(GameObject go)
+        {
+            var seqHashSet = new HashSet<object>();
+            var parHashSet = new HashSet<object>();
+
+
+            foreach (var mb in go.GetComponents<MonoBehaviour>())
+            {
+                if (mb is IGameComponent seq && seqHashSet.Add(seq))
+                {
+                    _sequential.Add(seq);
+                    _seqTypeMap[seq] = seq.GetType();
+                }
+
+                if (mb is ICoroutineGameComponent par && parHashSet.Add(par))
+                {
+                    _parallel.Add(par);
+                    _parTypeMap[par] = par.GetType();
+                }
+            }
+        }
     }
+
+    #endregion
 }

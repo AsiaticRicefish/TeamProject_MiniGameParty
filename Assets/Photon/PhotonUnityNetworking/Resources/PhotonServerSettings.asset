@@ -69,6 +69,7 @@ MonoBehaviour:
   - RPC_SyncTime
   - RPC_CountdownComplete
   - RPC_StartCountdown
+  - RpcAssignSceneViewIDs
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

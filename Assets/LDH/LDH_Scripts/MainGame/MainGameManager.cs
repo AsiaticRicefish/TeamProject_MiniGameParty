@@ -43,7 +43,6 @@ namespace LDH_MainGame
         [field: SerializeField] public int CurrentRound { get; private set; } = 0;
         [field: SerializeField] public bool IsGameFinish { get; private set; } = false;
         
-        
 
         private bool IsMaster => PhotonNetwork.IsMasterClient;
 
@@ -62,6 +61,7 @@ namespace LDH_MainGame
         protected override void OnAwake()
         {
             isPersistent = false;
+            MainGameSceneController.Instance.Register(gameObject);
             base.OnAwake();
         }
 
