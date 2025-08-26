@@ -1,9 +1,10 @@
+using System.Collections;
+using System.Collections.Generic;
 using DesignPattern;
 using Photon.Pun;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
 
 public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
 {
@@ -13,6 +14,9 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
     [Header("카운트다운 UI")]
     [SerializeField] private GameObject countdownPanel;      // 카운트다운 패널
     [SerializeField] private TMP_Text countdownText;         // 카운트다운 텍스트 (3, 2, 1, START!)
+
+    [Header("랭킹 UI")]
+    [SerializeField] private JengaRankingUIAnimated rankingUI;
 
     protected override void OnAwake()
     {
@@ -29,6 +33,7 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
         {
             JengaGameManager.Instance.OnTimeUpdated += UpdateTimerUI;
             JengaGameManager.Instance.OnGameStateChanged += OnGameStateChanged; // 게임 상태 변경 이벤트 구독
+            JengaGameManager.Instance.OnGameFinished += OnGameFinished_ShowRanking;
 
             // 초기 시간 설정
             UpdateTimerUI(JengaGameManager.Instance.GetRemainingTime());
@@ -43,6 +48,25 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
         InitializeUI();
 
         Debug.Log("[JengaUIManager - Initialize] UI 매니저 초기화 완료");
+    }
+
+    /// <summary>
+    /// 게임 상태 변경 시 호출되는 이벤트 핸들러
+    /// </summary>
+    private void OnGameStateChanged(JengaGameState newState)
+    {
+        switch (newState)
+        {
+            case JengaGameState.Playing:
+                // 게임 시작 시 카운트다운 UI 숨김 (혹시 남아있을 경우를 대비)
+                HideCountdown();
+                if (rankingUI != null) rankingUI.Hide();
+                break;
+
+            case JengaGameState.Finished:
+                // 게임 종료 시 처리
+                break;
+        }
     }
 
     #region UI 초기 활성화 상태
@@ -68,27 +92,16 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
         {
             countdownText.gameObject.SetActive(true);
         }
+
+        // 랭킹 패널은 기본 비활성
+        if (rankingUI != null)
+        {
+            rankingUI.Hide();
+        }
     }
     #endregion
 
     #region 카운트다운 UI
-    /// <summary>
-    /// 게임 상태 변경 시 호출되는 이벤트 핸들러
-    /// </summary>
-    private void OnGameStateChanged(JengaGameState newState)
-    {
-        switch (newState)
-        {
-            case JengaGameState.Playing:
-                // 게임 시작 시 카운트다운 UI 숨김 (혹시 남아있을 경우를 대비)
-                HideCountdown();
-                break;
-
-            case JengaGameState.Finished:
-                // 게임 종료 시 처리
-                break;
-        }
-    }
 
     /// <summary>
     /// 네트워크를 통해 동기화된 카운트다운 시작 (모든 클라이언트에서 동시 실행)
@@ -177,6 +190,24 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
         {
             timerText.text = JengaGameManager.Instance.GetFormattedTime();
         }
+    }
+
+    #endregion
+
+    #region 랭킹 UI
+
+    /// <summary>
+    /// 게임 종료 시 랭킹 표시
+    /// </summary>
+    /// <param name="rankings"></param>
+    private void OnGameFinished_ShowRanking(Dictionary<string, int> rankings)
+    {
+        if (rankingUI == null)
+        {
+            Debug.LogWarning("[JengaUIManager] rankingUI not set.");
+            return;
+        }
+        rankingUI.Show(rankings);   // 정렬/애니메이션/1등 강조까지 내부에서 처리
     }
 
     #endregion
