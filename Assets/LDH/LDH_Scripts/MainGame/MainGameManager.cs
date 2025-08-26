@@ -323,15 +323,7 @@ namespace LDH_MainGame
                 }
                 yield return new WaitForSeconds(0.1f);
             }
-
-            if (_readyPanel != null)
-            {
-                UnbindAllPanelEvents();
-                
-                Manager.UI.ClosePopupUI(_readyPanel).Forget();
-                _readyPanel = null;
-            }
-            //todo : 게임 정보 패널 닫기
+            
         }
       
         
@@ -347,6 +339,17 @@ namespace LDH_MainGame
             
             Debug.Log(_currentMiniGame.sceneName);
             yield return MiniGameLoader.LoadAdditive(registry.GetSceneName(_currentMiniGame.id), null);
+            
+            
+            if (_readyPanel != null)
+            {
+                UnbindAllPanelEvents();
+                
+                Manager.UI.ClosePopupUI(_readyPanel).Forget();
+                _readyPanel = null;
+            }
+            //todo : 게임 정보 패널 닫기
+            
             
             if (IsMaster)
             {
@@ -443,7 +446,7 @@ namespace LDH_MainGame
         
         private void RebuildPanel()
         {
-            _readyPanel?.ResetAllSlots(false);
+            _readyPanel?.ResetAllSlots(PhotonNetwork.IsMasterClient);
             _gameInfoPanel?.SetGameName(_currentMiniGame.gameName);
             _gameInfoPanel?.SetPlayerCount(PhotonNetwork.PlayerList.Length);
             
