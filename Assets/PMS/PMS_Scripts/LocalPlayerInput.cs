@@ -110,16 +110,25 @@ public class LocalPlayerInput : MonoBehaviourPun//, IPunOwnershipCallbacks
         if (!inputEnabled) return;
 
         Vector2 screenPos;
-        //Vector3 worldPos = ScreenToWorld(ctx.ReadValue<Vector2>());
+        ////Vector3 worldPos = ScreenToWorld(ctx.ReadValue<Vector2>());
 
-        // 터치인지 마우스인지 확인해서 위치 가져오기
-        if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
+        //// 터치인지 마우스인지 확인해서 위치 가져오기
+        //if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
+        //{
+        //    screenPos = Touchscreen.current.primaryTouch.position.ReadValue();   
+        //}
+        //else if (Mouse.current != null)
+        //{
+        //    screenPos = Mouse.current.position.ReadValue(); 
+        //}
+        //else
+        //{
+        //    return;
+        //}
+
+        if(TryGetScreenPosition(out Vector2 vaildscreenPos))
         {
-            screenPos = Touchscreen.current.primaryTouch.position.ReadValue();   
-        }
-        else if (Mouse.current != null)
-        {
-            screenPos = Mouse.current.position.ReadValue(); 
+            screenPos = vaildscreenPos;
         }
         else
         {
@@ -129,8 +138,6 @@ public class LocalPlayerInput : MonoBehaviourPun//, IPunOwnershipCallbacks
         #region Unimo와 충돌했을 때
         Ray ray = mainCam.ScreenPointToRay(screenPos); // screenPos는 Vector2 (스크린 좌표)
         RaycastHit hit;
-
-        Debug.DrawRay(mainCam.transform.position, screenPos,Color.gray,3.0f);
 
         if (Physics.Raycast(ray, out hit, Mathf.Infinity, LayerMask.GetMask("UnimoEgg"))) // 무한 거리까지 충돌 검사
         {
@@ -324,5 +331,23 @@ public class LocalPlayerInput : MonoBehaviourPun//, IPunOwnershipCallbacks
 
         if (arrow != null)
             arrow.gameObject.SetActive(photonView.IsMine);
+    }
+
+    private bool TryGetScreenPosition(out Vector2 screenPos)
+    {
+        if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
+        {
+            screenPos = Touchscreen.current.primaryTouch.position.ReadValue();
+            return true;
+        }
+
+        if (Mouse.current != null)
+        {
+            screenPos = Mouse.current.position.ReadValue();
+            return true;
+        }
+
+        screenPos = default;        //0,0 기존값을 리턴하기는 한테 입력이 없을리가 없으니깐
+        return false; // 입력 없음
     }
 }

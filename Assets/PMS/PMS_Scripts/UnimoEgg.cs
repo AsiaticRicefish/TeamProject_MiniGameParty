@@ -90,7 +90,7 @@ public class UnimoEgg : MonoBehaviourPun
         {
             // 자기 화면에서 AddForce 적용
             ApplyForce(dir);
-            //Test_ShotFollowCamera.Instance.StartFollow(gameObject);
+            Test_ShotFollowCamera.Instance.StartFollow(gameObject);
 
             // 다른 클라이언트에도 RPC 전송
             photonView.RPC("RPC_Shot", RpcTarget.Others, dir);
