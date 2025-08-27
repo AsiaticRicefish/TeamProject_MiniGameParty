@@ -114,6 +114,7 @@ namespace LDH_Util
             
             return n;
         }
+        
 
         public static void ConsoleLog<T>(T type, string message) where T : MonoBehaviour
         {

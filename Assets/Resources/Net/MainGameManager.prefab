@@ -70,11 +70,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   registry: {fileID: 7080885224738973986}
-  mainSceneName: MainScene
+  mainSceneName: LDH_MainScene
   <State>k__BackingField: 0
-  <TotalRound>k__BackingField: 0
+  <TotalRound>k__BackingField: 3
   <CurrentRound>k__BackingField: 0
-  <IsGameFinish>k__BackingField: 0
 --- !u!114 &2750379478678518143
 MonoBehaviour:
   m_ObjectHideFlags: 0
