@@ -3,10 +3,10 @@ using Cinemachine;
 
 public class CameraController : MonoBehaviour
 {
-    [SerializeField] CinemachineVirtualCamera baseCam; //±âº» Ä«¸Þ¶ó À§Ä¡
-    [SerializeField] CinemachineVirtualCamera focusCam; //ÁÜÀÎ ½Ã Ä«¸Þ¶ó À§Ä¡
+    [SerializeField] CinemachineVirtualCamera baseCam; //ê¸°ë³¸ ì¹´ë©”ë¼ ìœ„ì¹˜
+    [SerializeField] CinemachineVirtualCamera focusCam; //ì¤Œì¸ ì‹œ ì¹´ë©”ë¼ ìœ„ì¹˜
 
-    int basePriority, focusPriority; //Ä«¸Þ¶ó ¿ì¼±¼øÀ§
+    int basePriority, focusPriority; //ì¹´ë©”ë¼ ìš°ì„ ìˆœìœ„
 
     void Awake()
     {
@@ -14,20 +14,20 @@ public class CameraController : MonoBehaviour
         focusPriority = 0;
     }
 
-    // ¸¶Ä¿ À§Ä¡·Î ÁÜÀÎ
+    // ë§ˆì»¤ ìœ„ì¹˜ë¡œ ì¤Œì¸
     public void Focus(Transform marker)
     {
         focusCam.transform.SetPositionAndRotation(marker.position, marker.rotation);
 
-        //Ä«¸Þ¶ó ¿ì¼±¼øÀ§ º¯°æ (focusCam> baseCam)
+        //ì¹´ë©”ë¼ ìš°ì„ ìˆœìœ„ ë³€ê²½ (focusCam> baseCam)
         baseCam.Priority = basePriority;
         focusCam.Priority = basePriority + 1;
     }
 
-    // ¿ø·¡ Ä«¸Þ¶ó·Î º¹±ÍÇÏ±â
+    // ì›ëž˜ ì¹´ë©”ë¼ë¡œ ë³µê·€í•˜ê¸°
     public void BackToOrigin()
     {
-        //Ä«¸Þ¶ó ¿ì¼±¼øÀ§ º¯°æ (baseCam > focusCam)
+        //ì¹´ë©”ë¼ ìš°ì„ ìˆœìœ„ ë³€ê²½ (baseCam > focusCam)
         baseCam.Priority = basePriority + 1;
         focusCam.Priority = focusPriority;
     }

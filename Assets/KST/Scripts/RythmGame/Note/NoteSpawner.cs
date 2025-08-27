@@ -7,44 +7,44 @@ using System.Collections;
 namespace RhythmGame
 {
     /// <summary>
-    /// Note¸¦ ½ºÆùÇÏ´Â Å¬·¡½º·Î, 
-    /// ¸¶½ºÅÍ Å¬¶óÀÌ¾ðÆ®°¡ ´ã´çÇÏ¿© ½ÇÇàÇÏ¸ç, Note »ý¼º ½Ã ¼Óµµ, Á¾·ù µîÀ» ¼³Á¤ÇÔ.
+    /// Noteë¥¼ ìŠ¤í°í•˜ëŠ” í´ëž˜ìŠ¤ë¡œ, 
+    /// ë§ˆìŠ¤í„° í´ë¼ì´ì–¸íŠ¸ê°€ ë‹´ë‹¹í•˜ì—¬ ì‹¤í–‰í•˜ë©°, Note ìƒì„± ì‹œ ì†ë„, ì¢…ë¥˜ ë“±ì„ ì„¤ì •í•¨.
     /// 
-    /// ÇØ´ç Å¬·¡½º´Â µ¶¸³¼ºÀÌ º¸ÀåµÇ¾î¾ß ÇÏ¸ç, ÃßÈÄ °ÔÀÓ¸Å´ÏÀú ¹× ³×Æ®¿öÅ© ¸Å´ÏÀú¿¡¼­µµ ÀÌ¿ëÇÒ °¡´É¼ºÀÌ ÀÖ±â¿¡, ½Ì±ÛÅæÀ¸·Î ±¸Çö
+    /// í•´ë‹¹ í´ëž˜ìŠ¤ëŠ” ë…ë¦½ì„±ì´ ë³´ìž¥ë˜ì–´ì•¼ í•˜ë©°, ì¶”í›„ ê²Œìž„ë§¤ë‹ˆì € ë° ë„¤íŠ¸ì›Œí¬ ë§¤ë‹ˆì €ì—ì„œë„ ì´ìš©í•  ê°€ëŠ¥ì„±ì´ ìžˆê¸°ì—, ì‹±ê¸€í†¤ìœ¼ë¡œ êµ¬í˜„
     /// </summary>
     public class NoteSpawner : PunSingleton<NoteSpawner>
     {
-        //¿ÀºêÁ§Æ® Ç® °ü·Ã
+        //ì˜¤ë¸Œì íŠ¸ í’€ ê´€ë ¨
         [SerializeField] private PooledObject[] _notePrefabs;
         private Dictionary<string, ObjectPool> _notePools = new();
-        //½ºÆù °ü·Ã
+        //ìŠ¤í° ê´€ë ¨
         [SerializeField] private float _spawnTiming = 2f;
 
         private bool _isSpawning = false;
         private Coroutine _spawnCoroutine;
 
         /// <summary>
-        /// Note ½ºÆù ½ÃÀÛÇÏ´Â ·ÎÁ÷
-        /// ¸¶½ºÅÍÅ¬¶óÀÌ¾ðÆ®°¡ ´ã´çÇÏ¿© Note ½ºÆù
-        /// ½ºÆù ÁßÀÏ °æ¿ì return µÈ´Ù.
+        /// Note ìŠ¤í° ì‹œìž‘í•˜ëŠ” ë¡œì§
+        /// ë§ˆìŠ¤í„°í´ë¼ì´ì–¸íŠ¸ê°€ ë‹´ë‹¹í•˜ì—¬ Note ìŠ¤í°
+        /// ìŠ¤í° ì¤‘ì¼ ê²½ìš° return ëœë‹¤.
         /// </summary>
         public void StartSpawn()
         {
-            //½ºÆù ÁßÀÏ °æ¿ì ¸®ÅÏ
+            //ìŠ¤í° ì¤‘ì¼ ê²½ìš° ë¦¬í„´
             if (_isSpawning) return;
 
             _isSpawning = true;
 
-            //Pool ¼ÂÆÃ
+            //Pool ì…‹íŒ…
             InitPools();
 
-            //¸¶½ºÅÍ Å¬¶óÀÌ¾ðÆ®¸¸ ½ºÆùÇÒ ¼ö ÀÖµµ·Ï ¼³Á¤
+            //ë§ˆìŠ¤í„° í´ë¼ì´ì–¸íŠ¸ë§Œ ìŠ¤í°í•  ìˆ˜ ìžˆë„ë¡ ì„¤ì •
             if (PhotonNetwork.IsMasterClient)
                 _spawnCoroutine = StartCoroutine(IE_Spawn());
         }
 
         /// <summary>
-        /// °¢ Note ÇÁ¸®Æé¿¡ ÇØ´çÇÏ´Â Ç® »ý¼º
+        /// ê° Note í”„ë¦¬íŽ©ì— í•´ë‹¹í•˜ëŠ” í’€ ìƒì„±
         /// </summary>
         private void InitPools()
         {
@@ -59,41 +59,41 @@ namespace RhythmGame
         }
 
         /// <summary>
-        /// ¸¶½ºÅÍ Å¬¶óÀÌ¾ðÆ®°¡ Note Á¾·ù¿Í À§Ä¡ °áÁ¤ ÈÄ,
-        /// ¸ðµç Å¬¶óÀÌ¾ðÆ®¿¡°Ô µ¿±âÈ­ ½ÃÅ°´Â ·ÎÁ÷
+        /// ë§ˆìŠ¤í„° í´ë¼ì´ì–¸íŠ¸ê°€ Note ì¢…ë¥˜ì™€ ìœ„ì¹˜ ê²°ì • í›„,
+        /// ëª¨ë“  í´ë¼ì´ì–¸íŠ¸ì—ê²Œ ë™ê¸°í™” ì‹œí‚¤ëŠ” ë¡œì§
         /// </summary>
-        /// <returns> spawnTiming ¸¶´Ù ½ÇÇà </returns>
+        /// <returns> spawnTiming ë§ˆë‹¤ ì‹¤í–‰ </returns>
         private IEnumerator IE_Spawn()
         {
             while (true)
             {
                 yield return new WaitForSeconds(_spawnTiming);
 
-                // ¸¶½ºÅÍ Å¬¶óÀÌ¾ðÆ®°¡ Note Á¾·ù¿Í À§Ä¡ °áÁ¤
+                // ë§ˆìŠ¤í„° í´ë¼ì´ì–¸íŠ¸ê°€ Note ì¢…ë¥˜ì™€ ìœ„ì¹˜ ê²°ì •
 
-                //·£´ýÀ¸·Î Note ÇÁ¸®Æé Áß ÇÏ³ª ¼±ÅÃ
+                //ëžœë¤ìœ¼ë¡œ Note í”„ë¦¬íŽ© ì¤‘ í•˜ë‚˜ ì„ íƒ
                 int index = Random.Range(0, _notePrefabs.Length);
                 string noteName = _notePrefabs[index].name;
 
-                //TODO ±è½ÂÅÂ : ·¹ÀÏ À§Ä¡ ¼³Á¤ ÇÒ ÇÊ¿ä ÀÖÀ½
-                // -> °ÔÀÓ ½ÃÀÛ ½Ã ÇÊ¿ä ·¹ÀÏ ¼ö(ÇÃ·¹ÀÌ¾î ÀÎ¿ø ¼ö)¸¦ ¹Þ¾Æ¿Â ÈÄ, ·¹ÀÏ ¼ö¸¦ ÃÊ±âÈ­ ÇÑ ÈÄ,
-                // ¿©±â¼­ ÇØ´ç ·¹ÀÏ ¼ö¿¡ ¸Â°Ô À§Ä¡ Á¶Á¤(spawnPos)ÇÏ¸é µÉ µí.
-                
-                //·£´ý ÀÌµ¿ ¼Óµµ ¼³Á¤
+                //TODO ê¹€ìŠ¹íƒœ : ë ˆì¼ ìœ„ì¹˜ ì„¤ì • í•  í•„ìš” ìžˆìŒ
+                // -> ê²Œìž„ ì‹œìž‘ ì‹œ í•„ìš” ë ˆì¼ ìˆ˜(í”Œë ˆì´ì–´ ì¸ì› ìˆ˜)ë¥¼ ë°›ì•„ì˜¨ í›„, ë ˆì¼ ìˆ˜ë¥¼ ì´ˆê¸°í™” í•œ í›„,
+                // ì—¬ê¸°ì„œ í•´ë‹¹ ë ˆì¼ ìˆ˜ì— ë§žê²Œ ìœ„ì¹˜ ì¡°ì •(spawnPos)í•˜ë©´ ë  ë“¯.
+
+                //ëžœë¤ ì´ë™ ì†ë„ ì„¤ì •
                 float randomSpeed = Random.Range(1f, 4f);
 
-                // ¸ðµç Å¬¶óÀÌ¾ðÆ®¿¡°Ô µ¿±âÈ­
+                // ëª¨ë“  í´ë¼ì´ì–¸íŠ¸ì—ê²Œ ë™ê¸°í™”
                 // photonView.RPC(nameof(NoteSpawn), RpcTarget.All, noteName, spawnPos, randomSpeed);
             }
         }
 
         /// <summary>
-        /// Note ÀÌ¸§, ½ºÆù À§Ä¡, ÀÌµ¿¼Óµµ¸¦ ¸Å°³º¯¼ö·Î ¹ÞÀº ÈÄ,
-        /// Ç®¿¡¼­ ²¨³½ ÈÄ ÇØ´ç ¿É¼Ç ¼³Á¤ÇÏ´Â ·ÎÁ÷
+        /// Note ì´ë¦„, ìŠ¤í° ìœ„ì¹˜, ì´ë™ì†ë„ë¥¼ ë§¤ê°œë³€ìˆ˜ë¡œ ë°›ì€ í›„,
+        /// í’€ì—ì„œ êº¼ë‚¸ í›„ í•´ë‹¹ ì˜µì…˜ ì„¤ì •í•˜ëŠ” ë¡œì§
         /// </summary>
-        /// <param name="noteName">NoteÀÇ ÀÌ¸§</param>
-        /// <param name="spawnPos">Note°¡ ½ºÆùµÉ À§Ä¡</param>
-        /// <param name="speed">NoteÀÇ ³«ÇÏ ¼Óµµ</param>
+        /// <param name="noteName">Noteì˜ ì´ë¦„</param>
+        /// <param name="spawnPos">Noteê°€ ìŠ¤í°ë  ìœ„ì¹˜</param>
+        /// <param name="speed">Noteì˜ ë‚™í•˜ ì†ë„</param>
         [PunRPC]
         private void NoteSpawn(string noteName, Vector3 spawnPos, float speed)
         {
@@ -107,7 +107,7 @@ namespace RhythmGame
         }
 
         /// <summary>
-        /// ½ºÆùÀ» ¸ØÃß´Â ·ÎÁ÷
+        /// ìŠ¤í°ì„ ë©ˆì¶”ëŠ” ë¡œì§
         /// </summary>
         public void StopSpawn()
         {
