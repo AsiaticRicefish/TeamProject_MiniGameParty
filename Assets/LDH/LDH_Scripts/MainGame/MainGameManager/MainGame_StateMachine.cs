@@ -10,8 +10,7 @@ namespace LDH_MainGame
 {
     public class MainGame_StateMachine
     {
-        private readonly MainGame_RoomPropController _rpc;
-        private readonly MainGame_MaskController _maskctr;
+        private readonly MainGame_PropertiesController _pc;
         private readonly MainGame_UIBinder _uiBinder;
         private readonly MiniGameRegistry _registry;
         private readonly System.Func<bool> _isMaster;
@@ -20,14 +19,15 @@ namespace LDH_MainGame
         private readonly System.Func<MiniGameInfo, string> _sceneName;
         private readonly System.Func<IEnumerator, Coroutine> _start;
         private readonly System.Action<Coroutine> _stop;
-        private readonly PhotonView _pv; // 주입받은 PhotonView
+        private readonly PhotonView _pv; // 주입받은 PhotonView (현재는 사용 안 함)
 
         public int TotalRound { get; }
         private Define_LDH.MainState _state = Define_LDH.MainState.Init;
         private MiniGameInfo _currentMini;
 
         public MainGame_StateMachine(
-            MainGame_RoomPropController rpc, MainGame_MaskController mask, MainGame_UIBinder ui,
+            MainGame_PropertiesController pc,
+            MainGame_UIBinder ui,
             MiniGameRegistry registry,
             System.Func<bool> isMaster, System.Func<int> getLocalSlot, System.Action<int> onRoundChanged,
             System.Func<MiniGameInfo, string> sceneName,
@@ -36,8 +36,7 @@ namespace LDH_MainGame
             int totalRound,
             PhotonView pv)
         {
-            _rpc = rpc;
-            _maskctr = mask;
+            _pc = pc;
             _uiBinder = ui;
             _registry = registry;
             _isMaster = isMaster;
@@ -54,7 +53,7 @@ namespace LDH_MainGame
         public MainState Get() => _state;
         public MainState ReadOrDefault()
         {
-            var s = _rpc.Get(RoomProps.State, MainState.Init.ToString());
+            var s = _pc.GetRoomProps(RoomProps.State, MainState.Init.ToString());
             return System.Enum.TryParse(s, out MainState m) ? m : MainState.Init;
         }
         public bool Changed(MainState next) => next != _state;
@@ -62,7 +61,7 @@ namespace LDH_MainGame
 
         #region Coroutine
         
-          public IEnumerator Co_Picking(System.Action onPicking = null, System.Action onPicked= null)
+        public IEnumerator Co_Picking(System.Action onPicking = null, System.Action onPicked= null)
         {
             onPicking?.Invoke();
             
@@ -71,14 +70,10 @@ namespace LDH_MainGame
             if (_isMaster())
             {
                 _currentMini = _registry.PickRandomGame();
-                _rpc.Set(new Dictionary<string, object> {
+                _pc.SetRoomProps(new Dictionary<string, object> {
                     { RoomProps.MiniGameId, _currentMini.id },
-                    { RoomProps.ReadyMask, 0 }, 
-                    { RoomProps.DoneMask, 0 },
                     { RoomProps.State, MainState.Ready.ToString() }
                 });
-                // _pv.RPC(
-                //     nameof(MainGameManager.RPC_CompletePicking), RpcTarget.All);
             }
 
             onPicked?.Invoke();
@@ -90,30 +85,26 @@ namespace LDH_MainGame
             
             onWaitAllReady?.Invoke();
 
-            string id = _rpc.Get(RoomProps.MiniGameId, "");
+            string id = _pc.GetRoomProps(RoomProps.MiniGameId, "");
             _currentMini = string.IsNullOrEmpty(id) ? null : _registry.Get(id);
             if (_currentMini != null)
                 _uiBinder.BuildReadyPanel(_currentMini, PhotonNetwork.PlayerList, _isMaster(), out _);
 
-            // 마스터가 모두 준비되면 로딩으로
-            while (_state == MainState.Ready)
-            {
-                if (_isMaster())
-                {
-                    int mask = _rpc.Get(RoomProps.ReadyMask, 0);
-                    if (_maskctr.IsAllReady(mask))
-                    {
-                        _rpc.Set(new Dictionary<string, object> {
-                            { RoomProps.State, MainState.LoadingMiniGame.ToString() },
-                            { RoomProps.ReadyMask, 0 }
-                        });
-                        break;
-                    }
-                }
-                yield return null;
-            }
-            
-            
+            // // 마스터가 모두 준비되면 로딩으로
+            // while (_state == MainState.Ready)
+            // {
+            //     if (_isMaster())
+            //     {
+            //         if (_pc.AllPlayersReady())
+            //         {
+            //             _pc.SetRoomProps(new Dictionary<string, object> {
+            //                 { RoomProps.State, MainState.LoadingMiniGame.ToString() }
+            //             });
+            //             break;
+            //         }
+            //     }
+            //     yield return null;
+            // }
         }
 
         public IEnumerator Co_LoadingMini()
@@ -121,7 +112,7 @@ namespace LDH_MainGame
             if (_currentMini == null)
             {
                 if (_isMaster())
-                    _rpc.Set(RoomProps.State, MainState.Picking.ToString());
+                    _pc.SetRoomProps(RoomProps.State, MainState.Picking.ToString());
                 yield break;
             }
 
@@ -130,12 +121,12 @@ namespace LDH_MainGame
 
             _uiBinder.CloseReadyPanel();
             if (_isMaster())
-                _rpc.Set(RoomProps.State, MainState.PlayingMiniGame.ToString());
+                _pc.SetRoomProps(RoomProps.State, MainState.PlayingMiniGame.ToString());
         }
 
         public IEnumerator Co_PlayingMini()
         {
-            // 미니게임이 끝나면 외부에서 State=ApplyingResult로 전환한다고 가정
+            // 미니게임 종료는 외부에서 State=ApplyingResult로 전환한다고 가정
             yield break;
         }
 
@@ -143,22 +134,8 @@ namespace LDH_MainGame
         {
             yield return MiniGameLoader.UnloadAdditive();
 
-            if (_isMaster())
-            {
-                // 마스터 자기 비트 멱등 반영
-                int mask = _rpc.Get(RoomProps.DoneMask, 0);
-                int bit = 1 << _getLocalSlot();
-                if ((mask & bit) == 0) _rpc.Set(RoomProps.DoneMask, mask | bit);
-
-                CheckAllPlayerDone();
-            }
-            else
-            {
-                // 클라 → 마스터에게 Done 요청
-                PhotonNetwork.LocalPlayer.TagObject = null; // 필요시
-                _pv?.RPC(nameof(MainGameManager.RPC_SetDoneBySlot),
-                          RpcTarget.MasterClient, _getLocalSlot(), true);
-            }
+            // 각자 자기 Done = true
+            MainGame_PropertiesController.SetLocalDone(true);
         }
 
         public IEnumerator Co_End()
@@ -170,22 +147,21 @@ namespace LDH_MainGame
         #endregion
         
         
-        // ---- DoneMask 종합 판정 → 라운드 증가/전이 ----
+        // ---- Done 종합 판정 → 라운드 증가/전이 ----
         public void CheckAllPlayerDone()
         {
             if (!_isMaster()) return;
            
-            Debug.Log("모두 완료됐는지 체크");
-            int done = _rpc.Get(RoomProps.DoneMask, 0);
-            if (!_maskctr.IsAllDone(done)) return;
+            Debug.Log("모두 완료됐는지 체크 (PlayerProps 기반)");
+            if (!_pc.AllPlayersDone()) return;
 
-            int round = _rpc.Get(RoomProps.Round, 1) + 1;
+            int round = _pc.GetRoomProps(RoomProps.Round, 1) + 1;
             var kv = new Dictionary<string, object> {
-                { RoomProps.Round, round }, { RoomProps.DoneMask, 0 }, { RoomProps.MiniGameId, "" }
+                { RoomProps.Round, round }, { RoomProps.MiniGameId, "" }
             };
             bool end = (round > TotalRound);
             kv[RoomProps.State] = end ? MainState.End.ToString() : MainState.Picking.ToString();
-            _rpc.Set(kv);
+            _pc.SetRoomProps(kv);
 
             _onRoundChanged?.Invoke(round);
         }

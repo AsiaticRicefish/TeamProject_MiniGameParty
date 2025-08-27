@@ -18,8 +18,13 @@ namespace LDH_MainGame
         private UI_GameInfo _gameInfo;
         
         // 생성자
+        // 생성자
         public MainGame_UIBinder(MiniGameRegistry registry, Action<int> setLocalSlot, Action<int> onClickReady)
-        { _registry = registry; _setLocalSlot = setLocalSlot; _onClickReady = onClickReady; }
+        {
+            _registry = registry;
+            _setLocalSlot = setLocalSlot;
+            _onClickReady = onClickReady;
+        }
 
         
         public void BuildReadyPanel(MiniGameInfo mini, Player[] players, bool isMaster, out int localSlot)
@@ -55,7 +60,8 @@ namespace LDH_MainGame
             if (_readyPanel == null) return;
             foreach (var panel in _readyPanel.PlayerPanels)
                 if (panel != null) panel.ReadyClicked -= _onClickReady;
-            Manager.UI.ClosePopupUI(_readyPanel).Forget();
+
+            UniTask.Void(async () => { await Manager.UI.ClosePopupUI(_readyPanel); });
             _readyPanel = null; _gameInfo = null;
         }
 

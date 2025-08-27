@@ -23,8 +23,7 @@ namespace LDH_MainGame
         [Header("Config")] [SerializeField] private int totalRound = 3;
 
         //Controllers
-        public MainGame_RoomPropController RoomPropsCtrl;
-        public MainGame_MaskController MaskCtrl;
+        public MainGame_PropertiesController PropertiesesCtrl;
         public MainGame_UIBinder UI;
         public MainGame_StateMachine FSM;
 
@@ -59,15 +58,14 @@ namespace LDH_MainGame
         {
             Util_LDH.ConsoleLog(this, "MainGameManager 초기화 로직 실행");
 
-            RoomPropsCtrl = new(
+            PropertiesesCtrl = new(
                 () => PhotonNetwork.InRoom,
                 () => PhotonNetwork.NetworkClientState == ClientState.Joined,
                 () => !_isLeavingRoom);
 
-            MaskCtrl = new(RoomPropsCtrl);
             UI = new(registry, (s => _localSlot = s), (OnClickReady));
             FSM = new(
-                RoomPropsCtrl, MaskCtrl, UI, registry,
+                PropertiesesCtrl, UI, registry,
                 () => IsMaster,
                 () => _localSlot,
                 round => OnRoundChanged?.Invoke(round),
@@ -86,24 +84,22 @@ namespace LDH_MainGame
         public void StartGame()
         {
             Util_LDH.ConsoleLog(this, "게임을 시작합니다. (Enter 'Picking' State)");
-            
+
             // 필수 서비스 준비 확인
-            if (RoomPropsCtrl == null || FSM == null || UI == null)
+            if (PropertiesesCtrl == null || FSM == null || UI == null)
             {
                 Debug.LogError("[MainGameManager] StartGame() called before Initialize() — abort.");
                 return; // 또는 Initialize() 호출 후 재시도 로직을 넣어도 됨
             }
-            
-            
+
+
             OnGameStart?.Invoke();
 
             if (IsMaster)
-                RoomPropsCtrl.Set(new Dictionary<string, object>
+                PropertiesesCtrl.SetRoomProps(new Dictionary<string, object>
                     {
                         { RoomProps.Round, 1 },
                         { RoomProps.MiniGameId, "" },
-                        { RoomProps.ReadyMask, 0 },
-                        { RoomProps.DoneMask, 0 },
                         { RoomProps.State, MainState.Picking.ToString() }
                     }
                 );
@@ -115,7 +111,7 @@ namespace LDH_MainGame
         {
             if (PhotonNetwork.IsMasterClient)
             {
-                RoomPropsCtrl.Set(RoomProps.State, MainState.ApplyingResult.ToString());
+                PropertiesesCtrl.SetRoomProps(RoomProps.State, MainState.ApplyingResult.ToString());
             }
         }
 
@@ -124,27 +120,37 @@ namespace LDH_MainGame
 
         public override void OnRoomPropertiesUpdate(Hashtable changed)
         {
-            // //로그 출력용
-            // Util_LDH.ConsoleLog(this,
-            //     $"룸 프로퍼티 변경 - (State : {PhotonNetwork.CurrentRoom.CustomProperties[RoomProps.State]}), (MiniGameId : {PhotonNetwork.CurrentRoom.CustomProperties[RoomProps.MiniGameId]}), (ReadyMask : {(int)PhotonNetwork.CurrentRoom.CustomProperties[RoomProps.ReadyMask]:b})");
-
-            if (changed.ContainsKey(RoomProps.ReadyMask))
-            {
-                Debug.Log("ready mask 변경됨");
-                UI.UpdateReady(RoomPropsCtrl.Get(RoomProps.ReadyMask, 0));
-            }
-
-            if (changed.ContainsKey(RoomProps.DoneMask) && IsMaster)
-            {
-                FSM.CheckAllPlayerDone();
-            }
+            if (changed == null || changed.Count == 0) return;
 
             if (changed.ContainsKey(RoomProps.Round))
             {
-                OnRoundChanged?.Invoke(RoomPropsCtrl.Get(RoomProps.Round, 1));
+                OnRoundChanged?.Invoke(PropertiesesCtrl.GetRoomProps(RoomProps.Round, 1));
             }
 
+            // 상태 변경 반영
             SyncGameState();
+        }
+
+        public override void OnPlayerPropertiesUpdate(Player target, Hashtable changedProps)
+        {
+            // UI Ready 표시 갱신: PlayerProps 기반으로 계산해서 UI에만 전달
+            int readyMask = PropertiesesCtrl.BuildReadyMaskFromPlayers();
+            UI.UpdateReady(readyMask);
+
+            if (IsMaster)
+            {
+                if (changedProps.ContainsKey(PlayerProps.InGameReady) &&
+                    FSM.Get() == MainState.Ready &&
+                    PropertiesesCtrl.AllPlayersReady())
+                {
+                    PropertiesesCtrl.SetRoomProps(RoomProps.State, MainState.LoadingMiniGame.ToString());
+                }
+
+                if (changedProps.ContainsKey(PlayerProps.InGameDone) && FSM.Get() == MainState.ApplyingResult)
+                {
+                    FSM.CheckAllPlayerDone();
+                }
+            }
         }
 
         public override void OnPlayerLeftRoom(Player otherPlayer)
@@ -154,39 +160,23 @@ namespace LDH_MainGame
             if (!IsMaster) return;
             if (FSM.Get() != MainState.Ready) return;
 
-            // Ready 단계일 때만 ReadyMask 조정 로직 허용 (그 외 상태에서는 건드리지 않기)
-            //마스터는 나간 플레이어 대해 room properties 조정을 해준다.
-            //ready mask에서 해당 비트 제거
-            if (otherPlayer.CustomProperties.TryGetValue(PlayerProps.SlotIndex, out var value) &&
-                value is int slot)
+            // 준비 단계에서 누가 나가도, 남은 인원 기준 AllPlayersReady면 진행
+            if (FSM.Get() == MainState.Ready && PropertiesesCtrl.AllPlayersReady())
             {
-                int newMask = MaskCtrl.ToggleReady(slot, false);
-                RoomPropsCtrl.Set(RoomProps.ReadyMask, newMask);
-
-                if (MaskCtrl.IsAllDone(newMask))
-                {
-                    RoomPropsCtrl.Set(new Dictionary<string, object>
-                    {
-                        { RoomProps.State, MainState.LoadingMiniGame.ToString() }, { RoomProps.ReadyMask, 0 }
-                    });
-                }
+                PropertiesesCtrl.SetRoomProps(RoomProps.State, MainState.LoadingMiniGame.ToString());
             }
+
+            // UI 갱신
+            UI.UpdateReady(PropertiesesCtrl.BuildReadyMaskFromPlayers());
         }
 
         public override void OnMasterClientSwitched(Player newMasterClient)
         {
             if (!IsMaster) return;
 
-            if (FSM.Get() == MainState.Ready)
+            if (FSM.Get() == MainState.Ready && PropertiesesCtrl.AllPlayersReady())
             {
-                int mask = RoomPropsCtrl.Get(RoomProps.ReadyMask, 0);
-                if (MaskCtrl.AreAllPresentOn(mask))
-                {
-                    RoomPropsCtrl.Set(new Dictionary<string, object>
-                    {
-                        { RoomProps.State, MainState.LoadingMiniGame.ToString() }, { RoomProps.ReadyMask, 0 }
-                    });
-                }
+                PropertiesesCtrl.SetRoomProps(RoomProps.State, MainState.LoadingMiniGame.ToString());
             }
         }
 
@@ -213,7 +203,6 @@ namespace LDH_MainGame
             {
                 SwitchState(nextState);
             }
-               
         }
 
         /// <summary>
@@ -233,6 +222,7 @@ namespace LDH_MainGame
             switch (nextState)
             {
                 case MainState.Picking:
+                    MainGame_PropertiesController.ClearLocalInGameProperties();
                     _stateRoutine = StartCoroutine(FSM.Co_Picking(OnPicking, OnPicked));
                     break;
                 case MainState.Ready:
@@ -252,15 +242,14 @@ namespace LDH_MainGame
                     break;
             }
         }
-        
-        
+
+
         private IEnumerator Co_EndGame()
         {
             yield return FSM.Co_End();
             _isLeavingRoom = true;
             PhotonNetwork.LeaveRoom();
         }
-        
 
         #endregion
 
@@ -270,54 +259,26 @@ namespace LDH_MainGame
         private void OnClickReady(int slot)
         {
             Debug.Log("========= on click ready 호출 ================");
-
-            Debug.Log(FSM.Get());
             if (FSM.Get() != MainState.Ready) return;
-            
-            Debug.Log(_localSlot);
+
             if (_localSlot != slot)
             {
                 Debug.Log("!!!! 내 슬롯 아님 !!!");
-                return; // 내 슬롯 아니면 무시
+                return;
             }
 
-            if (IsMaster)
-            {
-                int mask = RoomPropsCtrl.Get(RoomProps.ReadyMask, 0);
-                bool toOn = ((mask >> slot) & 1) == 0;
-                
-                Debug.Log($"{mask} => {toOn}");
-                RoomPropsCtrl.Set(RoomProps.ReadyMask, MaskCtrl.ToggleReady(slot, toOn));
-            }
-            else
-            {
-                bool now = ((RoomPropsCtrl.Get(RoomProps.ReadyMask, 0) >> slot) & 1) == 1;
-                Debug.Log($"{now} => {!now}");
-                photonView.RPC(nameof(RPC_SetReadyBySlot), RpcTarget.MasterClient, slot, !now);
-            }
+            // 내 Ready 토글 (PlayerProps)
+            bool now = PhotonNetwork.LocalPlayer.CustomProperties != null
+                       && PhotonNetwork.LocalPlayer.CustomProperties.TryGetValue(PlayerProps.InGameReady, out var v)
+                       && v is bool b && b;
+
+            MainGame_PropertiesController.SetLocalReady(!now);
         }
 
         #endregion
 
         #region RPC
-
-        [PunRPC]
-        public void RPC_SetReadyBySlot(int slotIndex, bool isReady)
-        {
-            if (!IsMaster) return;
-            RoomPropsCtrl.Set(RoomProps.ReadyMask, MaskCtrl.ToggleReady(slotIndex, isReady));
-        }
-
-        [PunRPC]
-        public void RPC_SetDoneBySlot(int slotIndex, bool isDone)
-        {
-            if (!IsMaster) return;
-            Debug.Log("RPC_SetDoneBySlot 호출");
-            RoomPropsCtrl.Set(RoomProps.DoneMask, MaskCtrl.ToggleDone(slotIndex, isDone));
-           FSM.CheckAllPlayerDone(); 
-        }
-
-
+        
         [PunRPC]
         public void RPC_CompletePicking()
         {

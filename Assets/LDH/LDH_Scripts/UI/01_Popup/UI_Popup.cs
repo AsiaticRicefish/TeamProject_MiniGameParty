@@ -59,7 +59,8 @@ namespace LDH_UI
             }
 
             // UI 매니저의 표준 닫기 흐름을 타고 싶으면 RequestClose()가 안전
-            Manager.UI.ClosePopupUI(this).Forget();
+            UniTask.Void(async () => { await Manager.UI.ClosePopupUI(this); });
+
         }
     }
 }

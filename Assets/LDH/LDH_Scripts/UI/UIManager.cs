@@ -304,6 +304,10 @@ namespace LDH_UI
             _orderPopup = baseOrderPopup;
         }
 
+        
+        public Coroutine ClosePopupUI_AsCoroutine(UI_Popup popup, bool destroy = true)
+            => StartCoroutine(ClosePopupUI(popup, destroy).ToCoroutine());
+
         #endregion
 
 

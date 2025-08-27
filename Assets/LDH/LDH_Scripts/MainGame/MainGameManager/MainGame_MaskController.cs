@@ -11,10 +11,10 @@ namespace LDH_MainGame
             Ready,
             Done,
         }
-        private readonly MainGame_RoomPropController _rpc;
+        private readonly MainGame_PropertiesController _rpc;
 
         // 생성자
-        public MainGame_MaskController(MainGame_RoomPropController rpc)
+        public MainGame_MaskController(MainGame_PropertiesController rpc)
         {
             _rpc = rpc;
         }
@@ -51,8 +51,8 @@ namespace LDH_MainGame
         {
             int mask = maskType switch
             {
-                MaskType.Ready =>_rpc.Get(Define_LDH.RoomProps.ReadyMask, 0),
-                MaskType.Done => _rpc.Get(Define_LDH.RoomProps.DoneMask, 0),
+                MaskType.Ready =>_rpc.GetRoomProps(Define_LDH.RoomProps.ReadyMask, 0),
+                MaskType.Done => _rpc.GetRoomProps(Define_LDH.RoomProps.DoneMask, 0),
                 _ => 0,
             };
               
