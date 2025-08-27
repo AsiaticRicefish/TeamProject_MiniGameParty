@@ -44,6 +44,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d39b0d60337497eae2c31e0252ddf14, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isPersistent: 1
   gameSceneName: LDH_TestGameScene
+  lobbySceneName: LDH_MainScene
   autoSyncScene: 1

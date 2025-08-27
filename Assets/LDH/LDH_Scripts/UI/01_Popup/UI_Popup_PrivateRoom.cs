@@ -74,8 +74,6 @@ namespace LDH_UI
 
         public void SetPlayerPanel(int slotIdx, bool isReady, bool isLocal, bool isMaster)
         {
-            Debug.Log(slotIdx);
-            Debug.Log(this[slotIdx]==null);
             this[slotIdx].ApplyPlayer(isReady, isLocal, isMaster);
         }
 

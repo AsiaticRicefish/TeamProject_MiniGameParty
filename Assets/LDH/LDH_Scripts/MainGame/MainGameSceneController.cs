@@ -150,6 +150,7 @@ namespace LDH_MainGame
             _seqTypeMap.Clear();
             _parTypeMap.Clear();
             
+            Debug.Log($"initialize objects 개수 : {initializeObjects.Length}");
             foreach (var go in initializeObjects)
             {
                 Register(go);
@@ -179,7 +180,7 @@ namespace LDH_MainGame
                 photonView.RPC(nameof(RPC_AnnounceRoomObjects), RpcTarget.AllBuffered, ids.ToArray());
             }
             
-            Debug.Log("마수터가 viewid 뿌릴때까지 대기");
+            Debug.Log("마스터가 viewid 뿌릴때까지 대기");
             // 1) 마스터가 뿌린 ViewID 목록을 받을 때까지 대기
             yield return new WaitUntil(() => _spawnedViewIds != null && _spawnedViewIds.Length == roomObjectPaths.Length);
             Debug.Log("내 로컬에 뷰 아이디 생길때까지 대기");
@@ -222,7 +223,7 @@ namespace LDH_MainGame
 
                 if (mb is ICoroutineGameComponent par && parHashSet.Add(par))
                 {
-                    Debug.Log("병렬 대상");
+                    Debug.Log($"병렬 대상 : {go.name}");
                     _parallel.Add(par);
                     _parTypeMap[par] = par.GetType();
                 }

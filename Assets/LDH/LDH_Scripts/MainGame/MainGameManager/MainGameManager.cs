@@ -16,10 +16,9 @@ using Hashtable = ExitGames.Client.Photon.Hashtable;
 namespace LDH_MainGame
 {
     [RequireComponent(typeof(PhotonView))]
-    public class MainGameManager : PunSingleton<MainGameManager>, ICoroutineGameComponent
+    public class MainGameManager : PunSingleton<MainGameManager>, IGameComponent
     {
         [Header("Mini Games")] public MiniGameRegistry registry;
-        [Header("Scene")] [SerializeField] private string lobbySceneName = "MainScene";
         [Header("Config")] [SerializeField] private int totalRound = 3;
 
         //Controllers
@@ -54,7 +53,7 @@ namespace LDH_MainGame
             base.OnAwake();
         }
 
-        public IEnumerator InitializeCoroutine()
+        public void  Initialize()
         {
             Util_LDH.ConsoleLog(this, "MainGameManager 초기화 로직 실행");
 
@@ -78,7 +77,6 @@ namespace LDH_MainGame
                 totalRound,
                 photonView
             );
-            yield return null;
         }
 
         public void StartGame()
@@ -179,16 +177,7 @@ namespace LDH_MainGame
                 PropertiesesCtrl.SetRoomProps(RoomProps.State, MainState.LoadingMiniGame.ToString());
             }
         }
-
-
-        public override void OnLeftRoom()
-        {
-            if (!string.IsNullOrEmpty(lobbySceneName))
-            {
-                Debug.Log("로비로 이동합니다.");
-                UnityEngine.SceneManagement.SceneManager.LoadScene(lobbySceneName);
-            }
-        }
+        
 
         #endregion
 

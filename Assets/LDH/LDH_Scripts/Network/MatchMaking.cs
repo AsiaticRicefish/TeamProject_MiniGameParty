@@ -6,6 +6,7 @@ using LDH_Util;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
 using static LDH_Util.Define_LDH;
 
@@ -15,11 +16,15 @@ namespace Network
     {
         [Header("Scene Setting")]
         [SerializeField] private string gameSceneName;
+        [SerializeField] private string lobbySceneName;
+        
         [SerializeField] private bool autoSyncScene = true;
         
         private MatchType _createType = MatchType.None;
         //--- private matching ---- 
         private int _privateRetryCount;
+
+        private bool _isNavigating = false;
 
         #region Events
 
@@ -252,6 +257,13 @@ namespace Network
         public override void OnLeftRoom()
         {
             Debug.Log($"[NetworkManager] 방에서 나갔습니다.");
+            
+            var current = SceneManager.GetActiveScene().name;
+            if (!string.Equals(current, lobbySceneName, System.StringComparison.Ordinal) && !_isNavigating)
+            {
+                Debug.Log($"로비로 이동합니다. (current: {current} → lobby: {lobbySceneName})");
+                StartCoroutine(Util_LDH.LoadSceneWithDelay(lobbySceneName, 0.5f));
+            }
             
             ClearAllPlayerProperty();
             

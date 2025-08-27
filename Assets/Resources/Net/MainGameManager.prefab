@@ -70,7 +70,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   registry: {fileID: 7080885224738973986}
-  lobbySceneName: LDH_MainScene
   totalRound: 3
 --- !u!114 &2750379478678518143
 MonoBehaviour:
