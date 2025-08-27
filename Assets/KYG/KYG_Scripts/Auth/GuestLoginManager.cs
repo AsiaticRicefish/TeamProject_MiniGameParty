@@ -18,7 +18,7 @@ namespace KYG.Auth
         [SerializeField] private string defaultRegion = "asia";
 
         [Header("Scene Names")]
-        [SerializeField] private string lobbySceneName = "LobbyScene";            // 로비(대기) 씬 이름
+        [SerializeField] private string lobbySceneName = "LDH_MainScene";            // 로비(대기) 씬 이름
         [SerializeField] private string gameplaySceneName = "PMS_ShootingTestScene"; // 실제 게임 씬 (예시)
 
         [Header("Flow Options")]
