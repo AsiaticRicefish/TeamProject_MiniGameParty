@@ -33,6 +33,9 @@ public class JengaTower : MonoBehaviour
     [SerializeField] private bool allowTopRemoval = true;               // 최상단 제거 허용 여부
     [SerializeField, Min(0)] private int topSafeLayers = 1;             // 최상단 보호층 수
 
+    [Header("난이도 시스템")]
+    [SerializeField] private int blocksRemovedCount = 0;      // 제거된 블록 수 (성공한 제거만 카운트)
+
     [Header("프리팹 모드 옵션")]
     [SerializeField] private bool preferLayerByParentName = true; // "Layer_0" 부모명 우선
     [SerializeField] private string layerPrefix = "Layer_";
@@ -150,6 +153,14 @@ public class JengaTower : MonoBehaviour
     public JengaBlock GetBlockById(int id)
         => (id >= 0 && id < allBlocks.Count) ? allBlocks[id] : null;
 
+    /// <summary>
+    /// 현재 플레이어의 제거된 블록 수 반환
+    /// </summary>
+    public int GetRemovedBlocksCount()
+    {
+        return blocksRemovedCount;
+    }
+
     private void ResetRuntimeState()
     {
         allBlocks.Clear();
@@ -157,6 +168,7 @@ public class JengaTower : MonoBehaviour
         _removedBlockIds.Clear();
         _removableCache.Clear();
         _isCollapsed = false;
+        blocksRemovedCount = 0;
     }
 
     private bool TryInferSizeFromPrefabOrChildren()
@@ -320,6 +332,13 @@ public class JengaTower : MonoBehaviour
         else block.RemoveImmediately();
 
         _removedBlockIds.Add(blockId);
+
+        // 성공한 제거만 난이도 계산에 포함
+        if (isSuccess)
+        {
+            blocksRemovedCount++;
+        }
+
         RebuildRemovableCache(forceRelaxIfEmpty: false);
 
         if (!IsStable())
@@ -459,4 +478,5 @@ public class JengaTower : MonoBehaviour
         this.topSafeLayers = Mathf.Max(0, topSafeLayers);
         RebuildRemovableCache(false);
     }
+
 }

@@ -53,7 +53,7 @@ namespace Network
             PhotonNetwork.AutomaticallySyncScene = autoSyncScene;
 
             //임시로 awake 시점에 호출
-            ConnectServer();
+            //ConnectServer();
         }
 
 

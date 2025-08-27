@@ -7,19 +7,36 @@ using UnityEngine;
 /// </summary>
 public static class GameResultData
 {
-    private static Dictionary<string, Dictionary<string, int>> minigameResults = new();
+    private static readonly Dictionary<string, Dictionary<string, int>> minigameResults = new();
 
     public static void SetMinigameResult(string gameName, Dictionary<string, int> rankings)
     {
-        minigameResults[gameName] = rankings;
+        minigameResults[gameName] = new Dictionary<string, int>(rankings);
     }
 
     public static Dictionary<string, int> GetMinigameResult(string gameName)
     {
-        return minigameResults.ContainsKey(gameName) ? minigameResults[gameName] : null;
+        return minigameResults.TryGetValue(gameName, out var r) ? r : null;
     }
 
-    public static void ClearResults()
+    public static bool TryGetMinigameResult(string gameName, out Dictionary<string, int> rankings)
+    {
+        if (minigameResults.TryGetValue(gameName, out var r))
+        {
+            rankings = new Dictionary<string, int>(r);
+            return true;
+        }
+        rankings = null;
+        return false;
+    }
+
+    public static void Clear(string gameName)
+    {
+        if (minigameResults.ContainsKey(gameName))
+            minigameResults.Remove(gameName);
+    }
+
+    public static void ClearAll()
     {
         minigameResults.Clear();
     }

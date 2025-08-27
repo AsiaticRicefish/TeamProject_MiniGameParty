@@ -29,9 +29,11 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
     [Tooltip("Instantiate 시 타워를 앵커 하위로 붙일지 여부")]
     [SerializeField] private bool parentTowerUnderAnchor = true;
 
+    [Header("카메라 앵커")]
+    [SerializeField] private List<Transform> arenaCameraAnchors = new();
+
     [SerializeField] private string[] arenaLayerNames = { "Arena_0", "Arena_1", "Arena_2", "Arena_3" };
 
-    [Tooltip("아레나 트리 전체를 감싸는 루트. 비어 있으면 자동 생성")]
     [SerializeField] private Transform towersParent;
 
     private readonly Dictionary<int, JengaTower> _playerTowers = new(); // ActorNumber → Tower
@@ -71,6 +73,46 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
         CreateAllPlayerTowers();
         Debug.Log("[JengaTowerManager] 초기화 완료 - 개별 타워 생성");
     }
+
+    #region Camera Anchor 찾기
+    private Transform GetCameraAnchor(int slotIndex)
+    {
+        // 병렬 리스트가 있으면 우선 사용
+        if (arenaCameraAnchors != null && arenaCameraAnchors.Count > 0)
+        {
+            var idx = Mathf.Abs(slotIndex) % arenaCameraAnchors.Count;
+            var t = arenaCameraAnchors[idx];
+            if (t) return t;
+        }
+
+        // 2) TowerAnchor의 자식에서 "CameraAnchor" 이름으로 탐색
+        var towerAnchor = GetPlayerTowerAnchor(slotIndex);
+        if (towerAnchor)
+        {
+            var child = towerAnchor.Find("CameraAnchor");
+            if (child) return child;
+
+            child = FindDeepChild(towerAnchor, "CameraAnchor");
+            if (child) return child;
+        }
+
+        Debug.LogWarning($"[JengaTowerManager] CameraAnchor not found for slot={slotIndex}. Fallback to TowerAnchor.");
+        return towerAnchor ? towerAnchor : towersParent;
+    }
+
+    private Transform FindDeepChild(Transform parent, string name)
+    {
+        foreach (Transform c in parent)
+        {
+            if (c.name == name) return c;
+            var r = FindDeepChild(c, name);
+            if (r) return r;
+        }
+        return null;
+    }
+
+    #endregion
+
 
     #region Tower Creation
     private void CreateAllPlayerTowers()
@@ -138,6 +180,24 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
 
         _playerTowers[actorNumber] = tower;
         tower.ConfigureTopProtection(allowTopRemoval: false, topSafeLayers: 1);
+
+        if (actorNumber == PhotonNetwork.LocalPlayer.ActorNumber)
+        {
+            int slot = GetSlotIndexOf(actorNumber);
+            var cameraAnchor = GetCameraAnchor(slot);
+            var lookTarget = tower.transform;
+
+            var binder = FindFirstObjectByType<JengaLocalCameraBinder>(FindObjectsInactive.Include);
+            
+            if (binder)
+            {
+                binder.BindForLocal(actorNumber, cameraAnchor, lookTarget, arenaLayerNames);
+            }
+            else
+            {
+                Debug.LogWarning("[JengaTowerManager] JengaLocalCameraBinder not found in scene.");
+            }
+        }
 
     }
     #endregion
