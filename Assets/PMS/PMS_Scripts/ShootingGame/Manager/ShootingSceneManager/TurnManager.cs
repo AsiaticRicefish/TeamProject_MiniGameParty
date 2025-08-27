@@ -16,7 +16,7 @@ namespace ShootingScene
         //private List<int> turnOrder = new List<int>();
         private int currentTurnIndex = 0; 
         private int currentRound = 1;    
-        private int totalRounds = 3;
+        private int totalRounds = 1;
 
         public bool IsTurnEnd;
         private Coroutine TurnCorutine;
@@ -80,7 +80,8 @@ namespace ShootingScene
                 if (currentRound > totalRounds)
                 {
                     Debug.Log("[TurnManager] - 마스터 클라이언트만 보임 / 게임 종료!");
-                    // TODO : 게임종료처리
+                    // TODO : 게임종료처리가 아니라 우승자 정하는 게임 상태로 넘어감
+                    RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "CheckGameWinnderState");
                     return;
                 }
             }
@@ -97,7 +98,7 @@ namespace ShootingScene
             photonView.RPC(nameof(RPC_SetCurrentTurn), RpcTarget.All, this.currentTurnIndex, this.currentRound);
         }
 
-        // 턴 인덱스로 플레이어 UID 찾기 (헬퍼 메서드)
+        // 턴 인덱스로 플레이어 UID 찾기
         private string GetPlayerUidByTurnIndex(int turnIndex)
         {
             foreach (var kv in ShootingGameManager.Instance.players)
@@ -113,12 +114,12 @@ namespace ShootingScene
         public void StartFirstTurn()
         {
             if (!PhotonNetwork.IsMasterClient) return;
-            currentTurnIndex = 0;                 // 0번부터 시작
+            currentTurnIndex = 1;                 // 0번부터 시작
             BroadcastCurrentTurn();
         }
 
         [PunRPC]
-        private void RPC_SetCurrentTurn(int turnIndex,int roundIndex)
+        private void RPC_SetCurrentTurn(int turnIndex, int roundIndex)
         {
             string myUid = PMS_Util.PMS_Util.GetMyUid();
             if (string.IsNullOrEmpty(myUid))
@@ -143,11 +144,13 @@ namespace ShootingScene
                 Debug.Log("내 턴 입니다!");
                 //PlayerInputManager.Instance.EnableInput();
                 UnimoEgg newEgg = EggManager.Instance.SpawnEgg(myUid);
+                newEgg.ShooterUid = PMS_Util.PMS_Util.GetMyUid();
 
                 var localInput = newEgg.GetComponent<LocalPlayerInput>();
                 if (localInput != null)
                 {
                     localInput.EnableInput(); // 활성화 시킴
+                    StartCoroutine(DelayedUIUpdate(localInput));
                 }
             }
             else
@@ -155,6 +158,12 @@ namespace ShootingScene
                 Debug.Log("상대방 턴 입니다");
                 //PlayerInputManager.Instance.DisableInput();
                 Debug.Log($"[TurnManager] - {myPlayer.ShootingData.myTurnIndex}");
+            }
+
+            //턴 타이머 동기화
+            if (PhotonNetwork.IsMasterClient)
+            { 
+                StartTurnCorutine(10.0f);
             }
         }
 
@@ -167,8 +176,19 @@ namespace ShootingScene
         private IEnumerator TurnChangeDelay(float delay)
         {
             yield return new WaitForSeconds(delay);
-            NextTurn();
             TurnCorutine = null;
+            NextTurn();
+        }
+
+        private IEnumerator DelayedUIUpdate(LocalPlayerInput localInput)
+        {
+            yield return null; // 1프레임 대기
+            localInput.UpdateUIVisibility();
+        }
+
+        public void EndTurn()
+        {
+
         }
 
         /*private void SpawnEgg(string uid)

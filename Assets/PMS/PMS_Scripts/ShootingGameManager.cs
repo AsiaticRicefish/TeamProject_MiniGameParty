@@ -12,12 +12,13 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
     private ShootingGameState currentState;
 
     //public UnimoEgg currentUnimo;
+    [SerializeField]private GameObject finishLine;
 
     public Dictionary<string, ShootingPlayerData> players = new(); // UID를 key로 가지는 플레이어 데이터
     private Dictionary<string, int> playerScores = new();        // 플레이어별 점수
 
     public int CurrentRound { get; private set; } = 0;
-    public int MaxRounds { get; private set; } = 3;
+    public int MaxRounds { get; private set; } = 1;
 
     protected override void OnAwake()
     {
@@ -107,7 +108,7 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
                 CardManager.enabled = true;
                 break;
             case "GamePlayState": ChangeState(new GamePlayState()); break;
-            case "CheckGameWinnderState": ChangeState(new GamePlayState()); break;
+            case "CheckGameWinnderState": ChangeState(new CheckGameWinnderState()); break;
             default:
                 Debug.LogError($"[ChangeStateByName] {stateName}에 해당하는 상태가 없습니다.");
                 break;
@@ -116,11 +117,32 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
 
     public void CheckGameWinner()
     {
-        if(PhotonNetwork.IsMasterClient)
+        if (!PhotonNetwork.IsMasterClient) return;
+
+        UnimoEgg[] unimoEggList = GameObject.FindObjectsOfType<UnimoEgg>();
+
+        UnimoEgg winnerUnimo = null;
+        float minDistanceSqr = float.MaxValue;
+
+        foreach(var unimoEgg in unimoEggList)
         {
-            GameObject[] unimoEggList = GameObject.FindGameObjectsWithTag("UnimoEgg");
+            Vector3 worldDir = finishLine.transform.position - unimoEgg.transform.position;
+            worldDir.y = 0f; // 높이 무시
+
+            Vector2 flatDir = new Vector2(worldDir.x, worldDir.z);
+            float distSqr = flatDir.sqrMagnitude;
+
+            if (distSqr < minDistanceSqr)
+            {
+                minDistanceSqr = distSqr;
+                winnerUnimo = unimoEgg;
+                     
+            }
         }
-        Debug.Log("[ShootingGameManager] - 우승자 계산");
+        if (winnerUnimo != null)
+            Debug.Log($"[ShootingGameManager] - 우승자 {winnerUnimo.ShooterUid}");
+
+        //return winnerUnimo.ShooterUid;
     }
 
     public void EndGame()

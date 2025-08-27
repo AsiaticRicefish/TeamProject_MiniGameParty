@@ -188,12 +188,18 @@ public class LocalPlayerInput : MonoBehaviourPun//, IPunOwnershipCallbacks
     /// <summary>
     /// 내 소유일 때만 UI 보이기
     /// </summary>
-    /*private void UpdateUIVisibility()
+    public void UpdateUIVisibility()
+    {
+        photonView.RPC(nameof(RPC_UpdateUIVisibility), RpcTarget.All);
+    }
+
+    [PunRPC]
+    private void RPC_UpdateUIVisibility()
     {
         if (charger != null)
-            charger.enabled = photonView.IsMine;
+            charger.chargeSlider.gameObject.SetActive(photonView.IsMine);
 
         if (arrow != null)
-            arrow.enabled= photonView.IsMine;
-    }*/
+            arrow.gameObject.SetActive(photonView.IsMine);
+    }
 }
