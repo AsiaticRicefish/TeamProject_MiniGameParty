@@ -7,64 +7,41 @@ using UnityEngine.InputSystem;
 
 namespace ShootingScene
 {
-    public class PlayerInputManager : CombinedSingleton<PlayerInputManager>,IGameComponent
+    public class PlayerInputManager : CombinedSingleton<PlayerInputManager>, IGameComponent
     {
-        [SerializeField] private Camera mainCam;      
+        private PlayerInput playerInput; // PlayerInput ì»´í¬ë„ŒíŠ¸ ì°¸ì¡° ë³€ìˆ˜
+        private InputAction touchAction; // TouchPress ì•¡ì…˜ ì°¸ì¡° ë³€ìˆ˜
 
-        private PlayerInput playerInput; // PlayerInput ÄÄÆ÷³ÍÆ® ÂüÁ¶ º¯¼ö
-        private InputAction touchAction; // TouchPress ¾×¼Ç ÂüÁ¶ º¯¼ö
-
-        private DirectionSign selectedDirectionSign;
-        private UnimoEgg currentPlayerUnimo;
-
-        //private float limitTime = 5.0f;    //ÇÃ·¹ÀÌ Á¦ÇÑ½Ã°£
-        private float chargingtime;        //ÇöÀç Â÷Â¡ ½Ã°£
-
-        private bool isPressing = false;
-
-        //ÅÍÄ¡ ÇÏ¸é UI°¡ ²÷¾îÁö°Ô
-        public event Action onTouched;
-
+        public event Action<InputAction.CallbackContext> onTouchPress;
         protected override void OnAwake()
         {
-            isPersistent = false;
+           isPersistent = false;
         }
-     
-        public void Initialize()
+
+        protected override void Awake()
         {
-            // PlayerInput ÄÄÆ÷³ÍÆ®¸¦ °¡Á®¿À°í, ¾×¼ÇÀ» Ã£½À´Ï´Ù.
+            Debug.Log("í”Œë ˆì´ì–´ ì¸í’‹ ë§¤ë‹ˆì € ì´ˆê¸°í™”");
             playerInput = GetComponent<PlayerInput>();
             if (playerInput != null)
             {
                 touchAction = playerInput.actions.FindAction("TouchPress");
             }
-        }
-
-        private void Update()
-        {
-            // ´©¸£°í ÀÖ´Â µ¿¾È¸¸ timer Áõ°¡
-            if (isPressing)
-            {
-                chargingtime += Time.deltaTime;
-            }
-        }
-
-        #region ½Ì±Û È¯°æ Å×½ºÆ® ÄÚµå - ÃßÈÄ ÀÚ±âÅÏÀÏ¶§ ÀÚ±â¸¸ InputÀÌ °¡´ÉÇÏµµ·Ï ¼³°è ¿¹Á¤ 
-        /*private void OnEnable()
-        {
             EnableInput();
         }
 
-        private void OnDisable()
+        public void OnTouchPress(InputAction.CallbackContext ctx)
         {
-            // ½ºÅ©¸³Æ®°¡ ºñÈ°¼ºÈ­µÉ ¶§ ÀÌº¥Æ® ±¸µ¶ ÇØÁ¦
-            DisableInput();
-        }*/
-        #endregion
+            onTouchPress?.Invoke(ctx); // êµ¬ë…ìì—ê²Œ ì „ë‹¬
+        }
+
+        public void Initialize()
+        {
+            Debug.Log("PlayerInputManager ì´ˆê¸°í™”");
+        }
 
         public void EnableInput()
         {
-            // TouchPress ¾×¼ÇÀÇ ÀÌº¥Æ®¸¦ ±¸µ¶
+            // TouchPress ì•¡ì…˜ì˜ ì´ë²¤íŠ¸ë¥¼ êµ¬ë…
             if (touchAction != null)
             {
                 touchAction.started += OnTouchPress;
@@ -73,121 +50,189 @@ namespace ShootingScene
                 touchAction.Enable();
             }
         }
-
-        //touchAction ºñÈ°¼ºÈ­ - Å¬¸¯¸øÇÏ°Ô ¸·À½
-        public void DisableInput()
-        {
-            if (touchAction != null)
-            {
-                touchAction.started -= OnTouchPress;
-                touchAction.performed -= OnTouchPress;
-                touchAction.canceled -= OnTouchPress;
-                touchAction.Disable();
-            }
-        }
-
-        // TouchPress ÀÌº¥Æ® ¿¬°á
-        public void OnTouchPress(InputAction.CallbackContext ctx)
-        {
-            /*if(limitTime > 5.0f)
-            {
-                Debug.Log("Á¦ÇÑ½Ã°£ÀÌ Áö³ª¼­ °­Á¦ ½ÇÇà");
-
-                // TODO - °­Á¦ ½ÇÇà Ãß°¡ ÀÛ¾÷Ã³¸®                 
-                // ¾Æ¿¹ ¼ÕÀ» ¾È´ò°Å³ª
-                // ÅÍÄ¡ÁßÀÎµ¥ Á¦ÇÑ½Ã°£ÀÌ Áö³µ°Å³ª
-                 
-            }*/
-
-            Vector2 screenPos;
-
-            //¿Ö ÀÎÁö ¸ğ¸£°Ú´Âµ¥ pc¿¡¼­ Simulrator·Î PlayerÇÏ¸é ÀÚ²Ù ÀÌ»óÇÑµ¥ °ªÀ» µé°í¿È
-
-            // ÅÍÄ¡ÀÎÁö ¸¶¿ì½ºÀÎÁö È®ÀÎÇØ¼­ À§Ä¡ °¡Á®¿À±â
-            if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
-            {
-                screenPos = Touchscreen.current.primaryTouch.position.ReadValue();   //Vector2 -> x,y°ª
-            }
-            else if (Mouse.current != null)
-            {
-                screenPos = Mouse.current.position.ReadValue(); //Vector2 -> x,y°ª
-            }
-            else
-            {
-                return;
-            }
-
-            //È­¸é ¹Û ÁÂÇ¥ ¹æ¾î
-            if (float.IsNaN(screenPos.x) || float.IsNaN(screenPos.y) ||
-                screenPos.x < 0 || screenPos.x > Screen.width ||
-                screenPos.y < 0 || screenPos.y > Screen.height)
-            {
-                Debug.LogWarning($"Àß¸øµÈ ÅÍÄ¡ ÁÂÇ¥: {screenPos}");
-                return;
-            }
-
-            if (mainCam == null)
-            {
-                Debug.LogError("MainCamÀÌ ¼³Á¤µÇ¾î ÀÖÁö ¾Ê½À´Ï´Ù!");
-                return;
-            }
-
-            Ray ray = mainCam.ScreenPointToRay(screenPos);
-
-            Debug.Log(screenPos);
-
-            if (ctx.started)
-            {
-                Debug.Log("start");
-
-                // Å¸ÀÌ¸Ó ÃÊ±âÈ­
-                ResetChargingTime();
-
-                // ÅÍÄ¡ ½ÃÀÛ ¡æ Raycast·Î ¾Ë ¼±ÅÃ
-                if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, LayerMask.GetMask("DirectionSign")))
-                {
-                    Debug.Log("Raycast hit DirectionSign!");
-                    onTouched?.Invoke();
-                    selectedDirectionSign = hit.collider.GetComponent<DirectionSign>();
-                    selectedDirectionSign?.OnTouchStart(screenPos);
-                }
-            }
-            else if (ctx.performed)
-            {
-                isPressing = true;
-                Debug.Log($"clickÁß - ´©¸¥ ½Ã°£: {chargingtime}ÃÊ");
-                selectedDirectionSign?.OnTouch(chargingtime);
-
-            }
-            else if (ctx.canceled)
-            {
-                Debug.Log($"end - ÃÖÁ¾ ´©¸¥ ½Ã°£: {chargingtime:F2}ÃÊ");
-                isPressing = false; // Å¸ÀÌ¸Ó Áõ°¡ Áß´Ü
-
-                selectedDirectionSign?.OnTouchEnd();
-                selectedDirectionSign = null;
-
-                //DisableInput();                         //ÇÑ¹ø ½î°í ³ª¸é ´Ù½Ã ¸ø½îµµ·Ï
-
-                if (selectedDirectionSign == null)
-                {
-                    Debug.Log("NULLÃ³¸®¿Ï·á");
-                }
-
-            }
-        }
-
-        public void ResetChargingTime()
-        {
-            // Å¸ÀÌ¸Ó ÃÊ±âÈ­ ¹× Â÷Â¡ÁßÀÎÁö ¾Æ´ÑÁö bool º¯¼ö ÃÊ±âÈ­
-            chargingtime = 0f;
-            isPressing = false;
-        }
-
-        public void OnTouchPosition(InputAction.CallbackContext ctx)
-        {
-            Vector3 touchpos = ctx.ReadValue<Vector3>();
-            // Debug.Log("ÅÍÄ¡ À§Ä¡: " + pos);
-        }
     }
 }
+
+//    {
+//        [SerializeField] private Camera mainCam;      
+
+//        private PlayerInput playerInput; // PlayerInput ì»´í¬ë„ŒíŠ¸ ì°¸ì¡° ë³€ìˆ˜
+//        private InputAction touchAction; // TouchPress ì•¡ì…˜ ì°¸ì¡° ë³€ìˆ˜
+
+//        private DirectionSign selectedDirectionSign;
+//        private UnimoEgg currentPlayerUnimo;
+
+//        //private float limitTime = 5.0f;    //í”Œë ˆì´ ì œí•œì‹œê°„
+//        private float chargingtime;        //í˜„ì¬ ì°¨ì§• ì‹œê°„
+
+//        private bool isPressing = false;
+
+//        //í„°ì¹˜ í•˜ë©´ UIê°€ ëŠì–´ì§€ê²Œ
+//        public event Action onTouched;
+
+//        protected override void OnAwake()
+//        {
+//            isPersistent = false;
+//        }
+     
+//        public void Initialize()
+//        {
+//            // PlayerInput ì»´í¬ë„ŒíŠ¸ë¥¼ ê°€ì ¸ì˜¤ê³ , ì•¡ì…˜ì„ ì°¾ìŠµë‹ˆë‹¤.
+//            playerInput = GetComponent<PlayerInput>();
+//            if (playerInput != null)
+//            {
+//                touchAction = playerInput.actions.FindAction("TouchPress");
+//            }
+//        }
+
+//        private void Update()
+//        {
+//            // ëˆ„ë¥´ê³  ìˆëŠ” ë™ì•ˆë§Œ timer ì¦ê°€
+//            if (isPressing)
+//            {
+//                chargingtime += Time.deltaTime;
+//            }
+//        }
+
+//        #region ì‹±ê¸€ í™˜ê²½ í…ŒìŠ¤íŠ¸ ì½”ë“œ - ì¶”í›„ ìê¸°í„´ì¼ë•Œ ìê¸°ë§Œ Inputì´ ê°€ëŠ¥í•˜ë„ë¡ ì„¤ê³„ ì˜ˆì • 
+//        /*private void OnEnable()
+//        {
+//            EnableInput();
+//        }
+
+//        private void OnDisable()
+//        {
+//            // ìŠ¤í¬ë¦½íŠ¸ê°€ ë¹„í™œì„±í™”ë  ë•Œ ì´ë²¤íŠ¸ êµ¬ë… í•´ì œ
+//            DisableInput();
+//        }*/
+//        #endregion
+
+//        public void EnableInput()
+//        {
+//            // TouchPress ì•¡ì…˜ì˜ ì´ë²¤íŠ¸ë¥¼ êµ¬ë…
+//            if (touchAction != null)
+//            {
+//                touchAction.started += OnTouchPress;
+//                touchAction.performed += OnTouchPress;
+//                touchAction.canceled += OnTouchPress;
+//                touchAction.Enable();
+//            }
+//        }
+
+//        //touchAction ë¹„í™œì„±í™” - í´ë¦­ëª»í•˜ê²Œ ë§‰ìŒ
+//        public void DisableInput()
+//        {
+//            if (touchAction != null)
+//            {
+//                touchAction.started -= OnTouchPress;
+//                touchAction.performed -= OnTouchPress;
+//                touchAction.canceled -= OnTouchPress;
+//                touchAction.Disable();
+//            }
+//        }
+
+//        // TouchPress ì´ë²¤íŠ¸ ì—°ê²°
+//        public void OnTouchPress(InputAction.CallbackContext ctx)
+//        {
+//            /*if(limitTime > 5.0f)
+//            {
+//                Debug.Log("ì œí•œì‹œê°„ì´ ì§€ë‚˜ì„œ ê°•ì œ ì‹¤í–‰");
+
+//                // TODO - ê°•ì œ ì‹¤í–‰ ì¶”ê°€ ì‘ì—…ì²˜ë¦¬                 
+//                // ì•„ì˜ˆ ì†ì„ ì•ˆëŒ”ê±°ë‚˜
+//                // í„°ì¹˜ì¤‘ì¸ë° ì œí•œì‹œê°„ì´ ì§€ë‚¬ê±°ë‚˜
+                 
+//            }*/
+
+//            Vector2 screenPos;
+
+//            //ì™œ ì¸ì§€ ëª¨ë¥´ê² ëŠ”ë° pcì—ì„œ Simulratorë¡œ Playerí•˜ë©´ ìê¾¸ ì´ìƒí•œë° ê°’ì„ ë“¤ê³ ì˜´
+
+//            // í„°ì¹˜ì¸ì§€ ë§ˆìš°ìŠ¤ì¸ì§€ í™•ì¸í•´ì„œ ìœ„ì¹˜ ê°€ì ¸ì˜¤ê¸°
+//            if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
+//            {
+//                screenPos = Touchscreen.current.primaryTouch.position.ReadValue();   //Vector2 -> x,yê°’
+//            }
+//            else if (Mouse.current != null)
+//            {
+//                screenPos = Mouse.current.position.ReadValue(); //Vector2 -> x,yê°’
+//            }
+//            else
+//            {
+//                return;
+//            }
+            
+//            //í™”ë©´ ë°– ì¢Œí‘œ ë°©ì–´
+//            if (float.IsNaN(screenPos.x) || float.IsNaN(screenPos.y) ||
+//                screenPos.x < 0 || screenPos.x > Screen.width ||
+//                screenPos.y < 0 || screenPos.y > Screen.height)
+//            {
+//                Debug.LogWarning($"ì˜ëª»ëœ í„°ì¹˜ ì¢Œí‘œ: {screenPos}");
+//                return;
+//            }
+
+//            if (mainCam == null)
+//            {
+//                Debug.LogError("MainCamì´ ì„¤ì •ë˜ì–´ ìˆì§€ ì•ŠìŠµë‹ˆë‹¤!");
+//                return;
+//            }
+
+//            Ray ray = mainCam.ScreenPointToRay(screenPos);
+
+//            Debug.Log(screenPos);
+
+//            if (ctx.started)
+//            {
+//                Debug.Log("start");
+
+//                // íƒ€ì´ë¨¸ ì´ˆê¸°í™”
+//                ResetChargingTime();
+
+//                // í„°ì¹˜ ì‹œì‘ â†’ Raycastë¡œ ì•Œ ì„ íƒ
+//                if (Physics.Raycast(ray, out RaycastHit hit, Mathf.Infinity, LayerMask.GetMask("DirectionSign")))
+//                {
+//                    Debug.Log("Raycast hit DirectionSign!");
+//                    onTouched?.Invoke();
+//                    selectedDirectionSign = hit.collider.GetComponent<DirectionSign>();
+//                    selectedDirectionSign?.OnTouchStart(screenPos);
+//                }
+//            }
+//            else if (ctx.performed)
+//            {
+//                isPressing = true;
+//                Debug.Log($"clickì¤‘ - ëˆ„ë¥¸ ì‹œê°„: {chargingtime}ì´ˆ");
+//                selectedDirectionSign?.OnTouch(chargingtime);
+
+//            }
+//            else if (ctx.canceled)
+//            {
+//                Debug.Log($"end - ìµœì¢… ëˆ„ë¥¸ ì‹œê°„: {chargingtime:F2}ì´ˆ");
+//                isPressing = false; // íƒ€ì´ë¨¸ ì¦ê°€ ì¤‘ë‹¨
+
+//                selectedDirectionSign?.OnTouchEnd();
+//                selectedDirectionSign = null;
+
+//                //DisableInput();                         //í•œë²ˆ ì˜ê³  ë‚˜ë©´ ë‹¤ì‹œ ëª»ì˜ë„ë¡
+
+//                if (selectedDirectionSign == null)
+//                {
+//                    Debug.Log("NULLì²˜ë¦¬ì™„ë£Œ");
+//                }
+
+//            }
+//        }
+
+//        public void ResetChargingTime()
+//        {
+//            // íƒ€ì´ë¨¸ ì´ˆê¸°í™” ë° ì°¨ì§•ì¤‘ì¸ì§€ ì•„ë‹Œì§€ bool ë³€ìˆ˜ ì´ˆê¸°í™”
+//            chargingtime = 0f;
+//            isPressing = false;
+//        }
+
+//        public void OnTouchPosition(InputAction.CallbackContext ctx)
+//        {
+//            Vector3 touchpos = ctx.ReadValue<Vector3>();
+//            // Debug.Log("í„°ì¹˜ ìœ„ì¹˜: " + pos);
+//        }
+//    }
+//}

@@ -141,13 +141,19 @@ namespace ShootingScene
             if (isMyTurn)
             {
                 Debug.Log("내 턴 입니다!");
-                PlayerInputManager.Instance.EnableInput();
-                EggManager.Instance.SpawnEgg(myUid);
+                //PlayerInputManager.Instance.EnableInput();
+                UnimoEgg newEgg = EggManager.Instance.SpawnEgg(myUid);
+
+                var localInput = newEgg.GetComponent<LocalPlayerInput>();
+                if (localInput != null)
+                {
+                    localInput.EnableInput(); // 활성화 시킴
+                }
             }
             else
             {
                 Debug.Log("상대방 턴 입니다");
-                PlayerInputManager.Instance.DisableInput();
+                //PlayerInputManager.Instance.DisableInput();
                 Debug.Log($"[TurnManager] - {myPlayer.ShootingData.myTurnIndex}");
             }
         }

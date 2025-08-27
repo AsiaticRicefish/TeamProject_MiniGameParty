@@ -6,14 +6,14 @@ public class UnimoEgg : MonoBehaviourPun
 {
     private Rigidbody rb;
 
-    private Vector3 startdic;
+    //private Vector3 startdic;
 
-    private Vector3 startTouchPos;
-    private Vector3 endTouchPos;
+    //private Vector3 startTouchPos;
+    //private Vector3 endTouchPos;
 
     public string ShooterUid; // 누가 던졌는지 저장
 
-    [SerializeField][Range(0.1f,15f)] private float forceMultiplier = 3f;
+    //[SerializeField][Range(0.1f,15f)] private float forceMultiplier = 3f;
 
     private void Awake()
     {
@@ -90,6 +90,7 @@ public class UnimoEgg : MonoBehaviourPun
         {
             // 자기 화면에서 AddForce 적용
             ApplyForce(dir);
+            //Test_ShotFollowCamera.Instance.StartFollow(gameObject);
 
             // 다른 클라이언트에도 RPC 전송
             photonView.RPC("RPC_Shot", RpcTarget.Others, dir);
@@ -102,7 +103,6 @@ public class UnimoEgg : MonoBehaviourPun
         rb.velocity = Vector3.zero;
         rb.AddForce(dir, ForceMode.Impulse);
         Debug.Log($"발사 방향의 힘의 크기 - {dir.magnitude}");
-        Test_ShotFollowCamera.Instance.StartFollow(gameObject);
     }
 
     [PunRPC]

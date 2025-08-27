@@ -25,7 +25,7 @@ public class DirectionSign : MonoBehaviour
     private Vector3 dir;
     private float chargePower;
 
-    private bool isPress = false;
+    private bool isPress = true;
     private float pressStartTime;   // 누른 시점 기록
     private bool isAngleCheck = false;
 
@@ -41,7 +41,7 @@ public class DirectionSign : MonoBehaviour
         {
             // forward 기준
             //Vector3 forward = ShootingGameManager.Instance.currentUnimo.transform.forward;          
-            Vector3 forward = currentEgg.transform.forward;
+            Vector3 forward = transform.forward;
 
             // 시간에 따라 -1 ~ 1로 반복되는 값
             float t = Mathf.Sin(Time.time * speed);
@@ -60,11 +60,11 @@ public class DirectionSign : MonoBehaviour
 
             // 디버그 라인 확인
             //Debug.DrawRay(player.position, forward * 5, Color.white);  // forward
-            Debug.DrawRay(currentEgg.transform.position, leftDir * 5, Color.red);    // left 50도
-            Debug.DrawRay(currentEgg.transform.position, rightDir * 5, Color.blue);  // right 50도
+            Debug.DrawRay(transform.position, leftDir * 5, Color.red);    // left 50도
+            Debug.DrawRay(transform.position, rightDir * 5, Color.blue);  // right 50도
 
             //움직이는 Ray
-            Debug.DrawRay(currentEgg.transform.position, currentDir * lineLength, Color.yellow);
+            Debug.DrawRay(transform.position, currentDir * lineLength, Color.yellow);
         }
 
         if (isPress)
@@ -82,7 +82,7 @@ public class DirectionSign : MonoBehaviour
             if (chargeSlider != null)
                 chargeSlider.value = chargePower / chargeMax;
 
-            Debug.DrawRay(currentEgg.transform.position, currentDir * lineLength, Color.yellow);
+            Debug.DrawRay(transform.position, currentDir * lineLength, Color.yellow);
         }
     }
 
@@ -141,8 +141,10 @@ public class DirectionSign : MonoBehaviour
     {
         chargePower = 0;
         isPress = false;
+        isSwing = false;
         isAngleCheck = false;
         dir = Vector3.zero;
+        chargeSlider.value = 0;
     }
 
     private bool CheckAngle(Vector2 touchPos)
@@ -182,12 +184,15 @@ public class DirectionSign : MonoBehaviour
     private void Start()
     {
         if (PlayerInputManager.Instance != null)
-            PlayerInputManager.Instance.onTouched += SetDir;
+        {
+
+        }
+            //PlayerInputManager.Instance.onTouched += SetDir;
     }
 
     private void OnDisable()
     {
-        PlayerInputManager.Instance.onTouched -= SetDir;
+        //PlayerInputManager.Instance.onTouched -= SetDir;
     }
 
     private void SetDir()

@@ -88,19 +88,19 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
     }
 
     // 턴 시작 시 호출
-    public void SpawnEgg(string shooterUid)
+    public UnimoEgg SpawnEgg(string shooterUid)
     {
         Debug.Log("[SpawnEgg] - 호출?");
-        if (!isPoolReady) return;
+        if (!isPoolReady) return null;
         Debug.Log("[SpawnEgg] - 호출2?");
-        if (currentUnimoEgg != null) return;
+        if (currentUnimoEgg != null) return null;
         Debug.Log("[SpawnEgg] - 호출3?");
         // 풀에서 비활성 알 찾기
         UnimoEgg egg = playerEggPools[shooterUid].Find(e => !e.gameObject.activeInHierarchy);
         if (egg == null)
         {
             Debug.LogError($"[EggManager] {shooterUid} 사용 가능한 알 없음!");
-            return;
+            return null;
         }
         Debug.Log("[SpawnEgg] - 호출4?");
         //모든 클라이언트 한테 SetActive 및 position 이동
@@ -110,6 +110,8 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
             eggSpawnPoint.position.x,
             eggSpawnPoint.position.y,
             eggSpawnPoint.position.z);
+
+        return egg;
     }
 
     [PunRPC]

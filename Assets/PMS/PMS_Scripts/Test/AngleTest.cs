@@ -6,10 +6,10 @@ using ShootingScene;
 
 public class AngleTest : MonoBehaviour
 {
-    [SerializeField] private Transform player; // ÇÃ·¹ÀÌ¾î ±âÁØ Transform
-    [SerializeField] private float maxAngle = 50f;  // ¿ŞÂÊ/¿À¸¥ÂÊ ÃÖ´ë °¢µµ
-    [SerializeField] private float speed = 2f;      // ¿òÁ÷ÀÌ´Â ¼Óµµ
-    [SerializeField] private float lineLength = 5f; // µğ¹ö±× ¶óÀÎ ±æÀÌ
+    [SerializeField] private Transform player; // í”Œë ˆì´ì–´ ê¸°ì¤€ Transform
+    [SerializeField] private float maxAngle = 50f;  // ì™¼ìª½/ì˜¤ë¥¸ìª½ ìµœëŒ€ ê°ë„
+    [SerializeField] private float speed = 2f;      // ì›€ì§ì´ëŠ” ì†ë„
+    [SerializeField] private float lineLength = 5f; // ë””ë²„ê·¸ ë¼ì¸ ê¸¸ì´
 
     private bool isSwing = true;
     private Vector3 currentDir;
@@ -17,42 +17,45 @@ public class AngleTest : MonoBehaviour
     private void Start()
     {
         if (PlayerInputManager.Instance != null)
-            PlayerInputManager.Instance.onTouched += SetDir;
+        {
+
+        }
+            //PlayerInputManager.Instance.onTouched += SetDir;
     }
 
     private void OnDisable()
     {
-        PlayerInputManager.Instance.onTouched -= SetDir;
+        //PlayerInputManager.Instance.onTouched -= SetDir;
     }
 
     void Update()
     {
         if (isSwing)
         {
-            // forward ±âÁØ
+            // forward ê¸°ì¤€
             Vector3 forward = player.forward;
 
-            // ½Ã°£¿¡ µû¶ó -1 ~ 1·Î ¹İº¹µÇ´Â °ª
+            // ì‹œê°„ì— ë”°ë¼ -1 ~ 1ë¡œ ë°˜ë³µë˜ëŠ” ê°’
             float t = Mathf.Sin(Time.time * speed);
 
-            // -maxAngle ~ maxAngle ¹üÀ§ÀÇ °¢µµ
+            // -maxAngle ~ maxAngle ë²”ìœ„ì˜ ê°ë„
             float angle = t * maxAngle;
 
-            // È¸ÀüµÈ ¹æÇâ ±¸ÇÏ±â
+            // íšŒì „ëœ ë°©í–¥ êµ¬í•˜ê¸°
             currentDir = Quaternion.AngleAxis(angle, Vector3.up) * forward;
 
-            // ¿ŞÂÊ 50µµ ¹æÇâ
+            // ì™¼ìª½ 50ë„ ë°©í–¥
             Vector3 leftDir = Quaternion.AngleAxis(-50f, Vector3.up) * forward;
 
-            // ¿À¸¥ÂÊ 50µµ ¹æÇâ
+            // ì˜¤ë¥¸ìª½ 50ë„ ë°©í–¥
             Vector3 rightDir = Quaternion.AngleAxis(50f, Vector3.up) * forward;
 
-            // µğ¹ö±× ¶óÀÎ È®ÀÎ
+            // ë””ë²„ê·¸ ë¼ì¸ í™•ì¸
             //Debug.DrawRay(player.position, forward * 5, Color.white);  // forward
-            Debug.DrawRay(player.position, leftDir * 5, Color.red);    // left 50µµ
-            Debug.DrawRay(player.position, rightDir * 5, Color.blue);  // right 50µµ
+            Debug.DrawRay(player.position, leftDir * 5, Color.red);    // left 50ë„
+            Debug.DrawRay(player.position, rightDir * 5, Color.blue);  // right 50ë„
 
-            //¿òÁ÷ÀÌ´Â Ray
+            //ì›€ì§ì´ëŠ” Ray
             Debug.DrawRay(player.position, currentDir * lineLength, Color.yellow);
         }
         else
