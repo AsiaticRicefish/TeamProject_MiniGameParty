@@ -30,6 +30,7 @@ public class GamePlayer : MonoBehaviour
 
     #region 미니게임 관련 데이터
     public JengaPlayerData JengaData { get; set; }
+    public ShootingPlayerData ShootingData { get; set; }
     #endregion
 
 
