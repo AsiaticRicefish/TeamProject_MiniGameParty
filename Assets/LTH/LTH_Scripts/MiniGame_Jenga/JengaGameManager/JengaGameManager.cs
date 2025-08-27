@@ -7,6 +7,7 @@ using Photon.Pun;
 using Photon.Pun.Demo.PunBasics;
 using UnityEngine;
 using ExitGames.Client.Photon;
+using LDH_MainGame;
 
 
 /// <summary>
@@ -336,7 +337,8 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         // 씬 전환
         if (PhotonNetwork.IsMasterClient)
         {
-            PhotonNetwork.LoadLevel(mainMapSceneName); // 씬 이름은 변경 가능
+            // PhotonNetwork.LoadLevel(mainMapSceneName); // 씬 이름은 변경 가능
+            MainGameManager.Instance?.NotifyMiniGameFinish();
         }
     }
 

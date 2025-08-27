@@ -66,6 +66,8 @@ MonoBehaviour:
   - RPC_BlockRemovalDenied
   - RPC_ApplyTowerCollapse_All
   - RPC_RequestTowerCollapse_Master
+  - RPC_SetReadyBySlot
+  - RPC_CompletePicking
   - RPC_SyncTime
   - RPC_CountdownComplete
   - RPC_StartCountdown
@@ -78,6 +80,10 @@ MonoBehaviour:
   - ClearCurrentEgg
   - RPC_Shot
   - RPC_UpdateUIVisibility
+  - RpcAssignSceneViewIDs
+  - Rpc_AssignSceneViewIDs
+  - RPC_SetDoneBySlot
+  - RPC_AnnounceRoomObjects
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1
