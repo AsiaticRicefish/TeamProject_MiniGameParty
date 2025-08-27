@@ -496,6 +496,7 @@ GameObject:
   - component: {fileID: 1526620418941845562}
   - component: {fileID: 2024522449321599695}
   - component: {fileID: 7590267804842087607}
+  - component: {fileID: 8256130508048578343}
   m_Layer: 5
   m_Name: UI_Popup_PrivateRoom
   m_TagString: Untagged
@@ -600,7 +601,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _area: 1
-  cg: {fileID: 0}
+  cg: {fileID: 8256130508048578343}
   interactable: 1
   blocksRaycasts: 1
   fadeTime: 0.1
@@ -611,6 +612,18 @@ MonoBehaviour:
   - {fileID: 2374594096775786790}
   - {fileID: 796351317986263979}
   - {fileID: 8885752719420225043}
+--- !u!225 &8256130508048578343
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8448696387981144206}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &8808323388319841497
 GameObject:
   m_ObjectHideFlags: 0

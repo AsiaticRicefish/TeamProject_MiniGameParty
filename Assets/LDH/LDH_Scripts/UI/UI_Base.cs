@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using LDH_Util;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -20,6 +21,7 @@ namespace LDH_UI
         // Private 변수
         protected bool _isVisible = false;          // visible 상태
         protected bool _isAnimating = false;        // 애니메이션 실행 중인지 여부
+        private int _animVersion; // 재진입/취소 경쟁 방지용
         private CancellationTokenSource _cts;   // 현재 실행 중인 트랜지션을 취소하기 위한 토큰 소스 (취소 신호를 만들고 보내는 주체)
         
         // 프로퍼티
@@ -36,7 +38,7 @@ namespace LDH_UI
             _cts?.Cancel();
             _cts?.Dispose();
             _cts = null;
-
+            _animVersion++; // 이전 작업들이 finally에서 실행되지 않도록 버전 증가
             OnCloseRequested = null;
         }
         
@@ -105,6 +107,8 @@ namespace LDH_UI
             
             var ct = _cts.Token;  // 취소 신호를 받는 구독자, 취소신호를 보내면 OperationCanceledException을 던지며 즉시 중단됨
 
+            int myVersion = ++_animVersion;
+            
             // 같은 상태로의 중복 요청이면 무시
             if (_isAnimating && _isVisible == visible) return;
 
@@ -115,12 +119,11 @@ namespace LDH_UI
             {
                 if (visible)
                 {
-                    if (!gameObject.activeSelf)
+                    if (gameObject!=null && !gameObject.activeSelf) gameObject.SetActive(true);
                         gameObject.SetActive(true);
                     
                     
                     // 레이아웃 강제 갱신을 위해 추가
-                    
                     await ForceReBuildLayout(transform, ct);
                     await OnShowAsync(ct);
                     _isVisible = true;
@@ -144,7 +147,10 @@ namespace LDH_UI
             }
             finally
             {
-                SetInteractable(_isVisible); // 입력/레이캐스트 복구
+                if (myVersion == _animVersion && gameObject!=null && cg)
+                    SetInteractable(_isVisible); // 입력/레이캐스트 복구
+                
+              
                 _isAnimating = false;
             }
             
@@ -158,6 +164,7 @@ namespace LDH_UI
         /// </summary>
         protected virtual void SetInteractable(bool value)
         {
+            if (gameObject==null || !cg) return;
             cg.interactable = value && interactable;
             cg.blocksRaycasts = value && blocksRaycasts;
         }
@@ -172,8 +179,9 @@ namespace LDH_UI
         {
             if (cg == null)
             {
-                // cg = GetComponent<CanvasGroup>();
-                cg = Util_LDH.GetOrAddComponent<CanvasGroup>(gameObject);
+                cg = GetComponent<CanvasGroup>();
+                if (cg == null)
+                    cg = this.AddComponent<CanvasGroup>();
             }
 
             cg.alpha = 0f;

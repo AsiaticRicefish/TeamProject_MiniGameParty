@@ -12,7 +12,7 @@ namespace LDH.LDH_Scripts.Test
             if (PhotonNetwork.IsMasterClient)
             {
                 Debug.Log("----------------------- 미니 게임 종료 요청 ---------------------------");
-                MainGameManager.Instance?.SetRoomProperties(Define_LDH.RoomProps.State, Define_LDH.MainState.ApplyingResult.ToString());
+                MainGameManager.Instance?.NotifyMiniGameFinish();
             }
         }
     }

@@ -25,7 +25,7 @@ namespace LDH.LDH_Scripts.Test
                 SetLogText("Game Start!");
             };
 
-            MainGameManager.Instance.OnPikcing += () =>
+            MainGameManager.Instance.OnPicking += () =>
             {
                 SetLogText("Selecting a random mini-game...");
             };

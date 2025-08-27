@@ -29,6 +29,7 @@ namespace LDH_MainGame
 
 
         private UI_Loading _uiLoading;
+        private int[] _spawnedViewIds;   // 마스터가 뿌린 ViewID 목록을 받는 버퍼
 
 
         #region 초기화 구현(BasSceneController Implement)
@@ -41,6 +42,9 @@ namespace LDH_MainGame
 
             if (Instance == null)
                 Instance = this;
+            
+            _sequential.Clear();
+            _parallel.Clear();
         }
 
         /// <summary>
@@ -125,7 +129,7 @@ namespace LDH_MainGame
         #endregion
 
 
-        #region Editor / Type Setting / Type Util
+        #region Editor / Type Setting / Room Object 생성
 
         private void OnValidate()
         {
@@ -142,8 +146,7 @@ namespace LDH_MainGame
 
         private IEnumerator SetInitializeList()
         {
-            _sequential.Clear();
-            _parallel.Clear();
+           
             _seqTypeMap.Clear();
             _parTypeMap.Clear();
             
@@ -158,20 +161,52 @@ namespace LDH_MainGame
 
         private IEnumerator CreateRoomObjects()
         {
+            
+            Debug.Log("Create room object");
             if (PhotonNetwork.IsMasterClient)
             {
+                var ids = new List<int>();
+
                 foreach (var path in roomObjectPaths)
                 {
-                    var roomObject = PhotonNetwork.InstantiateRoomObject(path, Vector3.zero, Quaternion.identity);
+                    var ro = PhotonNetwork.InstantiateRoomObject(path, Vector3.zero, Quaternion.identity);
+                    if (ro != null && ro.TryGetComponent(out PhotonView pv))
+                        ids.Add(pv.ViewID);
+                    else
+                        Util_LDH.ConsoleLogWarning(this, $"RoomObject spawn failed or missing PhotonView: {path}");
                 }
+                
+                photonView.RPC(nameof(RPC_AnnounceRoomObjects), RpcTarget.AllBuffered, ids.ToArray());
             }
-
+            
+            Debug.Log("마수터가 viewid 뿌릴때까지 대기");
+            // 1) 마스터가 뿌린 ViewID 목록을 받을 때까지 대기
+            yield return new WaitUntil(() => _spawnedViewIds != null && _spawnedViewIds.Length == roomObjectPaths.Length);
+            Debug.Log("내 로컬에 뷰 아이디 생길때까지 대기");
+            // 2) 내 로컬에 해당 ViewID 들이 실제로 생길 때까지 대기
+            yield return new WaitUntil(() =>
+            {
+                for (int i = 0; i < _spawnedViewIds.Length; i++)
+                {
+                    if (PhotonView.Find(_spawnedViewIds[i]) == null) return false;
+                }
+                return true;
+            });
+            Debug.Log("완료 1프레임 대기 하고 메서드 종료");
+            // 3) 컴포넌트 Awake/Start 보장 위해 한 프레임 더 쉼
             yield return null;
         }
 
+        
+        [PunRPC]
+        private void RPC_AnnounceRoomObjects(int[] viewIds)
+        {
+            _spawnedViewIds = viewIds;
+        }
 
         public void Register(GameObject go)
         {
+            Debug.Log("등록 시작");
             var seqHashSet = new HashSet<object>();
             var parHashSet = new HashSet<object>();
 
@@ -180,12 +215,14 @@ namespace LDH_MainGame
             {
                 if (mb is IGameComponent seq && seqHashSet.Add(seq))
                 {
+                    Debug.Log("순차 대상 대상");
                     _sequential.Add(seq);
                     _seqTypeMap[seq] = seq.GetType();
                 }
 
                 if (mb is ICoroutineGameComponent par && parHashSet.Add(par))
                 {
+                    Debug.Log("병렬 대상");
                     _parallel.Add(par);
                     _parTypeMap[par] = par.GetType();
                 }

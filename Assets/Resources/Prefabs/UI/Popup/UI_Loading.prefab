@@ -146,6 +146,7 @@ GameObject:
   - component: {fileID: 6310844777886843133}
   - component: {fileID: 1135591586142827771}
   - component: {fileID: 2193188289693989625}
+  - component: {fileID: 7822392450015146525}
   m_Layer: 5
   m_Name: UI_Loading
   m_TagString: Untagged
@@ -224,7 +225,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _area: 3
-  cg: {fileID: 0}
+  cg: {fileID: 7822392450015146525}
   interactable: 0
   blocksRaycasts: 1
   fadeTime: 0.1
+--- !u!225 &7822392450015146525
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5469648193770635147}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
