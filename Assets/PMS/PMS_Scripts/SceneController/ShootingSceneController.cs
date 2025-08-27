@@ -2,53 +2,60 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using Photon.Pun;
 using ShootingScene;
 
+[RequireComponent(typeof(PhotonView))]
+[DisallowMultipleComponent]
 public class ShootingSceneController : BaseGameSceneController
 {
-    //µû·Î ÀÌº¥Æ®´Â ¾ø´Â°Å °°À½
+    //ë”°ë¡œ ì´ë²¤íŠ¸ëŠ” ì—†ëŠ”ê±° ê°™ìŒ
     public Action OnGameStarted;
 
     protected override string GameType => "Shooting";
 
     protected override IEnumerator WaitForManagersAwake()
     {
-        yield return new WaitUntil(() =>
-            ShootingGameManager.Instance != null &&
-            TurnManager.Instance != null);
+        yield return WaitForSingletonReady<ShootingNetworkManager>();
+        yield return WaitForSingletonReady<ShootingGameManager>();
+        yield return WaitForSingletonReady<RoomPropertyObserver>();
+        yield return WaitForSingletonReady<PlayerInputManager>();
+        //í„´ë§¤ë‹ˆì € ì¶”ê°€
+        yield return WaitForSingletonReady<TurnManager>();
+        //ì¹´ë“œ ë§¤ë‹ˆì € ì¶”ê°€ 
+        yield return WaitForSingletonReady<CardManager>();
+        yield return WaitForSingletonReady<Test_ShotFollowCamera>();
+        yield return WaitForSingletonReady<EggManager>();
 
-        Debug.Log("¸ğµç ShootingGameScene ¸Å´ÏÀú Awake¿Ï·á");
+        Debug.Log("ëª¨ë“  ShootingGameScene ë§¤ë‹ˆì € Awakeì™„ë£Œ");
     }
 
-    //¼øÂ÷ ÃÊ±âÈ­
+    //ìˆœì°¨ ì´ˆê¸°í™”
     protected override IEnumerator InitializeSequentialManagers()
     {
-        Debug.Log("ShootingGameScene ¼øÂ÷ ÃÊ±âÈ­ ½ÃÀÛ");
+        Debug.Log("ShootingGameScene ìˆœì°¨ ì´ˆê¸°í™” ì‹œì‘");
 
-        var sequentialComponents = new List<IGameComponent>();
-
-        // ÀÇÁ¸¼º ¼ø¼­´ë·Î Ãß°¡
-        /* if (ShootingGameManager.Instance is IGameComponent gameManagerComp)
-            sequentialComponents.Add(gameManagerComp);*/
-
-        /* if (TurnManager.Instance is IGameComponent turnManagerComp)
-            sequentialComponents.Add(turnManagerComp);*/
-
-        // ÇÊ¿äÇÏ´Ù¸é ´Ù¸¥ ¼øÂ÷ ÃÊ±âÈ­ ÄÄÆ÷³ÍÆ®µé Ãß°¡
+        var sequentialComponents = new IGameComponent[]
+        {
+            RoomPropertyObserver.Instance,
+            ShootingNetworkManager.Instance,
+            ShootingGameManager.Instance,
+            PlayerInputManager.Instance,
+            TurnManager.Instance,
+            EggManager.Instance,
+        };
 
         yield return StartCoroutine(InitializeComponentsSafely(sequentialComponents));
     }
 
-    //º¡·Ä ÃÊ±âÈ­
+    //ë²™ë ¬ ì´ˆê¸°í™”
     protected override IEnumerator InitializeParallelManagers()
     {
-        Debug.Log("ShootingGameScene º´·Ä ÃÊ±âÈ­ ½ÃÀÛ");
+        Debug.Log("ShootingGameScene ë³‘ë ¬ ì´ˆê¸°í™” ì‹œì‘");
 
         var parallelComponents = new List<ICoroutineGameComponent>();
 
-        // µ¶¸³ÀûÀ¸·Î ÃÊ±âÈ­ °¡´ÉÇÑ ÄÄÆ÷³ÍÆ®µé Ãß°¡
-        /*if (ShootingGameManager.Instance is ICoroutineGameComponent gameComp)
-            parallelComponents.Add(gameComp);*/
+        //parallelComponents.Add()
 
         yield return StartCoroutine(InitializeCoroutineComponentsSafely(parallelComponents));
     }
@@ -57,11 +64,31 @@ public class ShootingSceneController : BaseGameSceneController
     protected override void NotifyGameStart()
     {
         //OnGameStarted?.Invoke();
-
-        if (ShootingGameManager.Instance is IGameStartHandler gameStart)
-            gameStart.OnGameStart();
-
-        Debug.Log("Shooting °ÔÀÓ ½ÃÀÛ ¾Ë¸² ¿Ï·á");
+        if (ShootingGameManager.Instance == null)
+        {
+            Debug.LogError("[NotifyGameStart] ShootingGameManager is NULL");
+            return;
+        }
+        try
+        {
+            if (PhotonNetwork.IsMasterClient)
+            {
+                RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "CardSelectState");
+            }
+            else if(RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.State).ToString() == "CardSelectState")
+            {
+                Debug.Log("í˜¸ì¶œ?");
+                //ì´ë¯¸ ë³€ê²½ë˜ì–´ ë£¸í”„ë¡œí¼í‹°ê°€ callbackì„ ëª»ë°›ì•˜ì„ ë•Œ
+                //ì§€ì—°ë³´ìƒ
+                //ëŠ¦ê²Œ ë“¤ì–´ì™€ì„œ ë”°ë¡œ RoomCallBack ëª»ë°›ì€ ìƒí™©ì—ì„œëŠ” ìì‹ ì˜ State ë³€ê²½ ìš”ì²­í•´ì•¼í•œë‹¤. í´ë¼ì´ì–¸íŠ¸ -> ë§ˆìŠ¤í„° í´ë¼ì´ì–¸íŠ¸
+                string state = (string)PhotonNetwork.CurrentRoom.CustomProperties[ShootingGamePropertyKeys.State];
+                ShootingGameManager.Instance.ChangeStateByName("CardSelectState");//(state);
+            }
+            //ë‚˜ë¨¸ì§€ í´ë¼ì´ì–´íŠ¸ë„ ë£¸í”„ë¡œí¼í‹° ë³€ê²½ìœ¼ë¡œ ì¸í•œ ì½œë°±í•¨ìˆ˜ë¡œ ChangeState ì‹¤í–‰ë˜ê² ì§€?
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[NotifyGameStart] {ex}\n{ex.StackTrace}");
+        }
     }
-
 }

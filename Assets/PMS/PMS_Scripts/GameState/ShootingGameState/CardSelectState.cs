@@ -1,22 +1,29 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Photon.Pun;
 using ShootingScene;
 
 public class CardSelectState : ShootingGameState
 {
+    private bool flag = true;
     public override void Enter()
     {
-        Debug.Log("[ShootingGameState] - CardSelect »óÅÂ¿¡ ÁøÀÔ");
-        //ÇÃ·¹ÀÌ¾î ÀÔ·Â °¡´ÉÇÏµµ·Ï Ã³¸®
-        //InputManager.Instance.EnableInput();
+        Debug.Log("[ShootingGameState] - CardSelectState Enter");
+        //TurnManager.Instance.SetupTurn();
+        //TurnManager.Instance.TestSetupTurn();
     }
     public override void Update() 
-    { 
-
+    {
+        if(flag && CardManager.Instance.allPicked) //ë‹¤ ëˆŒë €ì„ ë•Œ í”Œë ˆì´ì–´ë“¤ì´ 
+        {
+            TurnManager.Instance.SetupTurn();
+            flag = false;
+        }
     }
     public override void Exit() 
     {
-        Debug.Log("[ShootingGameState] - CardSelect »óÅÂ¿¡¼­ ¹ş¾î³²");
+        Debug.Log("[ShootingGameState] - CardSelectState Exit");
+        //CardUIê°€ ì‚¬ë¼ì§€ë„ë¡
     }
 }
