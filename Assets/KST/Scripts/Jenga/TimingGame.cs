@@ -101,8 +101,8 @@ public class TimingGame : MonoBehaviour
         //초기화
         _slider.value = 0f;
         _pingPongTimer = 0f;
-        _speed = 1.6f;
-        _zoneWRate = 0.45f;
+        //_speed = 1.6f;
+        //_zoneWRate = 0.45f;
 
         _remainTime = _limitTime;
         gameObject.SetActive(true);
@@ -248,6 +248,7 @@ public class TimingGame : MonoBehaviour
         if (!isChnaged)
             Debug.Log("최고 난이도입니다.");
     }
+
 
     /// <summary>
     /// 왕복 속도 감소 로직

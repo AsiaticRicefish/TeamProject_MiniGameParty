@@ -24,6 +24,7 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
     [Header("게임 상태")]
     public JengaGameState currentState = JengaGameState.Waiting;
     public float remainingTime; // 남은 시간
+    [SerializeField] private float returnToLobbyDelay = 5f; // 지연시간 노출
 
     [Header("카운트다운 설정")]
     [SerializeField] private float countdownDuration = 3f; // 카운트다운 시간
@@ -322,7 +323,7 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
             }
         }
         // 일정 시간 후 메인 씬으로 복귀
-        StartCoroutine(ReturnToMainGameAfterDelay(3f));
+        StartCoroutine(ReturnToMainGameAfterDelay(returnToLobbyDelay));
     }
 
     /// <summary>
