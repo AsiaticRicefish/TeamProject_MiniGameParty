@@ -129,3 +129,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   miniGameInfos:
   - {fileID: 11400000, guid: 8e89eeac3d14f4a27b58566cacc7064d, type: 2}
+  - {fileID: 11400000, guid: e5c3ca65badd048ce85110929773f7f4, type: 2}
