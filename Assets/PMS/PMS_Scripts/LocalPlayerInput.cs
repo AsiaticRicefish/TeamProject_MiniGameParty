@@ -25,6 +25,7 @@ public class LocalPlayerInput : MonoBehaviourPun//, IPunOwnershipCallbacks
     private float grabLimit = 1f;        // 좌우 이동 제한 (X기준)
     private Vector3 grabStartPos;        // 잡은 위치 기준
 
+
     private void OnEnable()
     {
         Debug.Log("InputManager 구독");
@@ -162,7 +163,10 @@ public class LocalPlayerInput : MonoBehaviourPun//, IPunOwnershipCallbacks
                 //var currentEgg = EggManager.Instance.currentUnimoEgg;
                 var unimo = gameObject.GetComponent<UnimoEgg>();
                 if (unimo != null)
+                {
                     unimo.Shot(arrow.CurrentDir * charger.ChargePower);
+                    TurnOffUIVisibility();
+                }
 
                 charger.StopCharge();
                 arrow.Resume();
@@ -296,7 +300,20 @@ public class LocalPlayerInput : MonoBehaviourPun//, IPunOwnershipCallbacks
     /// </summary>
     public void UpdateUIVisibility()
     {
-        photonView.RPC(nameof(RPC_UpdateUIVisibility), RpcTarget.All);
+        if (charger != null)
+            charger.chargeSlider.gameObject.SetActive(photonView.IsMine);
+
+        if (arrow != null)
+            arrow.gameObject.SetActive(photonView.IsMine);
+    }
+
+    public void TurnOffUIVisibility()
+    {
+        if (charger != null)
+            charger.chargeSlider.gameObject.SetActive(false);
+
+        if (arrow != null)
+            arrow.gameObject.SetActive(false);
     }
 
     [PunRPC]

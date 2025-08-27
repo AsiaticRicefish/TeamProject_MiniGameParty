@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using Photon.Pun;
 using ShootingScene;
@@ -12,7 +13,6 @@ public class UnimoEgg : MonoBehaviourPun
     //private Vector3 endTouchPos;
 
     public string ShooterUid; // 누가 던졌는지 저장
-
     //[SerializeField][Range(0.1f,15f)] private float forceMultiplier = 3f;
 
     private void Awake()
