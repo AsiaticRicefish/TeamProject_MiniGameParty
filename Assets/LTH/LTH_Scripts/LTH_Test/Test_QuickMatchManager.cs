@@ -50,15 +50,19 @@ public class Test_QuickMatchManager : MonoBehaviourPunCallbacks
     {
         SetUI(true);
         SetStatus("Ready");
+
+        // 이미 방 안이라면(미니게임에서 로비로 돌아온 케이스) 곧바로 게이트 시도
+        if (PhotonNetwork.InRoom)
+        {
+            SetStatus($"In room: {PhotonNetwork.CurrentRoom.Name} ({PhotonNetwork.CurrentRoom.PlayerCount}/{PhotonNetwork.CurrentRoom.MaxPlayers})");
+            TryStartGate();
+            return;
+        }
+
+        // 방 밖이라면 평소대로 매치메이킹
         if (autoConnectOnPlay) OnClick_QuickMatch();
     }
 
-    //private void OnDisable()
-    //{
-    //    if (startRoutine != null) StopCoroutine(startRoutine);
-    //    startRoutine = null;
-    //    connecting = false;
-    //}
 
     #region UI helpers
     private void SetStatus(string msg)
@@ -79,6 +83,14 @@ public class Test_QuickMatchManager : MonoBehaviourPunCallbacks
         if (connecting) return;
         connecting = true;
         SetUI(false);
+
+        // 이미 방 안이면 재-조인 시도 대신 바로 게이트
+        if (PhotonNetwork.InRoom)
+        {
+            SetStatus("Already in a room. Waiting for start...");
+            TryStartGate();
+            return;
+        }
 
         if (PhotonNetwork.IsConnectedAndReady)
         {

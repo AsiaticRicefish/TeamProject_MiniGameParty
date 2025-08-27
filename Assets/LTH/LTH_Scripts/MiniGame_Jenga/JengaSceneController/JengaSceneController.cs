@@ -123,6 +123,9 @@ public class JengaSceneController : BaseGameSceneController
         {
             loading?.Set("시작 준비 완료!", 1.0f);
 
+            if (!Camera.main)
+                Debug.LogWarning("[Scene] MainCamera가 아직 준비되지 않았습니다.");
+
             if (PhotonNetwork.IsMasterClient)
             {
                 Debug.Log($"[Scene] About to call JengaGameManager.Instance.StartGame()");
