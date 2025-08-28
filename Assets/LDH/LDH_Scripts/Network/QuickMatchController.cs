@@ -72,7 +72,9 @@ namespace Network
             {
                 Manager.Network.JoinedRoom -= OnJoinedRoom;
                 Manager.Network.RoomPlayerCountChanged -=  TryStartGame;  
+                Manager.Network.MasterClientSwiched -= OnMasterClientSwitched;
                 Manager.Network.MatchStateChanged -= OnMatchStateChanged;
+                
                 if (_popupQuickMatch != null)
                     Manager.Network.RoomPlayerCountChanged -= _popupQuickMatch.SetPlayerCount;
             }

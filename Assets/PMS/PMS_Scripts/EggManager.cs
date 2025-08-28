@@ -26,6 +26,7 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
 
     public void Initialize()
     {
+        Debug.Log("EggManager Initialize 시작");
         if (PhotonNetwork.IsMasterClient)
             StartCoroutine(MasterInitPools());
     }
@@ -33,6 +34,7 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
     //마스터가 Pool을 생성한다. 
     private IEnumerator MasterInitPools()
     {
+        Debug.Log("EggManager 유니모 오브젝트 생성 시작");
         // 모든 플레이어 UID 가져오기
         List<string> uids = new List<string>(ShootingGameManager.Instance.players.Keys);
 

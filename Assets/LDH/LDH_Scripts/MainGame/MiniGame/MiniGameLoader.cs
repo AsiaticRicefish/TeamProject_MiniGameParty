@@ -25,16 +25,18 @@ namespace LDH_MainGame
             Disable<EventSystem>(mainScene); 
             
             
-            
             var op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
             while (!op.isDone) yield return null;
 
             _loadedMiniScene = SceneManager.GetSceneByName(sceneName);
             _hasMiniScene = _loadedMiniScene.IsValid();
-            
+
             if (_hasMiniScene)
+            {
+                Debug.Log("미니게임 씬 활성화 시점");
                 SceneManager.SetActiveScene(_loadedMiniScene);
-     
+            }
+            
             onReady?.Invoke();
         }
         

@@ -32,6 +32,8 @@ namespace DesignPattern
 
         protected virtual void Awake()
         {
+            OnAwake(); // 선택 구현 가능
+            
             // 게임오브젝트가 생성되면 자동으로 싱글톤 등록
             if (_instance != null && _instance != this)
             {
@@ -45,8 +47,7 @@ namespace DesignPattern
             {
                 DontDestroyOnLoad(gameObject);
             }
-
-            OnAwake(); // 선택 구현 가능
+            
         }
 
         /// <summary>
