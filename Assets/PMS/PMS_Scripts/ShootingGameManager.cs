@@ -103,11 +103,13 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
         //난 타이머가 없어도 된다. 
     }
 
+    [PunRPC]
     private void InputOn()
     {
         OnGameStarted?.Invoke();
     }
 
+    [PunRPC]
     private void InputOff()
     {
         OnGameEnded?.Invoke();
