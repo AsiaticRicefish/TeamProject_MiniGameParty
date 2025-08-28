@@ -51,7 +51,7 @@ namespace Network
         protected override void OnAwake()
         {
             PhotonNetwork.AutomaticallySyncScene = autoSyncScene;
-
+            
             //임시로 awake 시점에 호출
             ConnectServer();
         }
@@ -269,6 +269,7 @@ namespace Network
                 StartCoroutine(Util_LDH.LoadSceneWithDelay(lobbySceneName, 0.5f));
             }
             
+            PlayerManager.Instance.ClearAllPlayers();
             ClearAllPlayerProperty();
             
             LeftRoom?.Invoke();
