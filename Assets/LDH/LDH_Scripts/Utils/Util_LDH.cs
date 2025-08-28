@@ -101,6 +101,30 @@ namespace LDH_Util
             int n = RandomNumberGenerator.GetInt32(0, 10000); // 0~9999 균등
             return n.ToString("D4"); // 0000 허용
         }
+
+        /// <summary>
+        /// [min, max) 범위 내의 랜덤한 정수 반환
+        /// </summary>
+        /// <param name="min"></param>
+        /// <param name="max"></param>
+        /// <returns></returns>
+        public static int GetRandomInt(int min, int max)
+        {
+            int n = RandomNumberGenerator.GetInt32(min, max);
+            
+            return n;
+        }
+        
+
+        public static void ConsoleLog<T>(T type, string message) where T : MonoBehaviour
+        {
+            Debug.Log($"[{type.GetType().Name}] {message}");
+        }
+        
+        public static void ConsoleLogWarning<T>(T type, string message) where T : MonoBehaviour
+        {
+            Debug.LogWarning($"[{type.GetType().Name}] {message}");
+        }
         
         #endregion
         

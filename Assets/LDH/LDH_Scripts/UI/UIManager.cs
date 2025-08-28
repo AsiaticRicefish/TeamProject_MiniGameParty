@@ -155,7 +155,7 @@ namespace LDH_UI
                 Define_LDH.UIAreaType.Top => UIRoot.TopArea.transform,
                 Define_LDH.UIAreaType.Center => UIRoot.CenterArea.transform,
                 Define_LDH.UIAreaType.Bottom => UIRoot.BottomArea.transform,
-                Define_LDH.UIAreaType.Default => UIRoot.transform,
+                Define_LDH.UIAreaType.Default => UIRoot.DefaultArea.transform,
                 _ => UIRoot.transform,
             };
         }
@@ -303,6 +303,10 @@ namespace LDH_UI
 
             _orderPopup = baseOrderPopup;
         }
+
+        
+        public Coroutine ClosePopupUI_AsCoroutine(UI_Popup popup, bool destroy = true)
+            => StartCoroutine(ClosePopupUI(popup, destroy).ToCoroutine());
 
         #endregion
 

@@ -3,6 +3,7 @@ using LDH_Util;
 using Photon.Realtime;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.UI;
 
 namespace LDH_UI
@@ -38,8 +39,8 @@ namespace LDH_UI
             base.Init();
             
             //외부는 UI_Base의 OnClosedRequested를 구독해서 처리
-            exitButton.onClick.RemoveAllListeners();
-            exitButton.onClick.AddListener(RequestClose);
+            exitButton?.onClick.RemoveAllListeners();
+            exitButton?.onClick.AddListener(RequestClose);
         }
 
         #region UI Control API
@@ -50,6 +51,7 @@ namespace LDH_UI
         /// <param name="roomCode"></param>
         public void SetRoomCode(string roomCode)
         {
+            if(roomCodeText == null) return;
             roomCodeText.text = roomCode;
         }
 
@@ -61,18 +63,31 @@ namespace LDH_UI
         {
             if(playerPanels== null) return;
 
-            foreach (var playerPanel in playerPanels)
+            for (int i = 0; i < playerPanels.Length; i++)
             {
-                
-                for (int i = 0; i < playerPanels.Length; i++)
-                {
-                    playerPanels[i].Setup(i);
-                    playerPanels[i].SetEmpty(canInvite);
-                    
-                }
+                var p = playerPanels[i];
+                if (!p) continue;
+                p.Setup(i);
+                p.SetEmpty(canInvite);
             }
         }
-        
+
+        public void SetPlayerPanel(int slotIdx, bool isReady, bool isLocal, bool isMaster)
+        {
+            this[slotIdx].ApplyPlayer(isReady, isLocal, isMaster);
+        }
+
+
+        public void UpdateReadyByMask(int mask)
+        {
+            foreach (var panel in PlayerPanels)
+            {
+                int slot = panel.SlotIndex;
+                bool isReady = (mask & (1 << slot)) != 0;
+                panel.SetReadyVisual(isReady); 
+                
+            }
+        }
         #endregion
         
     

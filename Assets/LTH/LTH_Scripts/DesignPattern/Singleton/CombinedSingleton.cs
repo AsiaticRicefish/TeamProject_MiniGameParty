@@ -15,7 +15,7 @@ namespace DesignPattern
         private static T _instance;
 
         [Tooltip("true: 씬 이동 시 유지 / false: 씬마다 새로 생성됨")]
-        protected bool isPersistent = true;
+        [SerializeField] protected bool isPersistent = true;
 
         public static T Instance
         {
