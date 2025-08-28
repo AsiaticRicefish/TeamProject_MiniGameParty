@@ -132,9 +132,9 @@ namespace KYG.Auth
             SafeReapplyUid();
 
             // 여기서 바로 룸 합류(혹은 만들기)
-            //var roomName = "DefaultRoom"; // 프로젝트 정책에 맞는 룸명/매칭 로직으로 바꾸세요.
-            //var options = new RoomOptions { MaxPlayers = 4 };
-            //PhotonNetwork.JoinOrCreateRoom(roomName, options, TypedLobby.Default);
+            var roomName = "LOBBY-MM"; // 프로젝트 규칙에 맞게
+            var options = new RoomOptions { MaxPlayers = 4, IsOpen = true, IsVisible = true };
+            PhotonNetwork.JoinOrCreateRoom(roomName, options, TypedLobby.Default);
         }
 
         public override void OnJoinedRoom()
