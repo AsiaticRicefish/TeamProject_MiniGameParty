@@ -20,6 +20,8 @@ namespace Network
         
         [SerializeField] private bool autoSyncScene = true;
         
+        [SerializeField] private bool autoConnectOnAwake = false;
+        
         private MatchType _createType = MatchType.None;
         //--- private matching ---- 
         private int _privateRetryCount;
@@ -53,6 +55,7 @@ namespace Network
             PhotonNetwork.AutomaticallySyncScene = autoSyncScene;
             
             //임시로 awake 시점에 호출
+            if (autoConnectOnAwake)
             ConnectServer();
         }
 
