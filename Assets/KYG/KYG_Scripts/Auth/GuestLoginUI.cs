@@ -172,7 +172,11 @@ public class GuestLoginUI : MonoBehaviour
             if (!lenOk) hintText.text = $"닉네임을 입력하세요 (최소 {minLength}자)";
             else hintText.text = ready ? "완료/확인 버튼을 누르거나 잠시 기다리면 연결됩니다" : "초기화 중... 잠시만 기다려주세요";
         }
+        
+        
+        Debug.Log($"len : {len} / lenok : {lenOk} / ready : {ready} => interactable : {lenOk&&ready}");
 
+        
         if (confirmButton) confirmButton.interactable = lenOk && ready; // 준비/길이 둘 다 만족해야 활성
     }
 
