@@ -392,10 +392,10 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
     {
         // 4명의 플레이어가 각자 다른 위치에 타워 배치
         Vector3[] towerPositions = {
-            new Vector3(-5, 0, 5),   // 플레이어 1
-            new Vector3(5, 0, 5),    // 플레이어 2  
-            new Vector3(-5, 0, -5),  // 플레이어 3
-            new Vector3(5, 0, -5)    // 플레이어 4
+            new Vector3(0, 0, 0),   // 플레이어 1
+            new Vector3(0, 0, 0),   // 플레이어 2  
+            new Vector3(0, 0, 0),   // 플레이어 3
+            new Vector3(0, 0, 0)    // 플레이어 4
         };
         // 플레이어 ID의 해시코드를 이용해 위치 인덱스 결정
         int index = Math.Abs(playerId.GetHashCode()) % 4;
