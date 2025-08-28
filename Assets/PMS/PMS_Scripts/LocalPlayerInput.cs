@@ -28,6 +28,7 @@ public class LocalPlayerInput : MonoBehaviourPun//, IPunOwnershipCallbacks
     }
     private void OnDisable()
     { 
+        if(ShootingScene.PlayerInputManager.Instance!= null)
         ShootingScene.PlayerInputManager.Instance.onTouchPress -= HandleTouch;
     }
 

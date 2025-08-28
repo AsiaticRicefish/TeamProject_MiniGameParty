@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
 using DesignPattern;
+using LDH_MainGame;
 
 [RequireComponent(typeof(PhotonView))]
 [DisallowMultipleComponent]
@@ -143,11 +144,15 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
             Debug.Log($"[ShootingGameManager] - 우승자 {winnerUnimo.ShooterUid}");
 
         //return winnerUnimo.ShooterUid;
+        
+        EndGame();
     }
 
     public void EndGame()
     {
         Debug.Log("[ShootingGameManager] - 게임 종료");
+        if(PhotonNetwork.IsMasterClient)
+            MainGameManager.Instance?.NotifyMiniGameFinish();
     }
 
     /*[PunRPC]

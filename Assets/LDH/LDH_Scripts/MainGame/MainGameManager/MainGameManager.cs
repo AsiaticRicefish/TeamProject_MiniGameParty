@@ -187,6 +187,7 @@ namespace LDH_MainGame
         private void SyncGameState()
         {
             var nextState = FSM.ReadOrDefault();
+            Debug.Log(nextState);
 
             if (FSM.Changed(nextState))
             {

@@ -46,6 +46,7 @@ public class PlayerManager : CombinedSingleton<PlayerManager>
     {
         if (players.TryGetValue(id, out var existingPlayer))
         {
+            
             return existingPlayer;
         }
 

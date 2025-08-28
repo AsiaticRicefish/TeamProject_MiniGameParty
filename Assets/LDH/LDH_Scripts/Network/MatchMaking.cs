@@ -74,6 +74,9 @@ namespace Network
             if (string.IsNullOrEmpty(PhotonNetwork.NickName))
                 PhotonNetwork.NickName = $"Player_{UnityEngine.Random.Range(1000, 9999)}";
 
+            var table = new Hashtable { { "uid", PhotonNetwork.NickName.ToString() } };
+            PhotonNetwork.LocalPlayer.SetCustomProperties(table);
+
         }
 
 
