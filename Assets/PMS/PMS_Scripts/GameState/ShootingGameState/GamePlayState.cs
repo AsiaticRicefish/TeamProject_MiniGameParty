@@ -10,6 +10,7 @@ public class GamePlayState : ShootingGameState
         Debug.Log("[ShootingGameState] - GamePlayState Enter");
         if (PhotonNetwork.IsMasterClient)
         {
+            ShootingGameManager.Instance.photonView.RPC("InputOn", RpcTarget.All);
             TurnManager.Instance.NextTurn();
         }
     }
@@ -20,5 +21,10 @@ public class GamePlayState : ShootingGameState
     public override void Exit()
     {
         Debug.Log("[ShootingGameState] - GamePlayState Exit");
+
+        if (PhotonNetwork.IsMasterClient)
+        {
+            ShootingGameManager.Instance.photonView.RPC("InputOff", RpcTarget.All);
+        }
     }
 }

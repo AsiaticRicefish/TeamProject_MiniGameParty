@@ -36,7 +36,7 @@ namespace KYG.Auth
         {
             if (Instance != null && Instance != this) { Destroy(gameObject); return; }
             Instance = this;
-            DontDestroyOnLoad(gameObject);
+            //DontDestroyOnLoad(gameObject);
         }
 
         private void Start()
@@ -140,9 +140,12 @@ namespace KYG.Auth
             
             if (user == null) return;
 
-            if (!PhotonNetwork.InRoom)
-                PhotonNetwork.JoinOrCreateRoom("HUB-LOBBY",
-                    new RoomOptions { MaxPlayers = 8, IsOpen = true, IsVisible = false }, TypedLobby.Default);
+            // if (!PhotonNetwork.InRoom)
+            //     PhotonNetwork.JoinOrCreateRoom("HUB-LOBBY",
+            //         new RoomOptions { MaxPlayers = 8, IsOpen = true, IsVisible = false }, TypedLobby.Default);
+
+            //로비 씬으로 이동
+            SceneManager.LoadScene(lobbySceneName);
         }
 
         public override void OnJoinedRoom()

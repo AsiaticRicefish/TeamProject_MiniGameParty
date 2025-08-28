@@ -7,7 +7,7 @@ public class InitState : ShootingGameState
 {
     public override void Enter()
     {
-        Debug.Log("[ShootingGameState] - InitState »óÅÂ¿¡ ÁøÀÔ");
+        Debug.Log("[ShootingGameState] - InitState ìƒíƒœì— ì§„ì…");
         //SetupUI();
         //manager.ChangeState(new CardPlacementState(manager));
     }
@@ -24,6 +24,6 @@ public class InitState : ShootingGameState
 
     public override void Exit()
     {
-        Debug.Log("[ShootingGameState] - InitState »óÅÂ¿¡¼­ ¹ş¾î³²");
+        Debug.Log("[ShootingGameState] - InitState ìƒíƒœì—ì„œ ë²—ì–´ë‚¨");
     }
 }

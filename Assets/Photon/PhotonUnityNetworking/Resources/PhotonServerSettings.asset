@@ -84,6 +84,8 @@ MonoBehaviour:
   - Rpc_AssignSceneViewIDs
   - RPC_SetDoneBySlot
   - RPC_AnnounceRoomObjects
+  - InputOff
+  - InputOn
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

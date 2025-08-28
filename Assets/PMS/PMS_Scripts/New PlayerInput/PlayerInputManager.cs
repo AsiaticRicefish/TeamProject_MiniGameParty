@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using ShootingScene;
 
 namespace ShootingScene
 {
@@ -16,17 +17,13 @@ namespace ShootingScene
         protected override void OnAwake()
         {
            isPersistent = false;
+           Debug.Log("PlayerInputManager OnAwake 호출");
+
         }
 
         protected override void Awake()
         {
-            Debug.Log("플레이어 인풋 매니저 초기화");
-            playerInput = GetComponent<PlayerInput>();
-            if (playerInput != null)
-            {
-                touchAction = playerInput.actions.FindAction("TouchPress");
-            }
-            EnableInput();
+            base.Awake();
         }
 
         public void OnTouchPress(InputAction.CallbackContext ctx)
@@ -37,6 +34,13 @@ namespace ShootingScene
         public void Initialize()
         {
             Debug.Log("PlayerInputManager 초기화");
+            playerInput = GetComponent<PlayerInput>();
+            if (playerInput != null)
+            {
+                touchAction = playerInput.actions.FindAction("TouchPress");
+            }
+            EnableInput();
+            
         }
 
         public void EnableInput()

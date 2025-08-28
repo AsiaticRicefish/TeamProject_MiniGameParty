@@ -5,6 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Firebase.Auth;
+using Managers;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
 
 public class TestMatching : MonoBehaviourPunCallbacks
@@ -44,6 +45,7 @@ public class TestMatching : MonoBehaviourPunCallbacks
             quickMatchButton.onClick.RemoveListener(OnClick_QuickMatch);
             quickMatchButton.onClick.AddListener(OnClick_QuickMatch);
         }
+        Manager.Network.ConnectServer();
     }
 
     private void Start()

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using DesignPattern;
 using Photon.Pun;
 using UnityEngine;
@@ -15,7 +16,7 @@ public class PlayerManager : CombinedSingleton<PlayerManager>
     private Dictionary<string, GamePlayer> players = new();
 
     public IReadOnlyDictionary<string, GamePlayer> Players => players;
-
+    
 
     /// <summary>
     /// 플레이어 등록 메서드
@@ -25,11 +26,13 @@ public class PlayerManager : CombinedSingleton<PlayerManager>
     {
         if (!players.ContainsKey(id)) // 중복 등록 방지
         {
-            GameObject playerObj = new GameObject($"GamePlayer_{nickname}");
-            var gamePlayer = playerObj.AddComponent<GamePlayer>();
+            // GameObject playerObj = new GameObject($"GamePlayer_{nickname}");
+            // var gamePlayer = playerObj.AddComponent<GamePlayer>();
+            GamePlayer gamePlayer = new GamePlayer();
             gamePlayer.Init(id, nickname);
 
             players.Add(id, gamePlayer);
+            // gamePlayers.Add(gamePlayer.PlayerId);
             Debug.Log($"[PlayerManager] Registered new player: {id} ({nickname})");
         }
         else
@@ -46,6 +49,7 @@ public class PlayerManager : CombinedSingleton<PlayerManager>
     {
         if (players.TryGetValue(id, out var existingPlayer))
         {
+            Debug.Log($"플레이어 존재함 {id}");
             return existingPlayer;
         }
 
@@ -94,11 +98,12 @@ public class PlayerManager : CombinedSingleton<PlayerManager>
     {
         if (players.TryGetValue(id, out var player))
         {
-            if (player != null && player.gameObject != null)
-            {
-                Destroy(player.gameObject);
-            }
+            // if (player != null && player.gameObject != null)
+            // {
+            //     Destroy(player.gameObject);
+            // }
             players.Remove(id);
+            // gamePlayers.Remove(id);
             Debug.Log($"[PlayerManager] Removed player: {id}");
         }
     }
@@ -110,10 +115,10 @@ public class PlayerManager : CombinedSingleton<PlayerManager>
     {
         foreach (var player in players.Values)
         {
-            if (player != null && player.gameObject != null)
-            {
-                Destroy(player.gameObject);
-            }
+            // if (player != null && player.gameObject != null)
+            // {
+            //     Destroy(player.gameObject);
+            // }
         }
         players.Clear();
         Debug.Log("[PlayerManager] Cleared all players");
