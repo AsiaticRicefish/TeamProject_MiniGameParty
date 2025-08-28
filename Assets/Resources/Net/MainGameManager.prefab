@@ -69,6 +69,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9ad51af0cbd44e57bbedec4b802d0036, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isPersistent: 1
   registry: {fileID: 7080885224738973986}
   totalRound: 3
 --- !u!114 &2750379478678518143
@@ -128,5 +129,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   miniGameInfos:
-  - {fileID: 11400000, guid: 8e89eeac3d14f4a27b58566cacc7064d, type: 2}
   - {fileID: 11400000, guid: e5c3ca65badd048ce85110929773f7f4, type: 2}
