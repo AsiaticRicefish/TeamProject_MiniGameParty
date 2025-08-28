@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System;
 using UnityEngine;
 using Photon.Pun;
 using DesignPattern;
@@ -10,6 +11,9 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
 {
     private CardManager CardManager;
     private ShootingGameState currentState;
+
+    public event Action OnGameStarted;
+    public event Action OnGameEnded;
 
     //public UnimoEgg currentUnimo;
     [SerializeField]private GameObject finishLine;
@@ -26,7 +30,7 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
     }
 
     public void Initialize()
-    {
+    {      
         CardManager = GameObject.FindObjectOfType<CardManager>();
         Debug.Log("[ShootingGameManager] - 슈팅 게임 초기화");
         InitializePlayers();                // 플레이어 정보 세팅 - 따로 instantiate에서 만들 필요는 없음.
@@ -99,6 +103,16 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
         //난 타이머가 없어도 된다. 
     }
 
+    private void InputOn()
+    {
+        OnGameStarted?.Invoke();
+    }
+
+    private void InputOff()
+    {
+        OnGameEnded?.Invoke();
+    }
+
     public void ChangeStateByName(string stateName)
     {
         switch (stateName)
@@ -143,11 +157,6 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
             Debug.Log($"[ShootingGameManager] - 우승자 {winnerUnimo.ShooterUid}");
 
         //return winnerUnimo.ShooterUid;
-    }
-
-    public void EndGame()
-    {
-        Debug.Log("[ShootingGameManager] - 게임 종료");
     }
 
     /*[PunRPC]

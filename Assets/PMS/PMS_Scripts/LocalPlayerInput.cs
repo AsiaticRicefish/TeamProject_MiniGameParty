@@ -7,7 +7,7 @@ using Photon.Pun;
 using ShootingScene;
 using Photon.Realtime;
 
-public class LocalPlayerInput : MonoBehaviourPun//, IPunOwnershipCallbacks
+public class LocalPlayerInput : MonoBehaviourPun
 {
     public Transform player;
     public DirectionUIArrow arrow;
@@ -26,13 +26,13 @@ public class LocalPlayerInput : MonoBehaviourPun//, IPunOwnershipCallbacks
     private Vector3 grabStartPos;        // 잡은 위치 기준
 
 
-    private void OnEnable()
+    private void RegisterInput()
     {
-        Debug.Log("InputManager 구독");
         ShootingScene.PlayerInputManager.Instance.onTouchPress += HandleTouch;
     }
-    private void OnDisable()
-    { 
+
+    private void UnRegisterInput()
+    {
         ShootingScene.PlayerInputManager.Instance.onTouchPress -= HandleTouch;
     }
 
@@ -45,6 +45,8 @@ public class LocalPlayerInput : MonoBehaviourPun//, IPunOwnershipCallbacks
 
     private void Awake()
     {
+        ShootingGameManager.Instance.OnGameStarted += RegisterInput;
+        ShootingGameManager.Instance.OnGameEnded -= UnRegisterInput;
         player = gameObject.transform;
         charger = gameObject.GetComponent<ChargeController>();
     }
@@ -203,27 +205,16 @@ public class LocalPlayerInput : MonoBehaviourPun//, IPunOwnershipCallbacks
         }*/
     }
 
+    //Screen 좌표를 World 좌표로 변환 - 카메라의 각도와 상관없이
     private Vector3 ScreenToWorld(Vector2 screenPos)
     {
-        /*Ray ray = mainCam.ScreenPointToRay(screenPos);
-        Plane groundPlane = new Plane(Vector3.up, player.position); // y=player.position.y 평면
+        Ray ray = mainCam.ScreenPointToRay(screenPos);              //screenPos(마우스나 터치 위치)를 카메라 기준으로 Ray
+        Plane groundPlane = new Plane(Vector3.up, player.position); // y = player.position.y 평면
         if (groundPlane.Raycast(ray, out float enter))
         {
             return ray.GetPoint(enter); // XZ 평면 좌표
         }
-        return player.position;*/
-        Camera cam = Camera.main;
-        if (cam == null)
-        {
-            Debug.LogError("Main Camera 없음!");
-            return Vector3.zero;
-        }
-
-        // Orthographic 카메라: 카메라에서 얼마나 떨어진 평면을 변환할지 지정
-        float zDistance = 0f; // 예: z = 0 월드 평면 기준
-        Vector3 screenPoint = new Vector3(screenPos.x, screenPos.y, cam.nearClipPlane + zDistance);
-
-        return cam.ScreenToWorldPoint(screenPoint);
+        return player.position;
     }
 
     private bool IsWithinCone(Vector2 screenPos)
@@ -349,5 +340,10 @@ public class LocalPlayerInput : MonoBehaviourPun//, IPunOwnershipCallbacks
 
         screenPos = default;        //0,0 기존값을 리턴하기는 한테 입력이 없을리가 없으니깐
         return false; // 입력 없음
+    }
+
+    public void Initialize()
+    {
+        ShootingScene.PlayerInputManager.Instance.onTouchPress += HandleTouch;
     }
 }
