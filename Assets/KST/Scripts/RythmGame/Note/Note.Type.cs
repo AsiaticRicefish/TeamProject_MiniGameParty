@@ -13,6 +13,20 @@ namespace RhythmGame
         private NoteStatus _status;
         public NoteStatus Status { get { return _status; } set { _status = value; } }
 
+        private int _noteId;
+        public int NoteId { get { return _noteId; } set { _noteId = value; } }
+        private int _lane;
+        public int Lane { get { return _lane; } set { _lane = value; } }
+
+        //초기화
+        public void Init(int noteId, int lane)
+        {
+            _noteId = noteId;
+            _lane = lane;
+            _status = NoteStatus.None;
+        }
+
+
         /// <summary>
         /// 장애물 노트의 종류에 따른 과열 스코어
         /// </summary>

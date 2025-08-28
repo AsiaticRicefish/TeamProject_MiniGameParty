@@ -16,9 +16,9 @@ namespace RhythmGame
         void Awake() => _pooled = GetComponent<PooledObject>();
         void Update()
         {
-            transform.Translate(_speed * Time.deltaTime * Vector2.down);
+            transform.Translate(Vector3.forward * (_speed * Time.deltaTime), Space.Self);
 
-            if (transform.position.y < -6f)
+            if (transform.position.z < -8f)
                 _pooled.ReturnPool();
         }
 
