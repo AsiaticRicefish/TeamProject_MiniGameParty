@@ -4,6 +4,7 @@ using System;
 using UnityEngine;
 using Photon.Pun;
 using DesignPattern;
+using LDH_MainGame;
 
 [RequireComponent(typeof(PhotonView))]
 [DisallowMultipleComponent]
@@ -34,7 +35,7 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
         CardManager = GameObject.FindObjectOfType<CardManager>();
         Debug.Log("[ShootingGameManager] - 슈팅 게임 초기화");
         InitializePlayers();                // 플레이어 정보 세팅 - 따로 instantiate에서 만들 필요는 없음.
-        ChangeState(new InitState());       //전부 InitState 씬 상태
+        //ChangeState(new InitState());       //전부 InitState 씬 상태
     }
 
     private void InitializePlayers()
@@ -96,7 +97,7 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
         //마스터 클라이언트가 게임 시작을 알린다.
         if (PhotonNetwork.IsMasterClient)
         {
-            RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "InitState");
+            // RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "InitState");
         }
 
         Debug.Log("[ShootingGameManager] - 슈팅 게임 시작!");
@@ -159,6 +160,15 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
             Debug.Log($"[ShootingGameManager] - 우승자 {winnerUnimo.ShooterUid}");
 
         //return winnerUnimo.ShooterUid;
+        
+        EndGame();
+    }
+
+    public void EndGame()
+    {
+        Debug.Log("[ShootingGameManager] - 게임 종료");
+        if(PhotonNetwork.IsMasterClient)
+            MainGameManager.Instance?.NotifyMiniGameFinish();
     }
 
     /*[PunRPC]

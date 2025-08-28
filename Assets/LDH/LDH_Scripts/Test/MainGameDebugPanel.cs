@@ -12,6 +12,7 @@ namespace LDH.LDH_Scripts.Test
     {
         [SerializeField] private TextMeshProUGUI logText;
         [SerializeField] private TextMeshProUGUI roundText;
+        [SerializeField] private TextMeshProUGUI totalRoundText;
         
         
 
@@ -40,15 +41,24 @@ namespace LDH.LDH_Scripts.Test
             };
 
             MainGameManager.Instance.OnWaitAllReady += () => logText.gameObject.SetActive(false);
+            MainGameManager.Instance.OnLoadingMiniGame += () => gameObject.SetActive(false);
+            MainGameManager.Instance.OnEndMiniGame += () => gameObject.SetActive(true);
+            
+            MainGameManager.Instance.OnEndGame += () =>
+            {
+                SetLogText("End Game");
+            };
+            
+            totalRoundText.text = $"Total Round : {MainGameManager.Instance.TotalRound}";
+            
+            
         }
 
         private void SetLogText(string logText)
         {
-            if (!this.logText.gameObject.activeSelf)
-            {
-                this.logText.gameObject.SetActive(true);
-            }
+            this.logText.gameObject.SetActive(true);
             this.logText.text = logText;
         }
+
     }
 }

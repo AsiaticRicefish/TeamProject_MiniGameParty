@@ -107,8 +107,10 @@ namespace LDH_MainGame
             // }
         }
 
-        public IEnumerator Co_LoadingMini()
+        public IEnumerator Co_LoadingMini(Action onLoadingMiniGame = null)
         {
+            
+            
             if (_currentMini == null)
             {
                 if (_isMaster())
@@ -122,6 +124,9 @@ namespace LDH_MainGame
             _uiBinder.CloseReadyPanel();
             if (_isMaster())
                 _pc.SetRoomProps(RoomProps.State, MainState.PlayingMiniGame.ToString());
+            
+            onLoadingMiniGame?.Invoke();
+            
         }
 
         public IEnumerator Co_PlayingMini()
@@ -130,17 +135,20 @@ namespace LDH_MainGame
             yield break;
         }
 
-        public IEnumerator Co_ApplyingResult()
+        public IEnumerator Co_ApplyingResult(Action onApplyingResult)
         {
             yield return MiniGameLoader.UnloadAdditive();
 
             // 각자 자기 Done = true
             MainGame_PropertiesController.SetLocalDone(true);
+            
+            onApplyingResult?.Invoke();
         }
 
-        public IEnumerator Co_End()
+        public IEnumerator Co_End(Action onEndGame)
         {
-            yield return new UnityEngine.WaitForSeconds(1.5f);
+            onEndGame?.Invoke();
+            yield return new UnityEngine.WaitForSeconds(3f);
             // LeaveRoom은 MainGameManager에서 호출 (씬 전환 담당)
         }
         
@@ -155,15 +163,16 @@ namespace LDH_MainGame
             Debug.Log("모두 완료됐는지 체크 (PlayerProps 기반)");
             if (!_pc.AllPlayersDone()) return;
 
-            int round = _pc.GetRoomProps(RoomProps.Round, 1) + 1;
-            var kv = new Dictionary<string, object> {
-                { RoomProps.Round, round }, { RoomProps.MiniGameId, "" }
-            };
-            bool end = (round > TotalRound);
-            kv[RoomProps.State] = end ? MainState.End.ToString() : MainState.Picking.ToString();
-            _pc.SetRoomProps(kv);
-
-            _onRoundChanged?.Invoke(round);
+            int currentRound = _pc.GetRoomProps(RoomProps.Round, 1);
+            bool isEnd    = (currentRound+1) > TotalRound;
+            var nextState = isEnd ? MainState.End : MainState.Picking;
+            int nextRound = isEnd ? currentRound : currentRound + 1;
+            
+            _pc.SetRoomProps(new Dictionary<string, object> {
+                { RoomProps.Round,      nextRound },
+                { RoomProps.MiniGameId, ""        },
+                { RoomProps.State,      nextState.ToString() }
+            });
         }
     }
 }

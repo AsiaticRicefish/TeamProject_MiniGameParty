@@ -223,8 +223,14 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
     // IGameComponent들을 순차적으로 안전하게 초기화
     protected IEnumerator InitializeComponentsSafely(IEnumerable<IGameComponent> components)
     {
+        
         foreach (var component in components)
         {
+            var mb   = component as MonoBehaviour;
+            var go   = mb ? mb.gameObject : null;
+            var scene=  go && go.scene.IsValid() ? go.scene.name : "<no-scene>";
+
+            
             bool failed = false;
 
             try
@@ -234,7 +240,12 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
             catch (System.Exception e)
             {
                 failed = true;
-                Debug.LogError($"[{GameType}Controller] 초기화 실패 {component.GetType().Name}: {e.Message}");
+                Debug.LogError(
+                    $"[{GameType}Controller] 초기화 실패 → {component.GetType().Name}\n" +
+                    $"- Scene : {scene}\n" +
+                    $"- Active: {(go ? go.activeInHierarchy : false)}, Enabled: {(mb ? mb.enabled : false)}\n" +
+                    go /* context */);
+
             }
 
             yield return null;

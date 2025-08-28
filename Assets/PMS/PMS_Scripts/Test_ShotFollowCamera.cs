@@ -19,6 +19,7 @@ namespace ShootingScene
         
         protected override void OnAwake()
         {
+            isPersistent = false;
             // 기본 우선순위 세팅
             if (vcamDefault) vcamDefault.Priority = 10;
             if (vcamFollow) vcamFollow.Priority = 5;

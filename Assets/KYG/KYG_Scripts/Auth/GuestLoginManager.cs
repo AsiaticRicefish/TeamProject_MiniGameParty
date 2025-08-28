@@ -18,7 +18,7 @@ namespace KYG.Auth
         [SerializeField] private string defaultRegion = "asia";
 
         [Header("Scene Names")]
-        [SerializeField] private string lobbySceneName = "LobbyScene";            // 로비(대기) 씬 이름
+        [SerializeField] private string lobbySceneName = "LDH_MainScene";            // 로비(대기) 씬 이름
         [SerializeField] private string gameplaySceneName = "PMS_ShootingTestScene"; // 실제 게임 씬 (예시)
 
         [Header("Flow Options")]
@@ -123,6 +123,13 @@ namespace KYG.Auth
         {
             Debug.Log("[GuestLoginManager] ConnectedToMaster.");
             SafeReapplyUid();
+            
+            if (user == null)
+            {                   // 아직 Firebase 로그인 전
+                Debug.Log("[GuestLoginManager] Photon connected before auth; skip JoinLobby until user != null");
+                return;
+            }
+            
             PhotonNetwork.JoinLobby();
         }
 
@@ -130,17 +137,20 @@ namespace KYG.Auth
         {
             Debug.Log("[GuestLoginManager] JoinedLobby.");
             SafeReapplyUid();
+            
+            if (user == null) return;
 
-            // 여기서 바로 룸 합류(혹은 만들기)
-            //var roomName = "DefaultRoom"; // 프로젝트 정책에 맞는 룸명/매칭 로직으로 바꾸세요.
-            //var options = new RoomOptions { MaxPlayers = 4 };
-            //PhotonNetwork.JoinOrCreateRoom(roomName, options, TypedLobby.Default);
+            if (!PhotonNetwork.InRoom)
+                PhotonNetwork.JoinOrCreateRoom("HUB-LOBBY",
+                    new RoomOptions { MaxPlayers = 8, IsOpen = true, IsVisible = false }, TypedLobby.Default);
         }
 
         public override void OnJoinedRoom()
         {
             Debug.Log("[GuestLoginManager] JoinedRoom.");
             SafeReapplyUid();
+            
+            if (user == null) return; // 로그인 전이면 씬 로드 금지
 
             // 룸 입장 후 모든 Photon 플레이어를 등록해 GamePlayer 생성 보장
             //PlayerManager.Instance.EnsureAllPhotonPlayersRegistered(); // 파일에 이미 구현됨:contentReference[oaicite:0]{index=0}
@@ -148,12 +158,12 @@ namespace KYG.Auth
             // 씬 전환(권장: MasterClient가 공용 씬 로드)
             if (loadLobbyOnJoinedRoom && PhotonNetwork.IsMasterClient)
             {
-                if (!string.IsNullOrEmpty(lobbySceneName))
-                {
-                    Debug.Log($"[GuestLoginManager] MasterClient loading lobby scene: {lobbySceneName}");
-                    PhotonNetwork.LoadLevel(lobbySceneName); // 자동 동기화
-                }
+                Debug.Log($"[GuestLoginManager] MasterClient loading lobby scene: {lobbySceneName}");
+                PhotonNetwork.LoadLevel(lobbySceneName);
             }
+            
+            var hasUidProp = PhotonNetwork.LocalPlayer.CustomProperties.TryGetValue("uid", out var uv) && uv is string us && !string.IsNullOrEmpty(us);
+            Debug.Log($"[GuestLoginManager] UID present? props:{hasUidProp}, value:{(hasUidProp ? uv : "null")}");
         }
 
         // 예: 특정 시점(로비 UI에서 “게임시작” 버튼)에서 실제 게임 씬으로 전환

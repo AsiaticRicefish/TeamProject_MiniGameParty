@@ -42,7 +42,8 @@ public class CardManager : PunSingleton<CardManager>
     private void Start()
     {
         // 씬 자동 동기화 권장
-        PhotonNetwork.AutomaticallySyncScene = true;
+        // ------ 미니게임을 additive로 로컬에서 각자 올리기 때문에 automatically sync scene 을 해제해야 합니다. -------- //
+        // PhotonNetwork.AutomaticallySyncScene = true;
 
         if (PhotonNetwork.IsMasterClient)
         {
@@ -107,7 +108,10 @@ public class CardManager : PunSingleton<CardManager>
     private void BuildCardUIs()
     {
         // 기존 제거
-        foreach (Transform t in cardParent) Destroy(t.gameObject);
+        if (cardParent != null)
+        {
+            foreach (Transform t in cardParent) Destroy(t.gameObject);
+        } 
         _cards.Clear();
 
         for (int i = 0; i < _deckValues.Length; i++)

@@ -20,6 +20,8 @@ namespace Network
         
         [SerializeField] private bool autoSyncScene = true;
         
+        [SerializeField] private bool autoConnectOnAwake = false;
+        
         private MatchType _createType = MatchType.None;
         //--- private matching ---- 
         private int _privateRetryCount;
@@ -51,8 +53,9 @@ namespace Network
         protected override void OnAwake()
         {
             PhotonNetwork.AutomaticallySyncScene = autoSyncScene;
-
+            
             //임시로 awake 시점에 호출
+            if (autoConnectOnAwake)
             ConnectServer();
         }
 
@@ -73,6 +76,9 @@ namespace Network
         {
             if (string.IsNullOrEmpty(PhotonNetwork.NickName))
                 PhotonNetwork.NickName = $"Player_{UnityEngine.Random.Range(1000, 9999)}";
+
+            var table = new Hashtable { { "uid", PhotonNetwork.NickName.ToString() } };
+            PhotonNetwork.LocalPlayer.SetCustomProperties(table);
 
         }
 
@@ -266,6 +272,7 @@ namespace Network
                 StartCoroutine(Util_LDH.LoadSceneWithDelay(lobbySceneName, 0.5f));
             }
             
+            PlayerManager.Instance.ClearAllPlayers();
             ClearAllPlayerProperty();
             
             LeftRoom?.Invoke();

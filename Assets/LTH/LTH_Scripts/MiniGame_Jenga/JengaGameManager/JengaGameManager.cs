@@ -323,6 +323,7 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
                 player.WinThisMiniGame = pair.Value == 1;
             }
         }
+        
         // 일정 시간 후 메인 씬으로 복귀
         StartCoroutine(ReturnToMainGameAfterDelay(returnToLobbyDelay));
     }

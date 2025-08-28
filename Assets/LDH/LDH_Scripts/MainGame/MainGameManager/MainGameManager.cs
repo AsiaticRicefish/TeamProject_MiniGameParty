@@ -19,10 +19,12 @@ namespace LDH_MainGame
     public class MainGameManager : PunSingleton<MainGameManager>, IGameComponent
     {
         [Header("Mini Games")] public MiniGameRegistry registry;
-        [Header("Config")] [SerializeField] private int totalRound = 3;
-
+        [Header("Config")] 
+        [SerializeField] private int totalRound = 3;
+        public int TotalRound => totalRound;
+        
         //Controllers
-        public MainGame_PropertiesController PropertiesesCtrl;
+        public MainGame_PropertiesController PropertiesCtrl;
         public MainGame_UIBinder UI;
         public MainGame_StateMachine FSM;
 
@@ -38,6 +40,9 @@ namespace LDH_MainGame
         public event Action OnPicking;
         public event Action OnPicked;
         public event Action OnWaitAllReady;
+        public event Action OnLoadingMiniGame;
+        public event Action OnEndMiniGame;
+        public event Action OnEndGame;
 
 
         private bool IsMaster => PhotonNetwork.IsMasterClient;
@@ -57,14 +62,14 @@ namespace LDH_MainGame
         {
             Util_LDH.ConsoleLog(this, "MainGameManager 초기화 로직 실행");
 
-            PropertiesesCtrl = new(
+            PropertiesCtrl = new(
                 () => PhotonNetwork.InRoom,
                 () => PhotonNetwork.NetworkClientState == ClientState.Joined,
                 () => !_isLeavingRoom);
 
             UI = new(registry, (s => _localSlot = s), (OnClickReady));
             FSM = new(
-                PropertiesesCtrl, UI, registry,
+                PropertiesCtrl, UI, registry,
                 () => IsMaster,
                 () => _localSlot,
                 round => OnRoundChanged?.Invoke(round),
@@ -84,7 +89,7 @@ namespace LDH_MainGame
             Util_LDH.ConsoleLog(this, "게임을 시작합니다. (Enter 'Picking' State)");
 
             // 필수 서비스 준비 확인
-            if (PropertiesesCtrl == null || FSM == null || UI == null)
+            if (PropertiesCtrl == null || FSM == null || UI == null)
             {
                 Debug.LogError("[MainGameManager] StartGame() called before Initialize() — abort.");
                 return; // 또는 Initialize() 호출 후 재시도 로직을 넣어도 됨
@@ -94,7 +99,7 @@ namespace LDH_MainGame
             OnGameStart?.Invoke();
 
             if (IsMaster)
-                PropertiesesCtrl.SetRoomProps(new Dictionary<string, object>
+                PropertiesCtrl.SetRoomProps(new Dictionary<string, object>
                     {
                         { RoomProps.Round, 1 },
                         { RoomProps.MiniGameId, "" },
@@ -109,7 +114,7 @@ namespace LDH_MainGame
         {
             if (PhotonNetwork.IsMasterClient)
             {
-                PropertiesesCtrl.SetRoomProps(RoomProps.State, MainState.ApplyingResult.ToString());
+                PropertiesCtrl.SetRoomProps(RoomProps.State, MainState.ApplyingResult.ToString());
             }
         }
 
@@ -122,7 +127,7 @@ namespace LDH_MainGame
 
             if (changed.ContainsKey(RoomProps.Round))
             {
-                OnRoundChanged?.Invoke(PropertiesesCtrl.GetRoomProps(RoomProps.Round, 1));
+                OnRoundChanged?.Invoke(PropertiesCtrl.GetRoomProps(RoomProps.Round, 1));
             }
 
             // 상태 변경 반영
@@ -132,16 +137,16 @@ namespace LDH_MainGame
         public override void OnPlayerPropertiesUpdate(Player target, Hashtable changedProps)
         {
             // UI Ready 표시 갱신: PlayerProps 기반으로 계산해서 UI에만 전달
-            int readyMask = PropertiesesCtrl.BuildReadyMaskFromPlayers();
+            int readyMask = PropertiesCtrl.BuildReadyMaskFromPlayers();
             UI.UpdateReady(readyMask);
 
             if (IsMaster)
             {
                 if (changedProps.ContainsKey(PlayerProps.InGameReady) &&
                     FSM.Get() == MainState.Ready &&
-                    PropertiesesCtrl.AllPlayersReady())
+                    PropertiesCtrl.AllPlayersReady())
                 {
-                    PropertiesesCtrl.SetRoomProps(RoomProps.State, MainState.LoadingMiniGame.ToString());
+                    PropertiesCtrl.SetRoomProps(RoomProps.State, MainState.LoadingMiniGame.ToString());
                 }
 
                 if (changedProps.ContainsKey(PlayerProps.InGameDone) && FSM.Get() == MainState.ApplyingResult)
@@ -159,22 +164,22 @@ namespace LDH_MainGame
             if (FSM.Get() != MainState.Ready) return;
 
             // 준비 단계에서 누가 나가도, 남은 인원 기준 AllPlayersReady면 진행
-            if (FSM.Get() == MainState.Ready && PropertiesesCtrl.AllPlayersReady())
+            if (FSM.Get() == MainState.Ready && PropertiesCtrl.AllPlayersReady())
             {
-                PropertiesesCtrl.SetRoomProps(RoomProps.State, MainState.LoadingMiniGame.ToString());
+                PropertiesCtrl.SetRoomProps(RoomProps.State, MainState.LoadingMiniGame.ToString());
             }
 
             // UI 갱신
-            UI.UpdateReady(PropertiesesCtrl.BuildReadyMaskFromPlayers());
+            UI.UpdateReady(PropertiesCtrl.BuildReadyMaskFromPlayers());
         }
 
         public override void OnMasterClientSwitched(Player newMasterClient)
         {
             if (!IsMaster) return;
 
-            if (FSM.Get() == MainState.Ready && PropertiesesCtrl.AllPlayersReady())
+            if (FSM.Get() == MainState.Ready && PropertiesCtrl.AllPlayersReady())
             {
-                PropertiesesCtrl.SetRoomProps(RoomProps.State, MainState.LoadingMiniGame.ToString());
+                PropertiesCtrl.SetRoomProps(RoomProps.State, MainState.LoadingMiniGame.ToString());
             }
         }
         
@@ -187,6 +192,7 @@ namespace LDH_MainGame
         private void SyncGameState()
         {
             var nextState = FSM.ReadOrDefault();
+            Debug.Log(nextState);
 
             if (FSM.Changed(nextState))
             {
@@ -218,13 +224,13 @@ namespace LDH_MainGame
                     _stateRoutine = StartCoroutine(FSM.Co_Ready(OnWaitAllReady));
                     break;
                 case MainState.LoadingMiniGame:
-                    _stateRoutine = StartCoroutine(FSM.Co_LoadingMini());
+                    _stateRoutine = StartCoroutine(FSM.Co_LoadingMini(OnLoadingMiniGame));
                     break;
                 case MainState.PlayingMiniGame:
                     _stateRoutine = StartCoroutine(FSM.Co_PlayingMini());
                     break;
                 case MainState.ApplyingResult:
-                    _stateRoutine = StartCoroutine(FSM.Co_ApplyingResult());
+                    _stateRoutine = StartCoroutine(FSM.Co_ApplyingResult(OnEndMiniGame));
                     break;
                 case MainState.End:
                     _stateRoutine = StartCoroutine(Co_EndGame());
@@ -235,7 +241,7 @@ namespace LDH_MainGame
 
         private IEnumerator Co_EndGame()
         {
-            yield return FSM.Co_End();
+            yield return FSM.Co_End(OnEndGame);
             _isLeavingRoom = true;
             PhotonNetwork.LeaveRoom();
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Photon.Pun;
 using DesignPattern;
 using ExitGames.Client.Photon;
+using UnityEngine;
 
 
 public class RoomPropertyObserver : PunSingleton<RoomPropertyObserver>, IGameComponent
@@ -82,6 +83,6 @@ public class RoomPropertyObserver : PunSingleton<RoomPropertyObserver>, IGameCom
 
     public void Initialize()
     {
-        
+        Debug.Log("Room property observer 초기화 ");
     }
 }

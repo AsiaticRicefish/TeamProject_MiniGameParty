@@ -75,15 +75,15 @@ public class ShootingSceneController : BaseGameSceneController
             {
                 RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "CardSelectState");
             }
-            else if(RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.State).ToString() == "CardSelectState")
-            {
-                Debug.Log("호출?");
-                //이미 변경되어 룸프로퍼티가 callback을 못받았을 때
-                //지연보상
-                //늦게 들어와서 따로 RoomCallBack 못받은 상황에서는 자신의 State 변경 요청해야한다. 클라이언트 -> 마스터 클라이언트
-                string state = (string)PhotonNetwork.CurrentRoom.CustomProperties[ShootingGamePropertyKeys.State];
-                ShootingGameManager.Instance.ChangeStateByName("CardSelectState");//(state);
-            }
+            // else if(RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.State).ToString() == "CardSelectState")
+            // {
+            //     Debug.Log("호출?");
+            //     //이미 변경되어 룸프로퍼티가 callback을 못받았을 때
+            //     //지연보상
+            //     //늦게 들어와서 따로 RoomCallBack 못받은 상황에서는 자신의 State 변경 요청해야한다. 클라이언트 -> 마스터 클라이언트
+            //     string state = (string)PhotonNetwork.CurrentRoom.CustomProperties[ShootingGamePropertyKeys.State];
+            //     ShootingGameManager.Instance.ChangeStateByName("CardSelectState");//(state);
+            // }
             //나머지 클라이어트도 룸프로퍼티 변경으로 인한 콜백함수로 ChangeState 실행되겠지?
         }
         catch (Exception ex)

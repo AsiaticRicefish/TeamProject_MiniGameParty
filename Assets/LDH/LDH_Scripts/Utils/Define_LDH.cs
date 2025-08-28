@@ -71,8 +71,8 @@ namespace LDH_Util
 
         public static partial class RoomProps
         {
-            public const string State = "state";
-            public const string Round = "round";
+            public const string State = "mainState";
+            public const string Round = "mainRound";
             public const string MiniGameId = "miniGameId";
             public const string ReadyMask = "readyMask";
             public const string DoneMask = "doneMask";
