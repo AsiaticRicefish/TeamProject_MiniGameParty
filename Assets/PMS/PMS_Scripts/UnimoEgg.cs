@@ -111,4 +111,12 @@ public class UnimoEgg : MonoBehaviourPun
         // 다른 클라이언트에서 힘 적용
         ApplyForce(dir);
     }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.gameObject.CompareTag("PlayGround"))
+        {
+            gameObject.SetActive(false);
+        }
+    }
 }

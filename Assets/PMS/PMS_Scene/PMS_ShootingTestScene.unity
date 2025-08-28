@@ -122,6 +122,59 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &40471423
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 40471424}
+  - component: {fileID: 40471425}
+  m_Layer: 0
+  m_Name: PlaySpace
+  m_TagString: PlayGround
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &40471424
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 40471423}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 9.27}
+  m_LocalScale: {x: 8.8746805, y: 6.2279, z: 25.75037}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &40471425
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 40471423}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &176417659
 GameObject:
   m_ObjectHideFlags: 0
@@ -919,7 +972,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!64 &702217529
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -1168,6 +1221,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_AnchorMax.y
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 873450919960001178, guid: b4f2cd633f84448609793082bcf66d70,
+        type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1547428902181905421, guid: b4f2cd633f84448609793082bcf66d70,
         type: 3}
@@ -1708,7 +1766,7 @@ Transform:
   m_GameObject: {fileID: 1433939994}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.8, y: 0, z: 10.02}
+  m_LocalPosition: {x: -14.02, y: 0, z: 10.02}
   m_LocalScale: {x: 1, y: 1, z: 25}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2332,12 +2390,12 @@ PrefabInstance:
     - target: {fileID: 5747356351620459177, guid: 0598ffe1e9488fe418512788acb075be,
         type: 3}
       propertyPath: m_AnchorMax.x
-      value: 0.19010417
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5747356351620459177, guid: 0598ffe1e9488fe418512788acb075be,
         type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0.3611111
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2904,3 +2962,4 @@ SceneRoots:
   - {fileID: 234812723}
   - {fileID: 1314547069}
   - {fileID: 760453708}
+  - {fileID: 40471424}
