@@ -1,11 +1,13 @@
 using System;
 using System.Collections;
+using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using LDH_UI;
 using LDH_Util;
 using Managers;
 using Photon.Pun;
+using Photon.Realtime;
 using UnityEngine;
 using UnityEngine.UI;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
@@ -55,6 +57,9 @@ namespace Network
 
             // 정원 변화 감지 → 마스터만 시작 판단
             Manager.Network.RoomPlayerCountChanged += TryStartGame;     // 마스터 클라이언트가 중간에 변경될 수도 있으므로 모두 구독처리하고 내부에서 마스터만 실행하도록 처리
+            
+            // 마스터 변경 시
+            Manager.Network.MasterClientSwiched += OnMasterClientSwitched;
             
             // 룸 상태 변화 → UI 전환(매칭중 ↔ 매칭완료)
             Manager.Network.MatchStateChanged += OnMatchStateChanged;
@@ -116,7 +121,38 @@ namespace Network
         #endregion
 
 
-        #region UI Control
+        #region Slot
+
+        private void AssignSlot()
+        {
+            
+            //마스터가 제일 앞으로 오도록 정렬, 그 후 액터 넘버 순으로 정렬
+            var currentPlayers = PhotonNetwork.PlayerList.OrderBy(p => p != PhotonNetwork.MasterClient)
+                .ThenBy(p => p.ActorNumber)
+                .ToArray();
+            
+            for (int i = 0; i < currentPlayers.Length; i++)
+            {
+                if (currentPlayers[i].IsLocal )
+                {
+                    int slotIndex = i;
+                    Debug.Log($"슬롯 인덱스 할당 : {slotIndex}");
+                    PhotonNetwork.LocalPlayer.SetCustomProperties(new Hashtable
+                    {
+                        { Define_LDH.PlayerProps.SlotIndex, slotIndex }
+                    });
+                    break;
+                }
+                
+             
+            }
+        }
+        
+
+        #endregion
+
+
+        #region UI Control / Callback
         
         public void SetButtonInteractable(bool interactable)
         {
@@ -129,6 +165,9 @@ namespace Network
         // 팝업 생성, 초기 상태 / 인원 / 타이머 설정
         private void OnJoinedRoom()
         {
+            // 슬롯 배정
+            AssignSlot();
+            
             // 팝업 생성/표시
             _popupQuickMatch = Manager.UI.CreatePopupUI<UI_Popup_QuickMatch>();
             
@@ -153,6 +192,7 @@ namespace Network
             
             //경과시간 측정 시작 (비동기)
             TickElapsedAsync(ct).Forget();
+            
             
             // 다 됐으면 팝업 활성화
             Manager.UI.ShowPopupUI(_popupQuickMatch).Forget();
@@ -216,6 +256,14 @@ namespace Network
             }
         }
 
+
+        private void OnMasterClientSwitched(Player newMasterClient)
+        {
+            if(!newMasterClient.IsLocal) return;
+            
+            AssignSlot();
+        }
+        
         #endregion
         
 
