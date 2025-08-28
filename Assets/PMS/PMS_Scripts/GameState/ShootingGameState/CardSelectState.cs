@@ -15,9 +15,9 @@ public class CardSelectState : ShootingGameState
     }
     public override void Update() 
     {
-        if(flag && CardManager.Instance.allPicked) //다 눌렀을 때 플레이어들이 
+        if(flag && CardManager.Instance.allPicked && PhotonNetwork.IsMasterClient) //다 눌렀을 때 플레이어들이 
         {
-            TurnManager.Instance.SetupTurn();
+            RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "GamePlayState");
             flag = false;
         }
     }

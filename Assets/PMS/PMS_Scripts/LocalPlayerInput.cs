@@ -25,7 +25,6 @@ public class LocalPlayerInput : MonoBehaviourPun
     private float grabLimit = 1f;        // 좌우 이동 제한 (X기준)
     private Vector3 grabStartPos;        // 잡은 위치 기준
 
-
     private void RegisterInput()
     {
         ShootingScene.PlayerInputManager.Instance.onTouchPress += HandleTouch;
@@ -345,5 +344,23 @@ public class LocalPlayerInput : MonoBehaviourPun
     public void Initialize()
     {
         ShootingScene.PlayerInputManager.Instance.onTouchPress += HandleTouch;
+    }
+
+
+    public IEnumerator StepRoutine(int step)
+    {
+        float endTime = Time.time + 5f;
+        while (Time.time < endTime) // 단계 제한시간 5초
+        {
+            if (CheckInput(step))
+                break; // 입력 들어오면 즉시 종료
+            yield return null;
+        }
+        Debug.Log($"{step}단계 끝!");
+    }
+
+    public bool CheckInput(int step)
+    {
+        return Input.GetMouseButtonDown(0); // 간단히 예시
     }
 }

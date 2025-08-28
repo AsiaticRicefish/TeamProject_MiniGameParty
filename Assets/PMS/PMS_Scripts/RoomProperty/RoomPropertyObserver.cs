@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Photon.Pun;
 using DesignPattern;
@@ -68,9 +68,27 @@ public class RoomPropertyObserver : PunSingleton<RoomPropertyObserver>, IGameCom
     /// </summary>
     public void SetRoomProperty(string key, object value)
     {
-        if (PhotonNetwork.InRoom)
+        if (PhotonNetwork.InRoom && key != null && value != null)
         {
             var props = new Hashtable { { key, value } };
+            PhotonNetwork.CurrentRoom.SetCustomProperties(props);
+        }
+    }
+
+    /// <summary>
+    /// 여러 개의 룸 프로퍼티 설정
+    /// </summary>
+    /// <param name="properties">Key-Value 쌍</param>
+    public void SetRoomProperties(Dictionary<string,object> properties)
+    {
+        if (PhotonNetwork.InRoom && properties != null)
+        {
+            var props = new ExitGames.Client.Photon.Hashtable();
+            foreach (var prop in properties)              
+            {
+                props.Add(prop.Key, prop.Value);
+            }
+
             PhotonNetwork.CurrentRoom.SetCustomProperties(props);
         }
     }

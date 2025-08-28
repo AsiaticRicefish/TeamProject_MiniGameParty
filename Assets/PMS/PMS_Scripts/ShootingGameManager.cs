@@ -182,4 +182,14 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
                 Debug.Log($"[ShootingGameManager - RPC_ChangeState] - {stateName}에 해당되는 상태가 존재 하지 않습니다"); break;
         }
     }*/
+
+    public void Timer()
+    {
+        
+    }
+
+    private void ResetTimer()
+    {
+        
+    }
 }
