@@ -21,8 +21,7 @@ namespace ShootingScene
         public bool IsTurnEnd;
         private Coroutine TurnCorutine;
 
-        public event Action<UnimoEgg> OnTurnChanged;        
-
+        public event Action<UnimoEgg> OnTurnChanged;
         protected override void OnAwake()
         {
             isPersistent = false;
@@ -149,8 +148,7 @@ namespace ShootingScene
                 var localInput = newEgg.GetComponent<LocalPlayerInput>();
                 if (localInput != null)
                 {
-                    localInput.EnableInput(); // 활성화 시킴
-                    StartCoroutine(DelayedUIUpdate(localInput));
+                    localInput.EnableInput(); // 활성화 시킴                   
                 }
             }
             else
@@ -178,12 +176,6 @@ namespace ShootingScene
             yield return new WaitForSeconds(delay);
             TurnCorutine = null;
             NextTurn();
-        }
-
-        private IEnumerator DelayedUIUpdate(LocalPlayerInput localInput)
-        {
-            yield return null; // 1프레임 대기
-            localInput.UpdateUIVisibility();
         }
 
         public void EndTurn()

@@ -7,7 +7,7 @@ using Photon.Pun;
 using ShootingScene;
 using Photon.Realtime;
 
-public class LocalPlayerInput : MonoBehaviourPun//, IPunOwnershipCallbacks
+public class LocalPlayerInput : MonoBehaviourPun
 {
     public Transform player;
     public DirectionUIArrow arrow;
@@ -21,14 +21,18 @@ public class LocalPlayerInput : MonoBehaviourPun//, IPunOwnershipCallbacks
     private bool isInputActive = false;
     private bool inputEnabled = false;
 
-    private void OnEnable()
+    private UnimoEgg grabbedEgg = null;  // 잡은 Egg
+    private float grabLimit = 1f;        // 좌우 이동 제한 (X기준)
+    private Vector3 grabStartPos;        // 잡은 위치 기준
+
+
+    private void RegisterInput()
     {
-        Debug.Log("InputManager 구독");
         ShootingScene.PlayerInputManager.Instance.onTouchPress += HandleTouch;
     }
-    private void OnDisable()
-    { 
-        if(ShootingScene.PlayerInputManager.Instance!= null)
+
+    private void UnRegisterInput()
+    {
         ShootingScene.PlayerInputManager.Instance.onTouchPress -= HandleTouch;
     }
 
@@ -41,33 +45,147 @@ public class LocalPlayerInput : MonoBehaviourPun//, IPunOwnershipCallbacks
 
     private void Awake()
     {
+        ShootingGameManager.Instance.OnGameStarted += RegisterInput;
+        ShootingGameManager.Instance.OnGameEnded -= UnRegisterInput;
         player = gameObject.transform;
         charger = gameObject.GetComponent<ChargeController>();
-        mainCam = Camera.main;
     }
+
+    private void Start()
+    {
+        if (mainCam == null)
+            mainCam = Camera.main;
+    }
+
+    private void Update()
+    {
+        #region 평면 교차점 계산
+        if (grabbedEgg != null)
+        {
+            Vector2 currentInputPos;
+
+            // 현재 입력 위치 가져오기
+            if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
+            {
+                currentInputPos = Touchscreen.current.primaryTouch.position.ReadValue();
+            }
+            else
+            {
+                currentInputPos = Mouse.current.position.ReadValue();
+            }
+
+            // 바닥(XZ 평면, y=0) 정의
+            Plane groundPlane = new Plane(Vector3.up, Vector3.zero);
+            // 마우스(혹은 터치) 위치로부터 Ray 쏘기
+            Ray ray = mainCam.ScreenPointToRay(currentInputPos);
+            // 평면과 Ray가 교차하는 지점 구하기
+            if (groundPlane.Raycast(ray, out float enter))
+            {
+                Vector3 worldPos = ray.GetPoint(enter); // 평면 위 좌표
+                Vector3 newPos = grabbedEgg.transform.position;
+                // X 좌표만 제한적으로 이동
+                newPos.x = Mathf.Clamp(worldPos.x, grabStartPos.x - grabLimit, grabStartPos.x + grabLimit);
+                // 필요하면 Z 좌표도 제한 가능
+                // newPos.z = Mathf.Clamp(worldPos.z, grabStartPos.z - grabLimit, grabStartPos.z + grabLimit);
+                grabbedEgg.transform.position = newPos;
+            }
+        }
+        #endregion
+
+        #region 완전 수직일 때 만 가능한 ScreenToWorldPoint - 카메라 각도에 따른 부정확성
+        //if (grabbedEgg != null)
+        //{
+        //    // 현재 터치/마우스 위치를 XZ 평면으로 변환
+        //    Vector3 touchWorldPos = mainCam.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, mainCam.transform.position.y - grabStartPos.y));
+        //    Vector3 newPos = grabbedEgg.transform.position;
+
+        //    // XZ 좌표만 사용
+        //    newPos.x = Mathf.Clamp(touchWorldPos.x, grabStartPos.x - grabLimit, grabStartPos.x + grabLimit);
+
+        //    grabbedEgg.transform.position = newPos;
+        //}
+        #endregion
+    }
+
     private void HandleTouch(InputAction.CallbackContext ctx)
     {
         if (!inputEnabled) return;
 
-        //Vector3 worldPos = ScreenToWorld(ctx.ReadValue<Vector2>());
-
         Vector2 screenPos;
+        ////Vector3 worldPos = ScreenToWorld(ctx.ReadValue<Vector2>());
 
-        // 터치인지 마우스인지 확인해서 위치 가져오기
-        if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
+        //// 터치인지 마우스인지 확인해서 위치 가져오기
+        //if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
+        //{
+        //    screenPos = Touchscreen.current.primaryTouch.position.ReadValue();   
+        //}
+        //else if (Mouse.current != null)
+        //{
+        //    screenPos = Mouse.current.position.ReadValue(); 
+        //}
+        //else
+        //{
+        //    return;
+        //}
+
+        if(TryGetScreenPosition(out Vector2 vaildscreenPos))
         {
-            screenPos = Touchscreen.current.primaryTouch.position.ReadValue();   
-        }
-        else if (Mouse.current != null)
-        {
-            screenPos = Mouse.current.position.ReadValue(); 
+            screenPos = vaildscreenPos;
         }
         else
         {
             return;
         }
 
-        if (ctx.started) //&& IsWithinCone(screenPos))
+        #region Unimo와 충돌했을 때
+        Ray ray = mainCam.ScreenPointToRay(screenPos); // screenPos는 Vector2 (스크린 좌표)
+        RaycastHit hit;
+
+        if (Physics.Raycast(ray, out hit, Mathf.Infinity, LayerMask.GetMask("UnimoEgg"))) // 무한 거리까지 충돌 검사
+        {
+            Debug.Log("Raycast hit UnumoEgg!");
+
+            grabbedEgg = hit.collider.GetComponent<UnimoEgg>();
+            if (grabbedEgg != null)
+            {
+                grabStartPos = grabbedEgg.transform.position; // 시작 위치 저장
+                Debug.Log("Raycast hit UnimoEgg! Grabbed!");
+            }
+
+            if(ctx.canceled)
+            {
+                grabbedEgg = null;
+                grabStartPos = Vector3.zero;
+            }
+        }
+        #endregion
+        else
+        {
+            if (ctx.started) //&& IsWithinCone(screenPos))
+            {
+                arrow.Freeze();
+                charger.StartCharge();
+                isInputActive = true;
+            }
+            else if (ctx.canceled && isInputActive)
+            {
+                //var currentEgg = EggManager.Instance.currentUnimoEgg;
+                var unimo = gameObject.GetComponent<UnimoEgg>();
+                if (unimo != null)
+                {
+                    unimo.Shot(arrow.CurrentDir * charger.ChargePower);
+                    TurnOffUIVisibility();
+                }
+
+                charger.StopCharge();
+                arrow.Resume();
+                isInputActive = false;
+                DisableInput();
+            }
+        }
+
+
+        /*if (ctx.started) //&& IsWithinCone(screenPos))
         {
             arrow.Freeze();
             charger.StartCharge();
@@ -84,30 +202,19 @@ public class LocalPlayerInput : MonoBehaviourPun//, IPunOwnershipCallbacks
             arrow.Resume();
             isInputActive = false;
             DisableInput();
-        }
+        }*/
     }
 
+    //Screen 좌표를 World 좌표로 변환 - 카메라의 각도와 상관없이
     private Vector3 ScreenToWorld(Vector2 screenPos)
     {
-        /*Ray ray = mainCam.ScreenPointToRay(screenPos);
-        Plane groundPlane = new Plane(Vector3.up, player.position); // y=player.position.y 평면
+        Ray ray = mainCam.ScreenPointToRay(screenPos);              //screenPos(마우스나 터치 위치)를 카메라 기준으로 Ray
+        Plane groundPlane = new Plane(Vector3.up, player.position); // y = player.position.y 평면
         if (groundPlane.Raycast(ray, out float enter))
         {
             return ray.GetPoint(enter); // XZ 평면 좌표
         }
-        return player.position;*/
-        Camera cam = Camera.main;
-        if (cam == null)
-        {
-            Debug.LogError("Main Camera 없음!");
-            return Vector3.zero;
-        }
-
-        // Orthographic 카메라: 카메라에서 얼마나 떨어진 평면을 변환할지 지정
-        float zDistance = 0f; // 예: z = 0 월드 평면 기준
-        Vector3 screenPoint = new Vector3(screenPos.x, screenPos.y, cam.nearClipPlane + zDistance);
-
-        return cam.ScreenToWorldPoint(screenPoint);
+        return player.position;
     }
 
     private bool IsWithinCone(Vector2 screenPos)
@@ -191,7 +298,20 @@ public class LocalPlayerInput : MonoBehaviourPun//, IPunOwnershipCallbacks
     /// </summary>
     public void UpdateUIVisibility()
     {
-        photonView.RPC(nameof(RPC_UpdateUIVisibility), RpcTarget.All);
+        if (charger != null)
+            charger.chargeSlider.gameObject.SetActive(photonView.IsMine);
+
+        if (arrow != null)
+            arrow.gameObject.SetActive(photonView.IsMine);
+    }
+
+    public void TurnOffUIVisibility()
+    {
+        if (charger != null)
+            charger.chargeSlider.gameObject.SetActive(false);
+
+        if (arrow != null)
+            arrow.gameObject.SetActive(false);
     }
 
     [PunRPC]
@@ -202,5 +322,28 @@ public class LocalPlayerInput : MonoBehaviourPun//, IPunOwnershipCallbacks
 
         if (arrow != null)
             arrow.gameObject.SetActive(photonView.IsMine);
+    }
+
+    private bool TryGetScreenPosition(out Vector2 screenPos)
+    {
+        if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
+        {
+            screenPos = Touchscreen.current.primaryTouch.position.ReadValue();
+            return true;
+        }
+
+        if (Mouse.current != null)
+        {
+            screenPos = Mouse.current.position.ReadValue();
+            return true;
+        }
+
+        screenPos = default;        //0,0 기존값을 리턴하기는 한테 입력이 없을리가 없으니깐
+        return false; // 입력 없음
+    }
+
+    public void Initialize()
+    {
+        ShootingScene.PlayerInputManager.Instance.onTouchPress += HandleTouch;
     }
 }

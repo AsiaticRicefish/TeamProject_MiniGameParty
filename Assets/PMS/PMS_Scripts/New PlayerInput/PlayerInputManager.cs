@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using ShootingScene;
 
 namespace ShootingScene
 {
@@ -15,7 +16,7 @@ namespace ShootingScene
         public event Action<InputAction.CallbackContext> onTouchPress;
         protected override void OnAwake()
         {
-           isPersistent = false;
+            isPersistent = false;
         }
 
         protected override void Awake()
