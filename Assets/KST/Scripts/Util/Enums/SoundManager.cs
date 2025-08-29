@@ -33,6 +33,12 @@ namespace RhythmGame //추후 다른 스크립트에서도 사용할 경우 해�
             _bgmAudioSource.Play();
         }
 
+        // BGM 정지
+        public void StopBGM()
+        {
+            _bgmAudioSource.Stop();
+        }
+
         #endregion
 
         #region SFX
@@ -49,6 +55,12 @@ namespace RhythmGame //추후 다른 스크립트에서도 사용할 경우 해�
         public void PlaySFX_GAME(SfX_Game sfx)
         {
             _sfxAudioSource.PlayOneShot(_gameSfxList[(int)sfx]);
+        }
+
+        // SFX 정지
+        public void StopSFX()
+        {
+            _sfxAudioSource.Stop();
         }
 
         #endregion
