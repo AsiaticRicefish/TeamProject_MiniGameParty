@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -11,8 +12,8 @@ using UnityEngine;
 /// 게임 흐름 제어 로직에서 기준 정보로 활용됨
 /// </summary>
 
-
-public class GamePlayer : MonoBehaviour
+[Serializable]
+public class GamePlayer
 {
     #region 플레이어의 고유 정보
     public string PlayerId { get; private set; }    // Firebase UID
@@ -30,6 +31,7 @@ public class GamePlayer : MonoBehaviour
 
     #region 미니게임 관련 데이터
     public JengaPlayerData JengaData { get; set; }
+    public ShootingPlayerData ShootingData { get; set; }
     #endregion
 
 

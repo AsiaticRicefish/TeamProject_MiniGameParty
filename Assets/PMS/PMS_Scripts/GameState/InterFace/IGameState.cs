@@ -1,9 +1,9 @@
-namespace ShootingScene
+ï»¿namespace ShootingScene
 {
     public interface IGameState
     {
-        void Enter();    // ÁøÀÔ ½Ã È£Ãâ
-        void Update();   // ¸Å ÇÁ·¹ÀÓ¸¶´Ù ½ÇÇà
-        void Exit();     // Á¾·á ½Ã È£Ãâ
+        void Enter();    // ì§„ìž… ì‹œ í˜¸ì¶œ
+        void Update();   // ë§¤ í”„ë ˆìž„ë§ˆë‹¤ ì‹¤í–‰
+        void Exit();     // ì¢…ë£Œ ì‹œ í˜¸ì¶œ
     }
 }

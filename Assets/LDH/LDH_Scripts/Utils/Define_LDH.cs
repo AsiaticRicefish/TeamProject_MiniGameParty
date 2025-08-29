@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace LDH_Util
@@ -41,7 +42,7 @@ namespace LDH_Util
 
         #region Match Making
 
-        public static class RoomProps
+        public static partial class RoomProps
         {
             public const string MatchType = "matchType";   // "Quick", "Private"
             public const string MatchState = "matchState";  // "Matching", "Complete"
@@ -55,22 +56,36 @@ namespace LDH_Util
         public const int PRIVATE_MAX_RETRY = 5;
         
         
-        public static class PlayerProps
+        public static partial class PlayerProps
         {
             public const string ReadyState = "readyState"; //bool 타입으로 true, false
             public const string SlotIndex = "slotIndex"; // 0~4까지의 숫자
-            
         }
-        
 
         #endregion
 
 
+        #region Main Game
+        
+        public enum MainState {Init, Picking, Ready, LoadingMiniGame, PlayingMiniGame, ApplyingResult, End }
 
-
-
-
-
-
+        public static partial class RoomProps
+        {
+            public const string State = "mainState";
+            public const string Round = "mainRound";
+            public const string MiniGameId = "miniGameId";
+            public const string ReadyMask = "readyMask";
+            public const string DoneMask = "doneMask";
+            public const string MiniGameResult = "miniGameResult";
+        }
+        
+        public static partial class PlayerProps
+        {
+            public const string InGameReady = "inGameReady";
+            public const string InGameDone = "inGameDone";
+        }
+        
+        #endregion
     }
+
 }

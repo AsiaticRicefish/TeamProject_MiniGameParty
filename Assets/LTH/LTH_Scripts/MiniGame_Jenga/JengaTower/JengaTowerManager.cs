@@ -115,7 +115,9 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
 
 
     #region Tower Creation
-    private void CreateAllPlayerTowers()
+
+    // 초기화 단계에서는 p == null이어도 강제로 생성
+    private void CreateAllPlayerTowers(bool allowNullPlayer = true)
     {
         _playerTowers.Clear();
 
@@ -126,9 +128,16 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
         {
             var actorNumber = slotActors[i];
             var p = PhotonNetwork.PlayerList.FirstOrDefault(x => x.ActorNumber == actorNumber);
-            if (p == null) continue; // 떠난 플레이어 등
 
-            CreatePlayerTower(actorNumber, i, TryGetUid(p));
+            if (!allowNullPlayer && p == null)
+            {
+                // 런타임 중 재호출일 경우엔 탈주 처리
+                continue;
+            }
+
+            string ownerUid = TryGetUid(p);
+
+            CreatePlayerTower(actorNumber, i, ownerUid);
         }
     }
 
@@ -183,19 +192,14 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
 
         if (actorNumber == PhotonNetwork.LocalPlayer.ActorNumber)
         {
-            int slot = GetSlotIndexOf(actorNumber);
+            int slot = slotIndex; // 재계산하지 말고 생성에 사용한 동일 값 사용
             var cameraAnchor = GetCameraAnchor(slot);
             var lookTarget = tower.transform;
 
             var binder = FindFirstObjectByType<JengaLocalCameraBinder>(FindObjectsInactive.Include);
-            
             if (binder)
             {
-                binder.BindForLocal(actorNumber, cameraAnchor, lookTarget, arenaLayerNames);
-            }
-            else
-            {
-                Debug.LogWarning("[JengaTowerManager] JengaLocalCameraBinder not found in scene.");
+                binder.BindForLocal(actorNumber, slot, cameraAnchor, lookTarget, arenaLayerNames);
             }
         }
 

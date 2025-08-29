@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using LDH.LDH_Scripts.Network;
 using Photon.Pun;
 using UnityEngine;
 
@@ -92,6 +93,13 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
         // 2단계: 모든 플레이어 씬 로딩 완료 대기
         Debug.Log($"[{GameType}] Step 2: WaitForAllPlayersLoaded");
         yield return StartCoroutine(WaitForAllPlayersLoaded());
+        
+        // 추가) 포톤뷰 조정이 필요하면 포톤뷰 조정 처리
+        Debug.Log($"[{GameType}] Step 2.5 : Photon View 조정");
+        if (PhotonViewCoordinator.Instance != null)
+        {
+            yield return new WaitUntil(() => PhotonViewCoordinator.Instance.IsComplete);
+        }
 
         // 3단계: 매니저들 Awake 완료 대기
         Debug.Log($"[{GameType}] Step 3: WaitForManagersAwake");
@@ -204,12 +212,25 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
     {
         yield return new WaitUntil(() => FindObjectOfType<T>() != null);
     }
+    
+    // 타입을 매개변수로 받는 오버로드 메서드 추가
+    protected IEnumerator WaitForSingletonReady(Type type)
+    {
+        yield return new WaitUntil(() => FindObjectOfType(type) != null);
+    }
+
 
     // IGameComponent들을 순차적으로 안전하게 초기화
     protected IEnumerator InitializeComponentsSafely(IEnumerable<IGameComponent> components)
     {
+        
         foreach (var component in components)
         {
+            var mb   = component as MonoBehaviour;
+            var go   = mb ? mb.gameObject : null;
+            var scene=  go && go.scene.IsValid() ? go.scene.name : "<no-scene>";
+
+            
             bool failed = false;
 
             try
@@ -219,7 +240,12 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
             catch (System.Exception e)
             {
                 failed = true;
-                Debug.LogError($"[{GameType}Controller] 초기화 실패 {component.GetType().Name}: {e.Message}");
+                Debug.LogError(
+                    $"[{GameType}Controller] 초기화 실패 → {component.GetType().Name}\n" +
+                    $"- Scene : {scene}\n" +
+                    $"- Active: {(go ? go.activeInHierarchy : false)}, Enabled: {(mb ? mb.enabled : false)}\n" +
+                    go /* context */);
+
             }
 
             yield return null;

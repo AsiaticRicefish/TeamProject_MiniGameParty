@@ -1,69 +1,114 @@
+using System;
 using UnityEngine;
-
+using Photon.Pun;
+using ShootingScene;
 [RequireComponent(typeof(Rigidbody))]
-public class UnimoEgg : MonoBehaviour
+public class UnimoEgg : MonoBehaviourPun
 {
     private Rigidbody rb;
 
-    private Vector3 startdic;
+    //private Vector3 startdic;
 
-    private Vector3 startTouchPos;
-    private Vector3 endTouchPos;
+    //private Vector3 startTouchPos;
+    //private Vector3 endTouchPos;
 
-    [SerializeField][Range(0.1f,15f)] private float forceMultiplier = 10f;
+    public string ShooterUid; // ëˆ„ê°€ ë˜ì¡ŒëŠ”ì§€ ì €ì¥
+    //[SerializeField][Range(0.1f,15f)] private float forceMultiplier = 3f;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
     }
 
-    //ÅÍÄ¡ ½ÃÀÛÇßÀ» ¶§
-    public void OnTouchStart(Vector2 touchPos)
+    #region Legacy ì¡°ì‘ë²•
+    ////í„°ì¹˜ ì‹œì‘í–ˆì„ ë•Œ
+    //public void OnTouchStart(Vector2 touchPos)
+    //{
+    //    Debug.Log("ìœ ë‹ˆëª¨ ì°¾ì•„ì„œ í„°ì¹˜ ì‹œì‘í•¨");
+    //    startTouchPos = touchPos;               //ì‹œì‘ ìœ„ì¹˜ë¥¼ ì €ì¥
+    //    rb.isKinematic = true; 
+    //}
+
+    ////í„°ì¹˜ ì¤‘ì¼ë•Œ
+    //public void OnTouchMove(Vector2 touchPos)
+    //{
+    //    // í™”ë©´ ì¢Œí‘œì˜ Yë¥¼ ì›”ë“œ ì¢Œí‘œì˜ Zë¡œ ë³€í™˜
+    //    //Vector3 worldPos = Camera.main.ScreenToWorldPoint(new Vector3(touchPos.x, touchPos.y, Camera.main.transform.position.y));
+    //    //transform.position = new Vector3(worldPos.x, transform.position.y, worldPos.z);
+    //    //ìƒê°í•´ ë³´ë‹ˆê¹ ì´ë™ì„ êµ³ì´ ì•ˆí•´ë„ëœë‹¤.
+    //}
+
+    ////í„°ì¹˜ë¥¼ ë•Ÿì„ ë•Œ
+    //public void OnTouchEnd(Vector2 endtouchPos)
+    //{
+    //    //TODO - ì¶”í›„ ë‚˜ì¤‘ì— ë†“ì€ ì‹œê°„ë§Œí¼ forceMultiplierê°’ì„ ë†’ê²Œ í•˜ì—¬ ê³±í•´ì¤˜ì•¼í•œë‹¤.
+    //    rb.isKinematic = false;
+
+    //    //í•­ìƒ ì¹´ë©”ë¼ëŠ” x,yì¢Œí‘œ ë³´ë‹¤ Camera.main.transform.position.y ë§Œí¼ ë–¨ì–´ì ¸ìˆë‹¤.
+    //    Vector3 startWorld = Camera.main.ScreenToWorldPoint(new Vector3(startTouchPos.x,startTouchPos.y,Camera.main.transform.position.y));
+    //    Vector3 endWorld = Camera.main.ScreenToWorldPoint(new Vector3(endtouchPos.x,endtouchPos.y,Camera.main.transform.position.y));
+
+    //    //ë‘ë²¡í„°ì‚¬ì´ì˜ ê±°ë¦¬ë¥¼ êµ¬í•¨
+    //    //float pullBackPower = Vector3.Distance(startWorld,endWorld);
+    //    //Debug.Log(pullBackPower);
+
+    //    //ë‘ë²¡í„° ì‚¬ì´ì˜ ë°©í–¥ì„ êµ¬í•¨ -> ì—¬ê¸°ì„œ dir.magnitudeì˜ ê°’ì€ ë²¡í„°ì˜ í¬ê¸°
+    //    Vector3 dir = (startWorld - endWorld);
+    //    Debug.Log(dir.magnitude);
+    //    dir.y = 0;
+
+    //    //forceMultiplier - ë³´ì •ê°’
+    //    rb.AddForce(dir * forceMultiplier, ForceMode.Impulse);
+    //    /*Vector3 dir = startTouchPos - endTouchPos; //ì¢…ë£Œ -> ì‹œì‘ ë°©í–¥ ë²¡í„°
+
+
+    //    //í•´ìƒë„ max min í˜ì˜ í¬ê¸°? íŠ¹ì •í˜ê¹Œì§€ë§Œ ì¤„ìˆ˜ìˆë„ë¡ 
+
+    //    dir = new Vector3(dir.x, 0 , dir.z);
+
+    //    //Vector3 force = new Vector3(delta.x, 0, delta.y) * forceMultiplier;
+
+    //    rb.AddForce(dir.normalized * forceMultiplier, ForceMode.Impulse);*/
+    //}
+    #endregion
+
+    /*
+    public void Shot(Vector3 dir)
     {
-        Debug.Log("À¯´Ï¸ğ Ã£¾Æ¼­ ÅÍÄ¡ ½ÃÀÛÇÔ");
-        startTouchPos = touchPos;               //½ÃÀÛ À§Ä¡¸¦ ÀúÀå
-        rb.isKinematic = true; 
+        rb.velocity = Vector3.zero; // ê¸°ì¡´ ì†ë„ ì´ˆê¸°í™”
+        rb.AddForce(dir, ForceMode.Impulse);
+        //rb.AddForce(dir * forceMultiplier, ForceMode.Impulse);
+        Debug.Log($"ë°œì‚¬ ë°©í–¥ì˜ í˜ì˜ í¬ê¸° - {dir.magnitude}");
+        //Debug.Log($"ë°œì‚¬ ë°©í–¥ì˜ í˜ì˜ í¬ê¸° - {dir.magnitude * forceMultiplier}");
+        Test_ShotFollowCamera.Instance.StartFollow(gameObject);
+    }*/
+
+    // ê¸°ì¡´ Shot í˜¸ì¶œ ëŒ€ì‹  RPCë¡œ ë³´ë‚´ê¸°
+    public void Shot(Vector3 dir)
+    {
+        if (photonView.IsMine)
+        {
+            // ìê¸° í™”ë©´ì—ì„œ AddForce ì ìš©
+            ApplyForce(dir);
+            Test_ShotFollowCamera.Instance.StartFollow(gameObject);
+
+            // ë‹¤ë¥¸ í´ë¼ì´ì–¸íŠ¸ì—ë„ RPC ì „ì†¡
+            photonView.RPC("RPC_Shot", RpcTarget.Others, dir);
+        }
     }
 
-    //ÅÍÄ¡ ÁßÀÏ¶§
-    public void OnTouchMove(Vector2 touchPos)
+    // ì‹¤ì œ í˜ ì ìš©
+    private void ApplyForce(Vector3 dir)
     {
-        // È­¸é ÁÂÇ¥ÀÇ Y¸¦ ¿ùµå ÁÂÇ¥ÀÇ Z·Î º¯È¯
-        //Vector3 worldPos = Camera.main.ScreenToWorldPoint(new Vector3(touchPos.x, touchPos.y, Camera.main.transform.position.y));
-        //transform.position = new Vector3(worldPos.x, transform.position.y, worldPos.z);
-        //»ı°¢ÇØ º¸´Ï±ñ ÀÌµ¿À» ±»ÀÌ ¾ÈÇØµµµÈ´Ù.
+        rb.velocity = Vector3.zero;
+        rb.AddForce(dir, ForceMode.Impulse);
+        Debug.Log($"ë°œì‚¬ ë°©í–¥ì˜ í˜ì˜ í¬ê¸° - {dir.magnitude}");
     }
 
-    //ÅÍÄ¡¸¦ ¶­À» ¶§
-    public void OnTouchEnd(Vector2 endtouchPos)
+    [PunRPC]
+    private void RPC_Shot(Vector3 dir)
     {
-        //TODO - ÃßÈÄ ³ªÁß¿¡ ³õÀº ½Ã°£¸¸Å­ forceMultiplier°ªÀ» ³ô°Ô ÇÏ¿© °öÇØÁà¾ßÇÑ´Ù.
-        rb.isKinematic = false;
-
-        //Ç×»ó Ä«¸Ş¶ó´Â x,yÁÂÇ¥ º¸´Ù Camera.main.transform.position.y ¸¸Å­ ¶³¾îÁ®ÀÖ´Ù.
-        Vector3 startWorld = Camera.main.ScreenToWorldPoint(new Vector3(startTouchPos.x,startTouchPos.y,0/*Camera.main.transform.position.y*/));
-        Vector3 endWorld = Camera.main.ScreenToWorldPoint(new Vector3(endtouchPos.x,endtouchPos.y,0/*Camera.main.transform.position.y*/));
-
-        //µÎº¤ÅÍ»çÀÌÀÇ °Å¸®¸¦ ±¸ÇÔ
-        //float pullBackPower = Vector3.Distance(startWorld,endWorld);
-        //Debug.Log(pullBackPower);
-
-        //µÎº¤ÅÍ »çÀÌÀÇ ¹æÇâÀ» ±¸ÇÔ -> ¿©±â¼­ dir.magnitudeÀÇ °ªÀº º¤ÅÍÀÇ Å©±â
-        Vector3 dir = (startWorld - endWorld);
-        Debug.Log(dir.magnitude);
-        dir.y = 0;
-
-        //forceMultiplier - º¸Á¤°ª
-        rb.AddForce(dir * forceMultiplier, ForceMode.Impulse);
-        /*Vector3 dir = startTouchPos - endTouchPos; //Á¾·á -> ½ÃÀÛ ¹æÇâ º¤ÅÍ
-         
-
-        //ÇØ»óµµ max min ÈûÀÇ Å©±â? Æ¯Á¤Èû±îÁö¸¸ ÁÙ¼öÀÖµµ·Ï 
-
-        dir = new Vector3(dir.x, 0 , dir.z);
-        
-        //Vector3 force = new Vector3(delta.x, 0, delta.y) * forceMultiplier;
-
-        rb.AddForce(dir.normalized * forceMultiplier, ForceMode.Impulse);*/
+        // ë‹¤ë¥¸ í´ë¼ì´ì–¸íŠ¸ì—ì„œ í˜ ì ìš©
+        ApplyForce(dir);
     }
 }

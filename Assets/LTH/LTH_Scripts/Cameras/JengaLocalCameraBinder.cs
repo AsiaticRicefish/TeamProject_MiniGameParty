@@ -15,7 +15,7 @@ public class JengaLocalCameraBinder : MonoBehaviour
     /// 로컬 플레이어 슬롯의 앵커에 vcam을 붙이고, 메인 카메라의 cullingMask를 슬롯 레이어로 제한.
     /// 타워가 생성된 직후(로컬 슬롯일 때) 호출.
     /// </summary>
-    public void BindForLocal(int actorNumber, Transform cameraAnchor, Transform lookTarget, string[] arenaLayerNames)
+    public void BindForLocal(int actorNumber, int slotIndex, Transform cameraAnchor, Transform lookTarget, string[] arenaLayerNames)
     {
         if (!vcamPrefab || !cameraAnchor || !lookTarget)
         {
@@ -54,11 +54,33 @@ public class JengaLocalCameraBinder : MonoBehaviour
             return;
         }
 
-        // 레이어 커링: 내 슬롯 레이어 + 공용
-        int slot = JengaTowerManager.Instance.GetSlotIndexOf(actorNumber);
-        var layerName = arenaLayerNames[slot % arenaLayerNames.Length];
+        //// 레이어 커링: 내 슬롯 레이어 + 공용
+        //int slot = JengaTowerManager.Instance.GetSlotIndexOf(actorNumber);
+        //var layerName = arenaLayerNames[slot % arenaLayerNames.Length];
+        //int layer = LayerMask.NameToLayer(layerName);
+        //int slotMask = (layer >= 0 ? (1 << layer) : 0);
+
+        // 전달받은 slotIndex 사용
+        var layerName = arenaLayerNames[slotIndex % arenaLayerNames.Length];
         int layer = LayerMask.NameToLayer(layerName);
-        int slotMask = (layer >= 0 ? (1 << layer) : 0);
+
+        // 레이어 미정의 시 폴백(모든 아레나 레이어 보기)
+        int slotMask = 0;
+        if (layer >= 0)
+        {
+            slotMask = 1 << layer;
+        }
+        else
+        {
+            Debug.LogError($"[JengaLocalCameraBinder] Layer '{layerName}'가 정의되어 있지 않습니다. 폴백으로 모든 아레나 레이어를 표시합니다.");
+            foreach (var n in arenaLayerNames)
+            {
+                int l = LayerMask.NameToLayer(n);
+                if (l >= 0) slotMask |= 1 << l;
+            }
+            // 그래도 없으면 최소한 Everything으로
+            if (slotMask == 0) slotMask = ~ 0;
+        }
 
         main.cullingMask = commonLayers.value | slotMask;
 
@@ -67,9 +89,6 @@ public class JengaLocalCameraBinder : MonoBehaviour
             pr = main.gameObject.AddComponent<PhysicsRaycaster>();
         pr.eventMask = main.cullingMask;
 
-        // AudioListener는 메인 카메라에만 (vcam에는 없음)
-        // CinemachineBrain은 메인 카메라에만 (이미 붙어있어야 함)
-
-        Debug.Log($"[JengaLocalCameraBinder] Local VCam bound → slot={slot}, layer={layerName}");
+        Debug.Log($"[JengaLocalCameraBinder] Bound → actor={actorNumber}, slot={slotIndex}, layer={layerName}({layer}), mask=0x{main.cullingMask:X}");
     }
 }

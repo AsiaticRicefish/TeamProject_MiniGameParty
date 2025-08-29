@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 1085406745897923259}
   - component: {fileID: 5559973798811416425}
   - component: {fileID: 5197551211402478044}
+  - component: {fileID: 7269207131096324648}
   m_Layer: 20
   m_Name: Cylinder
   m_TagString: Untagged
@@ -119,7 +120,7 @@ Rigidbody:
   m_GameObject: {fileID: 1414311494131849494}
   serializedVersion: 4
   m_Mass: 1
-  m_Drag: 0
+  m_Drag: 1
   m_AngularDrag: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
@@ -132,7 +133,7 @@ Rigidbody:
     m_Bits: 0
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
-  m_UseGravity: 1
+  m_UseGravity: 0
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 116
@@ -150,6 +151,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   forceMultiplier: 5
+--- !u!114 &7269207131096324648
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1414311494131849494}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 331cb3fc389feb247bbe12b36b9c00dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  player: {fileID: 3602887977876217119}
+  maxAngle: 50
+  speed: 2
+  lineLength: 5
 --- !u!1 &8312603767561401704
 GameObject:
   m_ObjectHideFlags: 0
@@ -162,6 +179,7 @@ GameObject:
   - component: {fileID: 5889875346176728129}
   - component: {fileID: 5792576068055552057}
   - component: {fileID: 8013846419612888239}
+  - component: {fileID: 440097370144788969}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -178,7 +196,7 @@ Transform:
   m_GameObject: {fileID: 8312603767561401704}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -0.26666665, y: 189.33336, z: -0.0333333}
+  m_LocalPosition: {x: 0, y: 20, z: 0}
   m_LocalScale: {x: 3.3333333, y: 3.3333335, z: 33.333336}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -219,7 +237,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 2.97
+  orthographic size: 2.31
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -287,3 +305,19 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
+--- !u!114 &440097370144788969
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8312603767561401704}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c49b4cc203aa6414fae5c798d1d0e7d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_EventMask:
+    serializedVersion: 2
+    m_Bits: 2097152
+  m_MaxRayIntersections: 0

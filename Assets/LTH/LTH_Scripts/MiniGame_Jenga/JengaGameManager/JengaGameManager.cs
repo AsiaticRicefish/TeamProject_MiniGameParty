@@ -7,6 +7,7 @@ using Photon.Pun;
 using Photon.Pun.Demo.PunBasics;
 using UnityEngine;
 using ExitGames.Client.Photon;
+using LDH_MainGame;
 
 
 /// <summary>
@@ -322,6 +323,7 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
                 player.WinThisMiniGame = pair.Value == 1;
             }
         }
+        
         // 일정 시간 후 메인 씬으로 복귀
         StartCoroutine(ReturnToMainGameAfterDelay(returnToLobbyDelay));
     }
@@ -336,7 +338,8 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         // 씬 전환
         if (PhotonNetwork.IsMasterClient)
         {
-            PhotonNetwork.LoadLevel(mainMapSceneName); // 씬 이름은 변경 가능
+            // PhotonNetwork.LoadLevel(mainMapSceneName); // 씬 이름은 변경 가능
+            MainGameManager.Instance?.NotifyMiniGameFinish();
         }
     }
 

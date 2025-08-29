@@ -6,6 +6,7 @@ using LDH_Util;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
 using static LDH_Util.Define_LDH;
 
@@ -15,11 +16,17 @@ namespace Network
     {
         [Header("Scene Setting")]
         [SerializeField] private string gameSceneName;
+        [SerializeField] private string lobbySceneName;
+        
         [SerializeField] private bool autoSyncScene = true;
+        
+        [SerializeField] private bool autoConnectOnAwake = false;
         
         private MatchType _createType = MatchType.None;
         //--- private matching ---- 
         private int _privateRetryCount;
+
+        private bool _isNavigating = false;
 
         #region Events
 
@@ -46,8 +53,9 @@ namespace Network
         protected override void OnAwake()
         {
             PhotonNetwork.AutomaticallySyncScene = autoSyncScene;
-
+            
             //임시로 awake 시점에 호출
+            //if (autoConnectOnAwake)
             //ConnectServer();
         }
 
@@ -68,6 +76,9 @@ namespace Network
         {
             if (string.IsNullOrEmpty(PhotonNetwork.NickName))
                 PhotonNetwork.NickName = $"Player_{UnityEngine.Random.Range(1000, 9999)}";
+
+            // var table = new Hashtable { { "uid", PhotonNetwork.NickName.ToString() } };
+            // PhotonNetwork.LocalPlayer.SetCustomProperties(table);
 
         }
 
@@ -184,6 +195,7 @@ namespace Network
 
             foreach (var key in customProperties.Keys)
             {
+                if(key.ToString() == "uid") continue;
                 clearProperties[key] = null;
             }
 
@@ -220,11 +232,12 @@ namespace Network
         public override void OnJoinedRoom()
         {
             Debug.Log($"[NetworkManager] {PhotonNetwork.CurrentRoom.Name} 방에 입장했습니다.");
-
+            
+            PhotonNetwork.AutomaticallySyncScene = autoSyncScene;
+            
             JoinedRoom?.Invoke();
             RoomPlayerCountChanged?.Invoke(PhotonNetwork.CurrentRoom.PlayerCount, PhotonNetwork.CurrentRoom.MaxPlayers);
         }
-        
               
         // 랜덤 룸 입장 실패 (빠른 매칭)
         public override void OnJoinRandomFailed(short returnCode, string message)
@@ -252,6 +265,14 @@ namespace Network
         {
             Debug.Log($"[NetworkManager] 방에서 나갔습니다.");
             
+            var current = SceneManager.GetActiveScene().name;
+            if (!string.Equals(current, lobbySceneName, System.StringComparison.Ordinal) && !_isNavigating)
+            {
+                Debug.Log($"로비로 이동합니다. (current: {current} → lobby: {lobbySceneName})");
+                StartCoroutine(Util_LDH.LoadSceneWithDelay(lobbySceneName, 0.5f));
+            }
+            
+            PlayerManager.Instance.ClearAllPlayers();
             ClearAllPlayerProperty();
             
             LeftRoom?.Invoke();
