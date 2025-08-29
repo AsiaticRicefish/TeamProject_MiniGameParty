@@ -13,7 +13,7 @@ namespace RhythmGame
 
         [Header("룸 옵션")]
         [SerializeField] string gameRoomName = "RythemTestRoom";
-        [SerializeField] byte maxPlayers = 2;
+        [SerializeField] byte maxPlayers = 1;
 
         /// <summary>
         /// 씬 이동 동기화 해제
