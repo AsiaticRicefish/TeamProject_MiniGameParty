@@ -100,12 +100,14 @@ namespace KYG.Auth
 
         private void ApplyPhotonIdentityAndConnect(string uid, string nickname)
         {
+            //닉네임과 아이디만 설정해준다
             PhotonNetwork.NickName = nickname;
             PhotonNetwork.AuthValues = new AuthenticationValues(uid);
 
-            var props = new Hashtable { { "uid", uid } };
-            PhotonNetwork.LocalPlayer.SetCustomProperties(props);
-            Debug.Log($"[GuestLoginManager] Photon properties set: uid={uid}, nick={nickname}");
+            //---- 커스텀 프로퍼티는 로비 입장 후 설정되는 것으로 옮김 (공통적용을 위해)---- 0829(이도현)
+            // var props = new Hashtable { { "uid", uid } };
+            // PhotonNetwork.LocalPlayer.SetCustomProperties(props);
+            // Debug.Log($"[GuestLoginManager] Photon properties set: uid={uid}, nick={nickname}");
 
             if (!PhotonNetwork.IsConnected)
             {
@@ -122,7 +124,7 @@ namespace KYG.Auth
         public override void OnConnectedToMaster()
         {
             Debug.Log("[GuestLoginManager] ConnectedToMaster.");
-            SafeReapplyUid();
+            //SafeReapplyUid();
             
             if (user == null)
             {                   // 아직 Firebase 로그인 전
@@ -132,21 +134,22 @@ namespace KYG.Auth
             
             PhotonNetwork.JoinLobby();
         }
-
-        public override void OnJoinedLobby()
-        {
-            Debug.Log("[GuestLoginManager] JoinedLobby.");
-            SafeReapplyUid();
-            
-            if (user == null) return;
-
-            // if (!PhotonNetwork.InRoom)
-            //     PhotonNetwork.JoinOrCreateRoom("HUB-LOBBY",
-            //         new RoomOptions { MaxPlayers = 8, IsOpen = true, IsVisible = false }, TypedLobby.Default);
-
-            //로비 씬으로 이동
-            SceneManager.LoadScene(lobbySceneName);
-        }
+        
+        // ----- NetworkManager로 기능 통합 ----- 0829(이도현)
+        // public override void OnJoinedLobby()
+        // {
+        //     Debug.Log("[GuestLoginManager] JoinedLobby.");
+        //     SafeReapplyUid();
+        //     
+        //     if (user == null) return;
+        //
+        //     // if (!PhotonNetwork.InRoom)
+        //     //     PhotonNetwork.JoinOrCreateRoom("HUB-LOBBY",
+        //     //         new RoomOptions { MaxPlayers = 8, IsOpen = true, IsVisible = false }, TypedLobby.Default);
+        //
+        //     //로비 씬으로 이동
+        //     SceneManager.LoadScene(lobbySceneName);
+        // }
 
         public override void OnJoinedRoom()
         {
