@@ -125,7 +125,7 @@ public class UnimoEgg : MonoBehaviourPun
 
    public IEnumerator WaitForStop()
     {
-        while (rb.velocity.magnitude > stopSpeed)
+        while (rb.velocity.magnitude > stopSpeed || !gameObject.activeSelf)
         {
             yield return null; // 다음 프레임까지 대기
         }

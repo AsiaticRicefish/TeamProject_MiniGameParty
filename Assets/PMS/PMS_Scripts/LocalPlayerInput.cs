@@ -121,19 +121,23 @@ public class LocalPlayerInput : MonoBehaviourPun
         OnStep3Completed += () => {
             Debug.Log("Step 3: 차징 완료");
             inputEnabled = false;
+            var unimo = gameObject.GetComponent<UnimoEgg>();
+
+            unimo.Shot(arrow.CurrentDir * charger.ChargePower);
             FinishAllSteps();
         };
 
         // 최종 완료
         OnAllCompleted += () => {
             Debug.Log("모든 단계 완료!");
-            StartCoroutine(HandleShotAndWait());
+            //StartCoroutine(HandleShotAndWait());
         };
     }
 
-    private IEnumerator HandleShotAndWait()
+    /*private IEnumerator HandleShotAndWait()
     {
         var unimo = gameObject.GetComponent<UnimoEgg>();
+
         unimo.Shot(arrow.CurrentDir * charger.ChargePower);
 
         // 멈출 때까지 기다림
@@ -142,7 +146,7 @@ public class LocalPlayerInput : MonoBehaviourPun
         Debug.Log("UnimoEgg 멈춘 후 처리!");
 
         TurnManager.Instance.RequestMyTurnEnd();
-    }
+    }*/
 
     // 단계 시작 함수들 - 기존 타이머 정지 후 새 타이머 시작
     private void StartStep1()
@@ -214,7 +218,7 @@ public class LocalPlayerInput : MonoBehaviourPun
                 OnStep2Completed?.Invoke();
                 break;
             case 3:
-                charger?.StopCharge(); // 차징 정지
+                //charger?.StopCharge(); // 차징 정지
                 OnStep3Completed?.Invoke();
                 break;
         }
@@ -223,9 +227,9 @@ public class LocalPlayerInput : MonoBehaviourPun
     private void Update()
     {
         // Step 1: 유니모 좌우 자동 이동
-        if (currentStep == 1 && autoMoveFlag)
+        if (currentStep == 1 && autoMoveFlag && inputEnabled)
         {
-            float t = Mathf.PingPong(Time.time * autoMoveSpeed, 1f); // 0~1 반복
+            float t = Mathf.PingPong(Time.time, 1f); // 0~1 반복
             Vector3 newPos = transform.position;
             // grabStartPos.x를 중심으로 좌우 grabLimit 범위 내 이동
             newPos.x = Mathf.Lerp(autoMoveStartPos.x - autoMoveRangeX, autoMoveStartPos.x + autoMoveRangeX, t);

@@ -87,7 +87,6 @@ GameObject:
   - component: {fileID: 1803942830378389541}
   - component: {fileID: 6201823609930137359}
   - component: {fileID: 2527705848922240012}
-  - component: {fileID: 8600606283037920996}
   m_Layer: 5
   m_Name: Arrow
   m_TagString: Untagged
@@ -169,28 +168,6 @@ MonoBehaviour:
   swingSpeed: 2
   TargetPos: {fileID: 3518416739283501205}
   player: {fileID: 0}
---- !u!114 &8600606283037920996
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3458358081850640398}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ObservedComponentsFoldoutOpen: 1
-  Group: 0
-  prefixField: -1
-  Synchronization: 3
-  OwnershipTransfer: 0
-  observableSearch: 2
-  ObservedComponents: []
-  sceneViewId: 0
-  InstantiationId: 0
-  isRuntimeInstantiated: 0
 --- !u!1 &3713057282715791021
 GameObject:
   m_ObjectHideFlags: 0
@@ -450,6 +427,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5477655949011146365}
   - component: {fileID: 4942191860708732053}
+  - component: {fileID: 3529608048543021964}
   m_Layer: 5
   m_Name: Slider
   m_TagString: Untagged
@@ -529,6 +507,21 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &3529608048543021964
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6726540085561578620}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 176bcb7c9a381b14193e123c1b18718b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  chargeMax: 25
+  chargePeriod: 4
+  chargeSlider: {fileID: 4942191860708732053}
 --- !u!1 &7871336808941981924
 GameObject:
   m_ObjectHideFlags: 0
@@ -737,7 +730,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 0}
   arrow: {fileID: 2527705848922240012}
-  charger: {fileID: 0}
+  charger: {fileID: 3529608048543021964}
   mainCam: {fileID: 0}
 --- !u!114 &-3147721912726117881
 MonoBehaviour:

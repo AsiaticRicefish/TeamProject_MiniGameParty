@@ -15,7 +15,7 @@ namespace ShootingScene
 
         //private List<int> turnOrder = new List<int>();
         public int currentTurnIndex = 0; 
-        public int currentRoundIndex = 1;    
+        public int currentRoundIndex = 0;    
         private int totalRounds = 1;
 
         public bool IsTurnEnd;

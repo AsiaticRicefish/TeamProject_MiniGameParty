@@ -56,7 +56,7 @@ namespace Network
             
             //임시로 awake 시점에 호출
             //if (autoConnectOnAwake)
-            //ConnectServer();
+            ConnectServer();
         }
 
 
@@ -77,8 +77,8 @@ namespace Network
             if (string.IsNullOrEmpty(PhotonNetwork.NickName))
                 PhotonNetwork.NickName = $"Player_{UnityEngine.Random.Range(1000, 9999)}";
 
-            // var table = new Hashtable { { "uid", PhotonNetwork.NickName.ToString() } };
-            // PhotonNetwork.LocalPlayer.SetCustomProperties(table);
+             var table = new Hashtable { { "uid", PhotonNetwork.NickName.ToString() } };
+             PhotonNetwork.LocalPlayer.SetCustomProperties(table);
 
         }
 

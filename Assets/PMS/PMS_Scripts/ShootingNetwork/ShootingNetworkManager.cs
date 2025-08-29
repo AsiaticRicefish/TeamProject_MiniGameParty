@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -22,8 +23,8 @@ namespace ShootingScene
                 var props = new ExitGames.Client.Photon.Hashtable
                 {
                     { ShootingGamePropertyKeys.State, "InitState" },
-                    { ShootingGamePropertyKeys.Turn, -1 },
-                     { ShootingGamePropertyKeys.Round, -1 },
+                    { ShootingGamePropertyKeys.Turn, 0 },
+                     { ShootingGamePropertyKeys.Round, 1 },
                     ///{ ShootingGamePropertyKeyss.PlayerScore_Prefix + Player },
                 };
                 foreach (var player in PlayerManager.Instance.Players)
@@ -52,21 +53,21 @@ namespace ShootingScene
                 ShootingGameManager.Instance.ChangeStateByName(newState);
             });
 
-            // 게임 턴,라운드(int) 구독
-            RoomPropertyObserver.Instance.RegisterObserver(ShootingGamePropertyKeys.Turn, (value) =>
-            {
-                int newTurnIndex = (int)value;             
+            //// 게임 턴,라운드(int) 구독
+            //RoomPropertyObserver.Instance.RegisterObserver(ShootingGamePropertyKeys.Turn, (value) =>
+            //{
+            //    int newTurnIndex = (int)value;             
 
-                TurnManager.Instance.currentTurnIndex = newTurnIndex;
-                int newRound = (int)RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.Round); //          현재 최신 Round 읽기
+            //    TurnManager.Instance.currentTurnIndex = newTurnIndex;
+            //    int newRound = (int)RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.Round); //          현재 최신 Round 읽기
 
-                TurnManager.Instance.SetCurrentTurn();                                                  // 내 턴인지 판단
-            });
+            //    TurnManager.Instance.SetCurrentTurn();                                                  // 내 턴인지 판단
+            //});
 
-            RoomPropertyObserver.Instance.RegisterObserver(ShootingGamePropertyKeys.Round, (value) =>
-            {
-                //라운드 변경시 필요할 부분 추가
-            });
+            //RoomPropertyObserver.Instance.RegisterObserver(ShootingGamePropertyKeys.Round, (value) =>
+            //{
+            //    //라운드 변경시 필요할 부분 추가
+            //});
 
 
             //플레이어 점수 구독
@@ -78,6 +79,37 @@ namespace ShootingScene
             //        int newScore = (int)value;
             //    });
             //}
+        }
+
+        public void ShootingGameTurnAndRoundRoomPropertiesReigster()
+        {
+            // 게임 턴,라운드(int) 구독
+            // 람다를 변수에 저장해둠
+            turnObserverAction = (value) =>
+            {
+                int newTurnIndex = (int)value;
+                TurnManager.Instance.currentTurnIndex = newTurnIndex;
+
+                int newRound = (int)RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.Round);
+                TurnManager.Instance.SetCurrentTurn();
+            };
+
+            RoomPropertyObserver.Instance.RegisterObserver(ShootingGamePropertyKeys.Turn, turnObserverAction);
+        }
+
+        public void ShootingGameTurnAndRoundRoomPropertiesUnReigster()
+        {
+            //RoomPropertyObserver.Instance.UnregisterObserver(ShootingGamePropertyKeys.Turn,)
+            // 게임 턴,라운드(int) 구독
+            RoomPropertyObserver.Instance.RegisterObserver(ShootingGamePropertyKeys.Turn, (value) =>
+            {
+                int newTurnIndex = (int)value;
+
+                TurnManager.Instance.currentTurnIndex = newTurnIndex;
+                int newRound = (int)RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.Round); //          현재 최신 Round 읽기
+
+                TurnManager.Instance.SetCurrentTurn();                                                  // 내 턴인지 판단
+            });
         }
     }
 }

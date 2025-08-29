@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using Photon.Pun;
 
-[RequireComponent(typeof(PhotonView))]
 public class ChargeController : MonoBehaviourPun
 {
     public float chargeMax = 25f;

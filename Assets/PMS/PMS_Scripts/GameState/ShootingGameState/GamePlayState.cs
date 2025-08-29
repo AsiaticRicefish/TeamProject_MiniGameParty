@@ -11,8 +11,9 @@ public class GamePlayState : ShootingGameState
         if (PhotonNetwork.IsMasterClient)
         {
             ShootingGameManager.Instance.photonView.RPC("InputOn", RpcTarget.All);
-            //TurnManager.Instance.NextTurn();
+            TurnManager.Instance.NextTurn();
         }
+        ShootingNetworkManager.Instance.ShootingGameTurnAndRoundRoomPropertiesReigster();
     }
     public override void Update()
     {
