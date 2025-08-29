@@ -69,6 +69,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9ad51af0cbd44e57bbedec4b802d0036, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isPersistent: 1
   registry: {fileID: 7080885224738973986}
   totalRound: 3
 --- !u!114 &2750379478678518143

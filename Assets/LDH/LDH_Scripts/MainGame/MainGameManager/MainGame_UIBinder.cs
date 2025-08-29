@@ -50,14 +50,21 @@ namespace LDH_MainGame
             foreach (var panel in _readyPanel.PlayerPanels)
                 if (panel != null) panel.ReadyClicked += _onClickReady;
 
-            Manager.UI.ShowPopupUI(_readyPanel).Forget();
+            UniTask.Void(async () =>
+            {
+                await  Manager.UI.ShowPopupUI(_readyPanel);
+            });
         }
         
         public void UpdateReady(int mask) => _readyPanel?.UpdateReadyByMask(mask);
 
         public void CloseReadyPanel()
         {
-            if (_readyPanel == null) return;
+            if (_readyPanel == null)
+            {
+                Debug.Log("ready panel is null");
+                return;
+            }
             foreach (var panel in _readyPanel.PlayerPanels)
                 if (panel != null) panel.ReadyClicked -= _onClickReady;
 

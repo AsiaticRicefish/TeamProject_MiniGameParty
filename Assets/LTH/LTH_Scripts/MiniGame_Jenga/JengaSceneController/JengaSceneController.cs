@@ -19,6 +19,8 @@ public class JengaSceneController : BaseGameSceneController
     [Header("UI")]
     [SerializeField] private LoadingOverlay loading;
 
+    private const string ROOMKEY_SLOTS = "JG_SLOTS";
+
     private void Awake()
     {
         if (_only && _only != this)
@@ -38,6 +40,10 @@ public class JengaSceneController : BaseGameSceneController
         // 모든 플레이어가 uid 셋팅될 때까지 잠깐 대기
         loading?.Set("플레이어 동기화 확인 중...", 0.10f);
         yield return WaitForAllPlayerUids(5f);
+
+        // 슬롯맵이 준비될 때까지 잠깐 대기
+        loading?.Set("슬롯 맵 동기화 중...", 0.15f);
+        yield return WaitForSlotMapReady(5f);
 
         // 각 매니저들이 Awake에서 생성되기를 기다림
         loading?.Set("매니저 준비 중...", 0.20f);
@@ -177,7 +183,12 @@ public class JengaSceneController : BaseGameSceneController
         }
     }
 
-
+    /// <summary>
+    ///  네트워크 초기화 타이밍이 꼬여서 NotifyGameStart()가 끝까지 안 불릴 때
+    ///  JengaGameManager.Instance 초기화가 지연되면서 게임 시작 신호가 안 갈 때
+    ///  그럴 경우를 대비해서 3초 후 강제 StartGame()을 실행
+    /// </summary>
+    /// <returns></returns>
     private IEnumerator ForceStartAfterDelay()
     {
         yield return new WaitForSeconds(3f);
@@ -193,7 +204,8 @@ public class JengaSceneController : BaseGameSceneController
         }
     }
 
-    // --- 유틸: 모든 플레이어가 uid 세팅될 때까지 대기 ---
+    #region 유틸리티: 매니저 준비 대기
+    // 모든 플레이어가 uid 세팅될 때까지 대기
     private IEnumerator WaitForAllPlayerUids(float timeoutSec = 5f)
     {
         float end = Time.time + timeoutSec;
@@ -210,4 +222,31 @@ public class JengaSceneController : BaseGameSceneController
         }
         Debug.LogWarning("[Init] Not all players have UID. Continue anyway.");
     }
+
+    // 슬롯맵이 준비될 때까지 잠깐 대기
+    private IEnumerator WaitForSlotMapReady(float timeoutSec = 5f)
+    {
+        float end = Time.time + timeoutSec;
+        while (Time.time < end)
+        {
+            var room = PhotonNetwork.CurrentRoom;
+            if (room != null && room.CustomProperties != null &&
+                room.CustomProperties.TryGetValue(ROOMKEY_SLOTS, out var obj))
+            {
+                // 슬롯맵 길이가 현재 PlayerList와 합리적으로 일치할 때 OK
+                int[] slots = obj is int[] a ? a
+                               : obj is object[] o ? o.Select(x => Convert.ToInt32(x)).ToArray()
+                               : Array.Empty<int>();
+
+                var actors = PhotonNetwork.PlayerList.Select(p => p.ActorNumber).OrderBy(x => x).ToArray();
+                var slotsSorted = slots.OrderBy(x => x).ToArray();
+
+                if (slots.Length > 0 && actors.SequenceEqual(slotsSorted))
+                    yield break; // 준비 완료
+            }
+            yield return new WaitForSeconds(0.05f);
+        }
+        Debug.LogWarning("[Init] JG_SLOTS not fully ready. Continue anyway.");
+    }
+    #endregion
 }
