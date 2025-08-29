@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 6325174798037743133}
   - component: {fileID: 3329782082347843595}
   m_Layer: 5
-  m_Name: 00_Canvas (1)
+  m_Name: (Dev)End MiniGame Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
