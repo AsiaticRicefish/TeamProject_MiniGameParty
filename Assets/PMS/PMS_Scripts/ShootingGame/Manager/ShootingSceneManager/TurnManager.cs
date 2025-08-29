@@ -132,7 +132,7 @@ namespace ShootingScene
                 if (localInput != null)
                 {
                     localInput.EnableInput();                           // 해당 유니모 Input 활성화 시킴
-                    StartCoroutine(TurnRoutine(localInput));            //입력 코루틴 실행
+                    //StartCoroutine(TurnRoutine(localInput));            //입력 코루틴 실행
                 }
             }
             else
@@ -200,17 +200,8 @@ namespace ShootingScene
         }
         */
 
-        private IEnumerator TurnRoutine(LocalPlayerInput localPlayerInput)
-        {
-            for (int step = 1; step <= 3; step++)
-            {
-                yield return StartCoroutine(localPlayerInput.StepRoutine(step));
-            }
-            RequestMyTurnEnd();
-            Debug.Log("내 턴 종료 → 마스터 클라이언트에게 알림");
-        }
-
-        private void RequestMyTurnEnd()
+        //Local에서 처리가 완료 되었으면 마스터 클라이언트한테 요청
+        public void RequestMyTurnEnd()
         {
             // 마스터에게 턴 종료 요청
             photonView.RPC("RequestTurnEnd", RpcTarget.MasterClient);

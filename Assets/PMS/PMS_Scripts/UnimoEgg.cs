@@ -1,11 +1,14 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using Photon.Pun;
 using ShootingScene;
+
 [RequireComponent(typeof(Rigidbody))]
 public class UnimoEgg : MonoBehaviourPun
 {
     private Rigidbody rb;
+    public float stopSpeed = 0.01f; // 속도 기준
 
     //private Vector3 startdic;
 
@@ -117,6 +120,14 @@ public class UnimoEgg : MonoBehaviourPun
         if (other.gameObject.CompareTag("PlayGround"))
         {
             gameObject.SetActive(false);
+        }
+    }
+
+   public IEnumerator WaitForStop()
+    {
+        while (rb.velocity.magnitude > stopSpeed)
+        {
+            yield return null; // 다음 프레임까지 대기
         }
     }
 }

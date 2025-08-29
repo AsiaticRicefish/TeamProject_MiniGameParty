@@ -94,7 +94,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &3221953779316244013
 RectTransform:
   m_ObjectHideFlags: 0
@@ -260,7 +260,7 @@ RectTransform:
   m_Father: {fileID: 5644561560483297974}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 10, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -456,7 +456,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &5477655949011146365
 RectTransform:
   m_ObjectHideFlags: 0
@@ -598,7 +598,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 2df824aeaf4ccef40ae728e60393e28c, type: 2}
+  - {fileID: 2100000, guid: b1761bf67afe548478d6de58aebf89ce, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -682,6 +682,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bb1dca665c8f37844b6226e5ea38930a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  stopSpeed: 0.01
   ShooterUid: 
 --- !u!114 &3391661498813652295
 MonoBehaviour:
@@ -738,9 +739,6 @@ MonoBehaviour:
   arrow: {fileID: 2527705848922240012}
   charger: {fileID: 0}
   mainCam: {fileID: 0}
-  coneAngle: 100
-  coneDistance: 5
-  coneColor: {r: 0.41037738, g: 0.59766924, b: 1, a: 0.3}
 --- !u!114 &-3147721912726117881
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -58,7 +58,7 @@ namespace ShootingScene
                 int newTurnIndex = (int)value;             
 
                 TurnManager.Instance.currentTurnIndex = newTurnIndex;
-                int newRound = (int)RoomPropertyObserver.Instance.GetRoomProperty("Round"); //          현재 최신 Round 읽기
+                int newRound = (int)RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.Round); //          현재 최신 Round 읽기
 
                 TurnManager.Instance.SetCurrentTurn();                                                  // 내 턴인지 판단
             });
