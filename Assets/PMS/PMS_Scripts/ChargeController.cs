@@ -17,6 +17,16 @@ public class ChargeController : MonoBehaviourPun
 
     public float ChargePower => chargePower;
 
+    private void OnEnable()
+    {
+        StartCharge(); // 활성화될 때 차징 시작
+    }
+
+    private void OnDisable()
+    {
+        StopCharge();  // 비활성화될 때 차징 초기화
+    }
+
     private void Update()
     {
         if (!isCharging) return;
