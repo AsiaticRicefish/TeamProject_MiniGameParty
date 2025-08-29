@@ -7,20 +7,21 @@ namespace RhythmGame
     /// </summary>
     partial class Note : MonoBehaviour
     {
-        private NoteType _type;
+        [SerializeField] NoteType _type;
         public NoteType GetObstacleType() => _type;
 
-        private NoteStatus _status;
+        [SerializeField] NoteStatus _status;
         public NoteStatus Status { get { return _status; } set { _status = value; } }
 
-        private int _noteId;
+        [SerializeField] int _noteId;
         public int NoteId { get { return _noteId; } set { _noteId = value; } }
-        private int _lane;
+        [SerializeField] int _lane;
         public int Lane { get { return _lane; } set { _lane = value; } }
 
         //초기화
         public void Init(int noteId, int lane)
         {
+            _spawnPos = transform.position;
             _noteId = noteId;
             _lane = lane;
             _status = NoteStatus.None;

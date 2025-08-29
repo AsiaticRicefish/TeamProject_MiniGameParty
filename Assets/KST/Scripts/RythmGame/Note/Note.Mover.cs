@@ -11,14 +11,15 @@ namespace RhythmGame
     partial class Note : MonoBehaviour
     {
         private float _speed;
-        private PooledObject _pooled;
+        private Vector3 _spawnPos;
+        [SerializeField] private float _moveDist = 30f; //움직이는 거리
+        private Vector3 _moveDir; // 월드 고정 이동 방향
 
-        void Awake() => _pooled = GetComponent<PooledObject>();
         void Update()
         {
-            transform.Translate(Vector3.forward * (_speed * Time.deltaTime), Space.Self);
+            transform.Translate(-_moveDir * (_speed * Time.deltaTime), Space.World);
 
-            if (transform.position.z < -8f)
+            if ((transform.position - _spawnPos).sqrMagnitude >= _moveDist * _moveDist)
                 _pooled.ReturnPool();
         }
 
@@ -27,6 +28,6 @@ namespace RhythmGame
         /// </summary>
         /// <param name="speed">Note의 속도를 결정하는 매개변수</param>
         public void SetSpeed(float speed) => _speed = speed;
-        public void ReturnPool() => _pooled.ReturnPool();
+        public void SetMoveDirection(Vector3 dir) => _moveDir = dir.normalized;
     }
 }
