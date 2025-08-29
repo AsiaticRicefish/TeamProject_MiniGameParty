@@ -1,9 +1,10 @@
 <?xml version='1.0' encoding='utf-8'?>
-<resources xmlns:tools="http://schemas.android.com/tools" tools:keep="@string/gcm_defaultSenderId,@string/google_storage_bucket,@string/project_id,@string/google_api_key,@string/google_crash_reporting_api_key,@string/google_app_id">
+<resources xmlns:tools="http://schemas.android.com/tools" tools:keep="@string/gcm_defaultSenderId,@string/google_storage_bucket,@string/project_id,@string/google_api_key,@string/google_crash_reporting_api_key,@string/google_app_id,@string/default_android_client_id">
   <string name="gcm_defaultSenderId" translatable="false">32202351078</string>
   <string name="google_storage_bucket" translatable="false">unimo-56ebc.firebasestorage.app</string>
   <string name="project_id" translatable="false">unimo-56ebc</string>
   <string name="google_api_key" translatable="false">AIzaSyA8g_EaJ_yBH5rOB4sSHfGsVdTCXhnKtqI</string>
   <string name="google_crash_reporting_api_key" translatable="false">AIzaSyA8g_EaJ_yBH5rOB4sSHfGsVdTCXhnKtqI</string>
   <string name="google_app_id" translatable="false">1:32202351078:android:7b4a9151c1260b48b83627</string>
+  <string name="default_android_client_id" translatable="false">32202351078-i5q26hb88fabqouqh1bj9p6mhgt5ef9g.apps.googleusercontent.com</string>
 </resources>
