@@ -73,7 +73,6 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
         }
     }
 
-
     #region 플레이어 결과 보고 → 마스터
 
     /// <summary>
@@ -190,8 +189,6 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
 
     private void ApplyBlockRemoval_OnMaster(int actorNumber, int blockId, int clientSuggestedScore, float clientAccuracy)
     {
-        Debug.Log($"[NET] REQ_Remove recv on Master actor={actorNumber} blockId={blockId} acc={clientAccuracy:0.00}");
-
         var gm = JengaGameManager.Instance;
         if (gm == null)
         {
@@ -199,7 +196,6 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
         }
         else if (gm.currentState != JengaGameState.Playing)
         {
-            Debug.LogWarning($"[NET] Reject: state={gm.currentState}");
             ReplyDeny(actorNumber, blockId, "state-not-playing");
             return;
         }
@@ -247,6 +243,14 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
             {
                 Debug.Log("[NET] Proceeding by RULE (cache stale suspected)");
             }
+        }
+
+        // 규칙 검증 + (필요 시) 세션 시작
+        if (!ValidateRemovalAndMaybeStartPairSession_OnMaster(tower, block))
+        {
+            Debug.LogWarning("[NET] Reject: illegal by pair-session rule");
+            ReplyDeny(actorNumber, blockId, "illegal-by-rule");
+            return;
         }
 
         int bonus = Mathf.Clamp(Mathf.RoundToInt(clientAccuracy * MAX_BONUS), 0, MAX_BONUS);
@@ -320,6 +324,57 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
         if (!PhotonNetwork.IsMasterClient) return;
         thisPhotonView.RPC(nameof(RPC_ApplyBlockRemoval), RpcTarget.All, actorNumber, blockId, withAnimation, 0);
     }
+
+    #endregion
+
+    #region 블록 사이드 제거 세션 동기화
+    private bool ValidateRemovalAndMaybeStartPairSession_OnMaster(JengaTower tower, JengaBlock block)
+    {
+        // 같은 레이어에서 살아있는 블록들(인덱스 순)
+        var alive = tower.allBlocks
+            .Where(b => b.Layer == block.Layer && !b.IsRemoved)
+            .OrderBy(b => b.IndexInLayer)
+            .ToList();
+
+        bool isSide = (block.IndexInLayer == 0 || block.IndexInLayer == 2);
+        bool isCenter = (block.IndexInLayer == 1);
+
+        // 세션 중이면: 해당 레이어에서 '기대 사이드'만 허용 (센터 금지)
+        if (tower.IsPairSessionActiveOn(block.Layer))
+        {
+            var expected = tower.GetExpectedSide(block.Layer);
+            return expected.HasValue && isSide && block.IndexInLayer == expected.Value;
+        }
+
+        // 세션 아님(평상시)
+        if (alive.Count == 3)
+        {
+            // 센터는 언제나 OK
+            if (isCenter) return true;
+
+            // 사이드 단일 제거를 첫 시도로 허용할지 판단:
+            // 상단 보호 등과 충돌하지 않도록, 같은 레이어의 센터가 규칙상 제거 가능한 상태인지 확인
+            var centerBlock = alive.FirstOrDefault(x => x.IndexInLayer == 1);
+            bool centerAllowed = centerBlock != null && tower.CanRemoveBlock(centerBlock);
+            if (isSide && centerAllowed)
+            {
+                // 첫 사이드 합법 → 이 레이어에 Pair Session 시작 (반대편 사이드만 허용으로 전환)
+                tower.BeginPairSession(block.Layer, block.IndexInLayer);
+                return true;
+            }
+
+            return false;
+        }
+        else if (alive.Count == 2)
+        {
+            // 세션이 아닌데 2개(사이드+센터) 상태면 불허 (두 번째는 세션에서만)
+            return false;
+        }
+
+        // 그 외(1개 이하)는 제거 불가
+        return false;
+    }
+
 
     #endregion
 

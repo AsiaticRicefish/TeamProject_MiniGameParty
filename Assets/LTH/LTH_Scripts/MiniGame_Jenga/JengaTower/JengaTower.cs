@@ -45,12 +45,47 @@ public class JengaTower : MonoBehaviour
 
     private bool _isCollapsed = false;
 
+    // 층별 사이드 제거 모드 상태 : layer -> expectedSide(0 또는 2)
+    private readonly Dictionary<int, int> _pairSessionExpectedSide = new();
+
     public event Action<int> OnBlockRemoved;
     public event Action OnTowerCollapsed;
+
+    #region Session for side-pair removal
+    public bool IsPairSessionActiveOn(int layer)
+        => _pairSessionExpectedSide.ContainsKey(layer);
+
+    public int? GetExpectedSide(int layer)
+        => _pairSessionExpectedSide.TryGetValue(layer, out var side) ? side : null;
+
+    public void BeginPairSession(int layer, int firstSideIndex)
+    {
+        int opposite = (firstSideIndex == 0) ? 2 : 0;
+        _pairSessionExpectedSide[layer] = opposite;
+        RebuildRemovableCache(false);
+    }
+
+    public void EndPairSession(int layer)
+    {
+        if (_pairSessionExpectedSide.Remove(layer))
+            RebuildRemovableCache(false);
+    }
+
+    private void ValidateOrCancelPairSession(int layer)
+    {
+        if (!IsPairSessionActiveOn(layer)) return;
+        if (!_blocksByLayer.TryGetValue(layer, out var list)) { EndPairSession(layer); return; }
+        int alive = list.Count(b => !b.IsRemoved);
+        // 세션은 “센터+사이드=2개” 상태에서만 유효
+        if (alive != 2) EndPairSession(layer);
+    }
+
+    #endregion
 
     public bool CanRemoveBlock(JengaBlock b)
     {
         if (b == null || b.IsRemoved) return false;
+
         int topAlive = GetTopAliveLayer();
         if (!allowTopRemoval && topAlive >= 0)
         {
@@ -60,9 +95,39 @@ public class JengaTower : MonoBehaviour
         }
 
         if (!_blocksByLayer.TryGetValue(b.Layer, out var list)) return false;
-        int alive = 0;
-        foreach (var x in list) if (!x.IsRemoved) alive++;
-        return alive >= 2;
+
+           // 세션 유효성 검증(해당 레이어만)
+        ValidateOrCancelPairSession(b.Layer);
+
+        var alive = list.Where(x => !x.IsRemoved).OrderBy(x => x.IndexInLayer).ToList();
+
+        // 세션 중: 해당 레이어에서는 expectedSide만 허용(센터 클릭 금지)
+        if (IsPairSessionActiveOn(b.Layer))
+        {
+            var expected = GetExpectedSide(b.Layer);
+            return expected.HasValue && b.IndexInLayer == expected.Value;
+        }
+
+        // 평상 시 : 센터 쪽만 단일 제거 허용 (사이드는 세션 경로로만 진행)
+        if (alive.Count == 3)
+        {
+            // 3개 모두 살아있으면 가운데 하나만 제거 가능
+            return b.IndexInLayer == 1;
+        }
+        else if (alive.Count == 2)
+        {
+            // 세션이 아니라면(첫 사이드 성공 직후가 아님) 허용하지 않음
+            return false;
+        }
+
+        // 그 외(1개 이하)는 제거 불가
+        return false;
+
+        #region 단순히 2개만 빠질 경우 나머지 하나는 안 빠지도록 제한
+        //int alive = 0;
+        //foreach (var x in list) if (!x.IsRemoved) alive++;
+        //return alive >= 2;
+        #endregion
     }
 
     public void InitializeOwner(int actorNumber, string uid)
@@ -368,26 +433,52 @@ public class JengaTower : MonoBehaviour
             if (!_blocksByLayer.TryGetValue(layer, out var list)) continue;
             if (IsProtected(layer)) continue;
 
-            int alive = 0;
-            foreach (var b in list) if (!b.IsRemoved) alive++;
-            if (alive >= 2)
-                foreach (var b in list) if (!b.IsRemoved) _removableCache.Add(b);
+            // 세션 유효성 체크(레이어별)
+            ValidateOrCancelPairSession(layer);
+
+            var alive = list.Where(b => !b.IsRemoved).OrderBy(b => b.IndexInLayer).ToList();
+
+            if (IsPairSessionActiveOn(layer))
+            {
+                var expected = GetExpectedSide(layer);
+                if (expected.HasValue)
+                {
+                    var target = alive.FirstOrDefault(x => x.IndexInLayer == expected.Value);
+                    if (target != null) _removableCache.Add(target);
+                }
+                continue;
+            }
+
+            if (alive.Count == 3)
+            {
+                var center = alive.FirstOrDefault(x => x.IndexInLayer == 1);
+                if (center != null) _removableCache.Add(center);
+            }
+
+            #region 단순히 2개가 빠졌을 경우 나머지 하나는 안 빠지도록 제한
+            //int alive = 0;
+            //foreach (var b in list) if (!b.IsRemoved) alive++;
+            //if (alive >= 2)
+            //    foreach (var b in list) if (!b.IsRemoved) _removableCache.Add(b);
+            #endregion
         }
 
-        if (forceRelaxIfEmpty && _removableCache.Count == 0 && topAlive >= 0)
-        {
-            for (int layer = topAlive; layer >= 0; layer--)
-            {
-                if (!_blocksByLayer.TryGetValue(layer, out var list)) continue;
-                int alive = 0;
-                foreach (var b in list) if (!b.IsRemoved) alive++;
-                if (alive >= 2)
-                {
-                    foreach (var b in list) if (!b.IsRemoved) _removableCache.Add(b);
-                    break;
-                }
-            }
-        }
+        #region Don't use this logic for now
+        //if (forceRelaxIfEmpty && _removableCache.Count == 0 && topAlive >= 0)
+        //{
+        //    for (int layer = topAlive; layer >= 0; layer--)
+        //    {
+        //        if (!_blocksByLayer.TryGetValue(layer, out var list)) continue;
+        //        int alive = 0;
+        //        foreach (var b in list) if (!b.IsRemoved) alive++;
+        //        if (alive >= 2)
+        //        {
+        //            foreach (var b in list) if (!b.IsRemoved) _removableCache.Add(b);
+        //            break;
+        //        }
+        //    }
+        //}
+        #endregion
     }
 
     private int GetTopAliveLayer()
@@ -479,4 +570,12 @@ public class JengaTower : MonoBehaviour
         RebuildRemovableCache(false);
     }
 
+    // 같은 레이어의 반대편 사이드 블록 찾기(보기용 하이라이트 등에 사용)
+    public JengaBlock GetOppositeSideInLayer(int layer, int indexInLayer)
+    {
+        if (!_blocksByLayer.TryGetValue(layer, out var list)) return null;
+        int opposite = (indexInLayer == 0) ? 2 : (indexInLayer == 2 ? 0 : -1);
+        if (opposite < 0) return null;
+        return list.FirstOrDefault(b => !b.IsRemoved && b.IndexInLayer == opposite);
+    }
 }
