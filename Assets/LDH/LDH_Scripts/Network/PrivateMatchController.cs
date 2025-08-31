@@ -121,8 +121,19 @@ namespace Network
 
         private void RequestJoinPrivateRoom(string input)
         {
+            if (!PhotonNetwork.IsConnected || !PhotonNetwork.InLobby)
+            {
+                Util_LDH.ConsoleLog(this, "Server와 연결되지 않았거나 현재 로비가 아닙니다.");
+                return;
+            }
+            
             if (string.IsNullOrEmpty(input)) return;
-            if (_requesting || PhotonNetwork.InRoom) return;
+            
+            if (_requesting || PhotonNetwork.InRoom)
+            {
+                Util_LDH.ConsoleLog(this, "요청 사항을 처리 중이거나 이미 방에 들어온 상태입니다.");
+                return;
+            }
             
             Debug.Log($"[PrivateMatchController]  RequestJoinPrivateRoom(input:'{input.Trim()}')");
             
@@ -137,6 +148,20 @@ namespace Network
 
         private void RequestCreatePrivateRoom()
         {
+            
+            if (!PhotonNetwork.IsConnected || !PhotonNetwork.InLobby)
+            {
+                Util_LDH.ConsoleLog(this, "Server와 연결되지 않았거나 현재 로비가 아닙니다.");
+                return;
+            }
+            
+            if (_requesting || PhotonNetwork.InRoom)
+            {
+                Util_LDH.ConsoleLog(this, "요청 사항을 처리 중이거나 이미 방에 들어온 상태입니다.");
+                return;
+            }
+
+            
             if (_requesting || PhotonNetwork.InRoom) return;
             
             Debug.Log($"[PrivateMatchController] RequestCreatePrivateRoom()");
