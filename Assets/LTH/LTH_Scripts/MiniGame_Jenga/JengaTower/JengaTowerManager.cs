@@ -173,7 +173,6 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
 
             tower = towerRootGO.AddComponent<JengaTower>();
             tower.InitializeOwner(actorNumber, ownerUid);
-            tower.Initialize(blockPrefab, towerHeight);
 
             ApplyArenaLayer(towerRootGO, slotIndex);
         }
@@ -337,6 +336,20 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
         foreach (var kv in snapshot)
             GetPlayerTower(kv.Key)?.ApplyRemovedBlocks(kv.Value, withAnimation: false);
     }
+
+    public LayerMask GetArenaLayerMaskBySlot(int slotIndex)
+    {
+        var name = arenaLayerNames[Mathf.Abs(slotIndex) % arenaLayerNames.Length];
+        int layer = LayerMask.NameToLayer(name);
+        return (layer >= 0) ? (1 << layer) : 0;
+    }
+
+    public LayerMask GetArenaLayerMaskByActor(int actorNumber)
+    {
+        int slot = GetSlotIndexOf(actorNumber);
+        return GetArenaLayerMaskBySlot(slot);
+    }
+
     #endregion
 
     private void ApplyArenaLayer(GameObject root, int slotIndex)

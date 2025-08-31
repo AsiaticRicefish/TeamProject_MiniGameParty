@@ -117,7 +117,14 @@ public class JengaBlock : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
         //  1) 세션 중인 레이어라면: 기대 사이드만 허용
         if (tower.IsPairSessionActiveOn(Layer))
         {
-            if (!tower.CanRemoveBlock(this)) return; // 기대 사이드가 아니면 불가
+            var expectedSide = tower.GetExpectedSide(Layer);
+            bool isExpectedSide = expectedSide.HasValue && IndexInLayer == expectedSide.Value;
+
+            
+            if (!tower.CanRemoveBlock(this))
+            {
+                return;
+            }
 
             if (!_isSelected)
             {
@@ -161,14 +168,27 @@ public class JengaBlock : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
 
         if (threeAlive && isSide)
         {
-            // 세션 예고: 반대편 사이드 하이라이트(시각 안내)
-            _pairedTargetPreview = tower.GetOppositeSideInLayer(Layer, IndexInLayer);
-            if (_pairedTargetPreview == null || _pairedTargetPreview.IsRemoved) return;
+            if (!_isSelected)
+            {
+                // 1차 클릭: 세션 예고 + 시각적 안내
+                _pairedTargetPreview = tower.GetOppositeSideInLayer(Layer, IndexInLayer);
+                if (_pairedTargetPreview == null || _pairedTargetPreview.IsRemoved) return;
 
-            _isSelected = true;
-            Highlight(true);
-            _pairedTargetPreview.Highlight(true);
-            OnAnyBlockSelected?.Invoke(this); // UI : "사이드 연속 제거" 안내
+                _isSelected = true;
+                Highlight(true);
+                _pairedTargetPreview.Highlight(true);
+                OnAnyBlockSelected?.Invoke(this); // UI : "사이드 연속 제거" 안내
+            }
+            else
+            {
+                // 2차 클릭: 타이밍 게임 시작
+                if (_busy || IsRemoved) return;
+                _isSelected = false;
+                Highlight(false);
+                _pairedTargetPreview?.Highlight(false);
+                OnAnyBlockTimingStart?.Invoke(this);
+                _busy = true;
+            }
             return;
         }
 
@@ -254,12 +274,16 @@ public class JengaBlock : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
         _pairedTargetPreview?.Highlight(false); // 세션 예고 하이라이트 해제
         _pairedTargetPreview = null;
 
-        if (IsRemoved) return;
+        if (IsRemoved)
+        {
+            return;
+        }
 
         if (!success)
         {
-             // 실패 사실을 마스터에게 요청 (누구 타워인지도 함께)
-             JengaNetworkManager.Instance?.RequestTowerCollapse_MasterAuth(OwnerActorNumber);
+            // 실패 사실을 마스터에게 요청 (누구 타워인지도 함께)
+            JengaNetworkManager.Instance?.RequestTowerCollapse_MasterAuth(OwnerActorNumber);
+            return;
         }
 
         // 성공 처리: 블록 제거 ‘요청’만 마스터에게 보냄
@@ -279,25 +303,6 @@ public class JengaBlock : MonoBehaviour, IPointerClickHandler, IPointerEnterHand
         JengaNetworkManager.Instance?.RequestBlockRemoval_MasterAuth(
             OwnerActorNumber, BlockId, totalScore, accuracy
         );
-
-        // 1) 첫 사이드 성공(3개 상태에서 사이드였음) → 세션 시작
-        //    로컬은 아직 제거 적용 전이므로 "현재도 3개"로 보일 확률이 높음.
-        //    인덱스 기반으로만 판단해도 충분(센터는 IndexInLayer==1 이고, 사이드는 0/2).
-        var isSide = (IndexInLayer == 0 || IndexInLayer == 2);
-        if (isSide && !tower.IsPairSessionActiveOn(Layer))
-        {
-            // 첫 사이드 성공 → 해당 레이어 세션 시작(센터 잠금 + 반대편 사이드만 허용)
-            tower.BeginPairSession(Layer, IndexInLayer);
-        }
-        else
-        {
-            // 2) 세션 중 기대 사이드 성공 → 세션 종료
-            var expected = tower.GetExpectedSide(Layer);
-            if (expected.HasValue && IndexInLayer == expected.Value)
-            {
-                tower.EndPairSession(Layer);
-            }
-        }
     }
     #endregion
 
