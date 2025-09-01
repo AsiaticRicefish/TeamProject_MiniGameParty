@@ -88,8 +88,8 @@ public class LocalPlayerInput : MonoBehaviourPun
         autoMoveFlag = false;
         autoMoveStartPos = Vector3.zero;
 
-        //arrow.Initialize();
-        //charger.Initialize();
+        arrow.Initialize();
+        charger.Initialize();
 
         if (arrow != null) arrow.gameObject.SetActive(false);
         if (charger != null) charger.gameObject.SetActive(false);

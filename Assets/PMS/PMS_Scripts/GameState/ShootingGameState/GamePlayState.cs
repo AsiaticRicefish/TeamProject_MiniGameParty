@@ -8,12 +8,12 @@ public class GamePlayState : ShootingGameState
     public override void Enter()
     {
         Debug.Log("[ShootingGameState] - GamePlayState Enter");
+        ShootingNetworkManager.Instance.ShootingGameTurnAndRoundRoomPropertiesReigster();
         if (PhotonNetwork.IsMasterClient)
         {
             ShootingGameManager.Instance.photonView.RPC("InputOn", RpcTarget.All);
             TurnManager.Instance.NextTurn();
         }
-        ShootingNetworkManager.Instance.ShootingGameTurnAndRoundRoomPropertiesReigster();
     }
     public override void Update()
     {

@@ -126,7 +126,10 @@ public class UnimoEgg : MonoBehaviourPun
 
         // 내가 던진 알일 때만 마스터에게 턴 종료 요청
         if (photonView.IsMine)
+        {
+            Debug.Log("[UnimoEgg] 마스터에게 턴 종료 요청!");
             TurnManager.Instance.photonView.RPC(("RequestTurnEnd"), RpcTarget.MasterClient);
+        }
     }
 
     // 실제 힘 적용
@@ -150,6 +153,7 @@ public class UnimoEgg : MonoBehaviourPun
 
         if (other.CompareTag("PlayGround"))
         {
+            TurnManager.Instance.photonView.RPC(("RequestTurnEnd"), RpcTarget.MasterClient);
             EggManager.Instance.photonView.RPC("RPC_DeactivateEgg", RpcTarget.All, photonView.ViewID);
         }
     }
