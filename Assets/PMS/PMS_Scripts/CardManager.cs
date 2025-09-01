@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Linq;
 using System.Collections.Generic;
 using DesignPattern;
@@ -6,8 +7,7 @@ using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
 using ShootingScene;
-using ExitGames.Client.Photon;
-
+using Hashtable = ExitGames.Client.Photon.Hashtable;
 using Random = System.Random;
 
 /// <summary>
@@ -39,7 +39,14 @@ public class CardManager : PunSingleton<CardManager>
     private int[] _owners;     // 각 index의 소유자 ActorNumber, 미선택 -1
 
     public bool allPicked = false;
-
+    
+    //----- flag / request ---- //
+    private bool _requestPick = false;
+    private bool _alreadyPicked = false;
+   
+    //---- card reveal animation -----//
+    private float _revealSec = -1f;
+    private double t0 = -1;
     private void Start()
     {
         // 씬 자동 동기화 권장
@@ -133,6 +140,7 @@ public class CardManager : PunSingleton<CardManager>
             int owner   = _owners[i];
             bool free   = owner == -1;
             bool isMine = owner == myActor;
+            
 
             if (free)
             {
@@ -156,7 +164,11 @@ public class CardManager : PunSingleton<CardManager>
     private void TryPick(int cardIndex)
     {
         if (!PhotonNetwork.InRoom) return;
+        if (_requestPick) return; // 이미 pick에 대한 요청 처리를 한 상태
+        if(_alreadyPicked) return; // 이미 선택 완료한 상태
 
+        _requestPick = true;
+        
         // Master에게 선택 요청
         photonView.RPC(nameof(RPC_TryPick), RpcTarget.MasterClient,
             PhotonNetwork.LocalPlayer.ActorNumber, cardIndex);
@@ -172,20 +184,40 @@ public class CardManager : PunSingleton<CardManager>
         if ((byte)stObj != (byte)LobbyState.Picking) return;
 
         if (cardIndex < 0 || cardIndex >= _owners.Length) return;
-        if (_owners[cardIndex] != -1) return; // 이미 선택된 카드
+        if (_owners[cardIndex] != -1) {
+            Debug.Log("[CardManager] 이미 선택된 카드입니다.");
+            
+            //요청자에게 실패 콜백
+            photonView.RPC(nameof(RPC_PickResult), info.Sender, false, -1);
+
+            return; // 이미 선택된 카드
+        }
 
         // 소유자 확정
         _owners[cardIndex] = actorNumber;
         PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable { { KEY_CARD_OWNERS, _owners } });
 
+        // 요청자에게 성공 콜백
+        photonView.RPC(nameof(RPC_PickResult), info.Sender, true, cardIndex);
+
+        
+        
         // 모두 선택했는지 확인
         allPicked = _owners.All(o => o != -1);
         if (allPicked)
         {
             // 상태 전환
             PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable { { KEY_STATE, (byte)LobbyState.Revealing } });
+            
+            // 마스터 서버 공개 시작 시간 처리
+            t0 = PhotonNetwork.Time + 0.3; // 지연 감안한 여유 시간
+
+            _revealSec = 1f * PhotonNetwork.CurrentRoom.PlayerCount;
+            
             // 모든 클라에 공개 지시
-            photonView.RPC(nameof(RPC_RevealAll), RpcTarget.AllBuffered, _deckValues, _owners);
+            photonView.RPC(nameof(RPC_RevealAll), RpcTarget.AllBuffered, _deckValues, _owners, t0, _revealSec);
+            
+            
 
             // 턴 순서 계산(숫자 오름차순 → 카드 소유자의 ActorNumber)
             var pairs = new List<(int value, int owner)>();
@@ -199,9 +231,9 @@ public class CardManager : PunSingleton<CardManager>
                 { KEY_TURN_ORDER, order },
                 { KEY_STATE, (byte)LobbyState.Done } 
             });
-
             
-            photonView.RPC(nameof(RPC_OnTurnOrderReady), RpcTarget.AllBuffered, order);
+            
+            StartCoroutine(NotifyTurnOrderAfterReveal(t0, _revealSec, order));
         }
         else
         {
@@ -211,25 +243,35 @@ public class CardManager : PunSingleton<CardManager>
     }
 
     [PunRPC]
+    private void RPC_PickResult(bool result, int confirmedIndex)
+    {
+        _requestPick = false; //요청 플래그 복구
+        _alreadyPicked = result;
+    }
+
+    [PunRPC]
     private void RPC_OnPickUpdated(int[] ownersFromMaster)
     {
         _owners = ownersFromMaster;
+        
         RefreshInteractables();
     }
 
     [PunRPC]
-    private void RPC_RevealAll(int[] deckValues, int[] ownersFromMaster)
+    private void RPC_RevealAll(int[] deckValues, int[] ownersFromMaster, double t0, float revealSec)
     {
         _deckValues = deckValues;
         _owners = ownersFromMaster;
 
-        // 모든 카드 공개
-        for (int i = 0; i < _cards.Count; i++)
-        {
-            _cards[i].RevealFace();
-        }
-
-        RefreshInteractables();
+        // // 모든 카드 공개
+        // for (int i = 0; i < _cards.Count; i++)
+        // {
+        //     _cards[i].RevealFace();
+        // }
+        //
+        // RefreshInteractables();
+        
+        StartCoroutine(RevealRoutine(t0));
     }
     
     [PunRPC]
@@ -251,10 +293,10 @@ public class CardManager : PunSingleton<CardManager>
             PhotonNetwork.LocalPlayer.SetCustomProperties(table);
         }
 
-        // 3) 카드 UI 비활성/숨김 (선택 UI 닫기)
-        foreach (var c in _cards) c.gameObject.SetActive(false);
-        // 필요 시 카드 부모 패널도 끄기
-        if (cardParent != null) cardParent.gameObject.SetActive(false);
+        // // 3) 카드 UI 비활성/숨김 (선택 UI 닫기) -> 여기서 하면 안될 것 같음
+        // foreach (var c in _cards) c.gameObject.SetActive(false);
+        // // 필요 시 카드 부모 패널도 끄기
+        // if (cardParent != null) cardParent.gameObject.SetActive(false);
 
         // 4) 마스터만 첫 턴 시작
         /*if (PhotonNetwork.IsMasterClient)
@@ -263,6 +305,42 @@ public class CardManager : PunSingleton<CardManager>
             ShootingScene.TurnManager.Instance.StartFirstTurn();
         }*/
     }
+    #endregion
+
+
+    #region Card Reveal 연출 관련 로직
+
+    private IEnumerator RevealRoutine(double t0)
+    {
+        while (PhotonNetwork.Time < t0) yield return null;
+        for (int i = 0; i < _cards.Count; i++)
+            yield return _cards[i].RevealFace(); // 내부에서 tweens/particles
+    }
+
+    private IEnumerator NotifyTurnOrderAfterReveal(double t0, float sec, int[] order)
+    {
+        if (!PhotonNetwork.IsMasterClient) yield break;
+        
+        yield return WaitUntilNetworkTime(t0 + sec);
+
+        photonView.RPC(nameof(RPC_CloseCardUI), RpcTarget.All); //UI 끄기
+        photonView.RPC(nameof(RPC_OnTurnOrderReady), RpcTarget.AllBuffered, order); // 턴 order 알리기
+    }
+
+    private IEnumerator WaitUntilNetworkTime(double target)
+    {
+        while (PhotonNetwork.Time < target) yield return null;
+    }
+
+    [PunRPC]
+    private void RPC_CloseCardUI()
+    {
+        // 3) 카드 UI 비활성/숨김 (선택 UI 닫기)
+        foreach (var c in _cards) c.gameObject.SetActive(false);
+        // 필요 시 카드 부모 패널도 끄기
+        if (cardParent != null) cardParent.gameObject.SetActive(false);
+    }
+
     #endregion
 
     #region Photon Callbacks
