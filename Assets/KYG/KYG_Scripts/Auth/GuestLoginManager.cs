@@ -75,10 +75,23 @@ namespace KYG.Auth
                 return;
             }
 
+            // 중복 닉네임 체크
+            foreach (var p in PhotonNetwork.PlayerList)
+            {
+                if (string.Equals(p.NickName, nickname, StringComparison.OrdinalIgnoreCase))
+                {
+                    Debug.LogWarning("중복 닉네임입니다.");
+                    // UI에 알려주기 (GuestLoginUI의 힌트 텍스트 갱신)
+                    var ui = FindObjectOfType<GuestLoginUI>();
+                    if (ui != null) ui.SendMessage("SafeSetHint", "중복 닉네임입니다.", SendMessageOptions.DontRequireReceiver);
+                    return;
+                }
+            }
+            
             isConnecting = true;
             pendingNickname = nickname;
 
-            auth.SignInAnonymouslyAsync().ContinueWithOnMainThread(t =>
+            auth.SignInAnonymouslyAsync().ContinueWithOnMainThread(async t =>
             {
                 if (t.IsFaulted || t.IsCanceled)
                 {
@@ -90,12 +103,34 @@ namespace KYG.Auth
                 user = t.Result.User;
                 Debug.Log($"[GuestLoginManager] Firebase sign-in ok. uid={user.UserId}");
 
+                bool reserved = await NicknameRegistry.TryReserveAsync(user.UserId, pendingNickname);
+                if (!reserved)
+                {
+                    isConnecting = false;
+                    Debug.LogWarning("중복 닉네임입니다."); // 요구 로그
+                    var ui = FindObjectOfType<GuestLoginUI>();
+                    if (ui != null) ui.SendMessage("SafeSetHint", "중복 닉네임입니다.", SendMessageOptions.DontRequireReceiver);
+                    // 필요 시: auth.SignOut();
+                    return;
+                }
+                
+                // 연결 끊기면 자동 정리
+                await NicknameRegistry.BindOnDisconnectCleanupAsync(pendingNickname);
+                
+                // Firebase DisplayName 업데이트 후 Photon 연결
                 var profile = new UserProfile { DisplayName = pendingNickname };
                 user.UpdateUserProfileAsync(profile).ContinueWithOnMainThread(_ =>
                 {
                     ApplyPhotonIdentityAndConnect(user.UserId, pendingNickname);
                 });
             });
+        }
+        
+        // 앱에서 닉네임 바꾸거나 나갈 때 정리
+        private async void OnApplicationQuit()
+        {
+            if (!string.IsNullOrEmpty(pendingNickname))
+                await NicknameRegistry.ReleaseAsync(pendingNickname);
         }
 
         private void ApplyPhotonIdentityAndConnect(string uid, string nickname)
@@ -222,5 +257,7 @@ namespace KYG.Auth
         {
             Debug.LogWarning($"[GuestLoginManager] CustomAuth failed: {debugMessage}");
         }
+        
+        
     }
 }
