@@ -175,6 +175,9 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
         if (!viewIdToEgg.TryGetValue(viewID, out var egg)) return;
         egg.gameObject.SetActive(false);
 
+        egg.Initialize();
+        egg.GetComponent<LocalPlayerInput>().Initialize();
+
         if (currentUnimoEgg == egg)
             currentUnimoEgg = null;
     }

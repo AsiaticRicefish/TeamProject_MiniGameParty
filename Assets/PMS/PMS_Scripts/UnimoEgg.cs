@@ -7,9 +7,8 @@ using ShootingScene;
 [RequireComponent(typeof(Rigidbody))]
 public class UnimoEgg : MonoBehaviourPun
 {
-    private Rigidbody rb;
+    public Rigidbody rb;
     public float stopSpeed = 0.01f; // 속도 기준
-
     //private Vector3 startdic;
 
     //private Vector3 startTouchPos;
@@ -86,18 +85,48 @@ public class UnimoEgg : MonoBehaviourPun
         Test_ShotFollowCamera.Instance.StartFollow(gameObject);
     }*/
 
+    public void Initialize()
+    {
+        // Rigidbody 초기화
+        rb.velocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+        rb.isKinematic = false;
+
+        // 상태 초기화
+        ShooterUid = null;
+
+        // 카메라 팔로우 초기화
+        //Test_ShotFollowCamera.Instance.StopFollow(gameObject);
+    }
+
     // 기존 Shot 호출 대신 RPC로 보내기
     public void Shot(Vector3 dir)
     {
-        if (photonView.IsMine)
-        {
-            // 자기 화면에서 AddForce 적용
-            ApplyForce(dir);
-            Test_ShotFollowCamera.Instance.StartFollow(gameObject);
+        if (!photonView.IsMine) return;
 
-            // 다른 클라이언트에도 RPC 전송
-            photonView.RPC("RPC_Shot", RpcTarget.Others, dir);
-        }
+        // 자기 화면에서 AddForce 적용
+        ApplyForce(dir);
+        // 다른 클라이언트에도 RPC 전송
+        photonView.RPC("RPC_Shot", RpcTarget.Others, dir);
+
+        // 발사 후 멈출 때까지 감시 시작
+        //StartCoroutine(WaitForStop());
+        // 발사 후 한 프레임 대기 후 감시 시작
+        StartCoroutine(WaitForStop());
+    }
+    // 발사 후 한 프레임 대기 후 감시 시작
+
+    private IEnumerator WaitForStop()
+    {
+        yield return new WaitForFixedUpdate();   //AddForce 보장                                     
+        yield return new WaitForFixedUpdate();
+
+        while (rb.velocity.magnitude > stopSpeed && gameObject.activeSelf)
+            yield return null;
+
+        // 내가 던진 알일 때만 마스터에게 턴 종료 요청
+        if (photonView.IsMine)
+            TurnManager.Instance.photonView.RPC(("RequestTurnEnd"), RpcTarget.MasterClient);
     }
 
     // 실제 힘 적용
@@ -111,23 +140,17 @@ public class UnimoEgg : MonoBehaviourPun
     [PunRPC]
     private void RPC_Shot(Vector3 dir)
     {
-        // 다른 클라이언트에서 힘 적용
         ApplyForce(dir);
     }
 
+    //떨어졌을때
     private void OnTriggerExit(Collider other)
     {
-        if (other.gameObject.CompareTag("PlayGround"))
-        {
-            gameObject.SetActive(false);
-        }
-    }
+        if (!photonView.IsMine) return; // 내 알이 아니면 아무것도 안 함
 
-   public IEnumerator WaitForStop()
-    {
-        while (rb.velocity.magnitude > stopSpeed || !gameObject.activeSelf)
+        if (other.CompareTag("PlayGround"))
         {
-            yield return null; // 다음 프레임까지 대기
+            EggManager.Instance.photonView.RPC("RPC_DeactivateEgg", RpcTarget.All, photonView.ViewID);
         }
     }
 }

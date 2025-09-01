@@ -675,6 +675,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bb1dca665c8f37844b6226e5ea38930a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rb: {fileID: 0}
   stopSpeed: 0.01
   ShooterUid: 
 --- !u!114 &3391661498813652295

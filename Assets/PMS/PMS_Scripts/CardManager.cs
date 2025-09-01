@@ -5,6 +5,7 @@ using DesignPattern;
 using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
+using ShootingScene;
 using ExitGames.Client.Photon;
 
 using Random = System.Random;
@@ -243,8 +244,11 @@ public class CardManager : PunSingleton<CardManager>
         var myPlayer = PlayerManager.Instance.GetPlayer(myUid);
         if (myPlayer != null && myTurnIndex >= 0)
         {
-            myPlayer.ShootingData.myTurnIndex = myTurnIndex + 1;
+            myPlayer.ShootingData.myTurnIndex = myTurnIndex + 1;    // 1-based          1문제 - 동기화가 안된다. 턴인덱스 내꺼만 넣음.
             Debug.Log($"[CardManager] 내 턴 인덱스 확정: {myTurnIndex}");
+            var table = new Hashtable { { ShootingGamePlayerPropertyKeys.MyTurnIndex, myTurnIndex + 1 }};
+
+            PhotonNetwork.LocalPlayer.SetCustomProperties(table);
         }
 
         // 3) 카드 UI 비활성/숨김 (선택 UI 닫기)

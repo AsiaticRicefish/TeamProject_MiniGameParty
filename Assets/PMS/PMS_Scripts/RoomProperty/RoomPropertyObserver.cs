@@ -143,10 +143,12 @@ public class RoomPropertyObserver : PunSingleton<RoomPropertyObserver>, IGameCom
     }
 
     /// <summary>
-    /// 룸 프로퍼티 설정
+    /// 마스터 클라이언트 전용 함수 - 룸 프로퍼티 설정
     /// </summary>
     public void SetRoomProperty(string key, object value)
     {
+        if (!PhotonNetwork.IsMasterClient) return;
+
         if (PhotonNetwork.InRoom && key != null && value != null)
         {
             var props = new Hashtable { { key, value } };
@@ -155,11 +157,13 @@ public class RoomPropertyObserver : PunSingleton<RoomPropertyObserver>, IGameCom
     }
 
     /// <summary>
-    /// 여러 개의 룸 프로퍼티 설정
+    /// 마스터 클라이언트 전용 함수 - 여러 개의 룸 프로퍼티 설정
     /// </summary>
     /// <param name="properties">Key-Value 쌍</param>
     public void SetRoomProperties(Dictionary<string,object> properties)
     {
+        if (!PhotonNetwork.IsMasterClient) return;
+
         if (PhotonNetwork.InRoom && properties != null)
         {
             var props = new ExitGames.Client.Photon.Hashtable();

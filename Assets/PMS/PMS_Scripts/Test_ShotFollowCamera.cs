@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
@@ -34,15 +34,25 @@ namespace ShootingScene
         private IEnumerator CoFollow(GameObject currentUnimoEgg)
         {
             Debug.Log("따라가는중");
+
             // Follow 타깃 지정 + 우선순위 스위치
+            // 발사체 따라가기 시작
             vcamFollow.Follow = currentUnimoEgg.transform;
-            vcamFollow.Priority = 20;         // 기본보다 높게
+            vcamFollow.Priority = 20;                       // 자연스러운 Blend 적용
 
-            yield return new WaitForSeconds(5.0f);
+            // Blend가 시작될 시간을 조금 기다리거나, 최소 따라가기 시간 확보
+            yield return new WaitForSeconds(0.1f);
 
+            yield return new WaitUntil(() => Camera.main.GetComponent<CinemachineBrain>().ActiveBlend == null);          //따라가는 시간
+
+            // 복귀: 우선순위 낮추고 MoveToTopOfPrioritySubqueue 호출 준비
             // 복귀하는 경우 우선순위 되돌리고 타깃 해제
             vcamFollow.Priority = 5;
             vcamFollow.Follow = null;
+            // Blend 종료 후 즉시 컷        
+            vcamFollow.MoveToTopOfPrioritySubqueue();
+
+            yield return new WaitUntil(() => Camera.main.GetComponent<CinemachineBrain>().ActiveBlend == null);
             followCo = null;
         }
     }

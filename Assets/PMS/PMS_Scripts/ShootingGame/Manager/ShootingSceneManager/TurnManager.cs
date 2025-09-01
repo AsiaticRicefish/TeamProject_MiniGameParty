@@ -200,18 +200,35 @@ namespace ShootingScene
         }
         */
 
-        //Local에서 처리가 완료 되었으면 마스터 클라이언트한테 요청
-        public void RequestMyTurnEnd()
-        {
-            // 마스터에게 턴 종료 요청
-            photonView.RPC("RequestTurnEnd", RpcTarget.MasterClient);
-        }
-
         // 마스터가 턴을 넘기는 부분
         [PunRPC]
-        private void RequestTurnEnd()
+        private void RequestTurnEnd(PhotonMessageInfo info)
         {
-            if (!PhotonNetwork.IsMasterClient) return;
+            // 요청 보낸 사람 디버깅
+            Debug.Log($"[TurnManager] - 턴 종료 요청 보낸 사람: {info.Sender.NickName}");
+
+            //if (!PhotonNetwork.IsMasterClient) return;
+
+            // 요청 보낸 사람의 플레이어 프로퍼티 값 가져오기
+            int targetIndex = (int)info.Sender.CustomProperties[ShootingGamePlayerPropertyKeys.MyTurnIndex];
+       
+            // 실제 턴 주인인지 확인
+            if (TurnManager.Instance.currentTurnIndex == targetIndex)
+            {
+                Debug.Log($"[턴 종료 승인] {info.Sender.NickName}의 턴 종료 요청");
+                StartCoroutine(WaitForTurnDelay());
+                Debug.Log($"{targetIndex}");
+            }
+            else
+            {
+                Debug.LogWarning($"[턴 종료 거절] {info.Sender.NickName}은 현재 턴이 아님");
+                Debug.Log($"턴 불일치{targetIndex},{RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.Turn)}");
+            }
+        }
+
+        private IEnumerator WaitForTurnDelay(float delay = 2.0f)
+        {
+            yield return new WaitForSeconds(delay); 
             NextTurn();
         }
     }

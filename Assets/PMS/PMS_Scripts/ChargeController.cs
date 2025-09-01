@@ -26,6 +26,16 @@ public class ChargeController : MonoBehaviourPun
         StopCharge();  // 비활성화될 때 차징 초기화
     }
 
+    public void Initialize()
+    {
+        // 차징 상태 초기화
+        isCharging = false;
+        chargePower = 0f;
+        pressStartTime = 0f;
+        if (chargeSlider != null)
+            chargeSlider.value = 0f;
+    }
+
     private void Update()
     {
         if (!isCharging) return;

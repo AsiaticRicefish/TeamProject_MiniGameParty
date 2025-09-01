@@ -78,6 +78,29 @@ public class LocalPlayerInput : MonoBehaviourPun
             mainCam = Camera.main;
     }
 
+    //return pool 데이터 리셋 함수
+    public void Initialize()
+    {
+        isInputActive = false;
+        inputEnabled = false;
+        currentStep = 1;
+        stepCompleted = false;
+        autoMoveFlag = false;
+        autoMoveStartPos = Vector3.zero;
+
+        //arrow.Initialize();
+        //charger.Initialize();
+
+        if (arrow != null) arrow.gameObject.SetActive(false);
+        if (charger != null) charger.gameObject.SetActive(false);
+
+        if (currentTimeoutCoroutine != null)
+        {
+            StopCoroutine(currentTimeoutCoroutine);
+            currentTimeoutCoroutine = null;
+        }
+    }
+
     private void SetupEvents()
     {
         // Step1 유니모 좌우 자동이동
@@ -130,28 +153,7 @@ public class LocalPlayerInput : MonoBehaviourPun
         // 최종 완료
         OnAllCompleted += () => {
             Debug.Log("모든 단계 완료!");
-            StartCoroutine(Wait());
         };
-    }
-
-    private IEnumerator HandleShotAndWait()
-    {
-        var unimo = gameObject.GetComponent<UnimoEgg>();
-
-        unimo.Shot(arrow.CurrentDir * charger.ChargePower);
-
-        // 멈출 때까지 기다림
-        yield return StartCoroutine(unimo.WaitForStop());
-
-        Debug.Log("UnimoEgg 멈춘 후 처리!");
-
-        TurnManager.Instance.RequestMyTurnEnd();
-    }
-    private IEnumerator Wait()
-    {
-        // 멈출 때까지 기다림
-        yield return new WaitForSeconds(2.0f);  
-        TurnManager.Instance.RequestMyTurnEnd();
     }
 
     // 단계 시작 함수들 - 기존 타이머 정지 후 새 타이머 시작
@@ -522,8 +524,4 @@ public class LocalPlayerInput : MonoBehaviourPun
         screenPos = default;        //0,0 기존값을 리턴하기는 한테 입력이 없을리가 없으니깐
         return false; // 입력 없음
     }
-
-
-
-
 }

@@ -40,6 +40,21 @@ public class DirectionUIArrow : MonoBehaviourPun
         player = transform.parent.parent.gameObject;
     }
 
+    //return pool
+    public void Initialize()
+    {
+        isSwing = true;
+        currentAngle = 0f;
+        freezeAngle = 0f;
+
+        if (arrowTransform != null)
+        {
+            arrowTransform.gameObject.SetActive(true);
+            arrowTransform.localRotation = Quaternion.identity;
+            // arrowTransform.localPosition = Vector3.zero; // 필요 시
+        }
+    }
+
     private void Update()
     {
         if (isSwing) currentAngle = Mathf.Sin(Time.time * swingSpeed) * swingAngle;

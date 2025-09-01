@@ -24,6 +24,7 @@ public class CardSelectState : ShootingGameState
     public override void Exit() 
     {
         Debug.Log("[ShootingGameState] - CardSelectState Exit");
-        //CardUI가 사라지도록
+        
+        //카드 선택이 다된 시점
     }
 }
