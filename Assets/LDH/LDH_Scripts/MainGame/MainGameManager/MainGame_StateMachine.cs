@@ -90,27 +90,10 @@ namespace LDH_MainGame
             _currentMini = string.IsNullOrEmpty(id) ? null : _registry.Get(id);
             if (_currentMini != null)
                 _uiBinder.BuildReadyPanel(_currentMini, PhotonNetwork.PlayerList, _isMaster(), out _);
-
-            // // 마스터가 모두 준비되면 로딩으로
-            // while (_state == MainState.Ready)
-            // {
-            //     if (_isMaster())
-            //     {
-            //         if (_pc.AllPlayersReady())
-            //         {
-            //             _pc.SetRoomProps(new Dictionary<string, object> {
-            //                 { RoomProps.State, MainState.LoadingMiniGame.ToString() }
-            //             });
-            //             break;
-            //         }
-            //     }
-            //     yield return null;
-            // }
         }
 
         public IEnumerator Co_LoadingMini(Action onLoadingMiniGame = null)
         {
-            
             
             if (_currentMini == null)
             {

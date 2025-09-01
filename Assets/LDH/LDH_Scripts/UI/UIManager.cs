@@ -42,11 +42,6 @@ namespace LDH_UI
         [SerializeField] private string popupFolder = "Prefabs/UI/Popup";
         [SerializeField] private string toastFolder = "Prefabs/UI/Toast";
         
-        
-        //---- flag ------ //
-        private bool _isClosingAllPopups;
-
-
         protected override void OnAwake() => Init();
 
         // UI 매니저 초기화
@@ -252,12 +247,6 @@ namespace LDH_UI
         public async UniTask<T> ShowPopupUI<T>(T popup) where T : UI_Popup
         {
             
-            if (_isClosingAllPopups)
-            {
-                Debug.LogWarning("[UIManager] blocked: CloseAll in progress");
-                return null;
-            }
-            
             // 정렬 순서 부여
             SetCanvas(popup.gameObject, Define_LDH.UILayer.Popup, sort: true);
 
@@ -337,8 +326,6 @@ namespace LDH_UI
         /// </summary>
         public async UniTask CloseAllPopupUI()
         {
-            if (_isClosingAllPopups) return;
-            _isClosingAllPopups = true;
 
             Debug.Log(_popupStack.Count +"개의 팝업을 닫습니다.");
 
@@ -358,10 +345,6 @@ namespace LDH_UI
             {
                 Console.WriteLine(e);
                 throw;
-            }
-            finally
-            {
-                _isClosingAllPopups = false;
             }
             
         }

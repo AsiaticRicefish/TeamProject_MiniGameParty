@@ -20,23 +20,29 @@ namespace LDH_MainGame
             // 메인 씬 컴포넌트 중 비활성화 할 컴포넌트 처리
             var mainScene = SceneManager.GetActiveScene();
             _disabledOnMain.Clear();
-            Disable<Camera>(mainScene);
-            Disable<AudioListener>(mainScene);
-            Disable<EventSystem>(mainScene); 
-            
+            // Disable<Camera>(mainScene);
+            // Disable<AudioListener>(mainScene);
+            // Disable<EventSystem>(mainScene); 
             
             var op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
+            
             while (!op.isDone) yield return null;
 
             _loadedMiniScene = SceneManager.GetSceneByName(sceneName);
             _hasMiniScene = _loadedMiniScene.IsValid();
 
+            Disable<Camera>(mainScene);
+            Disable<AudioListener>(mainScene);
+            Disable<EventSystem>(mainScene); 
+            
             if (_hasMiniScene)
             {
                 Debug.Log("미니게임 씬 활성화 시점");
                 SceneManager.SetActiveScene(_loadedMiniScene);
             }
             
+          
+
             onReady?.Invoke();
         }
         
