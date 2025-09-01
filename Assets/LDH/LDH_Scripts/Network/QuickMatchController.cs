@@ -93,8 +93,19 @@ namespace Network
         // 빠른 매칭 시작
         public void OnClickMatchingStart()
         {
+            // 0) 포톤 연결 중이 아니거나 로비가 아니면 무시
+            if (!PhotonNetwork.IsConnected || !PhotonNetwork.InLobby)
+            {
+                Util_LDH.ConsoleLog(this, "Server와 연결되지 않았거나 현재 로비가 아닙니다.");
+                return;
+            }
+            
             // 1) 이미 방 안이거나 요청 중이면 무시
-            if (_requesting || PhotonNetwork.InRoom) return;
+            if (_requesting || PhotonNetwork.InRoom)
+            {
+                Util_LDH.ConsoleLog(this, "요청 사항을 처리 중이거나 이미 방에 들어온 상태입니다.");
+                return;
+            }
             
             // 2) 이벤트 구독
             Subscribe();
