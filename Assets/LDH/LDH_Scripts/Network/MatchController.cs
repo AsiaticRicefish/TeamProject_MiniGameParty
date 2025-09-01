@@ -3,6 +3,7 @@ using System.Collections;
 using LDH_Util;
 using Managers;
 using Photon.Pun;
+using Photon.Realtime;
 using UnityEngine;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
 using static LDH_Util.Define_LDH;
@@ -16,11 +17,10 @@ namespace Network
         
         // 매칭 모드
         public MatchType CurrentMatchType { get; private set; } = MatchType.None;
-        
         public bool IsMatching { get; private set; }
         public event Action<MatchType, bool> MatchTypeChanged;
         
-
+        
         [Header("Match Controller")]
         public QuickMatchController QuickMatch;
         public PrivateMatchController PrivateMatch;
@@ -34,23 +34,57 @@ namespace Network
         private void Start()
         {
             QuickMatch ??= GetComponent<QuickMatchController>();
-
             PrivateMatch ??= GetComponent<PrivateMatchController>();
+            
+            Subscribe();
         }
+
+        private void OnDestroy() => Unsubscribe();
+
+        private void Subscribe()
+        {
+            PhotonNetwork.NetworkingClient.StateChanged += OnPhotonStateChanged;
+        }
+
+        private void Unsubscribe()
+        {
+            PhotonNetwork.NetworkingClient.StateChanged -= OnPhotonStateChanged;
+
+        }
+
 
         public void SetMatching(MatchType type, bool isMatching)
         {
             IsMatching = isMatching;
             CurrentMatchType = type;
             
-            QuickMatch?.SetButtonInteractable(!isMatching);
-            PrivateMatch?.SetButtonInteractable(!isMatching);
-            
             MatchTypeChanged?.Invoke(type, isMatching);
+            RefreshButtons();
         }
 
+        
+        
+        #region Matching Button Control
+
+        private void OnPhotonStateChanged(ClientState prev, ClientState curr)
+        {
+            RefreshButtons();
+        }   
 
 
+        private bool ReadyToMatch() =>
+            PhotonNetwork.IsConnected && PhotonNetwork.InLobby && !PhotonNetwork.InRoom && !IsMatching;
+
+        private void RefreshButtons()
+        {
+            bool ready = ReadyToMatch();
+            QuickMatch?.SetButtonInteractable(ready);
+            PrivateMatch?.SetButtonInteractable(ready);
+        }
+
+        #endregion
+        
+ 
         #region Game Start Logic
 
         /// 방 상태를 Complete로 전파하고(취소 불가), 짧은 지연 후 씬 로드.
