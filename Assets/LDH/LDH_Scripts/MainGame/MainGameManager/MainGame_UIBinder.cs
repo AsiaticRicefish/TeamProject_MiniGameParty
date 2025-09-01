@@ -16,6 +16,7 @@ namespace LDH_MainGame
         
         private UI_Popup_PrivateRoom _readyPanel;
         private UI_GameInfo _gameInfo;
+        private UI_Popup_QuitGame _quitPopup;
         
         // 생성자
         // 생성자
@@ -72,6 +73,27 @@ namespace LDH_MainGame
             _readyPanel = null; _gameInfo = null;
         }
 
+
+
+        #region 게임 강제 종료 팝업
+        public void ShowQuitPopup()
+        {
+            if (_quitPopup != null) return;
+            _quitPopup = Manager.UI.CreatePopupUI<UI_Popup_QuitGame>();
+            Manager.UI.ShowPopupUI(_quitPopup).Forget();
+        }
+
+        public void CloseQuitPopup()
+        {
+            if(_quitPopup == null) return;
+            Manager.UI.ClosePopupUI(_quitPopup).Forget();
+            _quitPopup = null;
+        }
+        
+
+        #endregion
+
+        
 
     }
 }

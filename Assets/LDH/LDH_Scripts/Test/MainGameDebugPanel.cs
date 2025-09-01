@@ -41,7 +41,11 @@ namespace LDH.LDH_Scripts.Test
             };
 
             MainGameManager.Instance.OnWaitAllReady += () => logText.gameObject.SetActive(false);
-            MainGameManager.Instance.OnLoadingMiniGame += () => gameObject.SetActive(false);
+            MainGameManager.Instance.OnLoadingMiniGame += () =>
+            {
+                Debug.Log("[MainGameDebugPanel] 미니게임 진입. 디버그 패널을 안보이게 설정합니다.");
+                gameObject.SetActive(false);
+            };
             MainGameManager.Instance.OnEndMiniGame += () => gameObject.SetActive(true);
             
             MainGameManager.Instance.OnEndGame += () =>

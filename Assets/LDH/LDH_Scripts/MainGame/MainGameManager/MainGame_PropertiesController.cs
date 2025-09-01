@@ -78,6 +78,11 @@ namespace LDH_MainGame
                    v is bool b && b;
         }
 
+        public static void SetSlotIndex(int newSlotIndex)
+        {
+            PhotonNetwork.LocalPlayer.SetCustomProperties(new Hashtable { { PP.SlotIndex, newSlotIndex } });
+        }
+
         public static void SetLocalReady(bool ready)
         {
             PhotonNetwork.LocalPlayer?.SetCustomProperties(new Hashtable { { PP.InGameReady, ready } });

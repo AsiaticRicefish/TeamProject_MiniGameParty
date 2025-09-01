@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using DesignPattern;
 using JetBrains.Annotations;
@@ -57,7 +58,7 @@ namespace LDH_MainGame
 
             base.OnAwake();
         }
-
+        
         public void  Initialize()
         {
             Util_LDH.ConsoleLog(this, "MainGameManager 초기화 로직 실행");
@@ -140,7 +141,7 @@ namespace LDH_MainGame
             int readyMask = PropertiesCtrl.BuildReadyMaskFromPlayers();
             UI.UpdateReady(readyMask);
 
-            if (IsMaster)
+            if (IsMaster && PhotonNetwork.CurrentRoom!=null && PhotonNetwork.CurrentRoom.PlayerCount>1)
             {
                 if (changedProps.ContainsKey(PlayerProps.InGameReady) &&
                     FSM.Get() == MainState.Ready &&
@@ -158,8 +159,23 @@ namespace LDH_MainGame
 
         public override void OnPlayerLeftRoom(Player otherPlayer)
         {
+            //현재 room이 아니거나, joined 상태가 아니거나, leaving room 중이라면 패스
             if (!PhotonNetwork.InRoom || PhotonNetwork.NetworkClientState != ClientState.Joined ||
                 _isLeavingRoom) return;
+            
+            // 현재 방 가져오기
+            var room = PhotonNetwork.CurrentRoom;
+            if (room == null) return;   // 방이 없다면 패스
+            
+            // 1) 혼자 남았다면 강제 게임 종료 처리
+            if (room.PlayerCount == 1)
+            {
+                UI.ShowQuitPopup();
+                return;
+            }
+            
+            
+            // 2) 마스터 클라이언트이고, 메인 게임 상태가 ready(모든 플레이어의 ready를 기다리고 있는 상태)라면 재조정
             if (!IsMaster) return;
             if (FSM.Get() != MainState.Ready) return;
 
@@ -168,15 +184,23 @@ namespace LDH_MainGame
             {
                 PropertiesCtrl.SetRoomProps(RoomProps.State, MainState.LoadingMiniGame.ToString());
             }
-
-            // UI 갱신
-            UI.UpdateReady(PropertiesCtrl.BuildReadyMaskFromPlayers());
+           
         }
 
         public override void OnMasterClientSwitched(Player newMasterClient)
         {
             if (!IsMaster) return;
 
+            //새로 마스터가 된 플레이어의 슬롯을 재배정한다.(0번으로)
+            if (newMasterClient.IsLocal)
+            {
+                Debug.Log("[MainGameManager] 새롭게 마스터가 된 클라이언트의 슬롯 인덱스를 갱신합니다. : 0번 슬롯으로");
+                MainGame_PropertiesController.SetSlotIndex(0);
+                _localSlot = 0;
+
+            }
+            
+            
             if (FSM.Get() == MainState.Ready && PropertiesCtrl.AllPlayersReady())
             {
                 PropertiesCtrl.SetRoomProps(RoomProps.State, MainState.LoadingMiniGame.ToString());
@@ -233,16 +257,29 @@ namespace LDH_MainGame
                     _stateRoutine = StartCoroutine(FSM.Co_ApplyingResult(OnEndMiniGame));
                     break;
                 case MainState.End:
-                    _stateRoutine = StartCoroutine(Co_EndGame());
+                    _stateRoutine = null;
+                    EndGameAsync().Forget();
                     break;
             }
         }
 
 
-        private IEnumerator Co_EndGame()
+        public async UniTask EndGameAsync(bool force = false, CancellationToken ct = default)
         {
-            yield return FSM.Co_End(OnEndGame);
             _isLeavingRoom = true;
+            
+            if(!force)
+                await FSM.Co_End(OnEndGame).ToUniTask(cancellationToken: ct);
+            
+            // 병렬 실행
+            var unloadTask = MiniGameLoader.UnloadAdditive().ToUniTask(cancellationToken: ct);
+            var closeAllTask = Manager.UI.CloseAllPopupUI(); // 내부는 순차 닫기 유지
+
+            await UniTask.WhenAll(unloadTask, closeAllTask);
+            await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, ct);
+
+            Debug.Log("[MainGameManager] After close all popup ui, leave room");
+       
             PhotonNetwork.LeaveRoom();
         }
 

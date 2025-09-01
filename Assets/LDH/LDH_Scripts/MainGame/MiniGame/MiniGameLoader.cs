@@ -42,12 +42,12 @@ namespace LDH_MainGame
         
         public static IEnumerator UnloadAdditive()
         {
-            if (_hasMiniScene)
-            {
-                var op = SceneManager.UnloadSceneAsync(_loadedMiniScene);
-                while (!op.isDone) yield return null;
-                _hasMiniScene = false;
-            }
+            if (!_hasMiniScene) yield break;
+            
+            var op = SceneManager.UnloadSceneAsync(_loadedMiniScene);
+            while (!op.isDone) yield return null;
+            _hasMiniScene = false;
+            
             
             // 메인 씬 컴포넌트 복원
             foreach (var b in _disabledOnMain.Where(b => b != null))
