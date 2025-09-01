@@ -77,7 +77,7 @@ namespace Network
                 PhotonNetwork.ConnectUsingSettings();
             else
             {
-                RequestToJoinLobby();
+                TryJoinLobby();
             }
 #endif
         }
