@@ -86,6 +86,8 @@ MonoBehaviour:
   - RPC_AnnounceRoomObjects
   - InputOff
   - InputOn
+  - RPC_StartPairSession
+  - RPC_EndPairSession
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

@@ -20,13 +20,6 @@ public class JengaTower : MonoBehaviour
     private readonly HashSet<int> _removedBlockIds = new();
     private readonly List<JengaBlock> _removableCache = new();
 
-    [Header("프리팹 & 사이징")]
-    [SerializeField] private GameObject blockPrefab;
-    [SerializeField] private float blockWidth = 1.0f;    // 긴 변
-    [SerializeField] private float blockDepth = 0.3f;    // 짧은 변
-    [SerializeField] private float blockHeight = 0.3f;   // 높이 (y)
-    [SerializeField] private float blockGap = 0.01f;     // 블록 사이 미세 간격
-
     [Header("안정성 판정")]
     [SerializeField, Range(0f, 30f)] private float tiltFailAngle = 15f; // 블록이 이 각도 이상 기울면 불안정
     [SerializeField] private float dropFailY = -0.2f;                   // 바닥 기준 낙하 허용치
@@ -45,12 +38,38 @@ public class JengaTower : MonoBehaviour
 
     private bool _isCollapsed = false;
 
+    // 층별 사이드 제거 모드 상태 : layer -> expectedSide(0 또는 2)
+    private readonly Dictionary<int, int> _pairSessionExpectedSide = new();
+
     public event Action<int> OnBlockRemoved;
     public event Action OnTowerCollapsed;
+
+    #region Session for side-pair removal
+    public bool IsPairSessionActiveOn(int layer)
+        => _pairSessionExpectedSide.ContainsKey(layer);
+
+    public int? GetExpectedSide(int layer)
+        => _pairSessionExpectedSide.TryGetValue(layer, out var side) ? side : null;
+
+    public void BeginPairSession(int layer, int firstSideIndex)
+    {
+        int opposite = (firstSideIndex == 0) ? 2 : 0;
+        _pairSessionExpectedSide[layer] = opposite;
+
+        RebuildRemovableCache(false);
+    }
+
+    public void EndPairSession(int layer)
+    {
+        if (_pairSessionExpectedSide.Remove(layer))
+            RebuildRemovableCache(false);
+    }
+    #endregion
 
     public bool CanRemoveBlock(JengaBlock b)
     {
         if (b == null || b.IsRemoved) return false;
+
         int topAlive = GetTopAliveLayer();
         if (!allowTopRemoval && topAlive >= 0)
         {
@@ -60,9 +79,32 @@ public class JengaTower : MonoBehaviour
         }
 
         if (!_blocksByLayer.TryGetValue(b.Layer, out var list)) return false;
-        int alive = 0;
-        foreach (var x in list) if (!x.IsRemoved) alive++;
-        return alive >= 2;
+
+        var alive = list.Where(x => !x.IsRemoved).OrderBy(x => x.IndexInLayer).ToList();
+
+        // 세션 중: 해당 레이어에서는 expectedSide만 허용(센터 클릭 금지)
+        if (IsPairSessionActiveOn(b.Layer))
+        {
+            var expected = GetExpectedSide(b.Layer);
+            bool result = expected.HasValue && b.IndexInLayer == expected.Value;
+            return result;
+        }
+
+        // 평상 시 : 센터 쪽만 단일 제거 허용 (사이드는 세션 경로로만 진행)
+        if (alive.Count == 3)
+        {
+            // 3개 모두 살아있으면 가운데 하나만 제거 가능
+            bool result = b.IndexInLayer == 1;
+            return result;
+        }
+        else if (alive.Count == 2)
+        {
+            // 세션이 아니라면(첫 사이드 성공 직후가 아님) 허용하지 않음
+            return false;
+        }
+
+        // 그 외(1개 이하)는 제거 불가
+        return false;
     }
 
     public void InitializeOwner(int actorNumber, string uid)
@@ -74,9 +116,6 @@ public class JengaTower : MonoBehaviour
     public void InitializeFromExistingHierarchy()
     {
         ResetRuntimeState();
-
-        if (!TryInferSizeFromPrefabOrChildren())
-            Debug.LogWarning("[JengaTower - InitializeFromExistingHierarchy] Could not infer size from prefab/children. Using inspector values.");
 
         var blocks = GetComponentsInChildren<JengaBlock>(includeInactive: true);
         if (blocks == null || blocks.Length == 0)
@@ -93,7 +132,7 @@ public class JengaTower : MonoBehaviour
         }
         else
         {
-            byLayer = GroupByY(blocks, blockHeight, yQuantizeEpsilon);
+            byLayer = GroupByY(blocks);
         }
 
         AssignIdsAndSlots(byLayer);
@@ -102,22 +141,8 @@ public class JengaTower : MonoBehaviour
         allowTopRemoval = allowTopRemovalInPrefab;
 
         RebuildRemovableCache(forceRelaxIfEmpty: true);
-
-        Debug.Log($"[JengaTower - InitializeFromExistingHierarchy] Prefab scan complete. blocks = {allBlocks.Count}, layers = {_blocksByLayer.Count}, height = {towerHeight}");
     }
 
-    public void Initialize(GameObject prefab, int height)
-    {
-        ResetRuntimeState();
-        blockPrefab = prefab;
-        towerHeight = Mathf.Max(1, height);
-
-        if (!TryInferSizeFromPrefabOrChildren())
-            Debug.LogWarning("[JengaTower - Initialize] Size inference failed from prefab. Using inspector values.");
-
-        BuildTowerProcedurally();
-        RebuildRemovableCache(forceRelaxIfEmpty: false);
-    }
 
     public List<JengaBlock> GetRemovableBlocks()
         => _removableCache.Where(b => !b.IsRemoved).ToList();
@@ -171,56 +196,27 @@ public class JengaTower : MonoBehaviour
         blocksRemovedCount = 0;
     }
 
-    private bool TryInferSizeFromPrefabOrChildren()
-    {
-        if (blockPrefab != null)
-        {
-            var col = blockPrefab.GetComponentInChildren<BoxCollider>();
-            if (col != null)
-            {
-                var lossy = col.transform.lossyScale;
-                blockHeight = Mathf.Abs(col.size.y * lossy.y);
-                float x = Mathf.Abs(col.size.x * lossy.x);
-                float z = Mathf.Abs(col.size.z * lossy.z);
-                if (x >= z) { blockWidth = x; blockDepth = z; } else { blockWidth = z; blockDepth = x; }
-                return true;
-            }
-        }
-        var anyBlock = GetComponentInChildren<JengaBlock>();
-        if (anyBlock != null)
-        {
-            var col = anyBlock.GetComponentInChildren<BoxCollider>();
-            if (col != null)
-            {
-                var lossy = col.transform.lossyScale;
-                blockHeight = Mathf.Abs(col.size.y * lossy.y);
-                float x = Mathf.Abs(col.size.x * lossy.x);
-                float z = Mathf.Abs(col.size.z * lossy.z);
-                if (x >= z) { blockWidth = x; blockDepth = z; } else { blockWidth = z; blockDepth = x; }
-                return true;
-            }
-        }
-        return false;
-    }
 
-    private static Dictionary<int, List<JengaBlock>> GroupByY(IEnumerable<JengaBlock> blocks, float unitHeight, float eps)
+    private static Dictionary<int, List<JengaBlock>> GroupByY(IEnumerable<JengaBlock> blocks)
     {
+        // 블록들을 Y 좌표로 그룹핑
         var ys = new SortedDictionary<int, List<JengaBlock>>();
-        float h = Mathf.Max(0.0001f, unitHeight);
+        float eps = 0.01f; // 오차 허용치
 
         foreach (var b in blocks)
         {
-            float y = b.transform.localPosition.y / h;
-            int key = Mathf.RoundToInt(y);
+            float y = b.transform.localPosition.y;
+            int key = Mathf.RoundToInt(y / eps);
 
-            float yReal = b.transform.localPosition.y;
-            float yRef = key * h;
-            if (Mathf.Abs(yReal - yRef) > eps) key = Mathf.RoundToInt(yReal / h);
-
-            if (!ys.TryGetValue(key, out var list)) { list = new List<JengaBlock>(); ys[key] = list; }
+            if (!ys.TryGetValue(key, out var list))
+            {
+                list = new List<JengaBlock>();
+                ys[key] = list;
+            }
             list.Add(b);
         }
 
+        // 순서대로 레이어 번호 할당
         var result = new Dictionary<int, List<JengaBlock>>();
         int layer = 0;
         foreach (var kv in ys)
@@ -285,44 +281,6 @@ public class JengaTower : MonoBehaviour
         }
     }
 
-    private void BuildTowerProcedurally()
-    {
-        for (int layer = 0; layer < towerHeight; layer++)
-        {
-            bool isHorizontal = (layer % 2 == 0);
-
-            var layerRoot = new GameObject($"{layerPrefix}{layer}");
-            layerRoot.transform.SetParent(transform, false);
-            layerRoot.transform.localPosition = Vector3.up * (layer * blockHeight);
-            layerRoot.transform.localRotation = isHorizontal ? Quaternion.identity : Quaternion.Euler(0, 90f, 0f);
-
-            for (int slot = 0; slot < 3; slot++)
-            {
-                Vector3 localPos = LocalPosForLayerSlot(slot, isHorizontal);
-                var worldPos = layerRoot.transform.TransformPoint(localPos);
-
-                var blockObj = Instantiate(blockPrefab, worldPos, layerRoot.transform.rotation, layerRoot.transform);
-                if (!blockObj.TryGetComponent<JengaBlock>(out var jb))
-                    jb = blockObj.AddComponent<JengaBlock>();
-
-                int id = allBlocks.Count;
-                jb.Initialize(id, layer, slot, ownerActorNumber, ownerUid);
-
-                allBlocks.Add(jb);
-                if (!_blocksByLayer.TryGetValue(layer, out var list))
-                    _blocksByLayer[layer] = list = new List<JengaBlock>(3);
-                list.Add(jb);
-            }
-        }
-    }
-
-    private Vector3 LocalPosForLayerSlot(int slot, bool isHorizontal)
-    {
-        float centerIndex = 1f;
-        float offset = (slot - centerIndex) * (blockWidth + blockGap);
-        return isHorizontal ? new Vector3(offset, 0f, 0f) : new Vector3(0f, 0f, offset);
-    }
-
     private void RemoveBlockInternal(int blockId, bool withAnimation, bool raiseEvent, bool isSuccess = true)
     {
         var block = (blockId >= 0 && blockId < allBlocks.Count) ? allBlocks[blockId] : null;
@@ -368,24 +326,23 @@ public class JengaTower : MonoBehaviour
             if (!_blocksByLayer.TryGetValue(layer, out var list)) continue;
             if (IsProtected(layer)) continue;
 
-            int alive = 0;
-            foreach (var b in list) if (!b.IsRemoved) alive++;
-            if (alive >= 2)
-                foreach (var b in list) if (!b.IsRemoved) _removableCache.Add(b);
-        }
+            var alive = list.Where(b => !b.IsRemoved).OrderBy(b => b.IndexInLayer).ToList();
 
-        if (forceRelaxIfEmpty && _removableCache.Count == 0 && topAlive >= 0)
-        {
-            for (int layer = topAlive; layer >= 0; layer--)
+            if (IsPairSessionActiveOn(layer))
             {
-                if (!_blocksByLayer.TryGetValue(layer, out var list)) continue;
-                int alive = 0;
-                foreach (var b in list) if (!b.IsRemoved) alive++;
-                if (alive >= 2)
+                var expected = GetExpectedSide(layer);
+                if (expected.HasValue)
                 {
-                    foreach (var b in list) if (!b.IsRemoved) _removableCache.Add(b);
-                    break;
+                    var target = alive.FirstOrDefault(x => x.IndexInLayer == expected.Value);
+                    if (target != null) _removableCache.Add(target);
                 }
+                continue;
+            }
+
+            if (alive.Count == 3)
+            {
+                var center = alive.FirstOrDefault(x => x.IndexInLayer == 1);
+                if (center != null) _removableCache.Add(center);
             }
         }
     }
@@ -479,4 +436,12 @@ public class JengaTower : MonoBehaviour
         RebuildRemovableCache(false);
     }
 
+    // 같은 레이어의 반대편 사이드 블록 찾기(보기용 하이라이트 등에 사용)
+    public JengaBlock GetOppositeSideInLayer(int layer, int indexInLayer)
+    {
+        if (!_blocksByLayer.TryGetValue(layer, out var list)) return null;
+        int opposite = (indexInLayer == 0) ? 2 : (indexInLayer == 2 ? 0 : -1);
+        if (opposite < 0) return null;
+        return list.FirstOrDefault(b => !b.IsRemoved && b.IndexInLayer == opposite);
+    }
 }
