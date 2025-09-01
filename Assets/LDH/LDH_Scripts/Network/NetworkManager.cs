@@ -305,6 +305,9 @@ namespace Network
         {
             Debug.Log($"[NetworkManager] 비공개 방 입장에 실패했습니다. ({returnCode}) {message}");
             JoinFailed?.Invoke(returnCode, message);
+            
+            if (PhotonNetwork.IsConnectedAndReady && !PhotonNetwork.InLobby)
+                PhotonNetwork.JoinLobby();
         }
 
         #endregion

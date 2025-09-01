@@ -78,6 +78,8 @@ namespace Network
         private void RefreshButtons()
         {
             bool ready = ReadyToMatch();
+            
+            //Debug.Log($"[MatchController] isconnected :{PhotonNetwork.IsConnected} / inlobby : {PhotonNetwork.InLobby} / inroom : {PhotonNetwork.InRoom} / is maching : {IsMatching} ");
             QuickMatch?.SetButtonInteractable(ready);
             PrivateMatch?.SetButtonInteractable(ready);
         }

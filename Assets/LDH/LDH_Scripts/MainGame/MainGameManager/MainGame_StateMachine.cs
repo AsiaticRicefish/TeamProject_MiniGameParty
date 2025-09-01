@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using LDH_Util;
 using Photon.Pun;
 using UnityEngine;
@@ -118,10 +119,11 @@ namespace LDH_MainGame
                 yield break;
             }
 
+            yield return _uiBinder.CloseReadyPanel().ToCoroutine();
+            
             // Additive Load
             yield return MiniGameLoader.LoadAdditive(_sceneName(_currentMini), null);
-
-            _uiBinder.CloseReadyPanel();
+          
             if (_isMaster())
                 _pc.SetRoomProps(RoomProps.State, MainState.PlayingMiniGame.ToString());
             

@@ -30,7 +30,6 @@ namespace LDH.LDH_Scripts.Test
 
         private void UpdatePlayerInfo()
         {
-            Debug.Log("dafasf");
             playerInfoText.text = $"Player ID : {PhotonNetwork.LocalPlayer.CustomProperties["uid"].ToString()} \n\nPlayer NickName :{PhotonNetwork.NickName}";
         }
     }

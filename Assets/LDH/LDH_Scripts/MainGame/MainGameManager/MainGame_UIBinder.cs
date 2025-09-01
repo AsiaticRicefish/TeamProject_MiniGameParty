@@ -58,7 +58,7 @@ namespace LDH_MainGame
         
         public void UpdateReady(int mask) => _readyPanel?.UpdateReadyByMask(mask);
 
-        public void CloseReadyPanel()
+        public async UniTask CloseReadyPanel()
         {
             if (_readyPanel == null)
             {
@@ -68,7 +68,7 @@ namespace LDH_MainGame
             foreach (var panel in _readyPanel.PlayerPanels)
                 if (panel != null) panel.ReadyClicked -= _onClickReady;
 
-            UniTask.Void(async () => { await Manager.UI.ClosePopupUI(_readyPanel); });
+            await Manager.UI.ClosePopupUI(_readyPanel); // 패널 닫힐 때까지 기다리기
             _readyPanel = null; _gameInfo = null;
         }
 
