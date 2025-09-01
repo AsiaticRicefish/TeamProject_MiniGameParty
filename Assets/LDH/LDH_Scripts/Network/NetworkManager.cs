@@ -230,9 +230,8 @@ namespace Network
         {
             Debug.Log("[NetworkManager] 마스터 서버에 연결 완료");
 
-#if TEST_WITHOUT_LOGIN
-            PhotonNetwork.JoinLobby();
-#endif
+            if (PhotonNetwork.IsConnectedAndReady && !PhotonNetwork.InLobby)
+                PhotonNetwork.JoinLobby();
 
             ConnectedToMaster?.Invoke();
         }
