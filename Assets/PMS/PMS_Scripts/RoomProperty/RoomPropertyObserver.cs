@@ -16,6 +16,7 @@ public class RoomPropertyObserver : PunSingleton<RoomPropertyObserver>, IGameCom
         isPersistent = false;
     }
 
+    #region Legacy Code - 문제점:UnRegister 호출 문제
     /// <summary>
     /// 특정 RoomProperty Key를 구독
     /// </summary>
@@ -32,6 +33,7 @@ public class RoomPropertyObserver : PunSingleton<RoomPropertyObserver>, IGameCom
 
         return observerId;                                      // ID 반환해서 나중에 해제할 때 사용
     }
+    #endregion
 
     /// <summary>
     /// ID로 특정 Observer 해제 return값: 성공여부

@@ -10,6 +10,9 @@ namespace ShootingScene
     [RequireComponent(typeof(PhotonView))]
     public class ShootingNetworkManager : PunSingleton<ShootingNetworkManager>, IGameComponent
     {
+        private string turnObserverId;
+        private string SceneChangeObserverId;
+
         protected override void OnAwake()
         {
             base.isPersistent = false;
@@ -47,11 +50,9 @@ namespace ShootingScene
         private void ShootingGameRoomPropertyRegister()
         {
             // 게임 상태 구독
-            RoomPropertyObserver.Instance.RegisterObserver(ShootingGamePropertyKeys.State, (value) =>
-            {
-                string newState = (string)value;
-                ShootingGameManager.Instance.ChangeStateByName(newState);
-            });
+            ShootingGameSceneChangeRoomPropertiesReigster();
+            // 게임 턴,라운드(int) 구독
+            //ShootingGameTurnAndRoundRoomPropertiesReigster();
 
             //// 게임 턴,라운드(int) 구독
             //RoomPropertyObserver.Instance.RegisterObserver(ShootingGamePropertyKeys.Turn, (value) =>
@@ -81,35 +82,46 @@ namespace ShootingScene
             //}
         }
 
+        public void ShootingGameSceneChangeRoomPropertiesReigster()
+        {
+            // 게임 상태 구독
+            SceneChangeObserverId = RoomPropertyObserver.Instance.RegisterObserver(ShootingGamePropertyKeys.State, (value) =>
+            {
+                string newState = (string)value;
+                ShootingGameManager.Instance.ChangeStateByName(newState);
+            });
+        }
+
+        public void ShootingGameSceneChangeRoomPropertiesUnReigster()
+        {
+            if (!string.IsNullOrEmpty(SceneChangeObserverId))
+            {
+                RoomPropertyObserver.Instance.UnregisterObserverById(SceneChangeObserverId);
+                SceneChangeObserverId = null;
+            }
+        }
+
         public void ShootingGameTurnAndRoundRoomPropertiesReigster()
         {
-            // 게임 턴,라운드(int) 구독
+            // 게임 턴,라운드(int) 구독           
             // 람다를 변수에 저장해둠
-            turnObserverAction = (value) =>
+            turnObserverId = RoomPropertyObserver.Instance.RegisterObserver(ShootingGamePropertyKeys.Turn, (value) =>
             {
                 int newTurnIndex = (int)value;
                 TurnManager.Instance.currentTurnIndex = newTurnIndex;
 
                 int newRound = (int)RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.Round);
                 TurnManager.Instance.SetCurrentTurn();
-            };
-
-            RoomPropertyObserver.Instance.RegisterObserver(ShootingGamePropertyKeys.Turn, turnObserverAction);
+            });
         }
 
         public void ShootingGameTurnAndRoundRoomPropertiesUnReigster()
         {
-            //RoomPropertyObserver.Instance.UnregisterObserver(ShootingGamePropertyKeys.Turn,)
-            // 게임 턴,라운드(int) 구독
-            RoomPropertyObserver.Instance.RegisterObserver(ShootingGamePropertyKeys.Turn, (value) =>
+            if (!string.IsNullOrEmpty(turnObserverId))
             {
-                int newTurnIndex = (int)value;
-
-                TurnManager.Instance.currentTurnIndex = newTurnIndex;
-                int newRound = (int)RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.Round); //          현재 최신 Round 읽기
-
-                TurnManager.Instance.SetCurrentTurn();                                                  // 내 턴인지 판단
-            });
+                RoomPropertyObserver.Instance.UnregisterObserverById(turnObserverId);
+                turnObserverId = null;
+            }
         }
     }
 }

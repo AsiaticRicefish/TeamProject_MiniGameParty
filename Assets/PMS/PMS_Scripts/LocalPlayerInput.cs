@@ -130,11 +130,11 @@ public class LocalPlayerInput : MonoBehaviourPun
         // 최종 완료
         OnAllCompleted += () => {
             Debug.Log("모든 단계 완료!");
-            //StartCoroutine(HandleShotAndWait());
+            StartCoroutine(Wait());
         };
     }
 
-    /*private IEnumerator HandleShotAndWait()
+    private IEnumerator HandleShotAndWait()
     {
         var unimo = gameObject.GetComponent<UnimoEgg>();
 
@@ -146,7 +146,13 @@ public class LocalPlayerInput : MonoBehaviourPun
         Debug.Log("UnimoEgg 멈춘 후 처리!");
 
         TurnManager.Instance.RequestMyTurnEnd();
-    }*/
+    }
+    private IEnumerator Wait()
+    {
+        // 멈출 때까지 기다림
+        yield return new WaitForSeconds(2.0f);  
+        TurnManager.Instance.RequestMyTurnEnd();
+    }
 
     // 단계 시작 함수들 - 기존 타이머 정지 후 새 타이머 시작
     private void StartStep1()

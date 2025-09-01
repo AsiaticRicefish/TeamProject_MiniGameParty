@@ -16,7 +16,7 @@ namespace ShootingScene
         //private List<int> turnOrder = new List<int>();
         public int currentTurnIndex = 0; 
         public int currentRoundIndex = 0;    
-        private int totalRounds = 1;
+        private int totalRounds = 3;
 
         public bool IsTurnEnd;
         private Coroutine TurnCorutine;

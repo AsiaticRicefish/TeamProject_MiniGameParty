@@ -27,5 +27,6 @@ public class GamePlayState : ShootingGameState
         {
             ShootingGameManager.Instance.photonView.RPC("InputOff", RpcTarget.All);
         }
+        ShootingNetworkManager.Instance.ShootingGameTurnAndRoundRoomPropertiesUnReigster();
     }
 }
