@@ -12,7 +12,16 @@
           "package_name": "com.Hwgi.UNIMO"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "32202351078-i5q26hb88fabqouqh1bj9p6mhgt5ef9g.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.Hwgi.UNIMO",
+            "certificate_hash": "9ae4a572430e560b3d1f37dc0a9a0e13d42729a5"
+          }
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyA8g_EaJ_yBH5rOB4sSHfGsVdTCXhnKtqI"
@@ -20,7 +29,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "32202351078-e8cghemtfth2ikdjsserb11o61is2434.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
