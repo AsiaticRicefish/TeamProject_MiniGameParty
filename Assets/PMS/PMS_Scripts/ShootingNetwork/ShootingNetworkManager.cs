@@ -117,7 +117,10 @@ namespace ShootingScene
             // 게임 턴,라운드(int) 구독           
             // 람다를 변수에 저장해둠
             turnObserverId = RoomPropertyObserver.Instance.RegisterObserver(ShootingGamePropertyKeys.Turn, (value) =>
-            {          
+            {   
+                // 모든 클라이언트에서 Turn Order (linkedlist)의 current를 업데이트한다.
+                TurnManager.Instance.MoveToNextTurn();
+                
                 int newTurnIndex = (int)value;
                 TurnManager.Instance.currentTurnIndex = newTurnIndex;
 
