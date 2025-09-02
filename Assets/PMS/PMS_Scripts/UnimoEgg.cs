@@ -7,13 +7,14 @@ using ShootingScene;
 [RequireComponent(typeof(Rigidbody))]
 public class UnimoEgg : MonoBehaviourPun
 {
-    private bool turnEnded = false;
+    [SerializeField]private bool turnEnded = false;
     public Rigidbody rb;
     public float stopSpeed = 0.01f; // 속도 기준
     //private Vector3 startdic;
 
     //private Vector3 startTouchPos;
     //private Vector3 endTouchPos;
+    public bool isLaunched; // 내가 발사한 알인가?
 
     public string ShooterUid; // 누가 던졌는지 저장
     //[SerializeField][Range(0.1f,15f)] private float forceMultiplier = 3f;
@@ -106,6 +107,7 @@ public class UnimoEgg : MonoBehaviourPun
         if (!photonView.IsMine) return;
 
         // 자기 화면에서 AddForce 적용
+        isLaunched = true;
         ApplyForce(dir);
         // 다른 클라이언트에도 RPC 전송
         photonView.RPC("RPC_Shot", RpcTarget.Others, dir);
@@ -130,6 +132,7 @@ public class UnimoEgg : MonoBehaviourPun
         {
             turnEnded = true;
             TurnManager.Instance.photonView.RPC(("RequestTurnEnd"), RpcTarget.MasterClient);
+            isLaunched = false;
         }
     }
 
@@ -150,13 +153,14 @@ public class UnimoEgg : MonoBehaviourPun
     //떨어졌을때
     private void OnTriggerExit(Collider other)
     {
-        if (!photonView.IsMine && !turnEnded) return; // 내 알이 아니면 아무것도 안 함
+        //if (!photonView.IsMine || turnEnded) return; // 내 알이 아니면 아무것도 안 함
 
         //모두가 비활성처리를 해줘야한다.
         EggManager.Instance.photonView.RPC("RPC_DeactivateEgg", RpcTarget.All, photonView.ViewID);
 
-        if (other.CompareTag("PlayGround"))
+        if (other.CompareTag("PlayGround") && isLaunched)
         {
+            isLaunched = false; // 바깥으로 나가며 턴 종료 → 발사 상태 해제
             TurnManager.Instance.photonView.RPC(("RequestTurnEnd"), RpcTarget.MasterClient);
         }
     }

@@ -68,7 +68,6 @@ public class LocalPlayerInput : MonoBehaviourPun
         ShootingGameManager.Instance.OnGameStarted += RegisterInput;
         ShootingGameManager.Instance.OnGameEnded -= UnRegisterInput;
         player = gameObject.transform;
-        charger = gameObject.GetComponent<ChargeController>();
 
         SetupEvents();
     }
@@ -137,8 +136,9 @@ public class LocalPlayerInput : MonoBehaviourPun
         // Step3 차징 시스템
         OnStep3Started += () => {
             Debug.Log("Step 3: 차징 시작");
-            if (charger != null && photonView.IsMine)
-                charger.gameObject.SetActive(true);
+            if (charger != null && photonView.IsMine) {
+                charger.chargeSlider.gameObject.SetActive(true);
+            }
             inputEnabled = true;
         };
 
@@ -147,7 +147,18 @@ public class LocalPlayerInput : MonoBehaviourPun
             inputEnabled = false;
             var unimo = gameObject.GetComponent<UnimoEgg>();
 
+            if (arrow != null && photonView.IsMine)
+            {
+                arrow.gameObject.SetActive(false);
+            }
+
+            if (charger != null && photonView.IsMine)
+            {
+                charger.chargeSlider.gameObject.SetActive(false);
+            }
+
             unimo.Shot(arrow.CurrentDir * charger.ChargePower);
+
             FinishAllSteps();
         };
 

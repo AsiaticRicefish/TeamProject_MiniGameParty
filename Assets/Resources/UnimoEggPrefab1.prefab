@@ -427,7 +427,6 @@ GameObject:
   m_Component:
   - component: {fileID: 5477655949011146365}
   - component: {fileID: 4942191860708732053}
-  - component: {fileID: 3529608048543021964}
   m_Layer: 5
   m_Name: Slider
   m_TagString: Untagged
@@ -507,21 +506,6 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &3529608048543021964
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6726540085561578620}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 176bcb7c9a381b14193e123c1b18718b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  chargeMax: 25
-  chargePeriod: 4
-  chargeSlider: {fileID: 4942191860708732053}
 --- !u!1 &7871336808941981924
 GameObject:
   m_ObjectHideFlags: 0
@@ -539,7 +523,7 @@ GameObject:
   - component: {fileID: 3391661498813652295}
   - component: {fileID: 6388651937956838336}
   - component: {fileID: 1205335522521256558}
-  - component: {fileID: -3147721912726117881}
+  - component: {fileID: 3951490409639166659}
   m_Layer: 20
   m_Name: UnimoEggPrefab1
   m_TagString: UnimoEgg
@@ -661,7 +645,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 112
+  m_Constraints: 116
   m_CollisionDetection: 2
 --- !u!114 &7060676403440167170
 MonoBehaviour:
@@ -675,8 +659,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bb1dca665c8f37844b6226e5ea38930a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  turnEnded: 0
   rb: {fileID: 0}
   stopSpeed: 0.01
+  isLaunched: 0
   ShooterUid: 
 --- !u!114 &3391661498813652295
 MonoBehaviour:
@@ -731,9 +717,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 0}
   arrow: {fileID: 2527705848922240012}
-  charger: {fileID: 3529608048543021964}
+  charger: {fileID: 3951490409639166659}
   mainCam: {fileID: 0}
---- !u!114 &-3147721912726117881
+--- !u!114 &3951490409639166659
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
