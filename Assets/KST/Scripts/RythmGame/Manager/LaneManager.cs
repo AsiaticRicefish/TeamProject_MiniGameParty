@@ -63,8 +63,10 @@ namespace RhythmGame
             if (!PhotonNetwork.IsMasterClient) return;
 
             // 라인 검증 (내 라인의 노트인지 판별하기)
+
+            //TODO 김승태: 내 레인이 아닐 경우에는 과열점수가 오르도록(점수 차감도 진행 같이 해야할듯)
             if (!_laneByNoteId.TryGetValue(noteId, out int noteLane)) return;
-            if (!_laneByActor.TryGetValue(info.Sender.ActorNumber, out int actorLane)) return;
+            if (!GetLane(info.Sender.ActorNumber, out int actorLane)) return;
             if (noteLane != actorLane) return;
 
             // 득점 및 과열 처리
@@ -77,6 +79,24 @@ namespace RhythmGame
             _laneByNoteId.Remove(noteId);
             NoteSpawner.Instance.DestoryNote(noteId);
         }
+
+        public void RequestMiss()
+        {
+            photonView.RPC(nameof(RPC_RequestMiss), RpcTarget.MasterClient);
+        }
+
+        [PunRPC]
+        void RPC_RequestMiss()
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+            GameManager.Instance.OverHeatCheck();
+        }
+
+        //액터넘버에 따른 lane 구하기
+        public bool GetLane(int actorNum, out int lane)
+        {
+            return _laneByActor.TryGetValue(actorNum, out lane);
+        }   
 
 
         //룸 입장 시
