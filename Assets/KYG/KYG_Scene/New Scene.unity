@@ -153,10 +153,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 860bafcf47cc9234189cfc08dd6d11c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  databaseUrl: https://unimo-56ebc-default-rtdb.asia-southeast1.firebasedatabase.app
   defaultRegion: asia
-  lobbySceneName: LDH_MainScene
-  gameplaySceneName: PMS_ShootingTestScene
-  loadLobbyOnJoinedRoom: 1
 --- !u!4 &99408737
 Transform:
   m_ObjectHideFlags: 0
@@ -194,6 +192,11 @@ MonoBehaviour:
   minLength: 2
   maxLength: 16
   idleSubmitSec: 999
+  normalHintColor: {r: 0, g: 0, b: 0, a: 1}
+  errorHintColor: {r: 1, g: 0.25, b: 0.25, a: 1}
+  toastGroup: {fileID: 0}
+  toastFade: 0.15
+  toastHold: 1.5
 --- !u!1 &400221143
 GameObject:
   m_ObjectHideFlags: 0
