@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
@@ -15,11 +15,7 @@ public class CardSelectState : ShootingGameState
     }
     public override void Update() 
     {
-        if(flag && CardManager.Instance.allPicked && PhotonNetwork.IsMasterClient) //다 눌렀을 때 플레이어들이 
-        {
-            RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "GamePlayState");
-            flag = false;
-        }
+
     }
     public override void Exit() 
     {

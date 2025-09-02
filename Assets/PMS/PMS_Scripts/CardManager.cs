@@ -288,9 +288,14 @@ public class CardManager : PunSingleton<CardManager>
         {
             myPlayer.ShootingData.myTurnIndex = myTurnIndex + 1;    // 1-based          1문제 - 동기화가 안된다. 턴인덱스 내꺼만 넣음.
             Debug.Log($"[CardManager] 내 턴 인덱스 확정: {myTurnIndex}");
-            var table = new Hashtable { { ShootingGamePlayerPropertyKeys.MyTurnIndex, myTurnIndex + 1 }};
 
+            var table = new Hashtable { { ShootingGamePlayerPropertyKeys.MyTurnIndex, myTurnIndex + 1 }};
             PhotonNetwork.LocalPlayer.SetCustomProperties(table);
+
+            if(PhotonNetwork.IsMasterClient)
+            {
+                RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "GamePlayState");
+            }
         }
 
         // // 3) 카드 UI 비활성/숨김 (선택 UI 닫기) -> 여기서 하면 안될 것 같음
