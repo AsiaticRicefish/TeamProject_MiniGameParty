@@ -8,7 +8,7 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
-  - enabled: 0
+  - enabled: 1
     path: Assets/KYG/KYG_Scene/New Scene.unity
     guid: 5d9ca72adb7146f499042b64cade2327
   - enabled: 0
@@ -32,7 +32,7 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/LTH/LTH_Scenes/Test_MiniGameJengaScene.unity
     guid: 819050f4afc3e104b86c5df6d448906c
-  - enabled: 0
+  - enabled: 1
     path: Assets/Scenes/MiniGameJengaScene.unity
     guid: 221c75271dfd06f408256b27231ef1a6
   m_configObjects:
