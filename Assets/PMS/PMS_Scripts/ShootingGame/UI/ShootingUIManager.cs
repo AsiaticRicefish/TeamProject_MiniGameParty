@@ -48,10 +48,10 @@ namespace ShootingScene.ShootingGame
         {
             StopCountDown();
             
-            StartCoroutine(Co_CountDown(startAt, endAt));
+            _timerCoroutine =  StartCoroutine(Co_CountDown(startAt, endAt));
         }
 
-        public void StopCountDown()
+        public void StopCountDown(bool close = false)
         {
             if (_timerCoroutine != null)
             {
@@ -59,7 +59,7 @@ namespace ShootingScene.ShootingGame
                 _timerCoroutine = null;
             }
             
-            if(_timerUI.gameObject.activeSelf)
+            if(close && _timerUI.gameObject.activeSelf)
                 Manager.UI.CloseScreenUI(_timerUI).Forget();
         }
         

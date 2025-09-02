@@ -13,7 +13,7 @@ namespace LDH_UI
         private void OnDisable()
         {
             //reset timer
-            SetTimerText("");
+            _timerText.text = "n";
         }
 
         public void SetTimerText(string seconds)

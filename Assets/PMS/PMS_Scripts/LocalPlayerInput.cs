@@ -154,6 +154,7 @@ public class LocalPlayerInput : MonoBehaviourPun
         // 최종 완료
         OnAllCompleted += () => {
             Debug.Log("모든 단계 완료!");
+            NotifyStopCountdown(true);
         };
     }
 
@@ -544,9 +545,9 @@ public class LocalPlayerInput : MonoBehaviourPun
         photonView.RPC(nameof(RPC_StartCountDown), RpcTarget.All, startAt, endAt);
     }
     
-    public void NotifyStopCountdown()
+    public void NotifyStopCountdown(bool close = false)
     {
-        photonView.RPC(nameof(RPC_StopCountDown), RpcTarget.All);
+        photonView.RPC(nameof(RPC_StopCountDown), RpcTarget.All, close);
     }
 
     [PunRPC]
@@ -557,10 +558,10 @@ public class LocalPlayerInput : MonoBehaviourPun
     }
     
     [PunRPC]
-    private void RPC_StopCountDown()
+    private void RPC_StopCountDown(bool close)
     {
         Debug.Log("StopCountDown RPC 호출");
-        ShootingUIManager.Instance.StopCountDown();
+        ShootingUIManager.Instance.StopCountDown(close);
     }
     #endregion
 }
