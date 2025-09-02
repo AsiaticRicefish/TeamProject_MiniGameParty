@@ -22,7 +22,7 @@ namespace RhythmGame
         //과열 관리
         int overHeatValue = 0;// 마스터가 유지하는 공유 과열 값
 
-        public event Action OnIsOverHeat; // 과열 발생
+        // public event Action OnIsOverHeat; // 과열 발생
 
         //플레이어 자리
         [SerializeField] Transform[] playerPoints;
@@ -118,8 +118,9 @@ namespace RhythmGame
             // 과열 최대치 도달했을 경우
             if (overHeatValue >= overHeatMaxValue)
             {
-                ScoreManager.Instance.photonView.RPC(nameof(RPC_IsOverHeat), RpcTarget.All);
+                ScoreManager.Instance.photonView.RPC("RPC_IsOverHeat", RpcTarget.All);
                 overHeatValue = 0; //과열점수 리셋
+                Debug.Log($"과열 점수 초기화 {overHeatValue}");
 
                 ScoreManager.Instance.photonView.RPC(
                     nameof(ScoreManager.SetOverheat), RpcTarget.All, overHeatValue
@@ -127,17 +128,6 @@ namespace RhythmGame
                 return true;
             }
             return false;
-        }
-
-        /// <summary>
-        /// 과열 시 액션
-        /// </summary>
-        [PunRPC]
-        public void RPC_IsOverHeat()
-        {
-            Debug.Log("과열 Warning! 모든 플레이어 기절!");
-
-            OnIsOverHeat?.Invoke(); //과열 점수 초기화, 플레이어 이펙트 등등 설정
         }
 
         public int LaneCapacity => playerPoints?.Length ?? 0;

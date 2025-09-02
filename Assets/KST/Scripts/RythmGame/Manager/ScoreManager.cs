@@ -1,6 +1,7 @@
 using System;
 using DesignPattern;
 using Photon.Pun;
+using TMPro;
 using UnityEngine;
 
 namespace RhythmGame
@@ -8,10 +9,14 @@ namespace RhythmGame
     public class ScoreManager : PunSingleton<ScoreManager>
     {
         int _score; //개인 별 점수
+        [SerializeField] TMP_Text scoreText;
         int _heatScore; //과열 점수
+        [SerializeField] TMP_Text _heatscoreText;
+
         public event Action<int> OnScoreChanged;
         public event Action<int> OnOverHeatScoreChanaged;
         public event Action OnHeatScoreOver;
+
 
         /// <summary>
         /// 점수 추가 로직
@@ -24,6 +29,9 @@ namespace RhythmGame
             _score += amount;
             Debug.Log($" 점수 획득 {amount}");
             OnScoreChanged?.Invoke(_score);
+
+            //텍스트 임시
+            scoreText.text = $"{_score}";
         }
 
         /// <summary>
@@ -38,6 +46,8 @@ namespace RhythmGame
             Debug.Log($" 점수 차감 {amount}");
             if (_score < 0) _score = 0;
             OnScoreChanged?.Invoke(_score);
+            //텍스트 임시
+            scoreText.text = $"{_score}";
         }
 
         #region RPC
@@ -75,8 +85,21 @@ namespace RhythmGame
             _heatScore = Mathf.Max(0, value);
             OnOverHeatScoreChanaged?.Invoke(_heatScore);
             Debug.Log($"과열 점수 : {_heatScore}");
+            //텍스트 임시
+            _heatscoreText.text = $"{_heatScore}";
         }
-               
+
+        // /// <summary>
+        // /// 과열 시 액션
+        // /// </summary>
+        [PunRPC]
+        public void RPC_IsOverHeat()
+        {
+            Debug.Log("과열 Warning! 모든 플레이어 기절!");
+
+            // OnIsOverHeat?.Invoke(); //과열 점수 초기화, 플레이어 이펙트 등등 설정
+        }
+
         #endregion
     }
 }
