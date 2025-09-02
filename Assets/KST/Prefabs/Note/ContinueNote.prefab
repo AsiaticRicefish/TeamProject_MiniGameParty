@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 4602247196421631144}
   - component: {fileID: 3163768741583221442}
   - component: {fileID: 3865477662625259396}
-  m_Layer: 0
+  m_Layer: 23
   m_Name: ContinueNote
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -134,3 +134,5 @@ MonoBehaviour:
   _moveDist: 30
   _type: 2
   _status: 0
+  _noteId: 0
+  _lane: 0

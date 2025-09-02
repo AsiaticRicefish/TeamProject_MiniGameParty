@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 3098804010212416823}
   - component: {fileID: 5578723783930544825}
   - component: {fileID: 4889159608722495595}
-  m_Layer: 0
+  m_Layer: 23
   m_Name: FakeNote
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -134,3 +134,5 @@ MonoBehaviour:
   _moveDist: 30
   _type: 0
   _status: 0
+  _noteId: 0
+  _lane: 0

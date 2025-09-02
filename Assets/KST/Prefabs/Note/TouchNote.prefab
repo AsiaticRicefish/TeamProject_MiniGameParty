@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 6609920377324898477}
   - component: {fileID: 7399149748938395269}
   - component: {fileID: 855973624606696136}
-  m_Layer: 0
+  m_Layer: 23
   m_Name: TouchNote
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -134,3 +134,5 @@ MonoBehaviour:
   _moveDist: 30
   _type: 1
   _status: 0
+  _noteId: 0
+  _lane: 0
