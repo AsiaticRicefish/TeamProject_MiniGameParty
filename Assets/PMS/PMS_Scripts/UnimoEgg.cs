@@ -19,11 +19,28 @@ public class UnimoEgg : MonoBehaviourPun
     public string ShooterUid; // 누가 던졌는지 저장
     //[SerializeField][Range(0.1f,15f)] private float forceMultiplier = 3f;
 
+    
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
+        _renderer = GetComponent<Renderer>();
+
     }
 
+    #region Test용 Material 임시 추가
+
+    private Renderer _renderer;
+    public Material[] unimoMats;
+    
+    public void SetMaterial()
+    {
+        if (ShooterUid == null) return;
+        _renderer.material = unimoMats[TurnManager.Instance.currentTurnIndex - 1];
+
+    }
+
+    #endregion
+    
     #region Legacy 조작법
     ////터치 시작했을 때
     //public void OnTouchStart(Vector2 touchPos)
