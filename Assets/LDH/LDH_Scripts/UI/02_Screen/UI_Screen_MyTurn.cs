@@ -19,18 +19,14 @@ namespace LDH_UI
         [SerializeField] float moveTime = 0.5f;      // 들어오는 시간
         [SerializeField] float hold = 0.6f;        // 중앙에서 머무는 시간
         [SerializeField] float fadeTime = 0.25f;     // 페이드 인
+        public float HoldTime => hold;
+        
         
         [Header("Ease")]
         [SerializeField] Ease easeType = Ease.OutCubic;
 
         private Sequence seq;
-
-        public async UniTask Play()
-        {
-            await Manager.UI.ShowScreenUI(this);
-            await UniTask.Delay(TimeSpan.FromSeconds(hold), DelayType.UnscaledDeltaTime);
-            await Manager.UI.CloseScreenUI(this);
-        }
+        
 
         protected override async UniTask OnShowAsync(CancellationToken ct)
         {
@@ -41,9 +37,7 @@ namespace LDH_UI
             seq.Append(target.DOAnchorPos(centerRef.anchoredPosition, moveTime).SetEase(easeType));
             seq.Join(cg.DOFade(1f, fadeTime));
             
-            await seq.AsyncWaitForCompletion().AsUniTask(cancellationToken: ct);
-            
-
+            await seq.AsyncWaitForCompletion().AsUniTask().AttachExternalCancellation(ct);
         }
 
         protected override async UniTask OnCloseAsync(CancellationToken ct)
@@ -55,7 +49,7 @@ namespace LDH_UI
             seq.Append(target.DOAnchorPos(rightRef.anchoredPosition, moveTime).SetEase(easeType));
             seq.Join(cg.DOFade(0f, fadeTime));
             
-            await seq.AsyncWaitForCompletion().ToUniTask(cancellationToken: ct);
+            await seq.AsyncWaitForCompletion().AsUniTask().AttachExternalCancellation(ct);
 
         }
     }
