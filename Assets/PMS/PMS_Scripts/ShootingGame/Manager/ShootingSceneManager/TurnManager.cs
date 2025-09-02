@@ -63,8 +63,12 @@ namespace ShootingScene
 
             // 현재 턴 알 비활성화
             EggManager.Instance.photonView.RPC("ClearCurrentEgg", RpcTarget.All);
-
-            var nextNode = _turnOrder.NextNode;
+            
+            //첫 시작인 경우 currentTurnIndex가 설정되어 있지 않음
+            //첫 시작인 경우 현재 가리키고 있는 노드부터 시작해야 함.
+            var nextNode = (currentTurnIndex==0)? _turnOrder.CurrentNode : _turnOrder.NextNode;
+            Debug.Log($"라운드 {currentRoundIndex} / 이전 턴(currentTurnIndex) : {currentTurnIndex} ");
+            Debug.Log($"next turn - next node는? {nextNode?.Value.ShootingData.myTurnIndex}");
             if (nextNode == null)
             {
                 Debug.LogWarning("[TunManager] 다음 턴 대상이 없습니다.");
@@ -72,10 +76,9 @@ namespace ShootingScene
             }
             currentTurnIndex = nextNode.Value.ShootingData.myTurnIndex;
             
-            if (currentTurnIndex > PhotonNetwork.CurrentRoom.PlayerCount) // PhotonNetwork.CurrentRoom.PlayerCount 추후 변경
+            if (_turnOrder.IsFirstNode(nextNode)) // 한 라운드 완료를 체크하는 조건(다음 턴 대상자가 턴 리스트의 첫번째면, 한 라운드가 완료된 것)
             {
-                currentTurnIndex = 1; //1이 시작
-                currentRoundIndex++;
+                currentRoundIndex++; //1부터 시작
                 if (currentRoundIndex > totalRounds)
                 {
                     Debug.Log("[TurnManager] - 마스터 클라이언트만 보임 / 게임 종료!");

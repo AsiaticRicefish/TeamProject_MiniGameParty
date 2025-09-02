@@ -27,6 +27,7 @@ namespace LDH.LDH_Scripts.ShootingGame
             _dicByUid.Clear();
             _current = null;
         }
+        
 
 
         public void InitFromActorOrder(int[] actorOrder)
@@ -85,6 +86,16 @@ namespace LDH.LDH_Scripts.ShootingGame
         public void MoveToNext()
         {
             _current = _current.Next ?? _list.First;
+        }
+
+        public bool IsFirstNode(LinkedListNode<GamePlayer> node)
+        {
+            return node.Value.PlayerId == _list.First.Value.PlayerId;
+        }
+
+        public bool IsCurrentFirstNode()
+        {
+            return IsFirstNode(_current);
         }
     }
 }
