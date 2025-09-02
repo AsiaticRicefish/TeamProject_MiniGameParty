@@ -58,7 +58,8 @@ namespace LDH.LDH_Scripts.ShootingGame
                     PhotonNetwork.LocalPlayer.SetCustomProperties(table);
                 }
             }
-            _current = _list.First;
+
+            _current = _list.Last;
         }
 
         public bool RemovePlayer(string uid)

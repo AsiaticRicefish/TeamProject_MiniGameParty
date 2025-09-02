@@ -66,8 +66,7 @@ namespace ShootingScene
             
             //첫 시작인 경우 currentTurnIndex가 설정되어 있지 않음
             //첫 시작인 경우 현재 가리키고 있는 노드부터 시작해야 함.
-            var nextNode = (currentTurnIndex==0)? _turnOrder.CurrentNode : _turnOrder.NextNode;
-            Debug.Log($"라운드 {currentRoundIndex} / 이전 턴(currentTurnIndex) : {currentTurnIndex} ");
+            var nextNode = _turnOrder.NextNode;
             Debug.Log($"next turn - next node는? {nextNode?.Value.ShootingData.myTurnIndex}");
             if (nextNode == null)
             {
