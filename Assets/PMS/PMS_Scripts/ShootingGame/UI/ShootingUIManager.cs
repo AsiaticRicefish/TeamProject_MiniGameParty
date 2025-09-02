@@ -12,10 +12,10 @@ namespace ShootingScene.ShootingGame
 {
     public class ShootingUIManager : CombinedSingleton<ShootingUIManager>, IGameComponent
     {
-       [SerializeField] private UI_Screen_Wind _windUI;
-       [SerializeField] private UI_Screen_MyTurn _myTurnUI;
-       [SerializeField] private UI_Screen_OtherTurn _otherTurnUI;
-       [SerializeField] private UI_Screen_Timer _timerUI;
+       [SerializeField] private UI_Screen_Wind windUI;
+       [SerializeField] private UI_Screen_MyTurn myTurnUI;
+       [SerializeField] private UI_Screen_OtherTurn otherTurnUI;
+       [SerializeField] private UI_Screen_Timer timerUI;
 
        private Coroutine _timerCoroutine;
        
@@ -28,20 +28,20 @@ namespace ShootingScene.ShootingGame
 
        public void Initialize()
        {
-           TurnManager.Instance.OnSetCurrentTurn += _otherTurnUI.SetCurrentPlayerName;
+           TurnManager.Instance.OnSetCurrentTurn += otherTurnUI.SetCurrentPlayerName;
        }
         
         
         public IEnumerator PlayMyTurnUI()
         {
             Debug.Log("[ShootingUIManager] 내 턴 ui position reset");
-            _myTurnUI.ResetPosition();
+            myTurnUI.ResetPosition();
             Debug.Log("[ShootingUIManager] 내 턴 ui show 시작");
-            yield return Manager.UI.ShowScreenUI(_myTurnUI).ToCoroutine();
+            yield return Manager.UI.ShowScreenUI(myTurnUI).ToCoroutine();
             Debug.Log("[ShootingUIManager] 일시 정지");
-            yield return new WaitForSecondsRealtime(_myTurnUI.HoldTime);
+            yield return new WaitForSecondsRealtime(myTurnUI.HoldTime);
             Debug.Log("[ShootingUIManager] 내 턴 ui close 시작");
-            yield return Manager.UI.CloseScreenUI(_myTurnUI).ToCoroutine();
+            yield return Manager.UI.CloseScreenUI(myTurnUI).ToCoroutine();
         }
 
         public void StartCountDown(double startAt, double endAt)
@@ -59,8 +59,8 @@ namespace ShootingScene.ShootingGame
                 _timerCoroutine = null;
             }
             
-            if(close && _timerUI.gameObject.activeSelf)
-                Manager.UI.CloseScreenUI(_timerUI).Forget();
+            if(close && timerUI.gameObject.activeSelf)
+                Manager.UI.CloseScreenUI(timerUI).Forget();
         }
         
         private IEnumerator Co_CountDown(double startAt, double endAt)
@@ -72,7 +72,7 @@ namespace ShootingScene.ShootingGame
             
             Debug.Log("카운트 다운 시작 : 타이머 UI Show");
             //카운트 다운 시작
-            yield return Manager.UI.ShowScreenUI(_timerUI).ToCoroutine();
+            yield return Manager.UI.ShowScreenUI(timerUI).ToCoroutine();
             
             int lastSec = -1;
 
@@ -86,14 +86,14 @@ namespace ShootingScene.ShootingGame
                 if (sec != lastSec)
                 {
                     lastSec = sec;
-                    _timerUI.SetTimerText(sec.ToString());
+                    timerUI.SetTimerText(sec.ToString());
                 }
 
                 yield return null;
 
             }
             
-            Manager.UI.CloseScreenUI(_timerUI).Forget();
+            Manager.UI.CloseScreenUI(timerUI).Forget();
 
             _timerCoroutine = null;
         }

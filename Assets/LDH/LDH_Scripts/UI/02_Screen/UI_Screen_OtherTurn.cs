@@ -16,10 +16,25 @@ namespace LDH_UI
         {
 
             if (isMyTurn)
+            {
                 Manager.UI.CloseScreenUI(this).Forget();
+            }
+
 
             else
+            {
                 Manager.UI.ShowScreenUI(this).Forget();
+
+                var currentPlayer = TurnManager.Instance.GetCurrentTurnPlayer();
+                if (currentPlayer != null)
+                    playerName.text = currentPlayer.Nickname;
+                else
+                {
+                    Debug.Log("[UI_Screen_OtherTurn] currentPlayer가 null 입니다.");
+                    playerName.text = "error";
+                }
+            }
+                
         }
     }
     }
