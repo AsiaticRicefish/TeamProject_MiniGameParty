@@ -3,6 +3,7 @@ using System.Collections;
 using UnityEngine;
 using Photon.Pun;
 using ShootingScene;
+using Cinemachine;
 
 [RequireComponent(typeof(Rigidbody))]
 public class UnimoEgg : MonoBehaviourPun
@@ -112,6 +113,7 @@ public class UnimoEgg : MonoBehaviourPun
         // 다른 클라이언트에도 RPC 전송
         photonView.RPC("RPC_Shot", RpcTarget.Others, dir);
         Test_ShotFollowCamera.Instance.StartFollow(gameObject);
+
         // 발사 후 멈출 때까지 감시 시작
         //StartCoroutine(WaitForStop());
         // 발사 후 한 프레임 대기 후 감시 시작
@@ -124,8 +126,16 @@ public class UnimoEgg : MonoBehaviourPun
         yield return new WaitForFixedUpdate();   //AddForce 보장                                     
         yield return new WaitForFixedUpdate();
 
-        while (rb.velocity.magnitude > stopSpeed && gameObject.activeSelf)
-            yield return null;
+        //Test_ShotFollowCamera.Instance.StartFollowTarget(gameObject);
+        //yield return new WaitForFixedUpdate();
+        //yield return new WaitUntil(() => Camera.main.GetComponent<CinemachineBrain>().ActiveBlend == null);
+
+        //while (rb.velocity.magnitude > stopSpeed && gameObject.activeSelf)
+        //    yield return new WaitForFixedUpdate();
+
+        //Test_ShotFollowCamera.Instance.StopFollowTarget(gameObject);
+        //yield return new WaitForFixedUpdate();
+        //yield return new WaitUntil(() => Camera.main.GetComponent<CinemachineBrain>().ActiveBlend == null);
 
         // 내가 던진 알일 때만 마스터에게 턴 종료 요청
         if (photonView.IsMine && !turnEnded)
