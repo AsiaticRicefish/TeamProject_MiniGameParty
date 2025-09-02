@@ -8,5 +8,5 @@ public enum NoteType
 public enum NoteStatus
 {
     None = 0,
-    Good,
+    CanInteract,
 }
