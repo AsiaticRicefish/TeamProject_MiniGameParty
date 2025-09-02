@@ -275,8 +275,10 @@ namespace ShootingScene
                 if (otherPlayer.CustomProperties.TryGetValue("uid", out object value) && value is string uid &&
                     !string.IsNullOrEmpty(uid))
                 {
+                    var leftPlayerTurnIndex = _turnOrder.GetPlayerTurnIndex(uid);
+                    Debug.Log($"나간 플레이어의 myturnindex : {leftPlayerTurnIndex} / 현재 턴 인덱스 {currentTurnIndex}");
                     _turnOrder.RemovePlayer(uid);
-                    if (PhotonNetwork.IsMasterClient && _turnOrder.GetPlayerTurnIndex(uid) == currentTurnIndex)
+                    if (PhotonNetwork.IsMasterClient && leftPlayerTurnIndex == currentTurnIndex)
                     {
                         Debug.Log("현재 턴 플레이어가 나갔습니다. 강제로 턴을 넘깁니다.");
                         StartCoroutine(WaitForTurnDelay());
