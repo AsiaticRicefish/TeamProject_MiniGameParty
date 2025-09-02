@@ -266,12 +266,31 @@ namespace ShootingScene
 
         public override void OnPlayerLeftRoom(Player otherPlayer)
         {
-            if (otherPlayer.CustomProperties.TryGetValue("uid", out object value) && value is string uid &&
-                string.IsNullOrEmpty(uid))
-                _turnOrder.RemovePlayer(uid);
-            else
+            //현재 게임 상태를 가져온다(룸 프로퍼티)
+            var stateValue = RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.State);
+            
+            //현재 게임 상태가 game play state가 아니라면 처리할 필요가 없음
+            if (stateValue != null && stateValue is string currentState && currentState.Equals("GamePlayState"))
             {
-                Debug.Log("[TurnManager] 플레이어의 uid 프로퍼티를 찾을 수 없습니다.");
+                if (otherPlayer.CustomProperties.TryGetValue("uid", out object value) && value is string uid &&
+                    !string.IsNullOrEmpty(uid))
+                {
+                    var leftPlayerTurnIndex = _turnOrder.GetPlayerTurnIndex(uid);
+                    Debug.Log($"나간 플레이어의 myturnindex : {leftPlayerTurnIndex} / 현재 턴 인덱스 {currentTurnIndex}");
+                    _turnOrder.RemovePlayer(uid);
+                    if (PhotonNetwork.IsMasterClient && leftPlayerTurnIndex == currentTurnIndex)
+                    {
+                        Debug.Log("현재 턴 플레이어가 나갔습니다. 강제로 턴을 넘깁니다.");
+                        StartCoroutine(WaitForTurnDelay());
+                    }
+                }
+                   
+                else
+                {
+                    Debug.Log("[TurnManager] 플레이어의 uid 프로퍼티를 찾을 수 없습니다.");
+                }
+                
+           
             }
         }
 

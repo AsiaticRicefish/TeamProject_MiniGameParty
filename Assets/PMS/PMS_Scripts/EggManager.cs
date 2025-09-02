@@ -11,6 +11,8 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
     public Transform eggSpawnPoint;
     public int poolSizePerPlayer = 5;   //한사람당 5개만
 
+    private const string unimoEggPrefabPath = "Net/UnimoEggPrefab";
+
     public Color[] colors = new Color[]         //빨주노초
     {
         Color.red,
@@ -77,7 +79,7 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
             //한사람당 5개씩 생성
             for (int i = 0; i < poolSizePerPlayer; i++)
             {
-                GameObject eggObj = PhotonNetwork.Instantiate(unimoEggPrefab.name, Vector3.zero, Quaternion.identity);
+                GameObject eggObj = PhotonNetwork.InstantiateRoomObject(unimoEggPrefabPath, Vector3.zero, Quaternion.identity);
                 UnimoEgg egg = eggObj.GetComponent<UnimoEgg>();
                 
                 //해당 슈터 uid를 넣는다.
@@ -163,6 +165,7 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
         egg.transform.position = new Vector3(x, y, z);
         egg.transform.rotation = Quaternion.identity;
         egg.ShooterUid = shooterUid;
+        egg.SetMaterial();
         egg.gameObject.SetActive(true);
 
         Rigidbody rb = egg.GetComponent<Rigidbody>();

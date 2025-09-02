@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -17,7 +18,9 @@ public class DirectionUIArrow : MonoBehaviourPun
     private float freezeAngle;   // 멈췄을 때 각도
 
     [SerializeField] GameObject player;
-
+    
+        
+    
     public float CurrentAngle => isSwing ? currentAngle : freezeAngle;
 
     public Vector3 CurrentDir

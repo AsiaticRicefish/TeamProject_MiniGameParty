@@ -13,6 +13,7 @@ public class LocalPlayerInput : MonoBehaviourPun
 {
     public Transform player;
     public DirectionUIArrow arrow;
+    public GameObject arrowRangeImage;
     public ChargeController charger;
     public Camera mainCam;
 
@@ -121,13 +122,21 @@ public class LocalPlayerInput : MonoBehaviourPun
         // Step2 방향 시스템
         OnStep2Started += () => {
             Debug.Log("Step 2: 화살표 선택 시작");
-            if (arrow != null && photonView.IsMine)
+            if (arrow != null && arrowRangeImage!=null && photonView.IsMine)
+            {
                 arrow.gameObject.SetActive(true);
+                arrowRangeImage.SetActive(true);
+            }
+               
             inputEnabled = true;
         };
 
         OnStep2Completed += () => {
             Debug.Log("Step 2: 화살표 선택 완료");
+            if (arrowRangeImage!=null && photonView.IsMine)
+            {
+                arrowRangeImage.SetActive(false);
+            }
             inputEnabled = false;
             StartStep3();
 

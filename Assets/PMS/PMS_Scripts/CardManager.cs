@@ -195,7 +195,7 @@ public class CardManager : PunSingleton<CardManager>
             Debug.Log("[CardManager] 이미 선택된 카드입니다.");
 
             //요청자에게 실패 콜백
-            photonView.RPC(nameof(RPC_PickResult), info.Sender, false, -1);
+            photonView.RPC(nameof(RPC_PickResult), info.Sender, false, actorNumber,  -1);
 
             return; // 이미 선택된 카드
         }
@@ -205,52 +205,25 @@ public class CardManager : PunSingleton<CardManager>
         PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable { { KEY_CARD_OWNERS, _owners } });
 
         // 요청자에게 성공 콜백
-        photonView.RPC(nameof(RPC_PickResult), info.Sender, true, cardIndex);
+        photonView.RPC(nameof(RPC_PickResult), RpcTarget.AllBuffered, true, actorNumber, cardIndex);
 
 
         // 모두 선택했는지 확인
-        allPicked = _owners.All(o => o != -1);
-        if (allPicked)
-        {
-            // 상태 전환
-            PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable { { KEY_STATE, (byte)LobbyState.Revealing } });
-
-            // 마스터 서버 공개 시작 시간 처리
-            t0 = PhotonNetwork.Time + 0.3; // 지연 감안한 여유 시간
-
-            _revealSec = 1f * PhotonNetwork.CurrentRoom.PlayerCount;
-
-            // 모든 클라에 공개 지시
-            photonView.RPC(nameof(RPC_RevealAll), RpcTarget.AllBuffered, _deckValues, _owners, t0, _revealSec);
-
-
-            // 턴 순서 계산(숫자 오름차순 → 카드 소유자의 ActorNumber)
-            var pairs = new List<(int value, int owner)>();
-            for (int i = 0; i < _deckValues.Length; i++)
-                pairs.Add((_deckValues[i], _owners[i]));
-
-            var order = pairs.OrderBy(p => p.value).Select(p => p.owner).ToArray();
-
-            PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable
-            {
-                { KEY_TURN_ORDER, order }, { KEY_STATE, (byte)LobbyState.Done }
-            });
-
-
-            StartCoroutine(NotifyTurnOrderAfterReveal(t0, _revealSec, order));
-        }
-        else
-        {
-            // 선택 갱신만 반영되도록 각 클라 로컬 UI 갱신 요청
-            photonView.RPC(nameof(RPC_OnPickUpdated), RpcTarget.AllBuffered, _owners);
-        }
+        CheckAllPicked();
+     
     }
 
     [PunRPC]
-    private void RPC_PickResult(bool result, int confirmedIndex)
+    private void RPC_PickResult(bool result, int actorNumber, int confirmedIndex)
     {
-        _requestPick = false; //요청 플래그 복구
-        _alreadyPicked = result;
+        if (actorNumber == PhotonNetwork.LocalPlayer.ActorNumber)
+        {
+            _requestPick = false; //요청 플래그 복구
+            _alreadyPicked = result;
+        }
+      
+        if (result)
+            _owners[confirmedIndex] = actorNumber;
     }
 
     [PunRPC]
@@ -307,6 +280,7 @@ public class CardManager : PunSingleton<CardManager>
             RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "GamePlayState");
         }
 
+        #region Legacy
 
         // // 3) 카드 UI 비활성/숨김 (선택 UI 닫기) -> 여기서 하면 안될 것 같음
         // foreach (var c in _cards) c.gameObject.SetActive(false);
@@ -319,11 +293,70 @@ public class CardManager : PunSingleton<CardManager>
             // 0번 인덱스부터 시작
             ShootingScene.TurnManager.Instance.StartFirstTurn();
         }*/
+
+        #endregion
+        
     }
 
     #endregion
 
 
+    #region Check All Picked
+
+    private void CheckAllPicked()
+    {
+        if(!PhotonNetwork.IsMasterClient) return;
+        
+        int pickedPlayerCount = 0;
+        int currentPlayerCount = PhotonNetwork.CurrentRoom.PlayerCount;
+        foreach (int ownerActorNum in _owners)
+        {
+            if (ownerActorNum != -1 && PhotonNetwork.CurrentRoom.GetPlayer(ownerActorNum) != null)
+            {
+                pickedPlayerCount++;
+            }
+        }
+
+        bool isAllPicked = pickedPlayerCount == currentPlayerCount;
+        if (isAllPicked)
+        {
+            // 상태 전환
+            PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable { { KEY_STATE, (byte)LobbyState.Revealing } });
+
+            // 마스터 서버 공개 시작 시간 처리
+            t0 = PhotonNetwork.Time + 0.3; // 지연 감안한 여유 시간
+
+            _revealSec = 1f * PhotonNetwork.CurrentRoom.PlayerCount;
+
+            // 모든 클라에 공개 지시
+            photonView.RPC(nameof(RPC_RevealAll), RpcTarget.AllBuffered, _deckValues, _owners, t0, _revealSec);
+
+
+            // 턴 순서 계산(숫자 오름차순 → 카드 소유자의 ActorNumber)
+            var pairs = new List<(int value, int owner)>();
+            for (int i = 0; i < _deckValues.Length; i++)
+                pairs.Add((_deckValues[i], _owners[i]));
+
+            var order = pairs.OrderBy(p => p.value).Select(p => p.owner).ToArray();
+
+            PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable
+            {
+                { KEY_TURN_ORDER, order }, { KEY_STATE, (byte)LobbyState.Done }
+            });
+
+
+            StartCoroutine(NotifyTurnOrderAfterReveal(t0, _revealSec, order));
+        }
+        else
+        {
+            // 선택 갱신만 반영되도록 각 클라 로컬 UI 갱신 요청
+            photonView.RPC(nameof(RPC_OnPickUpdated), RpcTarget.AllBuffered, _owners);
+        }
+    }
+    
+
+    #endregion
+    
     #region Card Reveal 연출 관련 로직
 
     private IEnumerator RevealRoutine(double t0)
@@ -379,6 +412,16 @@ public class CardManager : PunSingleton<CardManager>
     {
         // 선택 중 누군가 이탈하면 Master가 남은 카드/인원을 재구성하는 로직을 여기에 추가 가능
         // (필요 시: 상태가 Picking일 때만 재빌드)
+        if (!PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(KEY_STATE, out var stObj)) return;
+        if ((byte)stObj != (byte)LobbyState.Picking) return;
+        
+        //picking 상태일 때 나간 플레이어가 선택한 카드가 있다면 제거 
+        if (PhotonNetwork.IsMasterClient)
+        {
+            CheckAllPicked();
+        }
+        
+        
     }
 
     #endregion
