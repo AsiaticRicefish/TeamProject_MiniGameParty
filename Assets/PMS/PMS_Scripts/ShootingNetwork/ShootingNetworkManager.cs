@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -9,6 +10,20 @@ namespace ShootingScene
     [RequireComponent(typeof(PhotonView))]
     public class ShootingNetworkManager : PunSingleton<ShootingNetworkManager>, IGameComponent
     {
+        private string turnObserverId;
+        private string SceneChangeObserverId;
+
+        private Coroutine _setTurnCoroutine;
+
+        public Coroutine SetTurnCoroutine
+        {
+            get => _setTurnCoroutine;
+            set
+            {
+                _setTurnCoroutine = value;
+            }
+        }
+
         protected override void OnAwake()
         {
             base.isPersistent = false;
@@ -18,17 +33,18 @@ namespace ShootingScene
         {
             if (PhotonNetwork.IsMasterClient)
             {
-                //¸¶½ºÅÍ Å¬¶óÀÌ¾ğÆ®¸¸ »ç¿ëÇÒ ·ë ÇÁ·ÎÆÛÆ¼ »ı¼º ¹× ±¸µ¶ Ã³¸®
+                //ë§ˆìŠ¤í„° í´ë¼ì´ì–¸íŠ¸ë§Œ ì‚¬ìš©í•  ë£¸ í”„ë¡œí¼í‹° ìƒì„± ë° êµ¬ë… ì²˜ë¦¬
                 var props = new ExitGames.Client.Photon.Hashtable
                 {
                     { ShootingGamePropertyKeys.State, "InitState" },
-                    { ShootingGamePropertyKeys.Turn, -1 },
+                    { ShootingGamePropertyKeys.Turn, 0 },
+                     { ShootingGamePropertyKeys.Round, 1 },
                     ///{ ShootingGamePropertyKeyss.PlayerScore_Prefix + Player },
                 };
                 foreach (var player in PlayerManager.Instance.Players)
                 {
                     string scoreKey = ShootingGamePropertyKeys.PlayerScore_Prefix + player.Value.PlayerId;
-                    props.Add(scoreKey, 0);                                                                     // ÃÊ±â Á¡¼ö 0
+                    props.Add(scoreKey, 0);                                                                     // ì´ˆê¸° ì ìˆ˜ 0
                 }
 
                 PhotonNetwork.CurrentRoom.SetCustomProperties(props);
@@ -44,21 +60,88 @@ namespace ShootingScene
 
         private void ShootingGameRoomPropertyRegister()
         {
-            // °ÔÀÓ »óÅÂ ±¸µ¶
-            RoomPropertyObserver.Instance.RegisterObserver(ShootingGamePropertyKeys.State, (value) =>
+            // ê²Œì„ ìƒíƒœ êµ¬ë…
+            ShootingGameSceneChangeRoomPropertiesReigster();
+            // ê²Œì„ í„´,ë¼ìš´ë“œ(int) êµ¬ë…
+            //ShootingGameTurnAndRoundRoomPropertiesReigster();
+
+            //// ê²Œì„ í„´,ë¼ìš´ë“œ(int) êµ¬ë…
+            //RoomPropertyObserver.Instance.RegisterObserver(ShootingGamePropertyKeys.Turn, (value) =>
+            //{
+            //    int newTurnIndex = (int)value;             
+
+            //    TurnManager.Instance.currentTurnIndex = newTurnIndex;
+            //    int newRound = (int)RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.Round); //          í˜„ì¬ ìµœì‹  Round ì½ê¸°
+
+            //    TurnManager.Instance.SetCurrentTurn();                                                  // ë‚´ í„´ì¸ì§€ íŒë‹¨
+            //});
+
+            //RoomPropertyObserver.Instance.RegisterObserver(ShootingGamePropertyKeys.Round, (value) =>
+            //{
+            //    //ë¼ìš´ë“œ ë³€ê²½ì‹œ í•„ìš”í•  ë¶€ë¶„ ì¶”ê°€
+            //});
+
+
+            //í”Œë ˆì´ì–´ ì ìˆ˜ êµ¬ë…
+            //foreach (var player in PlayerManager.Instance.Players)
+            //{
+            //    string scoreKey = ShootingGamePropertyKeys.PlayerScore_Prefix + player.Value.PlayerId;
+            //    RoomPropertyObserver.Instance.RegisterObserver(scoreKey, (value) =>
+            //    {
+            //        int newScore = (int)value;
+            //    });
+            //}
+        }
+
+        public void ShootingGameSceneChangeRoomPropertiesReigster()
+        {
+            // ê²Œì„ ìƒíƒœ êµ¬ë…
+            SceneChangeObserverId = RoomPropertyObserver.Instance.RegisterObserver(ShootingGamePropertyKeys.State, (value) =>
             {
                 string newState = (string)value;
                 ShootingGameManager.Instance.ChangeStateByName(newState);
             });
+        }
 
-            //ÇÃ·¹ÀÌ¾î Á¡¼ö ±¸µ¶
-            foreach (var player in PlayerManager.Instance.Players)
+        public void ShootingGameSceneChangeRoomPropertiesUnReigster()
+        {
+            if (!string.IsNullOrEmpty(SceneChangeObserverId))
             {
-                string scoreKey = ShootingGamePropertyKeys.PlayerScore_Prefix + player.Value.PlayerId;
-                RoomPropertyObserver.Instance.RegisterObserver(scoreKey, (value) =>
+                RoomPropertyObserver.Instance.UnregisterObserverById(SceneChangeObserverId);
+                SceneChangeObserverId = null;
+            }
+        }
+
+        public void ShootingGameTurnAndRoundRoomPropertiesReigster()
+        {
+            // ê²Œì„ í„´,ë¼ìš´ë“œ(int) êµ¬ë…           
+            // ëŒë‹¤ë¥¼ ë³€ìˆ˜ì— ì €ì¥í•´ë‘ 
+            turnObserverId = RoomPropertyObserver.Instance.RegisterObserver(ShootingGamePropertyKeys.Turn, (value) =>
+            {   
+                // ëª¨ë“  í´ë¼ì´ì–¸íŠ¸ì—ì„œ Turn Order (linkedlist)ì˜ currentë¥¼ ì—…ë°ì´íŠ¸í•œë‹¤.
+                TurnManager.Instance.MoveToNextTurn();
+                
+                int newTurnIndex = (int)value;
+                TurnManager.Instance.currentTurnIndex = newTurnIndex;
+
+                int newRound = (int)RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.Round);
+                TurnManager.Instance.currentRoundIndex = newRound;
+
+                if (_setTurnCoroutine != null)
                 {
-                    int newScore = (int)value;
-                });
+                    StopCoroutine(_setTurnCoroutine);
+                    _setTurnCoroutine = null;
+                }
+                StartCoroutine(TurnManager.Instance.SetCurrentTurn());
+            });
+        }
+
+        public void ShootingGameTurnAndRoundRoomPropertiesUnReigster()
+        {
+            if (!string.IsNullOrEmpty(turnObserverId))
+            {
+                RoomPropertyObserver.Instance.UnregisterObserverById(turnObserverId);
+                turnObserverId = null;
             }
         }
     }

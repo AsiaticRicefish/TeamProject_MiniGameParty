@@ -80,6 +80,12 @@ namespace LDH_MainGame
                 totalRound,
                 photonView
             );
+            
+            
+            //플레이어 매니저에 플레이어 등록
+            Debug.Log("[MainGameManager] PlayerManager에 플레이어를 등록합니다.");
+            Manager.Player.ClearAllPlayers();
+            Manager.Player.EnsureAllPhotonPlayersRegistered();
         }
 
         public void StartGame()
@@ -213,7 +219,6 @@ namespace LDH_MainGame
         private void SyncGameState()
         {
             var nextState = FSM.ReadOrDefault();
-            Debug.Log(nextState);
 
             if (FSM.Changed(nextState))
             {

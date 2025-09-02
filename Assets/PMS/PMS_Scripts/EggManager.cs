@@ -11,8 +11,19 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
     public Transform eggSpawnPoint;
     public int poolSizePerPlayer = 5;   //한사람당 5개만
 
+    public Color[] colors = new Color[]         //빨주노초
+    {
+        Color.red,
+        new Color(1f, 0.5f, 0f), // 오렌지색
+        Color.yellow,
+        Color.green
+    };
+
     [Header("Current State")]
     public UnimoEgg currentUnimoEgg;
+
+    // 예시: uid → 프리팹 이름 매핑
+    private Dictionary<string, string> playerPrefabMap = new Dictionary<string, string>();
 
     private Dictionary<string, List<UnimoEgg>> playerEggPools = new();
     private Dictionary<int, UnimoEgg> viewIdToEgg = new();
@@ -31,6 +42,13 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
             StartCoroutine(MasterInitPools());
     }
 
+    /*
+        각 유저에 맞는 UnimoEgg 프리팹을 알고 만들어야한다.
+        오브젝트 풀을 만들기 전에 
+
+        마스터 클라이언트가 플레이어 프로퍼티에 어떤 프립팹을 써야하는지 하나씩 조회해서 해당 프리팹 Name을 사용해야한다.
+     */
+
     //마스터가 Pool을 생성한다. 
     private IEnumerator MasterInitPools()
     {
@@ -38,20 +56,35 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
         // 모든 플레이어 UID 가져오기
         List<string> uids = new List<string>(ShootingGameManager.Instance.players.Keys);
 
+        //각 uids를 순회
         foreach (var uid in uids)
         {
+            //GamePlayer targetPlayer = PlayerManager.Instance.GetPlayer(uid);
+            //Photon.Realtime.Player player = PMS_Util.PMS_Util.GetPhotonPlayerByGamePlayer(targetPlayer);
+
+            //if (player.CustomProperties.ContainsKey(ShootingGamePlayerPropertyKeys.MyPrefabName))
+            //{
+            //    string prefabName = (string)player.CustomProperties[ShootingGamePlayerPropertyKeys.MyPrefabName];
+            //}
+
+            //uid를 가진 Egg가 존재하지 않았을 때 리스트 생성
             if (!playerEggPools.ContainsKey(uid))
                 playerEggPools[uid] = new List<UnimoEgg>();
 
+            //초기화
             List<int> viewIDs = new List<int>();
 
+            //한사람당 5개씩 생성
             for (int i = 0; i < poolSizePerPlayer; i++)
             {
                 GameObject eggObj = PhotonNetwork.Instantiate(unimoEggPrefab.name, Vector3.zero, Quaternion.identity);
                 UnimoEgg egg = eggObj.GetComponent<UnimoEgg>();
+                
+                //해당 슈터 uid를 넣는다.
                 egg.ShooterUid = uid;
                 egg.gameObject.SetActive(false);
 
+                //EggPools에 넣고,viewID 딕셔너리에도 넣는다.
                 playerEggPools[uid].Add(egg);
                 viewIdToEgg[egg.photonView.ViewID] = egg;
                 viewIDs.Add(egg.photonView.ViewID);
@@ -70,15 +103,18 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
     [PunRPC]
     private void RPC_SetupPlayerPool(string uid, int[] viewIDs)
     {
+        //애도 리스트 생성
         if (!playerEggPools.ContainsKey(uid))
             playerEggPools[uid] = new List<UnimoEgg>();
 
+        //viewIDs를 전달 받음 배열로 전체 순회
         foreach (var id in viewIDs)
         {
             PhotonView view = PhotonView.Find(id);
             if (view != null)
             {
                 UnimoEgg egg = view.GetComponent<UnimoEgg>();
+
                 egg.ShooterUid = uid;
                 egg.gameObject.SetActive(false);
 
@@ -92,11 +128,10 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
     // 턴 시작 시 호출
     public UnimoEgg SpawnEgg(string shooterUid)
     {
-        Debug.Log("[SpawnEgg] - 호출?");
         if (!isPoolReady) return null;
-        Debug.Log("[SpawnEgg] - 호출2?");
+
         if (currentUnimoEgg != null) return null;
-        Debug.Log("[SpawnEgg] - 호출3?");
+
         // 풀에서 비활성 알 찾기
         UnimoEgg egg = playerEggPools[shooterUid].Find(e => !e.gameObject.activeInHierarchy);
         if (egg == null)
@@ -104,7 +139,7 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
             Debug.LogError($"[EggManager] {shooterUid} 사용 가능한 알 없음!");
             return null;
         }
-        Debug.Log("[SpawnEgg] - 호출4?");
+
         //모든 클라이언트 한테 SetActive 및 position 이동
         photonView.RPC(nameof(RPC_ActivateEgg), RpcTarget.AllBuffered,
             egg.photonView.ViewID,
@@ -156,8 +191,6 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
 
     private IEnumerator CallShotAfterOwnership(PhotonView eggView)
     {
-        // 한 프레임 대기
-        //yield return null;
         yield return new WaitUntil(() => eggView.IsMine);
         Debug.Log("소유권 승인!");
     }
@@ -174,6 +207,9 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
     {
         if (!viewIdToEgg.TryGetValue(viewID, out var egg)) return;
         egg.gameObject.SetActive(false);
+
+        egg.Initialize();
+        egg.GetComponent<LocalPlayerInput>().Initialize();
 
         if (currentUnimoEgg == egg)
             currentUnimoEgg = null;

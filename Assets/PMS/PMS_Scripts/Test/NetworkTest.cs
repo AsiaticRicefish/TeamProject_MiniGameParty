@@ -9,18 +9,18 @@ public class NetworkTest : MonoBehaviourPunCallbacks
     [SerializeField] private byte maxPlayers = 4;
     public override void OnConnectedToMaster()
     {
-        Debug.Log("¸¶½ºÅÍ ¼­¹ö Á¢¼Ó ¿Ï·á ¡æ ¹æ »ı¼º ½Ãµµ");
-        CreateRoom();
+        Debug.Log("ë§ˆìŠ¤í„° ì„œë²„ ì ‘ì† ì™„ë£Œ â†’ ë°© ìƒì„± ì‹œë„");
+        //CreateRoom();
     }
 
-    private void CreateRoom()
-    {
-        RoomOptions options = new RoomOptions { MaxPlayers = maxPlayers };
-        PhotonNetwork.CreateRoom(null, options); // ÀÌ¸§ nullÀÌ¸é ·£´ı »ı¼º
-    }
+    //private void CreateRoom()
+    //{
+    //    RoomOptions options = new RoomOptions { MaxPlayers = maxPlayers };
+    //    PhotonNetwork.CreateRoom(null, options); // ì´ë¦„ nullì´ë©´ ëœë¤ ìƒì„±
+    //}
 
     public override void OnJoinedRoom()
     {
-        Debug.Log("¹æ ÀÔÀå ¿Ï·á! ÇöÀç ¹æ ÀÌ¸§: " + PhotonNetwork.CurrentRoom.Name);
+        Debug.Log("ë°© ì…ì¥ ì™„ë£Œ! í˜„ì¬ ë°© ì´ë¦„: " + PhotonNetwork.CurrentRoom.Name);
     }
 }

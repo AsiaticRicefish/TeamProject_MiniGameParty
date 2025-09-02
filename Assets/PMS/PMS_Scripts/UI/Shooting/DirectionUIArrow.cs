@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using Photon.Pun;
 
-[RequireComponent(typeof(PhotonView))]
 public class DirectionUIArrow : MonoBehaviourPun
 {
     [Header("Swing Settings")]
@@ -39,6 +38,19 @@ public class DirectionUIArrow : MonoBehaviourPun
     {
         arrowTransform = GetComponent<RectTransform>();
         player = transform.parent.parent.gameObject;
+    }
+
+    //return pool
+    public void Initialize()
+    {
+        isSwing = true;
+        currentAngle = 0f;
+        freezeAngle = 0f;
+
+        if (arrowTransform != null)
+        {
+            arrowTransform.localRotation = Quaternion.identity;
+        }
     }
 
     private void Update()

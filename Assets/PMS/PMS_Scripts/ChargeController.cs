@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using Photon.Pun;
 
-[RequireComponent(typeof(PhotonView))]
 public class ChargeController : MonoBehaviourPun
 {
     public float chargeMax = 25f;
@@ -17,19 +16,51 @@ public class ChargeController : MonoBehaviourPun
 
     public float ChargePower => chargePower;
 
+    //private void OnEnable()
+    //{
+    //    StartCharge(); // 활성화될 때 차징 시작
+    //}
+
+    //private void OnDisable()
+    //{
+    //    StopCharge();  // 비활성화될 때 차징 초기화
+    //}
+
+    public void Initialize()
+    {
+        // 차징 상태 초기화
+        isCharging = false;
+        chargePower = 0f;
+        pressStartTime = 0f;
+
+        if (chargeSlider != null)
+            chargeSlider.value = 0f;
+    }
+
     private void Update()
     {
         if (!isCharging) return;
-        float t = Mathf.PingPong((Time.time - pressStartTime) / (chargePeriod / 2f), 1f);
+
+        //float t = Mathf.PingPong((Time.time - pressStartTime) / (chargePeriod), 1f);
+        //chargePower = t * chargeMax;
+        //if (chargeSlider != null) chargeSlider.value = chargePower / chargeMax;
+        float elapsed = (Time.time - pressStartTime) % chargePeriod;
+        float half = chargePeriod / 2f;
+
+        float t = elapsed / half;
+        if (t > 1f) t = 2f - t; // 0→1→0 왕복
+
         chargePower = t * chargeMax;
-        if (chargeSlider != null) chargeSlider.value = chargePower / chargeMax;
+        if (chargeSlider != null)
+            chargeSlider.value = chargePower / chargeMax;
     }
 
     public void StartCharge()
     {
         isCharging = true;
-        pressStartTime = Time.time;
         chargePower = 0f;
+        pressStartTime = Time.time;
+
         if (chargeSlider != null) chargeSlider.value = 0f;
     }
 
@@ -37,6 +68,7 @@ public class ChargeController : MonoBehaviourPun
     {
         isCharging = false;
         chargePower = 0f;
+        pressStartTime = 0f;
         if (chargeSlider != null) chargeSlider.value = 0f;
     }
 }

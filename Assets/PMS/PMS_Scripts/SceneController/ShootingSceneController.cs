@@ -4,6 +4,7 @@ using UnityEngine;
 using System;
 using Photon.Pun;
 using ShootingScene;
+using ShootingScene.ShootingGame;
 
 [RequireComponent(typeof(PhotonView))]
 [DisallowMultipleComponent]
@@ -26,6 +27,7 @@ public class ShootingSceneController : BaseGameSceneController
         yield return WaitForSingletonReady<CardManager>();
         yield return WaitForSingletonReady<Test_ShotFollowCamera>();
         yield return WaitForSingletonReady<EggManager>();
+        yield return WaitForSingletonReady<ShootingUIManager>();
 
         Debug.Log("모든 ShootingGameScene 매니저 Awake완료");
     }
@@ -43,6 +45,7 @@ public class ShootingSceneController : BaseGameSceneController
             PlayerInputManager.Instance,
             TurnManager.Instance,
             EggManager.Instance,
+            ShootingUIManager.Instance,
         };
 
         yield return StartCoroutine(InitializeComponentsSafely(sequentialComponents));

@@ -1,9 +1,15 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using UnityEngine;
 using DesignPattern;
+using LDH.LDH_Scripts.ShootingGame;
+using Managers;
 using Photon.Pun;
+using Photon.Realtime;
+using ShootingScene.ShootingGame;
 
 namespace ShootingScene
 {
@@ -13,15 +19,18 @@ namespace ShootingScene
         //public Transform eggSpawnPoint; 
         //public UnimoEgg currentUnimoEgg;
 
-        //private List<int> turnOrder = new List<int>();
-        private int currentTurnIndex = 0; 
-        private int currentRound = 1;    
-        private int totalRounds = 1;
+        private TurnOrder _turnOrder = new();
+        
+        public int currentTurnIndex = 0;
+        public int currentRoundIndex = 0;
+        private int totalRounds = 3;
 
         public bool IsTurnEnd;
         private Coroutine TurnCorutine;
 
         public event Action<UnimoEgg> OnTurnChanged;
+        public event Action<bool, int> OnSetCurrentTurn;
+
         protected override void OnAwake()
         {
             isPersistent = false;
@@ -32,69 +41,68 @@ namespace ShootingScene
             Debug.Log("[ShootingScene/TurnManager] - TurnManager 초기화 완료");
         }
 
-        //마스터 클라이언트만 호출하도록
-        public void SetupTurn()     //List<int> sorted;
+        #region Turn Linked List 관련 로직 - API
+
+        public void InitTurnOrder(int[] actorOrder)
         {
-            Debug.Log("[TurnManager] SetupTurn 호출됨");
-            if (!PhotonNetwork.IsMasterClient) return;
-
-
-            currentTurnIndex = 0;
-            currentRound = 1;
-
-            RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "GamePlayState");
+            _turnOrder.InitFromActorOrder(actorOrder);
         }
 
-        //테스트용 코드
-        public void TestSetupTurn()
+        public void MoveToNextTurn()
         {
-            Debug.Log("[TurnManager] TestSetupTurn 호출됨");
-
-            int idx = 1; // 1-based
-            foreach (var kv in ShootingGameManager.Instance.players)
-            {
-                kv.Value.myTurnIndex = idx++;
-            }
-
-            if (!PhotonNetwork.IsMasterClient) return;
-
-            currentTurnIndex = 1;
-            currentRound = 1;
-
-            RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "GamePlayState");
+            _turnOrder.MoveToNext();
         }
 
+        public GamePlayer GetCurrentTurnPlayer() => _turnOrder.Current;
+
+        #endregion
+  
         public void NextTurn()
         {
             if (!PhotonNetwork.IsMasterClient) return;
 
             // 현재 턴 알 비활성화
             EggManager.Instance.photonView.RPC("ClearCurrentEgg", RpcTarget.All);
-
-            currentTurnIndex++;
-            if (currentTurnIndex > PhotonNetwork.CurrentRoom.PlayerCount) // PhotonNetwork.CurrentRoom.PlayerCount 추후 변경
+            
+            //첫 시작인 경우 currentTurnIndex가 설정되어 있지 않음
+            //첫 시작인 경우 현재 가리키고 있는 노드부터 시작해야 함.
+            var nextNode = _turnOrder.NextNode;
+            Debug.Log($"next turn - next node는? {nextNode?.Value.ShootingData.myTurnIndex}");
+            if (nextNode == null)
             {
-                currentTurnIndex = 1; //1이 시작
-                currentRound++;
-                if (currentRound > totalRounds)
+                Debug.LogWarning("[TunManager] 다음 턴 대상이 없습니다.");
+                return;
+            }
+            currentTurnIndex = nextNode.Value.ShootingData.myTurnIndex;
+            
+            if (_turnOrder.IsFirstNode(nextNode)) // 한 라운드 완료를 체크하는 조건(다음 턴 대상자가 턴 리스트의 첫번째면, 한 라운드가 완료된 것)
+            {
+                currentRoundIndex++; //1부터 시작
+                if (currentRoundIndex > totalRounds)
                 {
                     Debug.Log("[TurnManager] - 마스터 클라이언트만 보임 / 게임 종료!");
                     // TODO : 게임종료처리가 아니라 우승자 정하는 게임 상태로 넘어감
-                    RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "CheckGameWinnderState");
+                    RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State,
+                        "CheckGameWinnderState");
                     return;
                 }
             }
+
             BroadcastCurrentTurn();
         }
 
         public void BroadcastCurrentTurn()
         {
-            /*
-            RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.Turn, this.currentTurnIndex);
-            RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.Round, this.currentRound);
-            */
-            // 마스터 클라이언트만 알 관리
-            photonView.RPC(nameof(RPC_SetCurrentTurn), RpcTarget.All, this.currentTurnIndex, this.currentRound);
+            var props = new Dictionary<string, object>
+            {
+                { ShootingGamePropertyKeys.Turn, this.currentTurnIndex },
+                { ShootingGamePropertyKeys.Round, this.currentRoundIndex }
+            };
+
+            RoomPropertyObserver.Instance.SetRoomProperties(props);
+
+            //보장이 될 수 있나?
+            //photonView.RPC(nameof(RPC_SetCurrentTurn), RpcTarget.All, this.currentTurnIndex, this.currentRoundIndex);
         }
 
         // 턴 인덱스로 플레이어 UID 찾기
@@ -107,62 +115,63 @@ namespace ShootingScene
                     return kv.Key;
                 }
             }
+
             return null;
         }
 
         public void StartFirstTurn()
         {
             if (!PhotonNetwork.IsMasterClient) return;
-            currentTurnIndex = 1;                 // 0번부터 시작
+            currentTurnIndex = 1; // 0번부터 시작
             BroadcastCurrentTurn();
         }
 
-        [PunRPC]
-        private void RPC_SetCurrentTurn(int turnIndex, int roundIndex)
+        //네트워크 콜백 되는 함수
+        public IEnumerator SetCurrentTurn()
         {
             string myUid = PMS_Util.PMS_Util.GetMyUid();
             if (string.IsNullOrEmpty(myUid))
             {
                 Debug.LogWarning("[TurnManager] - UID를 가져올 수 없습니다.");
-                return;
+                yield break;
             }
 
             GamePlayer myPlayer = PlayerManager.Instance.GetPlayer(myUid);
             if (myPlayer == null)
             {
                 Debug.LogWarning("[TurnManager] - Player 객체를 찾을 수 없습니다.");
-                return;
+                yield break;
             }
 
-            bool isMyTurn = (turnIndex == myPlayer.ShootingData.myTurnIndex);
+            bool isMyTurn = (currentTurnIndex == myPlayer.ShootingData.myTurnIndex);
 
-            Debug.Log($"[TurnManager] 현재 라운드 = {roundIndex}, 현재 턴 = {turnIndex}, 내턴인가? ={isMyTurn}");
+            //현재 턴이 설정되었다는 이벤트 알림
+            OnSetCurrentTurn?.Invoke(isMyTurn, currentTurnIndex);
+
+            Debug.Log($"[TurnManager] 현재 라운드 = {currentRoundIndex}, 현재 턴 = {currentTurnIndex}, 내턴인가? = {isMyTurn}");
 
             if (isMyTurn)
             {
                 Debug.Log("내 턴 입니다!");
-                //PlayerInputManager.Instance.EnableInput();
                 UnimoEgg newEgg = EggManager.Instance.SpawnEgg(myUid);
                 newEgg.ShooterUid = PMS_Util.PMS_Util.GetMyUid();
 
                 var localInput = newEgg.GetComponent<LocalPlayerInput>();
                 if (localInput != null)
                 {
-                    localInput.EnableInput(); // 활성화 시킴                   
+                    yield return ShootingUIManager.Instance.PlayMyTurnUI();
+
+                    localInput.EnableInput(); // 해당 유니모 Input 활성화 시킴
+                    //StartCoroutine(TurnRoutine(localInput));            //입력 코루틴 실행
                 }
             }
             else
             {
                 Debug.Log("상대방 턴 입니다");
-                //PlayerInputManager.Instance.DisableInput();
-                Debug.Log($"[TurnManager] - {myPlayer.ShootingData.myTurnIndex}");
             }
 
-            //턴 타이머 동기화
-            if (PhotonNetwork.IsMasterClient)
-            { 
-                StartTurnCorutine(10.0f);
-            }
+            //StartTurnCorutine(10.0f);
+            ShootingNetworkManager.Instance.SetTurnCoroutine = null;
         }
 
         public void StartTurnCorutine(float delay)
@@ -180,7 +189,6 @@ namespace ShootingScene
 
         public void EndTurn()
         {
-
         }
 
         /*private void SpawnEgg(string uid)
@@ -221,5 +229,54 @@ namespace ShootingScene
             }
         }
         */
+
+        // 마스터가 턴을 넘기는 부분
+        [PunRPC]
+        private void RequestTurnEnd(PhotonMessageInfo info)
+        {
+            // 요청 보낸 사람 디버깅
+            Debug.Log($"[TurnManager] - 턴 종료 요청 보낸 사람: {info.Sender.NickName}");
+
+            //if (!PhotonNetwork.IsMasterClient) return;
+
+            // 요청 보낸 사람의 플레이어 프로퍼티 값 가져오기
+            int targetIndex = (int)info.Sender.CustomProperties[ShootingGamePlayerPropertyKeys.MyTurnIndex];
+
+            // 실제 턴 주인인지 확인
+            if (TurnManager.Instance.currentTurnIndex == targetIndex)
+            {
+                Debug.Log($"[턴 종료 승인] {info.Sender.NickName}의 턴 종료 요청");
+                StartCoroutine(WaitForTurnDelay());
+            }
+            else
+            {
+                Debug.LogWarning($"[턴 종료 거절] {info.Sender.NickName}은 현재 턴이 아님");
+                Debug.Log(
+                    $"턴 불일치{targetIndex},{RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.Turn)}");
+            }
+        }
+
+        private IEnumerator WaitForTurnDelay(float delay = 2.0f)
+        {
+            yield return new WaitForSeconds(delay);
+            NextTurn();
+        }
+
+        #region PunCallback
+
+        public override void OnPlayerLeftRoom(Player otherPlayer)
+        {
+            if (otherPlayer.CustomProperties.TryGetValue("uid", out object value) && value is string uid &&
+                string.IsNullOrEmpty(uid))
+                _turnOrder.RemovePlayer(uid);
+            else
+            {
+                Debug.Log("[TurnManager] 플레이어의 uid 프로퍼티를 찾을 수 없습니다.");
+            }
+        }
+
+        #endregion
+        
+  
     }
 }
