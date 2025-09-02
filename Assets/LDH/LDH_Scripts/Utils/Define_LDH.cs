@@ -86,6 +86,19 @@ namespace LDH_Util
         }
         
         #endregion
+
+
+        #region Shooting Game
+
+        public enum WindDirection
+        {
+            North,
+            South,
+            West,
+            East,
+        }
+
+        #endregion
     }
 
 }

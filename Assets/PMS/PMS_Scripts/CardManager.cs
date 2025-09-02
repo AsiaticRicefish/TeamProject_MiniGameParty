@@ -324,6 +324,7 @@ public class CardManager : PunSingleton<CardManager>
         yield return WaitUntilNetworkTime(t0 + sec);
 
         photonView.RPC(nameof(RPC_CloseCardUI), RpcTarget.All); //UI 끄기
+        yield return null;
         photonView.RPC(nameof(RPC_OnTurnOrderReady), RpcTarget.AllBuffered, order); // 턴 order 알리기
     }
 
@@ -339,6 +340,8 @@ public class CardManager : PunSingleton<CardManager>
         foreach (var c in _cards) c.gameObject.SetActive(false);
         // 필요 시 카드 부모 패널도 끄기
         if (cardParent != null) cardParent.gameObject.SetActive(false);
+        
+        Debug.Log("카드 ui 숨기기");
     }
 
     #endregion

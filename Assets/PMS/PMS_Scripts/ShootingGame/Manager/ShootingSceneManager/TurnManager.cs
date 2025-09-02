@@ -22,6 +22,8 @@ namespace ShootingScene
         private Coroutine TurnCorutine;
 
         public event Action<UnimoEgg> OnTurnChanged;
+        public event Action<int> OnSetCurrentTurn;
+        
         protected override void OnAwake()
         {
             isPersistent = false;
@@ -119,6 +121,9 @@ namespace ShootingScene
             }
 
             bool isMyTurn = (currentTurnIndex == myPlayer.ShootingData.myTurnIndex);
+            
+            //현재 턴이 설정되었다는 이벤트 알림
+            OnSetCurrentTurn?.Invoke(currentTurnIndex);
 
             Debug.Log($"[TurnManager] 현재 라운드 = {currentRoundIndex}, 현재 턴 = {currentTurnIndex}, 내턴인가? = {isMyTurn}");
 
