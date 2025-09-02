@@ -197,7 +197,7 @@ namespace LDH_UI
         /// 전역 UI를 활성화합니다.
         /// 팝업일 경우 Stack에 Push합니다.
         /// </summary>
-        public async UniTask<T> ShowScreenUI<T>(T screen) where T : UI_Screen
+        public async UniTask<UI_Screen> ShowScreenUI(UI_Screen screen)
         {
             SetCanvas(screen.gameObject, Define_LDH.UILayer.Screen, sort: true);
             await screen.ShowAsync();

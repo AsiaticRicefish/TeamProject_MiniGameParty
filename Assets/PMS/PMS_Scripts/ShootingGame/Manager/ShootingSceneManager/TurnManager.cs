@@ -152,6 +152,7 @@ namespace ShootingScene
             }
 
             //StartTurnCorutine(10.0f);
+            ShootingNetworkManager.Instance.SetTurnCoroutine = null;
         }
 
         public void StartTurnCorutine(float delay)

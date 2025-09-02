@@ -14,14 +14,12 @@ namespace LDH_UI
 
         public void SetCurrentPlayerName(bool isMyTurn, int currentTurnIndex)
         {
-            
 
             if (isMyTurn)
-                Manager.UI.ShowScreenUI(this).Forget();
+                Manager.UI.CloseScreenUI(this).Forget();
 
             else
-                Manager.UI.CloseScreenUI(this).Forget();
-            
+                Manager.UI.ShowScreenUI(this).Forget();
         }
     }
     }

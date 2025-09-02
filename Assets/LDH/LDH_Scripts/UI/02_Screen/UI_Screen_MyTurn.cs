@@ -26,10 +26,15 @@ namespace LDH_UI
         [SerializeField] Ease easeType = Ease.OutCubic;
 
         private Sequence seq;
-        
 
+        public void ResetPosition()
+        {
+            target.anchoredPosition = leftRef.anchoredPosition;
+        }
+        
         protected override async UniTask OnShowAsync(CancellationToken ct)
         {
+            
             seq?.Kill();
             seq = DOTween.Sequence();
             seq.SetUpdate(true);
