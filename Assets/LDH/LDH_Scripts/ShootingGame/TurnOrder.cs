@@ -4,6 +4,7 @@ using ExitGames.Client.Photon;
 using Managers;
 using Photon.Pun;
 using Photon.Realtime;
+using UnityEngine;
 
 namespace LDH.LDH_Scripts.ShootingGame
 {
@@ -37,6 +38,10 @@ namespace LDH.LDH_Scripts.ShootingGame
             for (int i = 0; i < actorOrder.Length; i++)
             {
                 int currentActorNum = actorOrder[i];
+                
+                //현재 존재하는 플레이어인지 검증
+                if(PhotonNetwork.CurrentRoom.GetPlayer(currentActorNum) == null) continue;
+                
                 int turnIndex = Array.IndexOf(actorOrder, currentActorNum) + 1;
                 Player currentPlayer = PhotonNetwork.CurrentRoom.GetPlayer(currentActorNum);
                 string currentPlayerUID = currentPlayer.CustomProperties["uid"].ToString();
@@ -67,6 +72,7 @@ namespace LDH.LDH_Scripts.ShootingGame
             if (string.IsNullOrEmpty(uid)) return false;
             if (_dicByUid.TryGetValue(uid, out var node))
             {
+                Debug.Log("노드 삭제");
                 RemoveNode(node);
                 return true;
             }
@@ -75,7 +81,7 @@ namespace LDH.LDH_Scripts.ShootingGame
         private void RemoveNode(LinkedListNode<GamePlayer> node)
         {
             if (node == _current)
-                _current = node.Next ?? _list.First;
+                _current = node.Previous ?? _list.First;
             if (!string.IsNullOrEmpty(node.Value.PlayerId))
                 _dicByUid.Remove(node.Value.PlayerId);
 
