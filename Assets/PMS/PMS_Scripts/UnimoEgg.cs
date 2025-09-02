@@ -7,6 +7,7 @@ using ShootingScene;
 [RequireComponent(typeof(Rigidbody))]
 public class UnimoEgg : MonoBehaviourPun
 {
+    private bool turnEnded = false;
     public Rigidbody rb;
     public float stopSpeed = 0.01f; // 속도 기준
     //private Vector3 startdic;
@@ -94,7 +95,7 @@ public class UnimoEgg : MonoBehaviourPun
 
         // 상태 초기화
         ShooterUid = null;
-
+        turnEnded = false;
         // 카메라 팔로우 초기화
         //Test_ShotFollowCamera.Instance.StopFollow(gameObject);
     }
@@ -108,7 +109,7 @@ public class UnimoEgg : MonoBehaviourPun
         ApplyForce(dir);
         // 다른 클라이언트에도 RPC 전송
         photonView.RPC("RPC_Shot", RpcTarget.Others, dir);
-
+        Test_ShotFollowCamera.Instance.StartFollow(gameObject);
         // 발사 후 멈출 때까지 감시 시작
         //StartCoroutine(WaitForStop());
         // 발사 후 한 프레임 대기 후 감시 시작
@@ -125,9 +126,9 @@ public class UnimoEgg : MonoBehaviourPun
             yield return null;
 
         // 내가 던진 알일 때만 마스터에게 턴 종료 요청
-        if (photonView.IsMine)
+        if (photonView.IsMine && !turnEnded)
         {
-            Debug.Log("[UnimoEgg] 마스터에게 턴 종료 요청!");
+            turnEnded = true;
             TurnManager.Instance.photonView.RPC(("RequestTurnEnd"), RpcTarget.MasterClient);
         }
     }
@@ -149,12 +150,14 @@ public class UnimoEgg : MonoBehaviourPun
     //떨어졌을때
     private void OnTriggerExit(Collider other)
     {
-        if (!photonView.IsMine) return; // 내 알이 아니면 아무것도 안 함
+        if (!photonView.IsMine && !turnEnded) return; // 내 알이 아니면 아무것도 안 함
+
+        //모두가 비활성처리를 해줘야한다.
+        EggManager.Instance.photonView.RPC("RPC_DeactivateEgg", RpcTarget.All, photonView.ViewID);
 
         if (other.CompareTag("PlayGround"))
         {
             TurnManager.Instance.photonView.RPC(("RequestTurnEnd"), RpcTarget.MasterClient);
-            EggManager.Instance.photonView.RPC("RPC_DeactivateEgg", RpcTarget.All, photonView.ViewID);
         }
     }
 }

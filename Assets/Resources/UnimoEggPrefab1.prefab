@@ -541,7 +541,7 @@ GameObject:
   - component: {fileID: 1205335522521256558}
   - component: {fileID: -3147721912726117881}
   m_Layer: 20
-  m_Name: UnimoEggPrefab
+  m_Name: UnimoEggPrefab1
   m_TagString: UnimoEgg
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

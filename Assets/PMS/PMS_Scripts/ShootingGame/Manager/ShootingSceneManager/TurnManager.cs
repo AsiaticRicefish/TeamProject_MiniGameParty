@@ -217,7 +217,6 @@ namespace ShootingScene
             {
                 Debug.Log($"[턴 종료 승인] {info.Sender.NickName}의 턴 종료 요청");
                 StartCoroutine(WaitForTurnDelay());
-                Debug.Log($"{targetIndex}");
             }
             else
             {

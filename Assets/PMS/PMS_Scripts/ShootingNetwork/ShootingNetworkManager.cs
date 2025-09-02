@@ -114,7 +114,6 @@ namespace ShootingScene
                 TurnManager.Instance.currentRoundIndex = newRound;
 
                 TurnManager.Instance.SetCurrentTurn();
-                Debug.Log(newRound);
             });
         }
 

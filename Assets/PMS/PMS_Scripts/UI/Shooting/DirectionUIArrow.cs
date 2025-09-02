@@ -49,9 +49,7 @@ public class DirectionUIArrow : MonoBehaviourPun
 
         if (arrowTransform != null)
         {
-            arrowTransform.gameObject.SetActive(true);
             arrowTransform.localRotation = Quaternion.identity;
-            // arrowTransform.localPosition = Vector3.zero; // 필요 시
         }
     }
 

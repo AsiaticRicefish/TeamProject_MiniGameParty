@@ -10,40 +10,40 @@ namespace PMS_Util
 {
     public static class PMS_Util
     {
-        //ÇÑ¹æ¿¡ 100¸í¾¿ ÀÖ´Â ´ë±Ô¸ğ ¸ÖÆ¼°ÔÀÓÀÌ ¾Æ´Ï´Ï±ñ ±¦ÂúÁö ¾ÊÀ»±î? 
-        //¾Æ ±×³É bool°ª ÀÌ ¸î°³ÀÎÁö¸¸ ¸¶½ºÅÍ°¡ È®ÀÎÇÏ¸é µÇÁö ¾ÊÀ»±î, ÀÏÀÏÈ÷ È®ÀÎÇÏÁö ¾Ê°í
+        //í•œë°©ì— 100ëª…ì”© ìˆëŠ” ëŒ€ê·œëª¨ ë©€í‹°ê²Œì„ì´ ì•„ë‹ˆë‹ˆê¹ ê´œì°®ì§€ ì•Šì„ê¹Œ? 
+        //ì•„ ê·¸ëƒ¥ boolê°’ ì´ ëª‡ê°œì¸ì§€ë§Œ ë§ˆìŠ¤í„°ê°€ í™•ì¸í•˜ë©´ ë˜ì§€ ì•Šì„ê¹Œ, ì¼ì¼íˆ í™•ì¸í•˜ì§€ ì•Šê³ 
 
         /// <summary>
-        /// ¸ğµç ÇÃ·¹ÀÌ¾îÀÇ Æ¯Á¤ Bool ÇÁ·ÎÆÛÆ¼°¡ true°¡ µÉ ¶§±îÁö ´ë±â
+        /// ëª¨ë“  í”Œë ˆì´ì–´ì˜ íŠ¹ì • Bool í”„ë¡œí¼í‹°ê°€ trueê°€ ë  ë•Œê¹Œì§€ ëŒ€ê¸°
         /// </summary>
-        /// <param name="mono">ÄÚ·çÆ¾ ½ÇÇàÇÒ MonoBehaviour</param>                             -> À¯Æ¿ Å¬·¡½º°¡ MonoBehaviour Å¬·¡½º°¡ ¾Æ´Ï±â ¶§¹®¿¡ ¿ÜºÎ¿¡¼­ ¹Ş¾Æ¼­ ÄÚ·çÆ¾À» »ç¿ë
-        /// <param name="property">È®ÀÎÇÒ Property ÀÌ¸§/ÀÏ´Ü boolº¯¼ö¸¸ °¡´É </param>   
-        /// <param name="checkInterval">Ã¼Å© °£°İ (ÃÊ)</param>                                 -> ºÎ´ãÀÌ µÇ¸é ÀÌ°ÍÀ» Á¶±İ ¼öÁ¤
-        /// <param name="timeout">Å¸ÀÓ¾Æ¿ô (0ÀÌ¸é ¹«Á¦ÇÑ)</param>
-        /// <returns>¸ğµç ÇÃ·¹ÀÌ¾î°¡ true°¡ µÇ¸é true, Å¸ÀÓ¾Æ¿ô ½Ã false</returns>
+        /// <param name="mono">ì½”ë£¨í‹´ ì‹¤í–‰í•  MonoBehaviour</param>                             -> ìœ í‹¸ í´ë˜ìŠ¤ê°€ MonoBehaviour í´ë˜ìŠ¤ê°€ ì•„ë‹ˆê¸° ë•Œë¬¸ì— ì™¸ë¶€ì—ì„œ ë°›ì•„ì„œ ì½”ë£¨í‹´ì„ ì‚¬ìš©
+        /// <param name="property">í™•ì¸í•  Property ì´ë¦„/ì¼ë‹¨ boolë³€ìˆ˜ë§Œ ê°€ëŠ¥ </param>   
+        /// <param name="checkInterval">ì²´í¬ ê°„ê²© (ì´ˆ)</param>                                 -> ë¶€ë‹´ì´ ë˜ë©´ ì´ê²ƒì„ ì¡°ê¸ˆ ìˆ˜ì •
+        /// <param name="timeout">íƒ€ì„ì•„ì›ƒ (0ì´ë©´ ë¬´ì œí•œ)</param>
+        /// <returns>ëª¨ë“  í”Œë ˆì´ì–´ê°€ trueê°€ ë˜ë©´ true, íƒ€ì„ì•„ì›ƒ ì‹œ false</returns>
         public static IEnumerator WaitForAllPlayersPropertyTrue(MonoBehaviour mono, string property, float checkInterval = 0.1f, float timeout = 0f, Action onAllReady = null, Action onTimeout = null)
         {
             float elapsed = 0f;
 
             while (true)
             {
-                // ¸ğµç ÇÃ·¹ÀÌ¾î°¡ trueÀÎÁö È®ÀÎ
+                // ëª¨ë“  í”Œë ˆì´ì–´ê°€ trueì¸ì§€ í™•ì¸
                 bool allReady = CheckAllPlayerProperty(property);
 
                 if (allReady)
                 {
                     onAllReady?.Invoke();
-                    yield break; // ÁØºñ ¿Ï·á
+                    yield break; // ì¤€ë¹„ ì™„ë£Œ
                 }
 
-                // Å¸ÀÓ¾Æ¿ô Ã¼Å©
+                // íƒ€ì„ì•„ì›ƒ ì²´í¬
                 if (timeout > 0f)
                 {
                     elapsed += checkInterval;
                     if (elapsed >= timeout)
                     {
                         onTimeout?.Invoke();
-                        Debug.Log("[PMS_Util] - WaitForAllPlayersPropertyTrue ÇÔ¼ö ´ë±â½Ã°£ ÃÊ°ú");
+                        Debug.Log("[PMS_Util] - WaitForAllPlayersPropertyTrue í•¨ìˆ˜ ëŒ€ê¸°ì‹œê°„ ì´ˆê³¼");
                         yield break;
                     }
                 }
@@ -53,14 +53,14 @@ namespace PMS_Util
         }
 
         /// <summary>
-        /// Room¿¡¼­ °¢ ÇÃ·¹ÀÌ¾îµéÀÇ Bool type ÇÃ·¹ÀÌ¾î Property¸¦ È®ÀÎ ÇÒ ¼ö ÀÖ´Â ÇÔ¼ö 
+        /// Roomì—ì„œ ê° í”Œë ˆì´ì–´ë“¤ì˜ Bool type í”Œë ˆì´ì–´ Propertyë¥¼ í™•ì¸ í•  ìˆ˜ ìˆëŠ” í•¨ìˆ˜ 
         /// </summary>
         public static bool CheckAllPlayerProperty(string property)
         {
-            //¿¬°á ¾È µÊ or ¿¬°áµÆÁö¸¸ Room¿¡ Á¸ÀçÇÏÁö ¾ÊÀ½
+            //ì—°ê²° ì•ˆ ë¨ or ì—°ê²°ëì§€ë§Œ Roomì— ì¡´ì¬í•˜ì§€ ì•ŠìŒ
             if (!PhotonNetwork.IsConnected || (!PhotonNetwork.InRoom))
             {
-                Debug.Log("ÇöÀç ÇØ´ç Å¬¶óÀÌ¾ğÆ®´Â Ã¼Å©¸¦ È®ÀÎ ÇÒ ¼ö ¾ø´Â »óÅÂÀÔ´Ï´Ù.");
+                Debug.Log("í˜„ì¬ í•´ë‹¹ í´ë¼ì´ì–¸íŠ¸ëŠ” ì²´í¬ë¥¼ í™•ì¸ í•  ìˆ˜ ì—†ëŠ” ìƒíƒœì…ë‹ˆë‹¤.");
                 return false;
             }
 
@@ -68,28 +68,28 @@ namespace PMS_Util
             {
                 if (player.Value.CustomProperties.TryGetValue(property, out object value))
                 {
-                    //ÆĞÅÏ ¸ÅÄª
+                    //íŒ¨í„´ ë§¤ì¹­
                     if (value is bool b)
                     {
-                        if (!b) return false; // ÇÏ³ª¶óµµ false¸é ¹Ù·Î Á¾·á
+                        if (!b) return false; // í•˜ë‚˜ë¼ë„ falseë©´ ë°”ë¡œ ì¢…ë£Œ
                     }
                     else
                     {
-                        Debug.LogWarning($"ÇÃ·¹ÀÌ¾î {property}ÀÌ Bool Å¸ÀÔÀÌ ¾Æ´Õ´Ï´Ù.");
+                        Debug.LogWarning($"í”Œë ˆì´ì–´ {property}ì´ Bool íƒ€ì…ì´ ì•„ë‹™ë‹ˆë‹¤.");
                         return false;
                     }
                 }
                 else
                 {
-                    Debug.LogWarning($"ÇÃ·¹ÀÌ¾î ÇÁ·ÎÆÛÆ¼¿¡ {property}ÀÌ ¾ø½À´Ï´Ù.");
+                    Debug.LogWarning($"í”Œë ˆì´ì–´ í”„ë¡œí¼í‹°ì— {property}ì´ ì—†ìŠµë‹ˆë‹¤.");
                     return false;
                 }
             }
-            return true; // ¸ğµç ÇÃ·¹ÀÌ¾î true
+            return true; // ëª¨ë“  í”Œë ˆì´ì–´ true
         }
 
-        //¹ü¿ëÀû »ç¿ë - Á¦ÇÑ µÎÁö ¾ÊÀ½ ·Îºñ/·ë
-        //ÀÚ½ÅÀÇ ÇÃ·¹ÀÌ¾î ÇÁ·ÎÆÛÆ¼ º¯°æÇÏ´Â ÇÔ¼ö -> Myself
+        //ë²”ìš©ì  ì‚¬ìš© - ì œí•œ ë‘ì§€ ì•ŠìŒ ë¡œë¹„/ë£¸
+        //ìì‹ ì˜ í”Œë ˆì´ì–´ í”„ë¡œí¼í‹° ë³€ê²½í•˜ëŠ” í•¨ìˆ˜ -> Myself
         public static void SetPlayerProperty(string prop, object value)
         {
             ExitGames.Client.Photon.Hashtable props = new ExitGames.Client.Photon.Hashtable 
@@ -98,22 +98,22 @@ namespace PMS_Util
             };
             PhotonNetwork.LocalPlayer.SetCustomProperties(props);
 
-            Debug.Log($"[PMS_Util] ÇÃ·¹ÀÌ¾î {PhotonNetwork.LocalPlayer.NickName} ÇÁ·ÎÆÛÆ¼ '{prop}' = {value} ¼³Á¤ ¿Ï·á");
+            Debug.Log($"[PMS_Util] í”Œë ˆì´ì–´ {PhotonNetwork.LocalPlayer.NickName} í”„ë¡œí¼í‹° '{prop}' = {value} ì„¤ì • ì™„ë£Œ");
         }
 
         public static string TryGetUidFromActor(int actorNumber)
         {
-            //¿¬°á ¾È µÊ or ¿¬°áµÆÁö¸¸ Room¿¡ Á¸ÀçÇÏÁö ¾ÊÀ½
+            //ì—°ê²° ì•ˆ ë¨ or ì—°ê²°ëì§€ë§Œ Roomì— ì¡´ì¬í•˜ì§€ ì•ŠìŒ
             if (!PhotonNetwork.IsConnected || (!PhotonNetwork.InRoom))
             {
-                Debug.Log("ÇöÀç ÇØ´ç Å¬¶óÀÌ¾ğÆ®´Â Ã¼Å©¸¦ È®ÀÎ ÇÒ ¼ö ¾ø´Â »óÅÂÀÔ´Ï´Ù.");
+                Debug.Log("í˜„ì¬ í•´ë‹¹ í´ë¼ì´ì–¸íŠ¸ëŠ” ì²´í¬ë¥¼ í™•ì¸ í•  ìˆ˜ ì—†ëŠ” ìƒíƒœì…ë‹ˆë‹¤.");
                 return null;
             }
 
-            // ÇöÀç ¹æ¿¡ ÀÖ´Â ÇÃ·¹ÀÌ¾î Áß ActorNumber°¡ °°Àº ÇÃ·¹ÀÌ¾î¸¦ Ã£À½
-            var p = PhotonNetwork.PlayerList.FirstOrDefault(x => x.ActorNumber == actorNumber);                         //using System.Linq; Ãß°¡ ÇØ¾ß FirstOrDefault »ç¿ë°¡´É
+            // í˜„ì¬ ë°©ì— ìˆëŠ” í”Œë ˆì´ì–´ ì¤‘ ActorNumberê°€ ê°™ì€ í”Œë ˆì´ì–´ë¥¼ ì°¾ìŒ
+            var p = PhotonNetwork.PlayerList.FirstOrDefault(x => x.ActorNumber == actorNumber);                         //using System.Linq; ì¶”ê°€ í•´ì•¼ FirstOrDefault ì‚¬ìš©ê°€ëŠ¥
 
-            // Ã£Àº ÇÃ·¹ÀÌ¾îÀÇ CustomProperties¿¡¼­ "uid" Å° ²¨³»±â
+            // ì°¾ì€ í”Œë ˆì´ì–´ì˜ CustomPropertiesì—ì„œ "uid" í‚¤ êº¼ë‚´ê¸°
             if (p != null && p.CustomProperties != null && p.CustomProperties.TryGetValue("uid", out var uidObj))
             {
                 return uidObj as string;
@@ -123,21 +123,36 @@ namespace PMS_Util
 
         public static string GetMyUid()
         {
-            //¿¬°á ¾È µÊ or ¿¬°áµÆÁö¸¸ Room¿¡ Á¸ÀçÇÏÁö ¾ÊÀ½
+            //ì—°ê²° ì•ˆ ë¨ or ì—°ê²°ëì§€ë§Œ Roomì— ì¡´ì¬í•˜ì§€ ì•ŠìŒ
             if (!PhotonNetwork.IsConnected || (!PhotonNetwork.InRoom))
             {
-                Debug.Log("ÇöÀç ÇØ´ç Å¬¶óÀÌ¾ğÆ®´Â Ã¼Å©¸¦ È®ÀÎ ÇÒ ¼ö ¾ø´Â »óÅÂÀÔ´Ï´Ù.");
+                Debug.Log("í˜„ì¬ í•´ë‹¹ í´ë¼ì´ì–¸íŠ¸ëŠ” ì²´í¬ë¥¼ í™•ì¸ í•  ìˆ˜ ì—†ëŠ” ìƒíƒœì…ë‹ˆë‹¤.");
                 return null;
             }
             
             object uidObj = Photon.Pun.PhotonNetwork.LocalPlayer.CustomProperties["uid"];
             if (uidObj == null)
             {
-                Debug.LogError("[GetMyUid] UID¸¦ °¡Á®¿Ã ¼ö ¾ø½À´Ï´Ù!");
+                Debug.LogError("[GetMyUid] UIDë¥¼ ê°€ì ¸ì˜¬ ìˆ˜ ì—†ìŠµë‹ˆë‹¤!");
                 return null;
             }
 
             return uidObj.ToString();
+        }
+
+        public static Photon.Realtime.Player GetPhotonPlayerByGamePlayer(GamePlayer gamePlayer)
+        {
+            if (!PhotonNetwork.InRoom) return null;
+
+            foreach(var player in PhotonNetwork.CurrentRoom.Players)
+            {
+                if (player.Value.CustomProperties.ContainsKey("uid"))
+                {
+                    if (gamePlayer.PlayerId == (string)player.Value.CustomProperties["uid"])
+                        return player.Value;
+                }
+            }
+            return null;
         }
     }
 }

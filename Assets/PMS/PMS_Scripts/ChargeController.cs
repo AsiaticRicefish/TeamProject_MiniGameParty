@@ -32,6 +32,7 @@ public class ChargeController : MonoBehaviourPun
         isCharging = false;
         chargePower = 0f;
         pressStartTime = 0f;
+
         if (chargeSlider != null)
             chargeSlider.value = 0f;
     }
