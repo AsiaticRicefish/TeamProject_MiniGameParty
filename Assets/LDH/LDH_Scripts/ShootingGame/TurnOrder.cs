@@ -81,7 +81,7 @@ namespace LDH.LDH_Scripts.ShootingGame
         private void RemoveNode(LinkedListNode<GamePlayer> node)
         {
             if (node == _current)
-                _current = node.Previous ?? _list.First;
+                _current = node.Previous ?? _list.Last;
             if (!string.IsNullOrEmpty(node.Value.PlayerId))
                 _dicByUid.Remove(node.Value.PlayerId);
 
@@ -103,6 +103,16 @@ namespace LDH.LDH_Scripts.ShootingGame
         public bool IsCurrentFirstNode()
         {
             return IsFirstNode(_current);
+        }
+
+        public int GetPlayerTurnIndex(string uid)
+        {
+            if (_dicByUid.TryGetValue(uid, out var node))
+            {
+                return node.Value.ShootingData.myTurnIndex;
+            }
+
+            else return -1;
         }
     }
 }

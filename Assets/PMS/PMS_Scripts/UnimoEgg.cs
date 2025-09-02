@@ -152,6 +152,7 @@ public class UnimoEgg : MonoBehaviourPun
             isLaunched = false;
         }
     }
+    
 
     // 실제 힘 적용
     private void ApplyForce(Vector3 dir)
