@@ -5,6 +5,7 @@ using Firebase.Extensions;
 using Photon.Pun;
 using Photon.Realtime;
 using ExitGames.Client.Photon;
+using Managers;
 using UnityEngine;
 using UnityEngine.SceneManagement; // 필요시
 
@@ -103,6 +104,8 @@ namespace KYG.Auth
             //닉네임과 아이디만 설정해준다
             PhotonNetwork.NickName = nickname;
             PhotonNetwork.AuthValues = new AuthenticationValues(uid);
+            
+            Manager.Network.SetAuthReady();
 
             //---- 커스텀 프로퍼티는 로비 입장 후 설정되는 것으로 옮김 (공통적용을 위해)---- 0829(이도현)
             // var props = new Hashtable { { "uid", uid } };
@@ -113,11 +116,6 @@ namespace KYG.Auth
             {
                 PhotonNetwork.ConnectUsingSettings();
                 Debug.Log("[GuestLoginManager] Connecting to Photon...");
-            }
-            else
-            {
-                if (!PhotonNetwork.InLobby)
-                    PhotonNetwork.JoinLobby();
             }
         }
 
@@ -132,7 +130,7 @@ namespace KYG.Auth
                 return;
             }
             
-            PhotonNetwork.JoinLobby();
+         
         }
         
         // ----- NetworkManager로 기능 통합 ----- 0829(이도현)

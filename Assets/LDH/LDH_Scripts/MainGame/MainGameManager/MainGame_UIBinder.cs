@@ -16,6 +16,7 @@ namespace LDH_MainGame
         
         private UI_Popup_PrivateRoom _readyPanel;
         private UI_GameInfo _gameInfo;
+        private UI_Popup_QuitGame _quitPopup;
         
         // 생성자
         // 생성자
@@ -58,7 +59,7 @@ namespace LDH_MainGame
         
         public void UpdateReady(int mask) => _readyPanel?.UpdateReadyByMask(mask);
 
-        public void CloseReadyPanel()
+        public async UniTask CloseReadyPanel()
         {
             if (_readyPanel == null)
             {
@@ -68,10 +69,31 @@ namespace LDH_MainGame
             foreach (var panel in _readyPanel.PlayerPanels)
                 if (panel != null) panel.ReadyClicked -= _onClickReady;
 
-            UniTask.Void(async () => { await Manager.UI.ClosePopupUI(_readyPanel); });
+            await Manager.UI.ClosePopupUI(_readyPanel); // 패널 닫힐 때까지 기다리기
             _readyPanel = null; _gameInfo = null;
         }
 
+
+
+        #region 게임 강제 종료 팝업
+        public void ShowQuitPopup()
+        {
+            if (_quitPopup != null) return;
+            _quitPopup = Manager.UI.CreatePopupUI<UI_Popup_QuitGame>();
+            Manager.UI.ShowPopupUI(_quitPopup).Forget();
+        }
+
+        public void CloseQuitPopup()
+        {
+            if(_quitPopup == null) return;
+            Manager.UI.ClosePopupUI(_quitPopup).Forget();
+            _quitPopup = null;
+        }
+        
+
+        #endregion
+
+        
 
     }
 }
