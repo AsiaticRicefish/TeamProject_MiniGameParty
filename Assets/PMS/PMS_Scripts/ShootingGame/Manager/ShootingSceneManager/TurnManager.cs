@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using DesignPattern;
 using Photon.Pun;
+using ShootingScene.ShootingGame;
 
 namespace ShootingScene
 {
@@ -14,14 +15,16 @@ namespace ShootingScene
         //public UnimoEgg currentUnimoEgg;
 
         //private List<int> turnOrder = new List<int>();
-        public int currentTurnIndex = 0; 
-        public int currentRoundIndex = 0;    
+        public int currentTurnIndex = 0;
+        public int currentRoundIndex = 0;
         private int totalRounds = 3;
 
         public bool IsTurnEnd;
         private Coroutine TurnCorutine;
 
         public event Action<UnimoEgg> OnTurnChanged;
+        public event Action<bool, int> OnSetCurrentTurn;
+
         protected override void OnAwake()
         {
             isPersistent = false;
@@ -60,10 +63,12 @@ namespace ShootingScene
                 {
                     Debug.Log("[TurnManager] - 마스터 클라이언트만 보임 / 게임 종료!");
                     // TODO : 게임종료처리가 아니라 우승자 정하는 게임 상태로 넘어감
-                    RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "CheckGameWinnderState");
+                    RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State,
+                        "CheckGameWinnderState");
                     return;
                 }
             }
+
             BroadcastCurrentTurn();
         }
 
@@ -91,34 +96,38 @@ namespace ShootingScene
                     return kv.Key;
                 }
             }
+
             return null;
         }
 
         public void StartFirstTurn()
         {
             if (!PhotonNetwork.IsMasterClient) return;
-            currentTurnIndex = 1;                 // 0번부터 시작
+            currentTurnIndex = 1; // 0번부터 시작
             BroadcastCurrentTurn();
         }
 
         //네트워크 콜백 되는 함수
-        public void SetCurrentTurn()
+        public IEnumerator SetCurrentTurn()
         {
             string myUid = PMS_Util.PMS_Util.GetMyUid();
             if (string.IsNullOrEmpty(myUid))
             {
                 Debug.LogWarning("[TurnManager] - UID를 가져올 수 없습니다.");
-                return;
+                yield break;
             }
 
             GamePlayer myPlayer = PlayerManager.Instance.GetPlayer(myUid);
             if (myPlayer == null)
             {
                 Debug.LogWarning("[TurnManager] - Player 객체를 찾을 수 없습니다.");
-                return;
+                yield break;
             }
 
             bool isMyTurn = (currentTurnIndex == myPlayer.ShootingData.myTurnIndex);
+
+            //현재 턴이 설정되었다는 이벤트 알림
+            OnSetCurrentTurn?.Invoke(isMyTurn, currentTurnIndex);
 
             Debug.Log($"[TurnManager] 현재 라운드 = {currentRoundIndex}, 현재 턴 = {currentTurnIndex}, 내턴인가? = {isMyTurn}");
 
@@ -131,7 +140,9 @@ namespace ShootingScene
                 var localInput = newEgg.GetComponent<LocalPlayerInput>();
                 if (localInput != null)
                 {
-                    localInput.EnableInput();                           // 해당 유니모 Input 활성화 시킴
+                    yield return ShootingUIManager.Instance.PlayMyTurnUI();
+
+                    localInput.EnableInput(); // 해당 유니모 Input 활성화 시킴
                     //StartCoroutine(TurnRoutine(localInput));            //입력 코루틴 실행
                 }
             }
@@ -141,6 +152,7 @@ namespace ShootingScene
             }
 
             //StartTurnCorutine(10.0f);
+            ShootingNetworkManager.Instance.SetTurnCoroutine = null;
         }
 
         public void StartTurnCorutine(float delay)
@@ -158,7 +170,6 @@ namespace ShootingScene
 
         public void EndTurn()
         {
-
         }
 
         /*private void SpawnEgg(string uid)
@@ -211,7 +222,7 @@ namespace ShootingScene
 
             // 요청 보낸 사람의 플레이어 프로퍼티 값 가져오기
             int targetIndex = (int)info.Sender.CustomProperties[ShootingGamePlayerPropertyKeys.MyTurnIndex];
-       
+
             // 실제 턴 주인인지 확인
             if (TurnManager.Instance.currentTurnIndex == targetIndex)
             {
@@ -221,13 +232,14 @@ namespace ShootingScene
             else
             {
                 Debug.LogWarning($"[턴 종료 거절] {info.Sender.NickName}은 현재 턴이 아님");
-                Debug.Log($"턴 불일치{targetIndex},{RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.Turn)}");
+                Debug.Log(
+                    $"턴 불일치{targetIndex},{RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.Turn)}");
             }
         }
 
         private IEnumerator WaitForTurnDelay(float delay = 2.0f)
         {
-            yield return new WaitForSeconds(delay); 
+            yield return new WaitForSeconds(delay);
             NextTurn();
         }
     }

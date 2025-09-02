@@ -7,6 +7,7 @@ using Photon.Pun;
 //using Photon.Realtime;
 using ShootingScene;
 using Photon.Realtime;
+using ShootingScene.ShootingGame;
 
 public class LocalPlayerInput : MonoBehaviourPun
 {
@@ -188,6 +189,8 @@ public class LocalPlayerInput : MonoBehaviourPun
     {
         if (currentTimeoutCoroutine != null)
         {
+            //타이머 정지를 모두에게 알리기
+            NotifyStopCountdown();
             StopCoroutine(currentTimeoutCoroutine);
             currentTimeoutCoroutine = null;
         }
@@ -204,6 +207,9 @@ public class LocalPlayerInput : MonoBehaviourPun
 
     private IEnumerator StepTimeout(float seconds)
     {
+        //타이머 시작을 모두에게 알리기
+        NotifyStartCountdown(seconds);
+        
         yield return new WaitForSeconds(seconds);
         Debug.Log($"Step {currentStep}: 시간 초과, 자동 진행");
         CompleteCurrentStep();
@@ -524,4 +530,37 @@ public class LocalPlayerInput : MonoBehaviourPun
         screenPos = default;        //0,0 기존값을 리턴하기는 한테 입력이 없을리가 없으니깐
         return false; // 입력 없음
     }
+
+
+    #region CountDown 싱크 로직
+
+    public void NotifyStartCountdown(float durationSec)
+    {
+        double now = PhotonNetwork.Time;
+        double lead = 0.3f;
+        double startAt = now + lead;
+        double endAt = startAt + durationSec;
+        
+        photonView.RPC(nameof(RPC_StartCountDown), RpcTarget.All, startAt, endAt);
+    }
+    
+    public void NotifyStopCountdown()
+    {
+        photonView.RPC(nameof(RPC_StopCountDown), RpcTarget.All);
+    }
+
+    [PunRPC]
+    private void RPC_StartCountDown(double startAt, double endAt)
+    {
+        Debug.Log("StartCountDown RPC 호출");
+        ShootingUIManager.Instance.StartCountDown(startAt, endAt);
+    }
+    
+    [PunRPC]
+    private void RPC_StopCountDown()
+    {
+        Debug.Log("StopCountDown RPC 호출");
+        ShootingUIManager.Instance.StopCountDown();
+    }
+    #endregion
 }

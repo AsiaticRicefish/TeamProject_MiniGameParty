@@ -13,6 +13,17 @@ namespace ShootingScene
         private string turnObserverId;
         private string SceneChangeObserverId;
 
+        private Coroutine _setTurnCoroutine;
+
+        public Coroutine SetTurnCoroutine
+        {
+            get => _setTurnCoroutine;
+            set
+            {
+                _setTurnCoroutine = value;
+            }
+        }
+
         protected override void OnAwake()
         {
             base.isPersistent = false;
@@ -113,7 +124,12 @@ namespace ShootingScene
                 int newRound = (int)RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.Round);
                 TurnManager.Instance.currentRoundIndex = newRound;
 
-                TurnManager.Instance.SetCurrentTurn();
+                if (_setTurnCoroutine != null)
+                {
+                    StopCoroutine(_setTurnCoroutine);
+                    _setTurnCoroutine = null;
+                }
+                StartCoroutine(TurnManager.Instance.SetCurrentTurn());
             });
         }
 
