@@ -138,6 +138,7 @@ public class LocalPlayerInput : MonoBehaviourPun
             Debug.Log("Step 3: 차징 시작");
             if (charger != null && photonView.IsMine) {
                 charger.chargeSlider.gameObject.SetActive(true);
+                charger.StartCharge();
             }
             inputEnabled = true;
         };
@@ -152,12 +153,13 @@ public class LocalPlayerInput : MonoBehaviourPun
                 arrow.gameObject.SetActive(false);
             }
 
+            unimo.Shot(arrow.CurrentDir * charger.ChargePower);
+
             if (charger != null && photonView.IsMine)
             {
                 charger.chargeSlider.gameObject.SetActive(false);
+                charger.StopCharge();
             }
-
-            unimo.Shot(arrow.CurrentDir * charger.ChargePower);
 
             FinishAllSteps();
         };

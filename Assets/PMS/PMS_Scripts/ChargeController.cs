@@ -16,15 +16,15 @@ public class ChargeController : MonoBehaviourPun
 
     public float ChargePower => chargePower;
 
-    private void OnEnable()
-    {
-        StartCharge(); // 활성화될 때 차징 시작
-    }
+    //private void OnEnable()
+    //{
+    //    StartCharge(); // 활성화될 때 차징 시작
+    //}
 
-    private void OnDisable()
-    {
-        StopCharge();  // 비활성화될 때 차징 초기화
-    }
+    //private void OnDisable()
+    //{
+    //    StopCharge();  // 비활성화될 때 차징 초기화
+    //}
 
     public void Initialize()
     {
@@ -61,7 +61,6 @@ public class ChargeController : MonoBehaviourPun
         chargePower = 0f;
         pressStartTime = Time.time;
 
-        Debug.Log(Time.time - pressStartTime);
         if (chargeSlider != null) chargeSlider.value = 0f;
     }
 
