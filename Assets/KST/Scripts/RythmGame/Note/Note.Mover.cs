@@ -20,7 +20,8 @@ namespace RhythmGame
             transform.Translate(-_moveDir * (_speed * Time.deltaTime), Space.World);
 
             if ((transform.position - _spawnPos).sqrMagnitude >= _moveDist * _moveDist)
-                _pooled.ReturnPool();
+                ReturnPool();
+                // _pooled.ReturnPool();
         }
 
         /// <summary>

@@ -1,5 +1,6 @@
 using UnityEngine;
 using DesignPattern;
+using System;
 
 namespace RhythmGame
 {
@@ -7,7 +8,20 @@ namespace RhythmGame
     {
         private PooledObject _pooled;
 
+        public event Action<Note> OnDespawn;
+
         void Awake() => _pooled = GetComponent<PooledObject>();
-        public void ReturnPool() => _pooled.ReturnPool();
+        public void ReturnPool()
+        {
+            Status = NoteStatus.None;
+            OnDespawn?.Invoke(this);
+            _pooled.ReturnPool();
+
+        } 
+
+        void OnDisable()
+        {
+            OnDespawn?.Invoke(this);
+        }
     }
 }

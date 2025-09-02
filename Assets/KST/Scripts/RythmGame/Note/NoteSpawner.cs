@@ -113,7 +113,10 @@ namespace RhythmGame
             if (_activeById.TryGetValue(noteId, out var inst))
             {
                 _activeById.Remove(noteId);
-                inst.ReturnPool();
+                if(inst.TryGetComponent(out Note mover))
+                {
+                    mover.ReturnPool();
+                }
             }
         }
 
