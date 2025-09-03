@@ -1,22 +1,22 @@
 using System;
 using DesignPattern;
 using Photon.Pun;
-using TMPro;
 using UnityEngine;
 
 namespace RhythmGame
 {
     public class ScoreManager : PunSingleton<ScoreManager>
     {
+        //점수
         int _score; //개인 별 점수
-        [SerializeField] TMP_Text scoreText;
         int _heatScore; //과열 점수
-        [SerializeField] TMP_Text _heatscoreText;
+        public int Score => _score;
+        public int HeatScore => _heatScore;
 
+        //이벤트
         public event Action<int> OnScoreChanged;
         public event Action<int> OnOverHeatScoreChanaged;
         public event Action OnHeatScoreOver;
-
 
         /// <summary>
         /// 점수 추가 로직
@@ -29,9 +29,6 @@ namespace RhythmGame
             _score += amount;
             Debug.Log($" 점수 획득 {amount}");
             OnScoreChanged?.Invoke(_score);
-
-            //텍스트 임시
-            scoreText.text = $"{_score}";
         }
 
         /// <summary>
@@ -46,8 +43,6 @@ namespace RhythmGame
             Debug.Log($" 점수 차감 {amount}");
             if (_score < 0) _score = 0;
             OnScoreChanged?.Invoke(_score);
-            //텍스트 임시
-            scoreText.text = $"{_score}";
         }
 
         #region RPC
@@ -85,8 +80,6 @@ namespace RhythmGame
             _heatScore = Mathf.Max(0, value);
             OnOverHeatScoreChanaged?.Invoke(_heatScore);
             Debug.Log($"과열 점수 : {_heatScore}");
-            //텍스트 임시
-            _heatscoreText.text = $"{_heatScore}";
         }
 
         // /// <summary>
