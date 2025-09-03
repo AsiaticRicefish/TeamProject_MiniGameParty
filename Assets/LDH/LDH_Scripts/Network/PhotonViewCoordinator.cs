@@ -34,18 +34,22 @@ namespace LDH.LDH_Scripts.Network
 
         public IEnumerator Start()
         {
-            Debug.Log("===== 포톤 뷰 조정 ========");
+            Debug.Log("===== PhotonViewCoordinator : Start Photon View Id Coordination ========");
             yield return new WaitUntil(() => LDH_MainGame.PhotonViewSync.Instance != null);
             // 씬 내 PV가 모두 생성/등록된 뒤 바인딩 시작
             yield return LDH_MainGame.PhotonViewSync.Instance.StartCoroutine(
-                LDH_MainGame.PhotonViewSync.Instance.SyncSceneViewsAndActivate()
+                LDH_MainGame.PhotonViewSync.Instance.SafePhotonViewSync()
             );
+            
+            Debug.Log("======= Complete Coordination =====");
+            
+            ActiveObjects();
         }
 
         public PhotonView[] GetSceneViews() => sceneViews;
 
        
-        public void ApplyIdsAndActivate(int[] ids)
+        public void ApplyIds(int[] ids)
         {
             int n = Mathf.Min(sceneViews.Length, ids.Length);
             for (int i = 0; i < n; i++)
@@ -54,9 +58,13 @@ namespace LDH.LDH_Scripts.Network
                 if ( pv.ViewID != ids[i])
                     pv.ViewID = ids[i];
             }
-            foreach (var r in roots) if (r) r.SetActive(true);
-
             _isComplete = true;
+        }
+
+        public void ActiveObjects()
+        {
+            Debug.Log("[PhotonViewCoordinator] Active Target Objects");
+            foreach (var r in roots) if (r) r.SetActive(true);
         }
     }
 }

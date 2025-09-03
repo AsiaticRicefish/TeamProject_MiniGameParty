@@ -102,8 +102,12 @@ namespace LDH_MainGame
                 yield break;
             }
 
+            //UI 비활성화
             _uiBinder.SetActiveDebugUI(false);
             yield return _uiBinder.CloseReadyPanel().ToCoroutine();
+            
+            //photon view sync 변수 초기화
+            PhotonViewSync.Instance.Clear();
             
             // Additive Load
             yield return MainGameManager.Instance.Loader.LoadAdditive(_sceneName(_currentMini), null);

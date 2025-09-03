@@ -425,6 +425,7 @@ MonoBehaviour:
   roomObjectPaths:
   - Net/MainGameManager
   - Net/MainMapManager
+  - Net/PhotonViewSyncManager
   initializeObjects: []
 --- !u!114 &1215810001
 MonoBehaviour:
