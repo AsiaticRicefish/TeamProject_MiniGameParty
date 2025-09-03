@@ -69,6 +69,7 @@ namespace ShootingScene
   
         public void NextTurn()
         {
+            Debug.Log("NextTurn 호출");
             if (!PhotonNetwork.IsMasterClient) return;
 
             // 현재 턴 알 비활성화
@@ -271,6 +272,7 @@ namespace ShootingScene
         {
             Debug.Log("[TurnManager]  WaitForTurnDelay 호출");
             yield return new WaitForSeconds(delay);
+            Debug.Log("2초가 지났습니다.");
             NextTurn();
         }
 

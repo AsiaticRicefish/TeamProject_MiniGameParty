@@ -63,8 +63,6 @@ namespace LDH_MainGame
             Debug.Log($"[PhotonViewSync] Step 3 : WaitUntilAllPlayerCompleted");
             yield return StartCoroutine(WaitUntilAllPlayerCompleted());
 
-            Debug.Log($"[PhotonViewSync] Step 3 : WaitUntilAllPlayerCompleted");
-
             Debug.Log($"=== SafePhotonViewSync Completed ===");
 
             _coordinator = null;
@@ -77,7 +75,7 @@ namespace LDH_MainGame
         private IEnumerator SyncSceneViews(PhotonViewCoordinator coordinator)
         {
             // 씬이 올라와 Coordinator가 준비될 때까지 대기
-            yield return new WaitUntil(() => coordinator != null);
+            yield return WaitUntilMyCoordinateDone();
 
             var sceneViews = coordinator.GetSceneViews();
 
@@ -94,11 +92,11 @@ namespace LDH_MainGame
 
                     // 남아있던 값 초기화(안전)
                     if (pv.ViewID != 0) pv.ViewID = 0;
-
-                    if (!PhotonNetwork.AllocateViewID(pv))
-                        Debug.LogError($"AllocateViewID failed: {pv?.name}");
-
-                    ids[i] = pv.ViewID;
+                    int id = PhotonNetwork.AllocateViewID(0); // ⬅ Owner=0 (씬/룸 소유)
+                    // if (!PhotonNetwork.AllocateViewID(0))
+                    //     Debug.LogError($"AllocateViewID failed: {pv?.name}");
+                    pv.ViewID = id;
+                    ids[i] = id;
                 }
 
                 // 1) 마스터는 로컬 적용 + 활성화
@@ -111,6 +109,30 @@ namespace LDH_MainGame
 
             yield return null;
             PhotonNetwork.IsMessageQueueRunning = prev;
+        }
+        
+        
+        private IEnumerator WaitUntilMyCoordinateDone()
+        {
+            Debug.Log("[PhotonViewSync] Wait until my coordinate done ");
+
+            while (!PhotonNetwork.IsConnected || !PhotonNetwork.InRoom || PhotonNetwork.CurrentRoom == null)
+                yield return null;
+
+            float timer = 0f;
+            while (_coordinator.IsComplete)
+            {
+                timer += Time.deltaTime;
+                if (timer > timeout)
+                {
+                    Debug.LogError($"[PhotonViewSync] !!!! WaitUntilAllPlayerCompleted Time Out!!!!");
+                    yield break;
+                }
+
+                yield return null;
+            }
+
+            Debug.Log($"[PhotonViewSync] My coordinate done!");
         }
 
 
