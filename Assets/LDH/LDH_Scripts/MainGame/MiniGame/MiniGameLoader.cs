@@ -8,14 +8,14 @@ using UnityEngine.SceneManagement;
 
 namespace LDH_MainGame
 {
-    public static class MiniGameLoader
+    public class MiniGameLoader : MonoBehaviour
     {
         private static Scene _loadedMiniScene;
         private static bool _hasMiniScene;
         private static List<Behaviour> _disabledOnMain = new(); // Camera, AudioListener, EventSystemBase 등
             
         
-        public static IEnumerator LoadAdditive(string sceneName, Action onReady)
+        public IEnumerator LoadAdditive(string sceneName, Action onReady)
         {
             // 메인 씬 컴포넌트 중 비활성화 할 컴포넌트 처리
             var mainScene = SceneManager.GetActiveScene();
@@ -31,9 +31,9 @@ namespace LDH_MainGame
             _loadedMiniScene = SceneManager.GetSceneByName(sceneName);
             _hasMiniScene = _loadedMiniScene.IsValid();
 
-            Disable<Camera>(mainScene);
-            Disable<AudioListener>(mainScene);
-            Disable<EventSystem>(mainScene); 
+            yield return StartCoroutine(Disable<Camera>(mainScene));
+            yield return StartCoroutine(Disable<AudioListener>(mainScene));
+            yield return StartCoroutine(Disable<EventSystem>(mainScene)); 
             
             if (_hasMiniScene)
             {
@@ -46,7 +46,7 @@ namespace LDH_MainGame
             onReady?.Invoke();
         }
         
-        public static IEnumerator UnloadAdditive()
+        public IEnumerator UnloadAdditive()
         {
             if (!_hasMiniScene) yield break;
             
@@ -66,7 +66,7 @@ namespace LDH_MainGame
             
         }
 
-        private static void Disable<T>(Scene scene) where T : Behaviour
+        private IEnumerator Disable<T>(Scene scene) where T : Behaviour
         {
             foreach (var go in scene.GetRootGameObjects())
             {
@@ -79,13 +79,15 @@ namespace LDH_MainGame
                     }
                 }
             }
+
+            yield return null;
         }
-        private static void Enable<T>(Scene scene) where T : Behaviour
-        {
-            foreach (var go in scene.GetRootGameObjects())
-            foreach (var c in go.GetComponentsInChildren<T>(true))
-                c.enabled = true;
-        }
+        // private static void Enable<T>(Scene scene) where T : Behaviour
+        // {
+        //     foreach (var go in scene.GetRootGameObjects())
+        //     foreach (var c in go.GetComponentsInChildren<T>(true))
+        //         c.enabled = true;
+        // }
         
     }
     

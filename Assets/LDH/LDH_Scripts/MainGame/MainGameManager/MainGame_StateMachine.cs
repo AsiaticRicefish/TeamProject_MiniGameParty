@@ -105,7 +105,7 @@ namespace LDH_MainGame
             yield return _uiBinder.CloseReadyPanel().ToCoroutine();
             
             // Additive Load
-            yield return MiniGameLoader.LoadAdditive(_sceneName(_currentMini), null);
+            yield return MainGameManager.Instance.Loader.LoadAdditive(_sceneName(_currentMini), null);
           
             if (_isMaster())
                 _pc.SetRoomProps(RoomProps.State, MainState.PlayingMiniGame.ToString());
@@ -122,7 +122,7 @@ namespace LDH_MainGame
 
         public IEnumerator Co_ApplyingResult()
         {
-            yield return MiniGameLoader.UnloadAdditive();
+            yield return MainGameManager.Instance.Loader.UnloadAdditive();
 
             // 각자 자기 Done = true
             MainGame_PropertiesController.SetLocalDone(true);
