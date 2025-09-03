@@ -18,6 +18,8 @@ namespace LDH_MainGame
 
         private HashSet<int> completedPlayers = new();
 
+        private PhotonViewCoordinator _coordinator;
+
         protected override void OnAwake()
         {
             base.OnAwake();
@@ -39,17 +41,19 @@ namespace LDH_MainGame
         /// 포톤 뷰 재할당 및 전체 싱크 맞추는 총괄 메서드
         /// </summary>
         /// <returns></returns>
-        public IEnumerator SafePhotonViewSync()
+        public IEnumerator SafePhotonViewSync(PhotonViewCoordinator coordinator)
         {
+            _coordinator = coordinator;
+            
             Debug.Log($"=== SafePhotonViewSync START ===");
             // 1단계 : 포톤뷰 조정이 필요하면 포톤뷰 조정 처리
             Debug.Log($"[PhotonViewSync] Step 1 : Coordinate PhotonView");
-            yield return StartCoroutine(SyncSceneViews());
+            yield return StartCoroutine(SyncSceneViews(coordinator));
 
             // 2단계 : 내 포톤뷰 조정이 완료됐다고 알림
             Debug.Log($"[PhotonViewSync] Step 2 : Notify complete photon view coordination on local");
             // 2-1 : 포톤뷰 아이디 조정이 완료되었는지 다시 체크
-            yield return new WaitUntil(() => PhotonViewCoordinator.Instance.IsComplete);
+            yield return new WaitUntil(() => coordinator.IsComplete);
             // 2-2 : 조정 완료를 알리기
             photonView.RPC(nameof(RPC_CompletePhotonViewCoordination), RpcTarget.All,
                 PhotonNetwork.LocalPlayer.ActorNumber);
@@ -62,18 +66,20 @@ namespace LDH_MainGame
             Debug.Log($"[PhotonViewSync] Step 3 : WaitUntilAllPlayerCompleted");
 
             Debug.Log($"=== SafePhotonViewSync Completed ===");
+
+            _coordinator = null;
         }
 
 
         /// <summary>
         /// 마스터가 포톤뷰 아이디 재할당 및 싱크
         /// </summary>
-        private IEnumerator SyncSceneViews()
+        private IEnumerator SyncSceneViews(PhotonViewCoordinator coordinator)
         {
             // 씬이 올라와 Coordinator가 준비될 때까지 대기
-            yield return new WaitUntil(() => PhotonViewCoordinator.Instance != null);
+            yield return new WaitUntil(() => coordinator != null);
 
-            var sceneViews = PhotonViewCoordinator.Instance.GetSceneViews();
+            var sceneViews = coordinator.GetSceneViews();
 
             bool prev = PhotonNetwork.IsMessageQueueRunning;
             PhotonNetwork.IsMessageQueueRunning = false;
@@ -96,7 +102,7 @@ namespace LDH_MainGame
                 }
 
                 // 1) 마스터는 로컬 적용 + 활성화
-                PhotonViewCoordinator.Instance.ApplyIds(ids);
+                coordinator.ApplyIds(ids);
 
                 // 2) 다른 클라에 전파 (Buffered: 늦게 입장해도 적용)
                 photonView.RPC(nameof(Rpc_AssignSceneViewIDs), RpcTarget.OthersBuffered, ids);
@@ -140,7 +146,7 @@ namespace LDH_MainGame
         public void Rpc_AssignSceneViewIDs(int[] ids)
         {
             Debug.Log("Rpc_AssignSceneViewIDs 호출");
-            PhotonViewCoordinator.Instance?.ApplyIds(ids);
+            _coordinator?.ApplyIds(ids);
         }
 
         [PunRPC]
@@ -149,7 +155,7 @@ namespace LDH_MainGame
             completedPlayers.Add(playerActorNumber);
             Debug.Log(
                 $"Player ActorNumber({playerActorNumber}), NickName ({PhotonNetwork.CurrentRoom.GetPlayer(playerActorNumber).NickName}) Complete photon view coordination ({completedPlayers.Count}/{PhotonNetwork.CurrentRoom.PlayerCount})");
-       
+            
         }
 
         #endregion
