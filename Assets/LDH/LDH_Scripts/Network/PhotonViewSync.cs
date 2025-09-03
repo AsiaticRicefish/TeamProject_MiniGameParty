@@ -20,7 +20,6 @@ namespace LDH_MainGame
 
         protected override void OnAwake()
         {
-            isPersistent = false;
             base.OnAwake();
         }
 

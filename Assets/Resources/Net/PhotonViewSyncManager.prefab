@@ -45,7 +45,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7379d8afc7b746e4bfbac58e60ceeba7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isPersistent: 0
+  isPersistent: 1
   timeout: 30
 --- !u!114 &6438928640293213941
 MonoBehaviour:
