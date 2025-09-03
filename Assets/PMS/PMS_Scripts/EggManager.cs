@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
 using DesignPattern;
+using Photon.Realtime;
 
 public class EggManager : PunSingleton<EggManager>, IGameComponent
 {
@@ -109,7 +110,7 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
     [PunRPC]
     private void RPC_SetupPlayerPool(string uid, int[] viewIDs)
     {
-        //애도 리스트 생성
+        //애도 딕셔너리 생성
         if (!playerEggPools.ContainsKey(uid))
             playerEggPools[uid] = new List<UnimoEgg>();
 
@@ -262,5 +263,44 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
                 }
             }
         }
+    }
+
+    //나간 유저의 otherPlayer를 가지고 UID를 찾아야한다.
+    public override void OnPlayerLeftRoom(Player otherPlayer)
+    {
+        if(otherPlayer.CustomProperties.TryGetValue("uid", out object uidObj) && uidObj is string targetUid)
+        {
+            Debug.Log($"[EggManager] - 플레이어 퇴장: UID = {targetUid}");
+         
+            //플레이어 가져온 uid를 가지고 일단 삭제 처리
+            foreach(var eggList in playerEggPools)
+            {
+                if(eggList.Key == targetUid)
+                {
+                    foreach(var egg in eggList.Value)
+                    {
+                        if (egg != null)
+                        {
+                            // viewIdToEgg에서도 제거
+                            if (viewIdToEgg.ContainsKey(egg.photonView.ViewID))
+                            {
+                                viewIdToEgg.Remove(egg.photonView.ViewID);
+                            }
+                            PhotonNetwork.Destroy(egg.gameObject);
+                        }
+                    }
+                }
+                // 풀에서도 제거
+                playerEggPools.Remove(targetUid);
+                break;
+            }
+        }
+        else
+        {
+            Debug.Log($"[EggManager] - 정리 작업 실패");
+        }
+
+        //string targetUid = (string)otherPlayer.CustomProperties["uid"];
+        //PMS_Util.PMS_Util.GetPhotonPlayerByGamePlayer //otherPlayer
     }
 }
