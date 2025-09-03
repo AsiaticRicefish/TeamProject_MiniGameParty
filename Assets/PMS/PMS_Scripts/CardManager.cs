@@ -74,7 +74,8 @@ public class CardManager : PunSingleton<CardManager>
         _deckValues = Enumerable.Range(1, playerCount).ToArray();
 
         // 안정적 재현을 위해 시드 생성(방 생성 시간 기반)
-        int seed = (int)(PhotonNetwork.CurrentRoom.CreatedAt / 1000 % int.MaxValue);
+        // int seed = (int)(PhotonNetwork.CurrentRoom.CreatedAt / 1000 % int.MaxValue);
+        int seed = Guid.NewGuid().GetHashCode() ^ PhotonNetwork.ServerTimestamp;
         ShuffleInPlace(_deckValues, new Random(seed));
 
         _owners = Enumerable.Repeat(-1, _deckValues.Length).ToArray();
@@ -84,6 +85,7 @@ public class CardManager : PunSingleton<CardManager>
             { KEY_DECK_VALUES, _deckValues }, { KEY_CARD_OWNERS, _owners }, { KEY_STATE, (byte)LobbyState.Picking }
         };
         PhotonNetwork.CurrentRoom.SetCustomProperties(props);
+        Debug.Log($"[CardManager] Deck after shuffle: {string.Join(",", _deckValues)} (seed={seed})");
 
         BuildCardUIs();
     }
