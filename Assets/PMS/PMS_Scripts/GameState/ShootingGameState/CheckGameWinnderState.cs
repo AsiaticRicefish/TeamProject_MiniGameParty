@@ -10,9 +10,11 @@ public class CheckGameWinnderState : ShootingGameState
         Debug.Log("[CheckGameWinnderState] - CheckGameWinnderState Enter");
         Debug.Log($"[CheckGameWinnderState] - 내 FireBaseUID {PMS_Util.PMS_Util.GetMyUid()}");
         if (PhotonNetwork.IsMasterClient)
-        {
+        {       
             ShootingGameManager.Instance.CheckGameWinner();
-        }
+            EggManager.Instance.ReturnAllEggOwnership();
+            EggManager.Instance.OnRemoveEggPool?.Invoke();
+        }      
     }
     public override void Update() 
     { 
@@ -20,6 +22,6 @@ public class CheckGameWinnderState : ShootingGameState
     }
     public override void Exit() 
     {
-        Debug.Log("[CheckGameWinnderState] - CheckGameWinnderState Exit");
+  
     }
 }

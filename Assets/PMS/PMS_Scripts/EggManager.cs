@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -32,6 +33,9 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
 
     private bool isPoolReady = false;
 
+    // 
+    public Action OnRemoveEggPool;
+
     protected override void OnAwake()
     {
         Debug.Log("[EggManager] - 초기화");
@@ -42,6 +46,8 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
         Debug.Log("EggManager Initialize 시작");
         if (PhotonNetwork.IsMasterClient)
             StartCoroutine(MasterInitPools());
+
+        OnRemoveEggPool += DestroyAllEggs;
     }
 
     /*
@@ -81,7 +87,7 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
             {
                 GameObject eggObj = PhotonNetwork.InstantiateRoomObject(unimoEggPrefabPath, Vector3.zero, Quaternion.identity);
                 UnimoEgg egg = eggObj.GetComponent<UnimoEgg>();
-                
+
                 //해당 슈터 uid를 넣는다.
                 egg.ShooterUid = uid;
                 egg.gameObject.SetActive(false);
@@ -216,5 +222,47 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
 
         if (currentUnimoEgg == egg)
             currentUnimoEgg = null;
+    }
+
+    public void DestroyAllEggs()
+    {
+        if (!PhotonNetwork.IsMasterClient) return;
+
+        Debug.Log("마스터 모든 오브젝트 풀 삭제");
+
+        // 현재 풀 전체 순회
+        foreach (var unimoEgg in playerEggPools)
+        {
+            foreach (var egg in unimoEgg.Value)
+            {
+                if (egg != null && egg.gameObject != null)
+                {
+                    PhotonNetwork.Destroy(egg.gameObject);
+                }
+            }
+        }
+
+        playerEggPools.Clear();         // 풀 정리
+        viewIdToEgg.Clear();            // ViewID Egg정리
+        currentUnimoEgg = null;         
+        isPoolReady = false;
+    }
+
+    public void ReturnAllEggOwnership()
+    {
+        if (!PhotonNetwork.IsMasterClient) return;
+
+        Debug.Log("마스터 모든 Egg 오브젝트 소유권 리턴");
+
+        foreach (var unimoEgg in playerEggPools)
+        {
+            foreach (var egg in unimoEgg.Value)
+            {
+                if (egg != null && egg.gameObject != null)
+                {
+                    egg.photonView.RequestOwnership();
+                }
+            }
+        }
     }
 }

@@ -125,6 +125,7 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
                 break;
             case "GamePlayState": ChangeState(new GamePlayState()); break;
             case "CheckGameWinnderState": ChangeState(new CheckGameWinnderState()); break;
+            //case "GameEndState":
             default:
                 Debug.LogError($"[ChangeStateByName] {stateName}에 해당하는 상태가 없습니다.");
                 break;
@@ -158,9 +159,11 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
         if (winnerUnimo != null)
             Debug.Log($"[ShootingGameManager] - 우승자 {winnerUnimo.ShooterUid}");
 
+        RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "GameEndState");
+
         //return winnerUnimo.ShooterUid;
         
-        EndGame();
+        //EndGame();
     }
 
     public void EndGame()
