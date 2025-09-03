@@ -2,6 +2,7 @@ using System;
 using Cysharp.Threading.Tasks;
 using LDH_UI;
 using LDH_Util;
+using LDH.LDH_Scripts.Test;
 using Managers;
 using Photon.Realtime;
 using UnityEngine;
@@ -13,7 +14,9 @@ namespace LDH_MainGame
         private readonly MiniGameRegistry _registry;
         private readonly Action<int> _setLocalSlot;
         private readonly Action<int> _onClickReady;
-        
+
+
+        private MainGameDebugPanel _debugUI;
         private UI_Popup_PrivateRoom _readyPanel;
         private UI_GameInfo _gameInfo;
         private UI_Popup_QuitGame _quitPopup;
@@ -27,6 +30,17 @@ namespace LDH_MainGame
             _onClickReady = onClickReady;
         }
 
+
+        public void SetDebugUI()
+        {
+            _debugUI = Manager.UI.CreateScreenUI<MainGameDebugPanel>();
+            Manager.UI.ShowScreenUI(_debugUI);
+        }
+
+        public void SetActiveDebugUI(bool active)
+        {
+            _debugUI.SetActiveDebugPanel(active);
+        }
         
         public void BuildReadyPanel(MiniGameInfo mini, Player[] players, bool isMaster, out int localSlot)
         {

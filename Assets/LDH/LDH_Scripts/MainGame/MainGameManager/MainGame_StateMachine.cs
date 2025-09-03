@@ -102,6 +102,7 @@ namespace LDH_MainGame
                 yield break;
             }
 
+            _uiBinder.SetActiveDebugUI(false);
             yield return _uiBinder.CloseReadyPanel().ToCoroutine();
             
             // Additive Load
@@ -127,6 +128,9 @@ namespace LDH_MainGame
             Debug.Log($"[MainGameStateMachine] local done : {MainGame_PropertiesController.GetDone(PhotonNetwork.LocalPlayer)}");
             yield return MainGameManager.Instance.Loader.UnloadAdditive();
 
+            
+            _uiBinder.SetActiveDebugUI(true);
+            
             // 각자 자기 Done = true
             MainGame_PropertiesController.SetLocalDone(true);
             MainGameManager.Instance.OnEndMiniGame?.Invoke();

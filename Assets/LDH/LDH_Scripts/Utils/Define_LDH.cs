@@ -51,8 +51,8 @@ namespace LDH_Util
 
         public enum MatchType { Quick, Private, None }
         public enum MatchState { Matching, Complete, None}
-
-        public const int MAX_PLAYERS = 2;
+        
+        public const int MAX_PLAYERS = 4;
         public const int PRIVATE_MAX_RETRY = 5;
         
         

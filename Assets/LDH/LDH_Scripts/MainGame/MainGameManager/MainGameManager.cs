@@ -86,6 +86,8 @@ namespace LDH_MainGame
             Debug.Log("[MainGameManager] PlayerManager에 플레이어를 등록합니다.");
             Manager.Player.ClearAllPlayers();
             Manager.Player.EnsureAllPhotonPlayersRegistered();
+            
+            UI.SetDebugUI();
         }
 
         public void StartGame()
