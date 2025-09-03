@@ -159,8 +159,6 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
         if (winnerUnimo != null)
             Debug.Log($"[ShootingGameManager] - 우승자 {winnerUnimo.ShooterUid}");
 
-        RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "GameEndState");
-
         //return winnerUnimo.ShooterUid;
         
         //EndGame();

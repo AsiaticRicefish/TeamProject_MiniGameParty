@@ -46,8 +46,6 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
         Debug.Log("EggManager Initialize 시작");
         if (PhotonNetwork.IsMasterClient)
             StartCoroutine(MasterInitPools());
-
-        OnRemoveEggPool += DestroyAllEggs;
     }
 
     /*
