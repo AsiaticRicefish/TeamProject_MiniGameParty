@@ -51,6 +51,8 @@ namespace LDH.LDH_Scripts.Network
        
         public void ApplyIds(int[] ids)
         {
+            //Debug.Log("apply id 실행");
+            if(_isComplete) return;
             int n = Mathf.Min(sceneViews.Length, ids.Length);
             for (int i = 0; i < n; i++)
             {

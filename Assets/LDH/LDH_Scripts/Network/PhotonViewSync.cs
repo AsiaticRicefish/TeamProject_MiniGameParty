@@ -139,15 +139,17 @@ namespace LDH_MainGame
         [PunRPC]
         public void Rpc_AssignSceneViewIDs(int[] ids)
         {
+            Debug.Log("Rpc_AssignSceneViewIDs 호출");
             PhotonViewCoordinator.Instance?.ApplyIds(ids);
         }
 
         [PunRPC]
         public void RPC_CompletePhotonViewCoordination(int playerActorNumber)
         {
-            Debug.Log(
-                $"Player ActorNumber( {playerActorNumber}), NickName ({PhotonNetwork.CurrentRoom.GetPlayer(playerActorNumber).NickName}) Complete photon view coordination ({completedPlayers.Count}/{PhotonNetwork.CurrentRoom.PlayerCount})");
             completedPlayers.Add(playerActorNumber);
+            Debug.Log(
+                $"Player ActorNumber({playerActorNumber}), NickName ({PhotonNetwork.CurrentRoom.GetPlayer(playerActorNumber).NickName}) Complete photon view coordination ({completedPlayers.Count}/{PhotonNetwork.CurrentRoom.PlayerCount})");
+       
         }
 
         #endregion
