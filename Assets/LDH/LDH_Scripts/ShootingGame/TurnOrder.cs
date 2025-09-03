@@ -20,8 +20,25 @@ namespace LDH.LDH_Scripts.ShootingGame
 
         public GamePlayer Current => _current?.Value;
         public LinkedListNode<GamePlayer> CurrentNode => _current;
-        public LinkedListNode<GamePlayer> NextNode => _current.Next ?? _list.First;
+
         
+        public LinkedListNode<GamePlayer> NextNode()
+        {
+            if (_list.Count == 0)
+            {
+                Debug.LogError("linked list에 노드가 없습니다.");
+                return null;
+            }
+            LinkedListNode<GamePlayer> nextNode = _current.Next ?? _list.First;
+            while (nextNode.Value == null)
+            {
+                nextNode = nextNode.Next ?? _list.First;
+            }
+
+            return nextNode;
+        }
+    
+    
         public void Clear()
         {
             _list.Clear();
@@ -80,13 +97,20 @@ namespace LDH.LDH_Scripts.ShootingGame
         }
         private void RemoveNode(LinkedListNode<GamePlayer> node)
         {
-            if (node == _current)
-                _current = node.Previous ?? _list.Last;
+            // if (node == _current)
+            //     _current = node.Previous ?? _list.Last;
             if (!string.IsNullOrEmpty(node.Value.PlayerId))
+            {
+                //링크드 리스트에서 해당 플레이어 노드를 찾는다.
+                var targetNode = _dicByUid[node.Value.PlayerId];
+                
+                //노드 내부 데이터를 비운다
+                targetNode.Value = null;
+                
+                //딕셔너리에서 제거한다.
                 _dicByUid.Remove(node.Value.PlayerId);
-
-            _list.Remove(node);
-
+            }
+            
             if (_list.Count == 0) _current = null;
         }
 
