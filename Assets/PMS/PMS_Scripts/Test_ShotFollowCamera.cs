@@ -86,7 +86,7 @@ namespace ShootingScene
             vcamFollow.Priority = 20;
         }
 
-        public void StopFollowTarget(GameObject currentUnimoEgg)
+        public void StopFollowTarget()
         {
             // Follow 타깃 지정 + 우선순위 스위치
             // 발사체 따라가기 시작

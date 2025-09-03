@@ -16,6 +16,7 @@ public class UnimoEgg : MonoBehaviourPun
     //private Vector3 startTouchPos;
     //private Vector3 endTouchPos;
     public bool isLaunched; // 내가 발사한 알인가?
+    private bool isCameraFollowing;
 
     public string ShooterUid; // 누가 던졌는지 저장
     //[SerializeField][Range(0.1f,15f)] private float forceMultiplier = 3f;
@@ -129,8 +130,8 @@ public class UnimoEgg : MonoBehaviourPun
         ApplyForce(dir);
         // 다른 클라이언트에도 RPC 전송
         photonView.RPC("RPC_Shot", RpcTarget.Others, dir);
+        isCameraFollowing = true;
         Test_ShotFollowCamera.Instance.StartFollow(gameObject);
-
         // 발사 후 멈출 때까지 감시 시작
         //StartCoroutine(WaitForStop());
         // 발사 후 한 프레임 대기 후 감시 시작
@@ -147,9 +148,13 @@ public class UnimoEgg : MonoBehaviourPun
         //yield return new WaitForFixedUpdate();
         //yield return new WaitUntil(() => Camera.main.GetComponent<CinemachineBrain>().ActiveBlend == null);
 
-        //while (rb.velocity.magnitude > stopSpeed && gameObject.activeSelf)
-        //    yield return new WaitForFixedUpdate();
+        while (rb.velocity.magnitude > stopSpeed)
+            yield return new WaitForFixedUpdate();
 
+        Test_ShotFollowCamera.Instance.StopFollowTarget(); //돌아가는 부분
+        yield return new WaitForFixedUpdate();
+
+        isCameraFollowing = false;
         //Test_ShotFollowCamera.Instance.StopFollowTarget(gameObject);
         //yield return new WaitForFixedUpdate();
         //yield return new WaitUntil(() => Camera.main.GetComponent<CinemachineBrain>().ActiveBlend == null);
@@ -181,15 +186,25 @@ public class UnimoEgg : MonoBehaviourPun
     //떨어졌을때
     private void OnTriggerExit(Collider other)
     {
+        if (!photonView.IsMine) return;
         //if (!photonView.IsMine || turnEnded) return; // 내 알이 아니면 아무것도 안 함
 
-        //모두가 비활성처리를 해줘야한다.
+            //모두가 비활성처리를 해줘야한다.
         EggManager.Instance.photonView.RPC("RPC_DeactivateEgg", RpcTarget.All, photonView.ViewID);
 
         if (other.CompareTag("PlayGround") && isLaunched)
         {
             isLaunched = false; // 바깥으로 나가며 턴 종료 → 발사 상태 해제
             TurnManager.Instance.photonView.RPC(("RequestTurnEnd"), RpcTarget.MasterClient);
+        }
+    }
+
+    private void OnDisable()
+    {
+        if(isCameraFollowing)       //카메라가 연출중이니깐
+        {
+            Debug.Log("[UnimoEgg] - 유니모를 잃어버려서 카메라가 원위치로 돌아가는중");
+            Test_ShotFollowCamera.Instance.StopFollowTarget();
         }
     }
 }
