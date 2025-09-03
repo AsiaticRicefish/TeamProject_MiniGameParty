@@ -53,7 +53,7 @@ namespace LDH_MainGame
             // 2단계 : 내 포톤뷰 조정이 완료됐다고 알림
             Debug.Log($"[PhotonViewSync] Step 2 : Notify complete photon view coordination on local");
             // 2-1 : 포톤뷰 아이디 조정이 완료되었는지 다시 체크
-            yield return new WaitUntil(() => coordinator.IsComplete);
+            yield return StartCoroutine(WaitUntilMyCoordinateDone());
             // 2-2 : 조정 완료를 알리기
             photonView.RPC(nameof(RPC_CompletePhotonViewCoordination), RpcTarget.All,
                 PhotonNetwork.LocalPlayer.ActorNumber);
@@ -75,7 +75,7 @@ namespace LDH_MainGame
         private IEnumerator SyncSceneViews(PhotonViewCoordinator coordinator)
         {
             // 씬이 올라와 Coordinator가 준비될 때까지 대기
-            yield return WaitUntilMyCoordinateDone();
+            yield return new WaitUntil(() => coordinator != null);
 
             var sceneViews = coordinator.GetSceneViews();
 
