@@ -24,6 +24,7 @@ namespace LDH_MainGame
         public MainGame_PropertiesController PropertiesCtrl;
         public MainGame_UIBinder UI;
         public MainGame_StateMachine FSM;
+        public MiniGameLoader Loader;
 
         // Local
         private bool _isLeavingRoom = false;
@@ -270,7 +271,7 @@ namespace LDH_MainGame
                 await FSM.Co_End().ToUniTask(cancellationToken: ct);
 
             // 병렬 실행
-            var unloadTask = MiniGameLoader.UnloadAdditive().ToUniTask(cancellationToken: ct);
+            var unloadTask = Loader.UnloadAdditive().ToUniTask(cancellationToken: ct);
             var closeAllTask = Manager.UI.CloseAllPopupUI(); // 내부는 순차 닫기 유지
 
             await UniTask.WhenAll(unloadTask, closeAllTask);
