@@ -52,19 +52,56 @@ namespace LDH_MainGame
         
         public IEnumerator UnloadAdditive()
         {
+            Debug.Log("[MiniGameLoader] UnloadAdditive() called.");
+            Debug.Log($"[MiniGameLoader] State check → hasMini={_hasMiniScene}, mini.IsValid={_loadedMiniScene.IsValid()}, mini.isLoaded={_loadedMiniScene.isLoaded}, active='{SceneManager.GetActiveScene().name}', main.IsValid={_mainScene.IsValid()}");
+
             //올라온 미니게임 씬이 있는지 확인
-            if (!_hasMiniScene) yield break;
+            if (!_hasMiniScene || !_loadedMiniScene.IsValid() || !_loadedMiniScene.isLoaded)
+            {
+                Debug.LogWarning("[MiniGameLoader] Nothing to unload (flag/scene invalid). Exiting early.");
+                yield break;
+            }
             
-            //활성씬 ㅁ너저 변경
+            
+            //활성씬 먼저 변경
             if (SceneManager.GetActiveScene() == _loadedMiniScene && _mainScene.IsValid())
             {
+                Debug.Log($"[MiniGameLoader] Active scene is mini '{_loadedMiniScene.name}'. Switching active scene back to main '{_mainScene.name}'.");
+
                 SceneManager.SetActiveScene(_mainScene);
                 yield return null;
+                Debug.Log($"[MiniGameLoader] Active scene after switch → '{SceneManager.GetActiveScene().name}'.");
+
             }
             
             //미니게임 씬 언로드
+            string miniName = _loadedMiniScene.name;
+            Debug.Log($"[MiniGameLoader] Requesting unload for mini scene '{miniName}'...");
+
             var op = SceneManager.UnloadSceneAsync(_loadedMiniScene);
-            while (!op.isDone) yield return null;
+            if (op == null)
+            {
+                Debug.LogError("[MiniGameLoader] UnloadSceneAsync returned null. Scene might not be loaded or name/handle mismatch.");
+                yield break;
+            }
+            float t0 = Time.realtimeSinceStartup;
+            const float TIMEOUT = 15f; // seconds
+            while (!op.isDone)
+            {
+                float elapsed = Time.realtimeSinceStartup - t0;
+                Debug.Log($"[MiniGameLoader] Unloading... progress={op.progress:0.00}, elapsed={elapsed:0.00}s");
+                if (elapsed > TIMEOUT)
+                {
+                    Debug.LogError($"[MiniGameLoader] Unload timeout (> {TIMEOUT}s). Something is holding references or async op stuck.");
+                    break;
+                }
+                yield return null;
+            }
+            
+            
+            // 3) Verify unload by name
+            var check = SceneManager.GetSceneByName(miniName);
+            Debug.Log($"[MiniGameLoader] Verification → GetSceneByName('{miniName}'): isValid={check.IsValid()}, isLoaded={check.isLoaded}, active='{SceneManager.GetActiveScene().name}'");
 
             
             // 플래그 초기활
@@ -73,12 +110,23 @@ namespace LDH_MainGame
             
             
             // 메인 씬 컴포넌트 복원
+            int restoreCount = 0;
+
             foreach (var b in _disabledOnMain.Where(b => b != null))
+            {
                 b.enabled = true;
-            _disabledOnMain.Clear();
+                restoreCount++;
+                Debug.Log($"[MiniGameLoader] Restored {_disabledOnMain.Count} → actually re-enabled {restoreCount} behaviours on main scene.");
+
+            }
             
-            var mainScene = SceneManager.GetActiveScene();
-            SceneManager.SetActiveScene(mainScene);
+            _disabledOnMain.Clear();
+            Debug.Log($"[MiniGameLoader] Restored {_disabledOnMain.Count} → actually re-enabled {restoreCount} behaviours on main scene.");
+
+            var main = _mainScene.IsValid() ? _mainScene : SceneManager.GetActiveScene();
+            SceneManager.SetActiveScene(main);
+            Debug.Log($"[MiniGameLoader] Final active scene → '{SceneManager.GetActiveScene().name}'.");
+
             
             
         }
