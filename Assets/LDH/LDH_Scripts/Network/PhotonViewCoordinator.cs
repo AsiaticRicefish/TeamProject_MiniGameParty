@@ -54,6 +54,8 @@ namespace LDH.LDH_Scripts.Network
                 if ( pv.ViewID != ids[i])
                     pv.ViewID = ids[i];
             }
+            
+            Debug.Log("_isComplete = true 로 변경된");
             _isComplete = true;
         }
 

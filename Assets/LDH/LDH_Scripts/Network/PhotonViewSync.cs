@@ -79,9 +79,6 @@ namespace LDH_MainGame
 
             var sceneViews = coordinator.GetSceneViews();
 
-            bool prev = PhotonNetwork.IsMessageQueueRunning;
-            PhotonNetwork.IsMessageQueueRunning = false;
-
             if (PhotonNetwork.IsMasterClient)
             {
                 var ids = new int[sceneViews.Length];
@@ -108,7 +105,6 @@ namespace LDH_MainGame
             // 비마스터는 RPC 수신 시 ApplyIds가 실행됨
 
             yield return null;
-            PhotonNetwork.IsMessageQueueRunning = prev;
         }
         
         
@@ -120,7 +116,7 @@ namespace LDH_MainGame
                 yield return null;
 
             float timer = 0f;
-            while (_coordinator.IsComplete)
+            while (!_coordinator.IsComplete)
             {
                 timer += Time.deltaTime;
                 if (timer > timeout)
