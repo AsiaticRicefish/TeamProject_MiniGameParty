@@ -280,8 +280,8 @@ namespace LDH_MainGame
             // 병렬 실행
             var unloadTask = Loader.UnloadAdditive().ToUniTask(cancellationToken: ct);
             var closeAllTask = Manager.UI.CloseAllPopupUI(); // 내부는 순차 닫기 유지
-
-            await UniTask.WhenAll(unloadTask, closeAllTask);
+            var closeAllScreenUITask = UI.CloseAllScreenUI();
+            await UniTask.WhenAll(unloadTask, closeAllTask, closeAllScreenUITask);
             await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, ct);
 
             Debug.Log("[MainGameManager] After close all popup ui, leave room");
