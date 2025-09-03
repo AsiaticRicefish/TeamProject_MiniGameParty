@@ -101,6 +101,7 @@ namespace LDH.LDH_Scripts.ShootingGame
             //     _current = node.Previous ?? _list.Last;
             if (!string.IsNullOrEmpty(node.Value.PlayerId))
             {
+                string targetPlayerID = node.Value.PlayerId;
                 //링크드 리스트에서 해당 플레이어 노드를 찾는다.
                 var targetNode = _dicByUid[node.Value.PlayerId];
                 
@@ -108,7 +109,7 @@ namespace LDH.LDH_Scripts.ShootingGame
                 targetNode.Value = null;
                 
                 //딕셔너리에서 제거한다.
-                _dicByUid.Remove(node.Value.PlayerId);
+                _dicByUid.Remove(targetPlayerID);
             }
             
             if (_list.Count == 0) _current = null;

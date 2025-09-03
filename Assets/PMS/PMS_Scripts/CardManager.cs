@@ -36,7 +36,7 @@ public class CardManager : PunSingleton<CardManager>
 
     // 로컬 캐시
     private List<ShootingScene.CardUI> _cards = new();
-    private int[] _deckValues; // 섞인 숫자들
+    public int[] _deckValues; // 섞인 숫자들
     private int[] _owners; // 각 index의 소유자 ActorNumber, 미선택 -1
 
     public bool allPicked = false;
