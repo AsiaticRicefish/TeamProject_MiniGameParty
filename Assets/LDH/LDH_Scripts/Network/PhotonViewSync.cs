@@ -11,6 +11,7 @@ using UnityEngine;
 
 namespace LDH_MainGame
 {
+    [RequireComponent(typeof(PhotonView))]
     public class PhotonViewSync : PunSingleton<PhotonViewSync>, IGameComponent
     {
         [Header("초기화 설정")] [SerializeField] protected float timeout = 30f; // WaitForAllPlayersLoaded()에서 사용하는 안전장치
