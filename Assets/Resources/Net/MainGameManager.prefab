@@ -71,7 +71,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   isPersistent: 1
   registry: {fileID: 7080885224738973986}
-  totalRound: 3
+  totalRound: 5
   Loader: {fileID: 7419730619517185691}
 --- !u!1 &4163732838003876761
 GameObject:

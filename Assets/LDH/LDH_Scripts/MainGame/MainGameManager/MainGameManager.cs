@@ -195,7 +195,7 @@ namespace LDH_MainGame
             if (FSM.Get() != MainState.Ready) return;
 
             // 준비 단계에서 누가 나가도, 남은 인원 기준 AllPlayersReady면 진행
-            if (FSM.Get() == MainState.Ready && PropertiesCtrl.AllPlayersReady())
+            if (FSM.Get() == MainState.Ready && PropertiesCtrl.AllPlayersReady() && PhotonNetwork.CurrentRoom.PlayerCount>1)
             {
                 PropertiesCtrl.SetRoomProps(RoomProps.State, MainState.LoadingMiniGame.ToString());
             }
@@ -214,7 +214,7 @@ namespace LDH_MainGame
             }
 
 
-            if (FSM.Get() == MainState.Ready && PropertiesCtrl.AllPlayersReady())
+            if (FSM.Get() == MainState.Ready && PropertiesCtrl.AllPlayersReady() && PhotonNetwork.CurrentRoom.PlayerCount>1)
             {
                 PropertiesCtrl.SetRoomProps(RoomProps.State, MainState.LoadingMiniGame.ToString());
             }
