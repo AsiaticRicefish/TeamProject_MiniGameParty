@@ -9,15 +9,9 @@ namespace LDH.LDH_Scripts.Network
     [DefaultExecutionOrder(-10000)]
     public class PhotonViewCoordinator : MonoBehaviour
     {
-        public static PhotonViewCoordinator Instance { get; private set; }
-        
         [SerializeField] private PhotonView[] sceneViews;
         [SerializeField] private GameObject[] roots;   // 바인딩 전까지 비활성화
         
-        
-        void OnEnable() => Instance = this;
-        private void OnDestroy() => Instance = null;
-
 
         private bool _isComplete = false;
         public bool IsComplete => _isComplete;
@@ -38,7 +32,7 @@ namespace LDH.LDH_Scripts.Network
             yield return new WaitUntil(() => LDH_MainGame.PhotonViewSync.Instance != null);
             // 씬 내 PV가 모두 생성/등록된 뒤 바인딩 시작
             yield return LDH_MainGame.PhotonViewSync.Instance.StartCoroutine(
-                LDH_MainGame.PhotonViewSync.Instance.SafePhotonViewSync()
+                LDH_MainGame.PhotonViewSync.Instance.SafePhotonViewSync(this)
             );
             
             Debug.Log("======= Complete Coordination =====");

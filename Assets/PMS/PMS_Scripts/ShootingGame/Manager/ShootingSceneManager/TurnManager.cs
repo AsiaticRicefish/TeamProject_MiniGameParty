@@ -269,6 +269,7 @@ namespace ShootingScene
 
         private IEnumerator WaitForTurnDelay(float delay = 2.0f)
         {
+            Debug.Log("[TurnManager]  WaitForTurnDelay 호출");
             yield return new WaitForSeconds(delay);
             NextTurn();
         }
