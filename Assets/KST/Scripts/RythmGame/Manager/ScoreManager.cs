@@ -94,5 +94,57 @@ namespace RhythmGame
         }
 
         #endregion
+
+
+        #region 판정관련 로직
+        // 클라 → 마스터: 히트 요청(판정 포함)
+        public void RequestHit(int noteId, bool isCanInteract, NoteType type)
+        {
+            photonView.RPC(nameof(RPC_RequestHit), RpcTarget.MasterClient, noteId, isCanInteract, type);
+        }
+
+        [PunRPC]
+        void RPC_RequestHit(int noteId, bool isCanInteract,NoteType type, PhotonMessageInfo info)
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+
+            // 라인 검증 (내 라인의 노트인지 판별하기)
+
+            if (!LaneManager.Instance.LaneByNoteId.TryGetValue(noteId, out int noteLane)) return;
+            if (!LaneManager.Instance.GetLane(info.Sender.ActorNumber, out int actorLane)) return;
+
+            //내 레인이 아닐 경우에
+            if (noteLane != actorLane)
+            {
+                //과열 점수가 오르도록
+                GameManager.Instance.OverHeatCheck();
+                return;
+            }
+
+            // 득점 및 과열 처리
+            if (isCanInteract)
+                GameManager.Instance.GoodHitScore(type,info.Sender);
+            else
+                GameManager.Instance.OverHeatCheck();
+
+            // 파괴
+            LaneManager.Instance.LaneByNoteId.Remove(noteId);
+            NoteSpawner.Instance.DestoryNote(noteId);
+        }
+
+        public void RequestMiss()
+        {
+            photonView.RPC(nameof(RPC_RequestMiss), RpcTarget.MasterClient);
+        }
+
+        [PunRPC]
+        void RPC_RequestMiss()
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+            GameManager.Instance.OverHeatCheck();
+        }
+
+        #endregion
+
     }
 }

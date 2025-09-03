@@ -6,7 +6,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 namespace RhythmGame
-{   
+{
     [RequireComponent(typeof(PlayerInput))]
     public class RythmPlayerInput : MonoBehaviour
     {
@@ -42,14 +42,15 @@ namespace RhythmGame
             //클릭 시 동작 (정확하게 note 누르면 마스터한테 요청),아니면 미스했다는 로직 호출
             if (t != null)
             {
-                LaneManager.Instance.RequestHit(t.NoteId, t.Status == NoteStatus.CanInteract);
-
+                // LaneManager.Instance.RequestHit(t.NoteId, t.Status == NoteStatus.CanInteract, t.Type);
+                ScoreManager.Instance.RequestHit(t.NoteId, t.Status == NoteStatus.CanInteract, t.Type);
             }
             //노트가 없는데도 클릭 시도
             else
             {
                 //TODO 김승태: 개인점수도 깎이도록 추가 코드 필요
-                LaneManager.Instance.RequestMiss();
+                // LaneManager.Instance.RequestMiss();
+                ScoreManager.Instance.RequestMiss();
             }
         }
 

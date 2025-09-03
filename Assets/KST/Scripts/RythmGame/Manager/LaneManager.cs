@@ -11,6 +11,7 @@ namespace RhythmGame
     {
         private Dictionary<int, int> _laneByActor = new(); // 액터넘버와 레인 번호 매핑
         private Dictionary<int, int> _laneByNoteId = new(); //noteID와 Lane 번호 매핑
+        public Dictionary<int,int> LaneByNoteId => _laneByNoteId;
 
         public int ActiveLaneCount => _laneByActor.Count; //현재 배정 된 Lane 수(플레이어 수)
 
@@ -50,54 +51,7 @@ namespace RhythmGame
             if (!PhotonNetwork.IsMasterClient) return;
             _laneByNoteId[noteId] = lane;
         }
-
-        // 클라 → 마스터: 히트 요청(판정 포함)
-        public void RequestHit(int noteId, bool isCanInteract, NoteType type)
-        {
-            photonView.RPC(nameof(RPC_RequestHit), RpcTarget.MasterClient, noteId, isCanInteract, type);
-        }
-
-        [PunRPC]
-        void RPC_RequestHit(int noteId, bool isCanInteract,NoteType type, PhotonMessageInfo info)
-        {
-            if (!PhotonNetwork.IsMasterClient) return;
-
-            // 라인 검증 (내 라인의 노트인지 판별하기)
-
-            if (!_laneByNoteId.TryGetValue(noteId, out int noteLane)) return;
-            if (!GetLane(info.Sender.ActorNumber, out int actorLane)) return;
-
-            //내 레인이 아닐 경우에
-            if (noteLane != actorLane)
-            {
-                //과열 점수가 오르도록
-                GameManager.Instance.OverHeatCheck();
-                return;
-            }
-
-            // 득점 및 과열 처리
-            if (isCanInteract)
-                GameManager.Instance.GoodHitScore(type,info.Sender);
-            else
-                GameManager.Instance.OverHeatCheck();
-
-            // 파괴
-            _laneByNoteId.Remove(noteId);
-            NoteSpawner.Instance.DestoryNote(noteId);
-        }
-
-        public void RequestMiss()
-        {
-            photonView.RPC(nameof(RPC_RequestMiss), RpcTarget.MasterClient);
-        }
-
-        [PunRPC]
-        void RPC_RequestMiss()
-        {
-            if (!PhotonNetwork.IsMasterClient) return;
-            GameManager.Instance.OverHeatCheck();
-        }
-
+        
         //액터넘버에 따른 lane 구하기
         public bool GetLane(int actorNum, out int lane)
         {
