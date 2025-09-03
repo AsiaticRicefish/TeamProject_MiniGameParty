@@ -17,10 +17,9 @@ namespace LDH_MainGame
     public class MainGameManager : PunSingleton<MainGameManager>, IGameComponent
     {
         [Header("Mini Games")] public MiniGameRegistry registry;
-        [Header("Config")] 
-        [SerializeField] private int totalRound = 3;
+        [Header("Config")] [SerializeField] private int totalRound = 3;
         public int TotalRound => totalRound;
-        
+
         //Controllers
         public MainGame_PropertiesController PropertiesCtrl;
         public MainGame_UIBinder UI;
@@ -33,14 +32,14 @@ namespace LDH_MainGame
 
 
         //Events
-        public event Action OnGameStart;
-        public event Action<int> OnRoundChanged;
-        public event Action OnPicking;
-        public event Action OnPicked;
-        public event Action OnWaitAllReady;
-        public event Action OnLoadingMiniGame;
-        public event Action OnEndMiniGame;
-        public event Action OnEndGame;
+        public Action OnGameStart;
+        public Action<int> OnRoundChanged;
+        public Action OnPicking;
+        public Action OnPicked;
+        public Action OnWaitAllReady;
+        public Action OnLoadingMiniGame;
+        public Action OnEndMiniGame;
+        public Action OnEndGame;
 
 
         private bool IsMaster => PhotonNetwork.IsMasterClient;
@@ -55,8 +54,8 @@ namespace LDH_MainGame
 
             base.OnAwake();
         }
-        
-        public void  Initialize()
+
+        public void Initialize()
         {
             Util_LDH.ConsoleLog(this, "MainGameManager 초기화 로직 실행");
 
@@ -80,8 +79,8 @@ namespace LDH_MainGame
                 totalRound,
                 photonView
             );
-            
-            
+
+
             //플레이어 매니저에 플레이어 등록
             Debug.Log("[MainGameManager] PlayerManager에 플레이어를 등록합니다.");
             Manager.Player.ClearAllPlayers();
@@ -144,7 +143,7 @@ namespace LDH_MainGame
             int readyMask = PropertiesCtrl.BuildReadyMaskFromPlayers();
             UI.UpdateReady(readyMask);
 
-            if (IsMaster && PhotonNetwork.CurrentRoom!=null && PhotonNetwork.CurrentRoom.PlayerCount>1)
+            if (IsMaster && PhotonNetwork.CurrentRoom != null && PhotonNetwork.CurrentRoom.PlayerCount > 1)
             {
                 if (changedProps.ContainsKey(PlayerProps.InGameReady) &&
                     FSM.Get() == MainState.Ready &&
@@ -165,19 +164,19 @@ namespace LDH_MainGame
             //현재 room이 아니거나, joined 상태가 아니거나, leaving room 중이라면 패스
             if (!PhotonNetwork.InRoom || PhotonNetwork.NetworkClientState != ClientState.Joined ||
                 _isLeavingRoom) return;
-            
+
             // 현재 방 가져오기
             var room = PhotonNetwork.CurrentRoom;
-            if (room == null) return;   // 방이 없다면 패스
-            
+            if (room == null) return; // 방이 없다면 패스
+
             // 1) 혼자 남았다면 강제 게임 종료 처리
             if (room.PlayerCount == 1)
             {
                 UI.ShowQuitPopup();
                 return;
             }
-            
-            
+
+
             // 2) 마스터 클라이언트이고, 메인 게임 상태가 ready(모든 플레이어의 ready를 기다리고 있는 상태)라면 재조정
             if (!IsMaster) return;
             if (FSM.Get() != MainState.Ready) return;
@@ -187,7 +186,6 @@ namespace LDH_MainGame
             {
                 PropertiesCtrl.SetRoomProps(RoomProps.State, MainState.LoadingMiniGame.ToString());
             }
-           
         }
 
         public override void OnMasterClientSwitched(Player newMasterClient)
@@ -200,16 +198,14 @@ namespace LDH_MainGame
                 Debug.Log("[MainGameManager] 새롭게 마스터가 된 클라이언트의 슬롯 인덱스를 갱신합니다. : 0번 슬롯으로");
                 MainGame_PropertiesController.SetSlotIndex(0);
                 _localSlot = 0;
-
             }
-            
-            
+
+
             if (FSM.Get() == MainState.Ready && PropertiesCtrl.AllPlayersReady())
             {
                 PropertiesCtrl.SetRoomProps(RoomProps.State, MainState.LoadingMiniGame.ToString());
             }
         }
-        
 
         #endregion
 
@@ -244,19 +240,19 @@ namespace LDH_MainGame
             {
                 case MainState.Picking:
                     MainGame_PropertiesController.ClearLocalInGameProperties();
-                    _stateRoutine = StartCoroutine(FSM.Co_Picking(OnPicking, OnPicked));
+                    _stateRoutine = StartCoroutine(FSM.Co_Picking());
                     break;
                 case MainState.Ready:
-                    _stateRoutine = StartCoroutine(FSM.Co_Ready(OnWaitAllReady));
+                    _stateRoutine = StartCoroutine(FSM.Co_Ready());
                     break;
                 case MainState.LoadingMiniGame:
-                    _stateRoutine = StartCoroutine(FSM.Co_LoadingMini(OnLoadingMiniGame));
+                    _stateRoutine = StartCoroutine(FSM.Co_LoadingMini());
                     break;
                 case MainState.PlayingMiniGame:
                     _stateRoutine = StartCoroutine(FSM.Co_PlayingMini());
                     break;
                 case MainState.ApplyingResult:
-                    _stateRoutine = StartCoroutine(FSM.Co_ApplyingResult(OnEndMiniGame));
+                    _stateRoutine = StartCoroutine(FSM.Co_ApplyingResult());
                     break;
                 case MainState.End:
                     _stateRoutine = null;
@@ -269,10 +265,10 @@ namespace LDH_MainGame
         public async UniTask EndGameAsync(bool force = false, CancellationToken ct = default)
         {
             _isLeavingRoom = true;
-            
-            if(!force)
-                await FSM.Co_End(OnEndGame).ToUniTask(cancellationToken: ct);
-            
+
+            if (!force)
+                await FSM.Co_End().ToUniTask(cancellationToken: ct);
+
             // 병렬 실행
             var unloadTask = MiniGameLoader.UnloadAdditive().ToUniTask(cancellationToken: ct);
             var closeAllTask = Manager.UI.CloseAllPopupUI(); // 내부는 순차 닫기 유지
@@ -281,7 +277,7 @@ namespace LDH_MainGame
             await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, ct);
 
             Debug.Log("[MainGameManager] After close all popup ui, leave room");
-       
+
             PhotonNetwork.LeaveRoom();
         }
 
@@ -312,7 +308,7 @@ namespace LDH_MainGame
         #endregion
 
         #region RPC
-        
+
         [PunRPC]
         public void RPC_CompletePicking()
         {

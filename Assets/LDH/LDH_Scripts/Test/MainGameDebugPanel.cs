@@ -21,6 +21,7 @@ namespace LDH.LDH_Scripts.Test
             yield return new WaitUntil(() => MainGameManager.Instance != null);
 
             
+            Debug.Log("[Debug Panel] MainGameManager Event Subscribe start");
             MainGameManager.Instance.OnGameStart += () =>
             {
                 SetLogText("Game Start!");
@@ -62,6 +63,15 @@ namespace LDH.LDH_Scripts.Test
         {
             this.logText.gameObject.SetActive(true);
             this.logText.text = logText;
+        }
+
+        public IEnumerator SetActiveDebugPanel(bool active)
+        {
+            logText.gameObject.SetActive(active);
+            totalRoundText.gameObject.SetActive(active);
+            roundText.gameObject.SetActive(active);
+
+            yield return null;
         }
 
     }
