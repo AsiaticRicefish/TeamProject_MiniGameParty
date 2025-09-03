@@ -20,7 +20,7 @@ namespace RhythmGame
         {
             GameManager.Instance.PlaceActorToLane(actorNumber, lane);
         }
-        
+
         //lane 배정 호출
         public void SetLane()
         {
@@ -52,26 +52,32 @@ namespace RhythmGame
         }
 
         // 클라 → 마스터: 히트 요청(판정 포함)
-        public void RequestHit(int noteId, bool isGood)
+        public void RequestHit(int noteId, bool isCanInteract, NoteType type)
         {
-            photonView.RPC(nameof(RPC_RequestHit), RpcTarget.MasterClient, noteId, isGood);
+            photonView.RPC(nameof(RPC_RequestHit), RpcTarget.MasterClient, noteId, isCanInteract, type);
         }
 
         [PunRPC]
-        void RPC_RequestHit(int noteId, bool isGood, PhotonMessageInfo info)
+        void RPC_RequestHit(int noteId, bool isCanInteract,NoteType type, PhotonMessageInfo info)
         {
             if (!PhotonNetwork.IsMasterClient) return;
 
             // 라인 검증 (내 라인의 노트인지 판별하기)
 
-            //TODO 김승태: 내 레인이 아닐 경우에는 과열점수가 오르도록(점수 차감도 진행 같이 해야할듯)
             if (!_laneByNoteId.TryGetValue(noteId, out int noteLane)) return;
             if (!GetLane(info.Sender.ActorNumber, out int actorLane)) return;
-            if (noteLane != actorLane) return;
+
+            //내 레인이 아닐 경우에
+            if (noteLane != actorLane)
+            {
+                //과열 점수가 오르도록
+                GameManager.Instance.OverHeatCheck();
+                return;
+            }
 
             // 득점 및 과열 처리
-            if (isGood)
-                GameManager.Instance.GoodHitScore(info.Sender);
+            if (isCanInteract)
+                GameManager.Instance.GoodHitScore(type,info.Sender);
             else
                 GameManager.Instance.OverHeatCheck();
 
@@ -96,7 +102,7 @@ namespace RhythmGame
         public bool GetLane(int actorNum, out int lane)
         {
             return _laneByActor.TryGetValue(actorNum, out lane);
-        }   
+        }
 
 
         //룸 입장 시
