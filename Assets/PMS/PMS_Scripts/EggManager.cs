@@ -295,7 +295,10 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
                             Debug.Log($"[EggManager] - viewID가 존재하는 Egg가 없음");
                         }
                         Debug.Log($"[EggManager] - 해당 오브젝트 파괴");
-                        PhotonNetwork.Destroy(egg.gameObject);
+                        if (PhotonNetwork.IsMasterClient)
+                        {
+                            PhotonNetwork.Destroy(egg.gameObject);
+                        }
                     }
                     else
                     {
