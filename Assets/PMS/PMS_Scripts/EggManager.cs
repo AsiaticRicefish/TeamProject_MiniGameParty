@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -268,39 +269,53 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
     //나간 유저의 otherPlayer를 가지고 UID를 찾아야한다.
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
-        if(otherPlayer.CustomProperties.TryGetValue("uid", out object uidObj) && uidObj is string targetUid)
+        if (otherPlayer.CustomProperties.TryGetValue("uid", out object uidObj) && uidObj is string targetUid)
         {
             Debug.Log($"[EggManager] - 플레이어 퇴장: UID = {targetUid}");
-         
-            //플레이어 가져온 uid를 가지고 일단 삭제 처리
-            foreach(var eggList in playerEggPools)
+
+            LDH_Util.Util_LDH.ConsoleLog(this, $" - {playerEggPools.Values.ToList()[0].Count}");
+
+            if (playerEggPools.TryGetValue(targetUid, out List<UnimoEgg> targetPool))
             {
-                if(eggList.Key == targetUid)
+                Debug.Log("[EggManager] - targetUID와 일치하는 eggList key가 존재");
+                foreach (var egg in targetPool)           //에그입니다 - 해당 유저 풀리스트
                 {
-                    foreach(var egg in eggList.Value)
+                    if (egg != null)
                     {
-                        if (egg != null)
+                        Debug.Log($"[EggManager] - {egg.ShooterUid} 에 해당 되는 egg가 존재");
+
+                        // viewIdToEgg에서도 제거
+                        if (viewIdToEgg.ContainsKey(egg.photonView.ViewID))
                         {
-                            // viewIdToEgg에서도 제거
-                            if (viewIdToEgg.ContainsKey(egg.photonView.ViewID))
-                            {
-                                viewIdToEgg.Remove(egg.photonView.ViewID);
-                            }
-                            PhotonNetwork.Destroy(egg.gameObject);
+                            Debug.Log($"[EggManager] - viewID가 존재하는 Egg 제거");
+                            viewIdToEgg.Remove(egg.photonView.ViewID);
                         }
+                        else
+                        {
+                            Debug.Log($"[EggManager] - viewID가 존재하는 Egg가 없음");
+                        }
+                        Debug.Log($"[EggManager] - 해당 오브젝트 파괴");
+                        PhotonNetwork.Destroy(egg.gameObject);
+                    }
+                    else
+                    {
+                        Debug.Log($"[EggManager] - {egg.ShooterUid} 에 해당 되는 egg가 존재않음");
                     }
                 }
                 // 풀에서도 제거
-                playerEggPools.Remove(targetUid);
-                break;
+                if (playerEggPools.Remove(targetUid))
+                {
+                    Debug.Log($"[EggManager] - 유저 : {targetUid} pool를 제거 함");
+                }
+                else
+                {
+                    Debug.Log($"[EggManager] - 풀에서 제거 실패");
+                }
+            }
+            else
+            {
+                Debug.Log($"[EggManager] - 정리 작업 실패");
             }
         }
-        else
-        {
-            Debug.Log($"[EggManager] - 정리 작업 실패");
-        }
-
-        //string targetUid = (string)otherPlayer.CustomProperties["uid"];
-        //PMS_Util.PMS_Util.GetPhotonPlayerByGamePlayer //otherPlayer
     }
 }
