@@ -107,9 +107,6 @@ namespace LDH_MainGame
             
             // Additive Load
             yield return MainGameManager.Instance.Loader.LoadAdditive(_sceneName(_currentMini), null);
-          
-            if (_isMaster())
-                _pc.SetRoomProps(RoomProps.State, MainState.PlayingMiniGame.ToString());
             
             MainGameManager.Instance.OnLoadingMiniGame?.Invoke();
             

@@ -116,6 +116,12 @@ namespace LDH_MainGame
             OnRoundChanged?.Invoke(1);
         }
 
+        public void NotifyMiniGameStart()
+        {
+            if (PhotonNetwork.IsMasterClient)
+                PropertiesCtrl.SetRoomProps(RoomProps.State, MainState.PlayingMiniGame.ToString());
+        }
+
         public void NotifyMiniGameFinish()
         {
             if (PhotonNetwork.IsMasterClient)

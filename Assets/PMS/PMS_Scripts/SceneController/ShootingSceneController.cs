@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using LDH_MainGame;
 using Photon.Pun;
 using ShootingScene;
 using ShootingScene.ShootingGame;
@@ -76,6 +77,7 @@ public class ShootingSceneController : BaseGameSceneController
         {
             if (PhotonNetwork.IsMasterClient)
             {
+                MainGameManager.Instance?.NotifyMiniGameStart();
                 RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "CardSelectState");
             }
             // else if(RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.State).ToString() == "CardSelectState")
