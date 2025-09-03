@@ -77,6 +77,7 @@ namespace ShootingScene
             
             if (_turnOrder.IsFirstNode(nextNode)) // 한 라운드 완료를 체크하는 조건(다음 턴 대상자가 턴 리스트의 첫번째면, 한 라운드가 완료된 것)
             {
+                Debug.Log("라운드를 증가시킵니다.");
                 currentRoundIndex++; //1부터 시작
                 if (currentRoundIndex > totalRounds)
                 {

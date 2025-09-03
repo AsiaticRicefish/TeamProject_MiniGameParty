@@ -24,6 +24,10 @@ namespace LDH_MainGame
             // Disable<AudioListener>(mainScene);
             // Disable<EventSystem>(mainScene); 
             
+            //먼저 disable 되도 괜찮은 컴포넌트
+            yield return StartCoroutine(Disable<AudioListener>(mainScene));
+            yield return StartCoroutine(Disable<EventSystem>(mainScene)); 
+            
             var op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
             
             while (!op.isDone) yield return null;
@@ -31,9 +35,9 @@ namespace LDH_MainGame
             _loadedMiniScene = SceneManager.GetSceneByName(sceneName);
             _hasMiniScene = _loadedMiniScene.IsValid();
 
+            //카메라만 나중에 비활성
             yield return StartCoroutine(Disable<Camera>(mainScene));
-            yield return StartCoroutine(Disable<AudioListener>(mainScene));
-            yield return StartCoroutine(Disable<EventSystem>(mainScene)); 
+          
             
             if (_hasMiniScene)
             {
