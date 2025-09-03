@@ -15,7 +15,7 @@ namespace RhythmGame
         Coroutine timerCo;
 
         //게임 규칙
-        [SerializeField] int hitScore = 100; //적중 시 점수
+        // [SerializeField] int hitScore = 100; //적중 시 점수
         [SerializeField] int overHeatPoint = 5; // 미스 시 과열 증가
         [SerializeField] int overHeatMaxValue = 100; // 임계치
 
@@ -90,12 +90,38 @@ namespace RhythmGame
         /// <summary>
         /// Good 히트 → 개인 점수 증감
         /// </summary>
-        public void GoodHitScore(Player actor)
+        public void GoodHitScore(NoteType type, Player actor)
         {
             if (!PhotonNetwork.IsMasterClient || actor == null) return;
 
+            int score = CalculateNote(type);
+
             ScoreManager.Instance.photonView.
-            RPC(nameof(ScoreManager.AddScore), RpcTarget.All, actor.ActorNumber, hitScore);
+            RPC(nameof(ScoreManager.AddScore), RpcTarget.All, actor.ActorNumber, score);
+            // RPC(nameof(ScoreManager.AddScore), RpcTarget.All, actor.ActorNumber, hitScore);
+        }
+
+        //판정 관련 로직, NoteType에 따라 점수 반영 다르도록
+        public int CalculateNote(NoteType type)
+        {
+            int score = 0;
+            switch (type)
+            {
+                case NoteType.Fake:
+                    score = -1;
+                    OverHeatCheck();
+                    break;
+
+                case NoteType.Touch:
+                    score = 2;
+                    break;
+
+                case NoteType.Continue:
+                    score = 10;
+                    break;
+            }
+
+            return score;
         }
 
         /// <summary>
@@ -118,7 +144,7 @@ namespace RhythmGame
             // 과열 최대치 도달했을 경우
             if (overHeatValue >= overHeatMaxValue)
             {
-                ScoreManager.Instance.photonView.RPC("RPC_IsOverHeat", RpcTarget.All);
+                ScoreManager.Instance.photonView.RPC(nameof(ScoreManager.RPC_IsOverHeat), RpcTarget.All);
                 overHeatValue = 0; //과열점수 리셋
                 Debug.Log($"과열 점수 초기화 {overHeatValue}");
 
@@ -129,9 +155,8 @@ namespace RhythmGame
             }
             return false;
         }
-
+        
         public int LaneCapacity => playerPoints?.Length ?? 0;
-
 
         public void PlaceActorToLane(int actorNumber, int lane)
         {

@@ -8,7 +8,7 @@ namespace RhythmGame
     partial class Note : MonoBehaviour
     {
         [SerializeField] NoteType _type;
-        public NoteType GetObstacleType() => _type;
+        public NoteType Type => _type;
 
         [SerializeField] NoteStatus _status;
         public NoteStatus Status { get { return _status; } set { _status = value; } }

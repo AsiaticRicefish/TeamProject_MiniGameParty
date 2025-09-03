@@ -123,7 +123,9 @@ namespace RhythmGame
 
             // 득점 및 과열 처리
             if (isCanInteract)
+            {
                 GameManager.Instance.GoodHitScore(type,info.Sender);
+            }
             else
                 GameManager.Instance.OverHeatCheck();
 
