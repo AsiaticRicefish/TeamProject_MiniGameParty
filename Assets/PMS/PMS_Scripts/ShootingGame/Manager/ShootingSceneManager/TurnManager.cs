@@ -22,7 +22,17 @@ namespace ShootingScene
         private TurnOrder _turnOrder = new();
         
         public int currentTurnIndex = 0;
-        public int currentRoundIndex = 0;
+        private int _round = 0;
+
+        public int currentRoundIndex
+        {
+            get => _round;
+            set
+            {
+                Debug.Log($"라운드 값 변경 - 기존 값 : {_round}  / 변경될 값 : {value}");
+                _round = value;
+            }
+        }
         private int totalRounds = 3;
 
         public bool IsTurnEnd;
