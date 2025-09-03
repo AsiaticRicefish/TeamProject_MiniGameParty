@@ -32,7 +32,6 @@ namespace RhythmGame
 
             note.OnDespawn -= Despawn;
             note.OnDespawn += Despawn;
-
         }
 
         /// <summary>
@@ -41,24 +40,16 @@ namespace RhythmGame
         /// <param name="other"></param>
         void OnTriggerExit(Collider other)
         {
-            if (other.TryGetComponent(out Note note))
-            {
-                _notes.Remove(note);
+            if (!other.TryGetComponent(out Note note)) return;
+            if (!_notes.Contains(note)) return;
 
-                if (note.Status != NoteStatus.None)
-                {
-                    note.Status = NoteStatus.None;
-                    note.OnDespawn -= Despawn;
-                }
-            }
+            note.ReturnPool();
         }
 
         void Despawn(Note note)
         {
             if (_notes.Remove(note))
-            {
                 note.OnDespawn -= Despawn;
-            }
         }
     }
 }
