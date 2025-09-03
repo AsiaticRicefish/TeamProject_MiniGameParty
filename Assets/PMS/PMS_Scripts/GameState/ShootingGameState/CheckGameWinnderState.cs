@@ -26,6 +26,6 @@ public class CheckGameWinnderState : ShootingGameState
     }
     public override void Exit() 
     {
-  
+        Debug.Log("[CheckGameWinnderState] - CheckGameWinnderState Exit");
     }
 }

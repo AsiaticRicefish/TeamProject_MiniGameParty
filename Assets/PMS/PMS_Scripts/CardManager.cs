@@ -27,10 +27,10 @@ public class CardManager : PunSingleton<CardManager>
 
     [Header("Scene")] [SerializeField] private string nextSceneName = "PMS_ShootingTestScene";
 
-    private const string KEY_DECK_VALUES = "deckValues";
-    private const string KEY_CARD_OWNERS = "cardOwners";
-    private const string KEY_STATE = "state";
-    private const string KEY_TURN_ORDER = "turnOrder";
+    //private const string KEY_DECK_VALUES = "deckValues";
+    //private const string KEY_CARD_OWNERS = "cardOwners";
+    //private const string KEY_STATE = "state";
+    //private const string KEY_TURN_ORDER = "turnOrder";
 
     private enum LobbyState : byte { Picking = 0, Revealing = 1, Done = 2 }
 
@@ -82,7 +82,7 @@ public class CardManager : PunSingleton<CardManager>
 
         var props = new Hashtable
         {
-            { KEY_DECK_VALUES, _deckValues }, { KEY_CARD_OWNERS, _owners }, { KEY_STATE, (byte)LobbyState.Picking }
+            { ShootingGamePropertyKeys.KEY_DECK_VALUES, _deckValues }, { ShootingGamePropertyKeys.KEY_CARD_OWNERS, _owners }, { ShootingGamePropertyKeys.KEY_STATE, (byte)LobbyState.Picking }
         };
         PhotonNetwork.CurrentRoom.SetCustomProperties(props);
         Debug.Log($"[CardManager] Deck after shuffle: {string.Join(",", _deckValues)} (seed={seed})");
@@ -95,8 +95,8 @@ public class CardManager : PunSingleton<CardManager>
         var room = PhotonNetwork.CurrentRoom;
         if (room == null || room.CustomProperties == null) return;
 
-        if (room.CustomProperties.TryGetValue(KEY_DECK_VALUES, out var dvObj) &&
-            room.CustomProperties.TryGetValue(KEY_CARD_OWNERS, out var ownObj))
+        if (room.CustomProperties.TryGetValue(ShootingGamePropertyKeys.KEY_DECK_VALUES, out var dvObj) &&
+            room.CustomProperties.TryGetValue(ShootingGamePropertyKeys.KEY_CARD_OWNERS, out var ownObj))
         {
             _deckValues = (int[])dvObj;
             _owners = (int[])ownObj;
@@ -188,7 +188,7 @@ public class CardManager : PunSingleton<CardManager>
         if (!PhotonNetwork.IsMasterClient) return;
 
         // 방 상태 확인
-        if (!PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(KEY_STATE, out var stObj)) return;
+        if (!PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(ShootingGamePropertyKeys.KEY_STATE, out var stObj)) return;
         if ((byte)stObj != (byte)LobbyState.Picking) return;
 
         if (cardIndex < 0 || cardIndex >= _owners.Length) return;
@@ -204,7 +204,7 @@ public class CardManager : PunSingleton<CardManager>
 
         // 소유자 확정
         _owners[cardIndex] = actorNumber;
-        PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable { { KEY_CARD_OWNERS, _owners } });
+        PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable { { ShootingGamePropertyKeys.KEY_CARD_OWNERS, _owners } });
 
         // 요청자에게 성공 콜백
         photonView.RPC(nameof(RPC_PickResult), RpcTarget.AllBuffered, true, actorNumber, cardIndex);
@@ -323,7 +323,7 @@ public class CardManager : PunSingleton<CardManager>
         if (isAllPicked)
         {
             // 상태 전환
-            PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable { { KEY_STATE, (byte)LobbyState.Revealing } });
+            PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable { { ShootingGamePropertyKeys.KEY_STATE, (byte)LobbyState.Revealing } });
 
             // 마스터 서버 공개 시작 시간 처리
             t0 = PhotonNetwork.Time + 0.3; // 지연 감안한 여유 시간
@@ -343,7 +343,7 @@ public class CardManager : PunSingleton<CardManager>
 
             PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable
             {
-                { KEY_TURN_ORDER, order }, { KEY_STATE, (byte)LobbyState.Done }
+                { ShootingGamePropertyKeys.KEY_TURN_ORDER, order }, { ShootingGamePropertyKeys.KEY_STATE, (byte)LobbyState.Done }
             });
 
 
@@ -403,8 +403,8 @@ public class CardManager : PunSingleton<CardManager>
     public override void OnRoomPropertiesUpdate(Hashtable propertiesThatChanged)
     {
         // 뒤늦게 입장한 클라가 즉시 동기화될 수 있도록 안전망
-        if (propertiesThatChanged.ContainsKey(KEY_DECK_VALUES) ||
-            propertiesThatChanged.ContainsKey(KEY_CARD_OWNERS))
+        if (propertiesThatChanged.ContainsKey(ShootingGamePropertyKeys.KEY_DECK_VALUES) ||
+            propertiesThatChanged.ContainsKey(ShootingGamePropertyKeys.KEY_CARD_OWNERS))
         {
             TryInitFromRoomProps();
         }
@@ -414,7 +414,7 @@ public class CardManager : PunSingleton<CardManager>
     {
         // 선택 중 누군가 이탈하면 Master가 남은 카드/인원을 재구성하는 로직을 여기에 추가 가능
         // (필요 시: 상태가 Picking일 때만 재빌드)
-        if (!PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(KEY_STATE, out var stObj)) return;
+        if (!PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(ShootingGamePropertyKeys.KEY_STATE, out var stObj)) return;
         if ((byte)stObj != (byte)LobbyState.Picking) return;
         
         //picking 상태일 때 나간 플레이어가 선택한 카드가 있다면 제거 

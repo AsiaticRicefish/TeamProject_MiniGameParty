@@ -144,5 +144,50 @@ namespace ShootingScene
                 turnObserverId = null;
             }
         }
+
+        //슈팅 게임 룸 프로퍼티 초기화 함수
+        public void ClearShootingGameRoomProperties()
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+
+            // 초기화할 룸 프로퍼티 키들
+            string[] gameKeys = { 
+                ShootingGamePropertyKeys.State, 
+                ShootingGamePropertyKeys.Turn, 
+                ShootingGamePropertyKeys.Round,
+                ShootingGamePropertyKeys.KEY_DECK_VALUES,
+                ShootingGamePropertyKeys.KEY_CARD_OWNERS,
+                ShootingGamePropertyKeys.KEY_STATE,
+                ShootingGamePropertyKeys.KEY_TURN_ORDER,
+             };
+
+            var props = new ExitGames.Client.Photon.Hashtable();
+            foreach (var key in gameKeys)
+            {
+                props[key] = null;  // 또는 초기값 설정 가능
+            }
+
+            PhotonNetwork.CurrentRoom.SetCustomProperties(props);
+        }
+
+        //슈팅 게임 플레이어 프로퍼티 초기화 함수
+        public void ClearShootingGamePlayerProperties()
+        {
+            //각자 초기화
+
+            //초기화할 플레이어 프로퍼티 키들
+            string[] keys = { 
+                ShootingGamePlayerPropertyKeys.MyPrefabName, 
+                ShootingGamePlayerPropertyKeys.MyTurnIndex 
+            };
+
+            var props = new ExitGames.Client.Photon.Hashtable();
+            foreach (var key in keys)
+            {
+                props[key] = null;
+            }
+
+            PhotonNetwork.LocalPlayer.SetCustomProperties(props);
+        }
     }
 }
