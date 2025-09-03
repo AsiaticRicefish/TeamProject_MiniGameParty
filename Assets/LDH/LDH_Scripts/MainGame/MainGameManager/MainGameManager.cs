@@ -140,6 +140,11 @@ namespace LDH_MainGame
 
         public override void OnPlayerPropertiesUpdate(Player target, Hashtable changedProps)
         {
+            if (target.IsLocal && changedProps.ContainsKey(PlayerProps.InGameDone))
+            {
+                Debug.Log($"[PlayerProps chagned] my done : {changedProps[PlayerProps.InGameDone]}");
+            }
+            
             // UI Ready 표시 갱신: PlayerProps 기반으로 계산해서 UI에만 전달
             int readyMask = PropertiesCtrl.BuildReadyMaskFromPlayers();
             UI.UpdateReady(readyMask);

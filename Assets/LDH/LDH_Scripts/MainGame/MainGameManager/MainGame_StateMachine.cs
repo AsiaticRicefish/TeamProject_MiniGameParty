@@ -94,7 +94,7 @@ namespace LDH_MainGame
 
         public IEnumerator Co_LoadingMini()
         {
-            
+         
             if (_currentMini == null)
             {
                 if (_isMaster())
@@ -117,11 +117,14 @@ namespace LDH_MainGame
         public IEnumerator Co_PlayingMini()
         {
             // 미니게임 종료는 외부에서 State=ApplyingResult로 전환한다고 가정
+            MainGame_PropertiesController.SetLocalReady(false);
+            MainGame_PropertiesController.SetLocalDone(false);
             yield break;
         }
 
         public IEnumerator Co_ApplyingResult()
         {
+            Debug.Log($"[MainGameStateMachine] local done : {MainGame_PropertiesController.GetDone(PhotonNetwork.LocalPlayer)}");
             yield return MainGameManager.Instance.Loader.UnloadAdditive();
 
             // 각자 자기 Done = true
