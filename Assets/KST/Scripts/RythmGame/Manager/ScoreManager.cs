@@ -24,8 +24,13 @@ namespace RhythmGame
         /// 점수 추가 및 이벤트 호출
         /// </summary>
         /// <param name="amount">획득 점수량</param>
-        public void AddScroe(int amount)
+        public void AddScore(int amount)
         {
+            if (amount < 0)
+            {
+                MinusScore(amount);
+                return;
+            }
             _score += amount;
             Debug.Log($" 점수 획득 {amount}");
             OnScoreChanged?.Invoke(_score);
@@ -36,10 +41,11 @@ namespace RhythmGame
         /// 
         /// 차감될때 점수가 0보다 이하일 경우 0으로 설정
         /// </summary>
-        /// <param name="amount">차감 점수량</param>
+        /// <param name="amount">차감 점수량(음수)</param>
         public void MinusScore(int amount)
         {
-            _score -= amount;
+            _score += amount;
+
             Debug.Log($" 점수 차감 {amount}");
             if (_score < 0) _score = 0;
             OnScoreChanged?.Invoke(_score);
@@ -56,7 +62,7 @@ namespace RhythmGame
         public void AddScore(int actorNumber, int score)
         {
             if (PhotonNetwork.LocalPlayer.ActorNumber == actorNumber)
-                AddScroe(score);
+                AddScore(score);
         }
 
         /// <summary>
@@ -85,13 +91,13 @@ namespace RhythmGame
         // /// <summary>
         // /// 과열 시 액션
         // /// </summary>
-        [PunRPC]
-        public void RPC_IsOverHeat()
-        {
-            Debug.Log("과열 Warning! 모든 플레이어 기절!");
+        // [PunRPC]
+        // public void RPC_IsOverHeat()
+        // {
+        //     Debug.Log("과열 Warning! 모든 플레이어 기절!");
 
-            // OnIsOverHeat?.Invoke(); //과열 점수 초기화, 플레이어 이펙트 등등 설정
-        }
+        //     // OnIsOverHeat?.Invoke(); //과열 점수 초기화, 플레이어 이펙트 등등 설정
+        // }
 
         #endregion
 
@@ -104,7 +110,7 @@ namespace RhythmGame
         }
 
         [PunRPC]
-        void RPC_RequestHit(int noteId, bool isCanInteract,NoteType type, PhotonMessageInfo info)
+        void RPC_RequestHit(int noteId, bool isCanInteract, NoteType type, PhotonMessageInfo info)
         {
             if (!PhotonNetwork.IsMasterClient) return;
 
@@ -116,18 +122,24 @@ namespace RhythmGame
             //내 레인이 아닐 경우에
             if (noteLane != actorLane)
             {
+                //TODO 김승태 : 내 레인과 상대 레인에 노트가 동시에 도착하는 경우 과열처리가 날 수도 있음. 이걸 방지하는 코드가 필요함.
                 //과열 점수가 오르도록
-                GameManager.Instance.OverHeatCheck();
+                GameManager.Instance.MissBlock(info.Sender);
                 return;
             }
 
             // 득점 및 과열 처리
             if (isCanInteract)
             {
-                GameManager.Instance.GoodHitScore(type,info.Sender);
+                GameManager.Instance.GoodHitScore(type, info.Sender);
             }
             else
+            {
                 GameManager.Instance.OverHeatCheck();
+
+                GameManager.Instance.MissBlock(info.Sender);
+
+            }
 
             // 파괴
             LaneManager.Instance.LaneByNoteId.Remove(noteId);
@@ -140,10 +152,11 @@ namespace RhythmGame
         }
 
         [PunRPC]
-        void RPC_RequestMiss()
+        void RPC_RequestMiss(PhotonMessageInfo info)
         {
             if (!PhotonNetwork.IsMasterClient) return;
             GameManager.Instance.OverHeatCheck();
+            GameManager.Instance.MissBlock(info.Sender);
         }
 
         #endregion
