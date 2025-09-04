@@ -22,7 +22,7 @@ namespace LDH_MainGame
         private PhotonViewCoordinator _coordinator;
 
 
-        private bool _syncCompleted = false;
+        private bool _syncCompleted = true;
         public bool SyncCompleted => _syncCompleted;
 
         protected override void OnAwake()

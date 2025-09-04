@@ -102,6 +102,9 @@ namespace LDH_MainGame
             // 모든 초기화가 완료되고 게임 시작을 알림
             Util_LDH.ConsoleLog(this, "모든 초기화가 완료되었습니다. 게임을 시작합니다.");
 
+            // 포톤뷰 싱크 플래그 끄기
+            PhotonViewSync.Instance.Clear();
+            
             // 로딩 패널을 꺼주기
             Manager.UI.CloseTopPopupUI();
 
