@@ -79,6 +79,12 @@ public class LocalPlayerInput : MonoBehaviourPun
             mainCam = Camera.main;
     }
 
+    private void OnDisable()
+    {
+       if(currentTimeoutCoroutine != null)
+           StopCoroutine(currentTimeoutCoroutine);
+    }
+
     //return pool 데이터 리셋 함수
     public void Initialize()
     {
