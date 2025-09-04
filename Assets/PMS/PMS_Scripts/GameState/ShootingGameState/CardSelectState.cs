@@ -26,7 +26,6 @@ public class CardSelectState : ShootingGameState
         if (PhotonNetwork.IsMasterClient)
         {
             ShootingGameManager.Instance.photonView.RPC("InputOn", RpcTarget.All);
-            TurnManager.Instance.NextTurn();
         }
     }
 }
