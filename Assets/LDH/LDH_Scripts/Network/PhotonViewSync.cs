@@ -76,7 +76,8 @@ namespace LDH_MainGame
             // 3단계 : 모든 플레이어의 조정 완료를 대기
             Debug.Log($"[PhotonViewSync] Step 3 : WaitUntilAllPlayerCompleted");
             yield return StartCoroutine(WaitUntilAllPlayerCompleted());
-            
+
+            coordinator.ActiveObjects();
             
             // 4단계 : 내 포톤 뷰 오브젝트 모두 활성화 대기
             Debug.Log($"[PhotonViewSync] Step 4 : Notify complete photon view objects all active");
