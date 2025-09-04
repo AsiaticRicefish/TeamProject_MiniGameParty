@@ -182,12 +182,17 @@ public class UnimoEgg : MonoBehaviourPun
         //if (!photonView.IsMine || turnEnded) return; // 내 알이 아니면 아무것도 안 함
 
             //모두가 비활성처리를 해줘야한다.
-        EggManager.Instance.photonView.RPC("RPC_DeactivateEgg", RpcTarget.All, photonView.ViewID);
+        
 
-        if (other.CompareTag("PlayGround") && isLaunched)
+        if (other.CompareTag("PlayGround"))
+        {
+            EggManager.Instance.photonView.RPC("RPC_DeactivateEgg", RpcTarget.All, photonView.ViewID);
+        }
+
+        if (other.CompareTag("FallDownZone") && isLaunched)
         {
             isLaunched = false; // 바깥으로 나가며 턴 종료 → 발사 상태 해제
-            TurnManager.Instance.photonView.RPC(("RequestTurnEnd"), RpcTarget.MasterClient);
+            TurnManager.Instance.photonView.RPC(("RequestTurnEnd"), RpcTarget.MasterClient);    
         }
 
         if (other.CompareTag("FallDownZone"))
