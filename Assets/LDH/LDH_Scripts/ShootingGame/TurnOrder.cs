@@ -122,7 +122,17 @@ namespace LDH.LDH_Scripts.ShootingGame
 
         public bool IsFirstNode(LinkedListNode<GamePlayer> node)
         {
-            return node.Value.PlayerId == _list.First.Value.PlayerId;
+            var firstNode = _list.First;
+            if (_list.Count == 0)
+            {
+                Debug.LogError("list is empty!!!");
+                return false;
+            }
+            while (firstNode?.Value == null)
+            {
+                firstNode = firstNode?.Next;
+            }
+            return node.Value.PlayerId == firstNode.Value.PlayerId;
         }
 
         public bool IsCurrentFirstNode()
