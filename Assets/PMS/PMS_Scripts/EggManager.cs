@@ -41,6 +41,9 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
     // 
     public Action OnRemoveEggPool;
 
+
+    private HashSet<string> registerdPools = new();
+
     protected override void OnAwake()
     {
         Debug.Log("[EggManager] - 초기화");
@@ -49,6 +52,8 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
     public void Initialize()
     {
         Debug.Log("EggManager Initialize 시작");
+        isPoolReady = false;
+        registerdPools.Clear();
         StartCoroutine(LocalInitPool());
     }
 
@@ -88,13 +93,16 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
         // 모든 유저에게 생성된 egg의 내가 생성한 viewIDs 전달
         photonView.RPC(nameof(RPC_RegisterEgg), RpcTarget.OthersBuffered, myUid, viewIDs.ToArray());
 
+        registerdPools.Add(myUid);
         Debug.Log($"[EggManager] - {PhotonNetwork.LocalPlayer.NickName}의 모든 풀 초기화 완료");
+
     }
 
 
     [PunRPC]
     private void RPC_RegisterEgg(string uid, int[] viewIDs)
     {
+        Debug.Log("register egg - view ids count : " + viewIDs.Length);
         //viewIDs를 전달 받음 배열로 전체 순회
         foreach (var id in viewIDs)
         {
@@ -115,6 +123,16 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
             }
         }
         //isPoolReady = true; -> 모든 플레이어의 풀이 다 적용되어 있으면 true가 되도록 하고 싶은데
+        registerdPools.Add(uid);
+        Debug.Log($"{uid} 의 풀 전달 받아서 등록 완료");
+
+        if(registerdPools.Count == PhotonNetwork.CurrentRoom.PlayerCount) //모든 플레이어의 풀이 등록이 완료 되었을 때
+        {
+            isPoolReady = true;
+            Debug.Log("모든 플레이어의 풀 등록 완료 - isPoolReady true");
+        }
+
+
     }
 
     // 턴 시작 시 개인이 호출
@@ -125,6 +143,9 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
         if (currentUnimoEgg != null) return null;
 
         // 풀에서 비활성 알 찾기
+        Debug.Log($"플레이어 egg pools {playerEggPools.Count}개 - {playerEggPools.Values?.ToList()[0].Count} egg 있음");
+        Debug.Log($"shooter uid {shooterUid}에 해당하는 egg pools 있나? {playerEggPools.ContainsKey(shooterUid)}");
+        Debug.Log($" playerEggPools[shooterUid] == null? {playerEggPools[shooterUid] == null}");
         UnimoEgg egg = playerEggPools[shooterUid].Find(e => !e.gameObject.activeInHierarchy);
         if (egg == null)
         {
