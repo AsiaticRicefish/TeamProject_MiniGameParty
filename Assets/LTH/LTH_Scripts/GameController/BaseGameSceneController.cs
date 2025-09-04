@@ -30,10 +30,16 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
     private HashSet<int> initializedPlayers = new();
     private bool isInitializing = false;
 
-    private void OnEnable()
+    private void Awake()            // enable에서 호출하니 초기화 순서 문제로 awake에서 호출
     {
+        Debug.Log("[BaseSceneController] Awake 호출 시점");
         loadedPlayers.Clear();
         initializedPlayers.Clear();
+    }
+
+    private void OnEnable()
+    {
+        Debug.Log("[BaseSceneController] Enable 호출 시점");
     }
 
     private void Start()
