@@ -36,6 +36,7 @@ namespace ShootingScene
         private int totalRounds = 3;
 
         public bool IsTurnEnd;
+        private bool skipRoundIncrease = false;
         private Coroutine TurnCorutine;
 
         public event Action<UnimoEgg> OnTurnChanged;
@@ -68,7 +69,7 @@ namespace ShootingScene
         #endregion
 
         #region Turn 넘기기 / 결과 알리기 
-        private IEnumerator NextTurn(bool skipRound = false, float delay = 2.0f)
+        private IEnumerator NextTurn(float delay = 2.0f)
         {
             Debug.Log($"[TurnManager] NextTurn 호출. {delay} 동안 잠시 대기합니다.");
             yield return new WaitForSeconds(delay);
@@ -97,7 +98,7 @@ namespace ShootingScene
             currentTurnIndex = nextNode.Value.ShootingData.myTurnIndex;
             
             // 한 라운드 완료를 체크하는 조건
-            if (_turnOrder.IsFirstNode(nextNode) && !skipRound)
+            if (_turnOrder.IsFirstNode(nextNode) && !skipRoundIncrease)
             {
                 Debug.Log("라운드를 증가시킵니다.");
                 currentRoundIndex++; //1부터 시작
@@ -113,7 +114,9 @@ namespace ShootingScene
                     yield break;
                 }
             }
-            
+
+            skipRoundIncrease = false; //초기화
+
             RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "GamePlayState");
             TurnCorutine = null;
         }
@@ -316,7 +319,8 @@ namespace ShootingScene
         {
             //현재 게임 상태를 가져온다(룸 프로퍼티)
             var stateValue = RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.State);
-            
+            Debug.Log($"플레이어 나감 콜백 - 플레이어가 나갔을 때 게임 STATE : {stateValue}");
+
             //현재 게임 상태가 game play state가 아니라면 처리할 필요가 없음
             if (stateValue != null && stateValue is string && (stateValue.ToString().Equals("GamePlayState") || stateValue.ToString().Equals("TurnCheckState")))
             {
@@ -326,9 +330,9 @@ namespace ShootingScene
                     
                     // 조건 체크를 위한 캐싱
                     var leftPlayerTurnIndex = _turnOrder.GetPlayerTurnIndex(uid);
-                    bool isLeftPlayerFirst = _turnOrder.IsFirstNode(uid);
+                    skipRoundIncrease = _turnOrder.IsFirstNode(uid);
                     
-                    Debug.Log($"나간 플레이어의 myturnindex : {leftPlayerTurnIndex} / 현재 턴 인덱스 {currentTurnIndex} / 나간 플레이어가 첫번째 순서였는가 : {isLeftPlayerFirst}");
+                    Debug.Log($"나간 플레이어의 myturnindex : {leftPlayerTurnIndex} / 현재 턴 인덱스 {currentTurnIndex} / 나간 플레이어가 첫번째 순서였는가 : {skipRoundIncrease}");
                     
                     // 턴에서 제거
                     StartCoroutine(SafeRemoveNode(uid));
@@ -339,9 +343,9 @@ namespace ShootingScene
                         && RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.State) is string
                         && stateValue.ToString().Equals("GamePlayState"))
                     {
-                        Debug.Log("현재 턴 플레이어가 나갔습니다. 강제로 턴을 넘깁니다.");
+                        Debug.Log("현재 턴 플레이어가 나감 && 현재 상태가 게임 플레이 상태이기 때문에 강제로 턴을 넘깁니다.");
                         
-                        StartCoroutine(NextTurn(isLeftPlayerFirst));
+                        StartCoroutine(NextTurn());
                     }
                 }
                    
@@ -361,13 +365,14 @@ namespace ShootingScene
             // 이전 마스터가 턴 종료 요청을 승인하고 다음 턴을 계산해서 GamePlayState로 넘겨줘야하는데 이걸 완료하지 못하고 나간 것 -> 턴이 멈추게 된다.
             // 따라서 새로운 마스터는 턴 계산을 다시해서 반영해줘야 한다.
             var currentStateValue = RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.State);
+            Debug.Log($"마스터 변경 콜백 - 플레이어가 나갔을 때 게임 STATE : {currentStateValue}");
             if (currentStateValue is string && currentStateValue.Equals("TurnCheckState"))
             {
                 if (newMasterClient.CustomProperties.TryGetValue("uid", out object value)
                     && value is string uid && !string.IsNullOrEmpty(uid))
                 {
-                    bool isLeftPlayerFirst = _turnOrder.IsFirstNode(uid);
-                    StartCoroutine(NextTurn(isLeftPlayerFirst));
+                    Debug.Log($"마스터 변경 콜백 - 턴 체크 상태이고,새로운 마스터가 NEXT TURN을 다시 실행시킴");
+                    StartCoroutine(NextTurn());
                 }
             }
         }
