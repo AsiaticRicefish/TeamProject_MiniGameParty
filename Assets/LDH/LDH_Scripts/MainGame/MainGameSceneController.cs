@@ -45,6 +45,9 @@ namespace LDH_MainGame
             
             _sequential.Clear();
             _parallel.Clear();
+
+            CreateRoomObjects();
+
         }
 
         /// <summary>
@@ -180,31 +183,32 @@ namespace LDH_MainGame
                     else
                         Util_LDH.ConsoleLogWarning(this, $"RoomObject spawn failed or missing PhotonView: {path}");
                 }
-                
-                photonView.RPC(nameof(RPC_AnnounceRoomObjects), RpcTarget.AllBuffered, ids.ToArray());
+                //
+                // photonView.RPC(nameof(RPC_AnnounceRoomObjects), RpcTarget.AllBuffered, ids.ToArray());
             }
-            
-            Debug.Log("마스터가 viewid 뿌릴때까지 대기");
-            // 1) 마스터가 뿌린 ViewID 목록을 받을 때까지 대기
-            yield return new WaitUntil(() => _spawnedViewIds != null && _spawnedViewIds.Length == roomObjectPaths.Length);
-            Debug.Log("내 로컬에 뷰 아이디 생길때까지 대기");
-            // 2) 내 로컬에 해당 ViewID 들이 실제로 생길 때까지 대기
-            yield return new WaitUntil(() =>
-            {
-                for (int i = 0; i < _spawnedViewIds.Length; i++)
-                {
-                    Debug.Log(_spawnedViewIds[i]);
-                    if (PhotonView.Find(_spawnedViewIds[i]) == null)
-                    {
-                        Debug.Log($"Find? {PhotonView.Find(_spawnedViewIds[i]) == null}");
-                        return false;
-                    }
-                }
-                return true;
-            });
-            Debug.Log("완료 1프레임 대기 하고 메서드 종료");
-            // 3) 컴포넌트 Awake/Start 보장 위해 한 프레임 더 쉼
             yield return null;
+            
+            // Debug.Log("마스터가 viewid 뿌릴때까지 대기");
+            // // 1) 마스터가 뿌린 ViewID 목록을 받을 때까지 대기
+            // yield return new WaitUntil(() => _spawnedViewIds != null && _spawnedViewIds.Length == roomObjectPaths.Length);
+            // Debug.Log("내 로컬에 뷰 아이디 생길때까지 대기");
+            // // 2) 내 로컬에 해당 ViewID 들이 실제로 생길 때까지 대기
+            // yield return new WaitUntil(() =>
+            // {
+            //     for (int i = 0; i < _spawnedViewIds.Length; i++)
+            //     {
+            //         Debug.Log(_spawnedViewIds[i]);
+            //         if (PhotonView.Find(_spawnedViewIds[i]) == null)
+            //         {
+            //             Debug.Log($"Find? {PhotonView.Find(_spawnedViewIds[i]) == null}");
+            //             return false;
+            //         }
+            //     }
+            //     return true;
+            // });
+            // Debug.Log("완료 1프레임 대기 하고 메서드 종료");
+            // // 3) 컴포넌트 Awake/Start 보장 위해 한 프레임 더 쉼
+            // yield return null;
         }
 
         
