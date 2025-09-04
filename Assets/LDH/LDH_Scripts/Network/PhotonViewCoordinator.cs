@@ -16,6 +16,11 @@ namespace LDH.LDH_Scripts.Network
         private bool _isComplete = false;
         public bool IsComplete => _isComplete;
 
+
+        private bool _isActiveAll = false;
+        public bool IsActiveAll => _isActiveAll;
+            
+            
         private void Awake()
         {
             if (roots.Length != 0 || sceneViews.Length != null)
@@ -63,6 +68,9 @@ namespace LDH.LDH_Scripts.Network
         {
             Debug.Log("[PhotonViewCoordinator] Active Target Objects");
             foreach (var r in roots) if (r) r.SetActive(true);
+
+            _isActiveAll = true;
+
         }
     }
 }

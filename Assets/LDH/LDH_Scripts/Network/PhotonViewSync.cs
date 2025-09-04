@@ -18,7 +18,12 @@ namespace LDH_MainGame
 
         private HashSet<int> completedPlayers = new();
         private HashSet<int> hasCoordniatorPlayers = new();
+        private HashSet<int> activeCompletedPlayers = new();
         private PhotonViewCoordinator _coordinator;
+
+
+        private bool _syncCompleted = false;
+        public bool SyncCompleted => _syncCompleted;
 
         protected override void OnAwake()
         {
@@ -29,6 +34,8 @@ namespace LDH_MainGame
         public void Initialize()
         {
             completedPlayers.Clear();
+            hasCoordniatorPlayers.Clear();
+            activeCompletedPlayers.Clear();
         }
 
         public void Clear()
@@ -36,6 +43,9 @@ namespace LDH_MainGame
             Debug.Log("[PhotonViewSync] Clear Hash Sets");
             completedPlayers.Clear();
             hasCoordniatorPlayers.Clear();
+            activeCompletedPlayers.Clear();
+
+            _syncCompleted = false;
         }
 
         /// <summary>
@@ -66,6 +76,20 @@ namespace LDH_MainGame
             // 3단계 : 모든 플레이어의 조정 완료를 대기
             Debug.Log($"[PhotonViewSync] Step 3 : WaitUntilAllPlayerCompleted");
             yield return StartCoroutine(WaitUntilAllPlayerCompleted());
+            
+            
+            // 4단계 : 내 포톤 뷰 오브젝트 모두 활성화 대기
+            Debug.Log($"[PhotonViewSync] Step 4 : Notify complete photon view objects all active");
+            yield return StartCoroutine(WaitUntilObjectsActive());
+            // 4-1단계 : 내 포톤 뷰 오브젝트 활성화 완료를 알림
+            photonView.RPC(nameof(RPC_CompleteObjectsActive), RpcTarget.All,
+                PhotonNetwork.LocalPlayer.ActorNumber);
+            
+            
+            // 5단계 : 모든 플레이어의 포톤 뷰 오브젝트 활성화를 대기
+            Debug.Log($"[PhotonViewSync] Step 5 : WaitUntilAllObjectsActive");
+            yield return StartCoroutine(WaitUntilAllPlayerActiveObjects());
+
 
             Debug.Log($"=== SafePhotonViewSync Completed ===");
 
@@ -136,7 +160,7 @@ namespace LDH_MainGame
 
             Debug.Log($"[PhotonViewSync] My coordinate done!");
         }
-
+        
 
         /// <summary>
         /// 모든 플레이어가 포톤 뷰 조정을 마칠 때까지 대기
@@ -162,6 +186,8 @@ namespace LDH_MainGame
             }
 
             Debug.Log($"[PhotonViewSync] All players complete coordination!");
+
+            _syncCompleted = true;
         }
 
         
@@ -188,7 +214,52 @@ namespace LDH_MainGame
             Debug.Log($"[PhotonViewSync] All Player has coordinator!");
         }
 
+        private IEnumerator WaitUntilObjectsActive()
+        {
+            Debug.Log("[PhotonViewSync]  Wait until my objects all active ");
+            
+            while (!PhotonNetwork.IsConnected || !PhotonNetwork.InRoom || PhotonNetwork.CurrentRoom == null)
+                yield return null;
+
+            float timer = 0f;
+            while (!_coordinator.IsActiveAll)
+            {
+                timer += Time.deltaTime;
+                if (timer > timeout)
+                {
+                    Debug.LogError($"[PhotonViewSync] !!!! WaitUntilObjectsActive Time Out!!!!");
+                    yield break;
+                }
+
+                yield return null;
+            }
+
+            Debug.Log($"[PhotonViewSync] My  objects all active!");
+            
+        }
         
+        private IEnumerator WaitUntilAllPlayerActiveObjects()
+        {
+            Debug.Log("[PhotonViewSync] Wait until all players have coordinator ");
+
+            while (!PhotonNetwork.IsConnected || !PhotonNetwork.InRoom || PhotonNetwork.CurrentRoom == null)
+                yield return null;
+
+            float timer = 0f;
+            while (activeCompletedPlayers.Count < PhotonNetwork.CurrentRoom.PlayerCount)
+            {
+                timer += Time.deltaTime;
+                if (timer > timeout)
+                {
+                    Debug.LogError($"[PhotonViewSync] !!!!  WaitUntilAllPlayerActiveObjects Time Out!!!!");
+                    yield break;
+                }
+
+                yield return null;
+            }
+
+            Debug.Log($"[PhotonViewSync] All Player all objects active!");
+        }
         #region RPC
 
         [PunRPC]
@@ -213,6 +284,16 @@ namespace LDH_MainGame
             hasCoordniatorPlayers.Add(playerActorNumber);
             Debug.Log(
                 $"Player ActorNumber({playerActorNumber}), NickName ({PhotonNetwork.CurrentRoom.GetPlayer(playerActorNumber).NickName}) Has coordinator ({completedPlayers.Count}/{PhotonNetwork.CurrentRoom.PlayerCount})");
+            
+        }
+        
+        
+        [PunRPC]
+        public void RPC_CompleteObjectsActive(int playerActorNumber)
+        {
+            activeCompletedPlayers.Add(playerActorNumber);
+            Debug.Log(
+                $"Player ActorNumber({playerActorNumber}), NickName ({PhotonNetwork.CurrentRoom.GetPlayer(playerActorNumber).NickName}) Complete all objects active. ({completedPlayers.Count}/{PhotonNetwork.CurrentRoom.PlayerCount})");
             
         }
 

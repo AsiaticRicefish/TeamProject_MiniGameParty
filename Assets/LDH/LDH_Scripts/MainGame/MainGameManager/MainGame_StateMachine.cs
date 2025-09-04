@@ -106,8 +106,6 @@ namespace LDH_MainGame
             _uiBinder.SetActiveDebugUI(false);
             yield return _uiBinder.CloseReadyPanel().ToCoroutine();
             
-            //photon view sync 변수 초기화
-            PhotonViewSync.Instance.Clear();
             
             // Additive Load
             yield return MainGameManager.Instance.Loader.LoadAdditive(_sceneName(_currentMini), null);
@@ -129,6 +127,8 @@ namespace LDH_MainGame
             Debug.Log($"[MainGameStateMachine] local done : {MainGame_PropertiesController.GetDone(PhotonNetwork.LocalPlayer)}");
             yield return MainGameManager.Instance.Loader.UnloadAdditive();
 
+            //photon view sync 변수 초기화
+            PhotonViewSync.Instance.Clear();
             
             _uiBinder.SetActiveDebugUI(true);
             
