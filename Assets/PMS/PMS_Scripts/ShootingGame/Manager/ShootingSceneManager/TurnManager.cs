@@ -260,7 +260,7 @@ namespace ShootingScene
             Debug.Log("[TurnManager]  WaitForTurnDelay 호출");
             yield return new WaitForSeconds(delay);
             NextTurn();
-         
+            TurnCorutine = null;
         }
 
         public void TurnCheck()
