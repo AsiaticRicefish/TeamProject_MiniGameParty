@@ -272,38 +272,31 @@ namespace KYG.Auth
         /// </summary>
         private void ApplyPhotonIdentityAndConnect(string uid, string nickname)
         {
-            //닉네임과 아이디만 설정해준다
             PhotonNetwork.NickName = nickname;
             PhotonNetwork.AuthValues = new AuthenticationValues(uid);
 
-            //---- 커스텀 프로퍼티는 로비 입장 후 설정되는 것으로 옮김 (공통적용을 위해)---- 0829(이도현)
-            // var props = new Hashtable { { "uid", uid } };
-            // PhotonNetwork.LocalPlayer.SetCustomProperties(props);
-            // Debug.Log($"[GuestLoginManager] Photon properties set: uid={uid}, nick={nickname}");
+            // Debug 로그 추가
+            Debug.Log($"[GuestLogin] Firebase UID={uid}, Nickname={PhotonNetwork.NickName}");
+            Debug.Log($"[GuestLogin] Photon.AuthValues.UserId={PhotonNetwork.AuthValues?.UserId}");
 
             if (!PhotonNetwork.IsConnected)
             {
                 PhotonNetwork.ConnectUsingSettings();
-                Debug.Log("[GuestLoginManager] Connecting to Photon...");
+                Debug.Log("[GuestLogin] Connecting to Photon...");
             }
             else if (!PhotonNetwork.InLobby)
             {
                 PhotonNetwork.JoinLobby();
             }
-            
-            // NetworkManager 이벤트 연결 (씬 전환은 여기서 위임)
+
             var nm = NetworkManager.Instance;
             if (nm != null)
             {
                 nm.ConnectedToMaster += () =>
                 {
-                    Debug.Log("[GuestLoginManager] Handing off to NetworkManager");
-                    nm.ConnectServer(); // 여기서 JoinLobby 호출
+                    Debug.Log("[GuestLogin] Handing off to NetworkManager");
+                    nm.ConnectServer();
                 };
-            }
-            else
-            {
-                Debug.LogWarning("[GuestLoginManager] NetworkManager.Instance is null. Relying on OnConnectedToMaster.");
             }
         }
 
