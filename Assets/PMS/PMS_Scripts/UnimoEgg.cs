@@ -144,18 +144,11 @@ public class UnimoEgg : MonoBehaviourPun
         yield return new WaitForFixedUpdate();   //AddForce 보장                                     
         yield return new WaitForFixedUpdate();
 
-        //Test_ShotFollowCamera.Instance.StartFollowTarget(gameObject);
-        //yield return new WaitForFixedUpdate();
-        //yield return new WaitUntil(() => Camera.main.GetComponent<CinemachineBrain>().ActiveBlend == null);
-
         while (rb.velocity.magnitude > stopSpeed)
-            yield return new WaitForSeconds(1.0f); //최소 보장시간
+            yield return new WaitForFixedUpdate(); //업데이트 프레임
 
+        yield return new WaitForSeconds(1.0f);
         Test_ShotFollowCamera.Instance.StopFollowTarget(); //돌아가는 부분
-
-        //Test_ShotFollowCamera.Instance.StopFollowTarget(gameObject);
-        //yield return new WaitForFixedUpdate();
-        //yield return new WaitUntil(() => Camera.main.GetComponent<CinemachineBrain>().ActiveBlend == null);
 
         // 내가 던진 알일 때만 마스터에게 턴 종료 요청
         if (photonView.IsMine && !turnEnded)
@@ -195,6 +188,11 @@ public class UnimoEgg : MonoBehaviourPun
         {
             isLaunched = false; // 바깥으로 나가며 턴 종료 → 발사 상태 해제
             TurnManager.Instance.photonView.RPC(("RequestTurnEnd"), RpcTarget.MasterClient);
+        }
+
+        if (other.CompareTag("PlayGround"))
+        {
+            rb.constraints &= ~RigidbodyConstraints.FreezePositionY;
         }
     }
 
