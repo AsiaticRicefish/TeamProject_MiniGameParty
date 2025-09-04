@@ -235,24 +235,24 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
         isPoolReady = false;
     }
 
-    //예? 이게머죠 왜 소유권 리턴이 있죠
-    public void ReturnAllEggOwnership()
-    {
-        if (!PhotonNetwork.IsMasterClient) return;
 
-        Debug.Log("마스터 모든 Egg 오브젝트 소유권 리턴");
+    //public void ReturnAllEggOwnership()
+    //{
+    //    if (!PhotonNetwork.IsMasterClient) return;
 
-        foreach (var unimoEgg in playerEggPools)
-        {
-            foreach (var egg in unimoEgg.Value)
-            {
-                if (egg != null && egg.gameObject != null)
-                {
-                    egg.photonView.RequestOwnership();
-                }
-            }
-        }
-    }
+    //    Debug.Log("마스터 모든 Egg 오브젝트 소유권 리턴");
+
+    //    foreach (var unimoEgg in playerEggPools)
+    //    {
+    //        foreach (var egg in unimoEgg.Value)
+    //        {
+    //            if (egg != null && egg.gameObject != null)
+    //            {
+    //                egg.photonView.RequestOwnership();
+    //            }
+    //        }
+    //    }
+    //}
 
     //나간 유저의 otherPlayer를 가지고 UID를 찾아야한다.
     public override void OnPlayerLeftRoom(Player otherPlayer)

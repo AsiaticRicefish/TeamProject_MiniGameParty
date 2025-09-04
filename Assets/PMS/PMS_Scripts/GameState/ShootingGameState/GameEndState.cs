@@ -15,9 +15,10 @@ public class GameEndState : ShootingGameState
 
         //룸 프로퍼티(마스터만) 및 플레이어 프로퍼티 초기화(로컬)        
         ShootingNetworkManager.Instance.ClearShootingGamePlayerProperties();
+        PlayerInputManager.Instance.DisableInput();
 
         if (PhotonNetwork.IsMasterClient)
-        {
+        {          
             ShootingNetworkManager.Instance.ClearShootingGameRoomProperties();
             ShootingGameManager.Instance.EndGame();
         }

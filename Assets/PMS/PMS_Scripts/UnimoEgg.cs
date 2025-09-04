@@ -199,6 +199,11 @@ public class UnimoEgg : MonoBehaviourPun
         }
     }
 
+    //OnCollistion
+    //맞은대상이 이미 쏜 친구
+
+    //
+
     private void OnDisable()
     {
         if(isCameraFollowing)       //카메라가 연출중이니깐

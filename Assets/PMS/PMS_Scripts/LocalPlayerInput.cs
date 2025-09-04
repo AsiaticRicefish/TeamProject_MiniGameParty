@@ -67,7 +67,7 @@ public class LocalPlayerInput : MonoBehaviourPun
     private void Awake()
     {
         ShootingGameManager.Instance.OnGameStarted += RegisterInput;
-        ShootingGameManager.Instance.OnGameEnded -= UnRegisterInput;
+        ShootingGameManager.Instance.OnGameEnded += UnRegisterInput;
         player = gameObject.transform;
 
         SetupEvents();
