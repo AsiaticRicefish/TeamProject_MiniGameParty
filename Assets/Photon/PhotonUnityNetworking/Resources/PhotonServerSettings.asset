@@ -95,6 +95,7 @@ MonoBehaviour:
   - RPC_StopCountDown
   - RPC_CompletePhotonViewCoordination
   - RPC_HasCoordination
+  - RPC_RegisterEgg
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

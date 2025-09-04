@@ -31,6 +31,9 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
     private Dictionary<string, string> playerPrefabMap = new Dictionary<string, string>();
 
     private Dictionary<string, List<UnimoEgg>> playerEggPools = new();
+
+
+
     private Dictionary<int, UnimoEgg> viewIdToEgg = new();
 
     private bool isPoolReady = false;
@@ -46,75 +49,52 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
     public void Initialize()
     {
         Debug.Log("EggManager Initialize 시작");
-        if (PhotonNetwork.IsMasterClient)
-            StartCoroutine(MasterInitPools());
+        StartCoroutine(LocalInitPool());
     }
 
-    /*
-        각 유저에 맞는 UnimoEgg 프리팹을 알고 만들어야한다.
-        오브젝트 풀을 만들기 전에 
-
-        마스터 클라이언트가 플레이어 프로퍼티에 어떤 프립팹을 써야하는지 하나씩 조회해서 해당 프리팹 Name을 사용해야한다.
-     */
-
-    //마스터가 Pool을 생성한다. 
-    private IEnumerator MasterInitPools()
+    // 각자 자신의 풀 생성
+    private IEnumerator LocalInitPool()
     {
-        Debug.Log("EggManager 유니모 오브젝트 생성 시작");
-        // 모든 플레이어 UID 가져오기
-        List<string> uids = new List<string>(ShootingGameManager.Instance.players.Keys);
+        Debug.Log("각자 EggManager 유니모 오브젝트 생성 시작");
+        
+        string myUid = PMS_Util.PMS_Util.GetMyUid();                    // 내 UID를 가져오기
+        List<int> viewIDs = new List<int>();                            //UnimoEgg를 viewID 매핑하기 위하여 초기화
 
-        //각 uids를 순회
-        foreach (var uid in uids)
+        //만약 내이름에 풀이 있으면 안되니깐 먼저 확인하고 새로운 풀리스트 생성
+        if (!playerEggPools.ContainsKey(myUid))
         {
-            //GamePlayer targetPlayer = PlayerManager.Instance.GetPlayer(uid);
-            //Photon.Realtime.Player player = PMS_Util.PMS_Util.GetPhotonPlayerByGamePlayer(targetPlayer);
-
-            //if (player.CustomProperties.ContainsKey(ShootingGamePlayerPropertyKeys.MyPrefabName))
-            //{
-            //    string prefabName = (string)player.CustomProperties[ShootingGamePlayerPropertyKeys.MyPrefabName];
-            //}
-
-            //uid를 가진 Egg가 존재하지 않았을 때 리스트 생성
-            if (!playerEggPools.ContainsKey(uid))
-                playerEggPools[uid] = new List<UnimoEgg>();
-
-            //초기화
-            List<int> viewIDs = new List<int>();
-
-            //한사람당 5개씩 생성
-            for (int i = 0; i < poolSizePerPlayer; i++)
-            {
-                GameObject eggObj = PhotonNetwork.InstantiateRoomObject(unimoEggPrefabPath, Vector3.zero, Quaternion.identity);
-                UnimoEgg egg = eggObj.GetComponent<UnimoEgg>();
-
-                //해당 슈터 uid를 넣는다.
-                egg.ShooterUid = uid;
-                egg.gameObject.SetActive(false);
-
-                //EggPools에 넣고,viewID 딕셔너리에도 넣는다.
-                playerEggPools[uid].Add(egg);
-                viewIdToEgg[egg.photonView.ViewID] = egg;
-                viewIDs.Add(egg.photonView.ViewID);
-
-                yield return null;
-            }
-
-            // 다른 클라이언트에도 알 풀 세팅
-            photonView.RPC(nameof(RPC_SetupPlayerPool), RpcTarget.OthersBuffered, uid, viewIDs.ToArray());
+            playerEggPools[myUid] = new List<UnimoEgg>();               //풀 리스트 초기화                
+        }
+        else
+        {
+            Debug.Log("[UnimoEgg] - 이미 내 UID에 맞는 pool이 존재함!");
         }
 
-        isPoolReady = true;
-        Debug.Log("[EggManager] 모든 풀 초기화 완료");
+        for (int i = 0; i < poolSizePerPlayer; i++)
+        {
+            GameObject eggObj = PhotonNetwork.Instantiate(unimoEggPrefabPath, Vector3.zero, Quaternion.identity);
+            UnimoEgg egg = eggObj.GetComponent<UnimoEgg>();
+
+            egg.ShooterUid = myUid;
+            egg.gameObject.SetActive(false);            //로컬 비활성화
+
+            playerEggPools[myUid].Add(egg);
+            viewIdToEgg[egg.photonView.ViewID] = egg;
+            viewIDs.Add(egg.photonView.ViewID);
+
+            yield return null;
+        }
+
+        // 모든 유저에게 생성된 egg의 내가 생성한 viewIDs 전달
+        photonView.RPC(nameof(RPC_RegisterEgg), RpcTarget.OthersBuffered, myUid, viewIDs.ToArray());
+
+        Debug.Log($"[EggManager] - {PhotonNetwork.LocalPlayer.NickName}의 모든 풀 초기화 완료");
     }
 
-    [PunRPC]
-    private void RPC_SetupPlayerPool(string uid, int[] viewIDs)
-    {
-        //애도 딕셔너리 생성
-        if (!playerEggPools.ContainsKey(uid))
-            playerEggPools[uid] = new List<UnimoEgg>();
 
+    [PunRPC]
+    private void RPC_RegisterEgg(string uid, int[] viewIDs)
+    {
         //viewIDs를 전달 받음 배열로 전체 순회
         foreach (var id in viewIDs)
         {
@@ -124,16 +104,20 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
                 UnimoEgg egg = view.GetComponent<UnimoEgg>();
 
                 egg.ShooterUid = uid;
-                egg.gameObject.SetActive(false);
+                egg.gameObject.SetActive(false);                    //다른 클라이언트도 비활성화시키게 하기
 
-                playerEggPools[uid].Add(egg);
+                if (!playerEggPools.ContainsKey(uid))               //나 이외의 유저들은 해당 viewID를 가진 유니모를 해당 UID의 유저의 풀에 등록
+                    playerEggPools[uid] = new List<UnimoEgg>();
+                if (!playerEggPools[uid].Contains(egg))             
+                    playerEggPools[uid].Add(egg);
+
                 viewIdToEgg[id] = egg;
             }
         }
-        isPoolReady = true;
+        //isPoolReady = true; -> 모든 플레이어의 풀이 다 적용되어 있으면 true가 되도록 하고 싶은데
     }
 
-    // 턴 시작 시 호출
+    // 턴 시작 시 개인이 호출
     public UnimoEgg SpawnEgg(string shooterUid)
     {
         if (!isPoolReady) return null;
@@ -170,7 +154,9 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
         Debug.Log("[SpawnEgg] - 호출5?");
         egg.transform.position = new Vector3(x, y, z);
         egg.transform.rotation = Quaternion.identity;
-        egg.ShooterUid = shooterUid;
+
+        egg.ShooterUid ??= shooterUid;
+
         egg.SetMaterial();
         egg.gameObject.SetActive(true);
 
@@ -181,27 +167,7 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
             rb.angularVelocity = Vector3.zero;
         }
 
-        currentUnimoEgg = egg;
-
-        //  여기서 발사자 클라이언트라면 소유권 요청
-        if (!PhotonNetwork.IsMasterClient && PMS_Util.PMS_Util.GetMyUid() == shooterUid)//PhotonNetwork.LocalPlayer.UserId == shooterUid)
-        {
-            Debug.Log("[SpawnEgg] - 소유권 요청!");
-            PhotonView eggView = egg.photonView;
-
-            // 소유권 요청
-            eggView.RequestOwnership();
-
-            // 소유권 획득 후 Shot 호출 (AddForce 적용)
-            // 만약 바로 호출하면 IsMine이 아직 false일 수 있음 → 코루틴으로 약간 지연 가능
-            StartCoroutine(CallShotAfterOwnership(eggView));
-        }
-    }
-
-    private IEnumerator CallShotAfterOwnership(PhotonView eggView)
-    {
-        yield return new WaitUntil(() => eggView.IsMine);
-        Debug.Log("소유권 승인!");
+        currentUnimoEgg = egg;     
     }
 
     // 턴 종료 시 호출
@@ -248,6 +214,7 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
         isPoolReady = false;
     }
 
+    //예? 이게머죠 왜 소유권 리턴이 있죠
     public void ReturnAllEggOwnership()
     {
         if (!PhotonNetwork.IsMasterClient) return;
