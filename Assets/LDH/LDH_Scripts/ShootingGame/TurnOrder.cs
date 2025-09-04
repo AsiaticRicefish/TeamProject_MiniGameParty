@@ -117,7 +117,7 @@ namespace LDH.LDH_Scripts.ShootingGame
 
         public void MoveToNext()
         {
-            _current = _current.Next ?? _list.First;
+            _current = NextNode();
         }
 
         public bool IsFirstNode(LinkedListNode<GamePlayer> node)
