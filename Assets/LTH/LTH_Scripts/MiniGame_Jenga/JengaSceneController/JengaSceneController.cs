@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using DesignPattern;
+using InputBlocker;
 using MiniGameJenga;
 using Photon.Pun;
 using UnityEngine;
@@ -37,6 +38,7 @@ public class JengaSceneController : BaseGameSceneController
 
     protected override IEnumerator WaitForManagersAwake()
     {
+        EnsureInputManagerForScene();
         // 모든 플레이어가 uid 셋팅될 때까지 잠깐 대기
         loading?.Set("플레이어 동기화 확인 중...", 0.10f);
         yield return WaitForAllPlayerUids(5f);
@@ -65,6 +67,7 @@ public class JengaSceneController : BaseGameSceneController
         // 순차적으로 초기화해야 할 매니저들
         var sequentialComponents = new IGameComponent[]
         {
+            InputManager.Instance,          // 입력 시스템 먼저
             JengaNetworkManager.Instance,     // 네트워크 먼저
             JengaGameManager.Instance,        // 게임 로직
             JengaTowerManager.Instance,       // 타워 생성
@@ -154,35 +157,6 @@ public class JengaSceneController : BaseGameSceneController
         Debug.Log($"=== [Scene] NotifyGameStart END ===");
     }
 
-    private void OnDestroy()
-    {
-        // 씬 전환 전 젠가 관련 매니저들 명시적 해제
-        if (JengaGameManager.Instance != null)
-        {
-            CombinedSingleton<JengaGameManager>.Release();
-        }
-        
-        if (JengaTowerManager.Instance != null)
-        {
-            CombinedSingleton<JengaTowerManager>.Release();
-        }
-        
-        if (JengaNetworkManager.Instance != null)
-        {
-            PunSingleton<JengaNetworkManager>.Release();
-        }
-        
-        if (JengaTimingManager.Instance != null)
-        {
-            CombinedSingleton<JengaTimingManager>.Release();
-        }
-        
-        if (JengaUIManager.Instance != null)
-        {
-            CombinedSingleton<JengaUIManager>.Release();
-        }
-    }
-
     /// <summary>
     ///  네트워크 초기화 타이밍이 꼬여서 NotifyGameStart()가 끝까지 안 불릴 때
     ///  JengaGameManager.Instance 초기화가 지연되면서 게임 시작 신호가 안 갈 때
@@ -202,6 +176,17 @@ public class JengaSceneController : BaseGameSceneController
         {
             Debug.LogError("[FORCE START] JengaGameManager.Instance is null!");
         }
+    }
+
+    private void EnsureInputManagerForScene()
+    {
+        if (InputManager.Instance == null)
+        {
+            var go = new GameObject("@InputManager_Jenga");
+            go.AddComponent<InputManager>();
+        }
+        // 씬 진입 시 잠금 초기화(안전장치)
+        InputManager.Instance.ResetAllLocks();
     }
 
     #region 유틸리티: 매니저 준비 대기
