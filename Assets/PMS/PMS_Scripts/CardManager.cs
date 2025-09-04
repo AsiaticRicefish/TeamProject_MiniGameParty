@@ -279,7 +279,7 @@ public class CardManager : PunSingleton<CardManager>
 
         if (PhotonNetwork.IsMasterClient)
         {
-            RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "GamePlayState");
+            RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "TurnCheckState");
         }
 
         #region Legacy

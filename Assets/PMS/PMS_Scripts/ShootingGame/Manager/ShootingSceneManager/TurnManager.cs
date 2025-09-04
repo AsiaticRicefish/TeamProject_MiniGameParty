@@ -99,8 +99,7 @@ namespace ShootingScene
                     return;
                 }
             }
-
-            BroadcastCurrentTurn();
+            RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "GamePlayState");
         }
 
         public void BroadcastCurrentTurn()
@@ -108,11 +107,11 @@ namespace ShootingScene
             var props = new Dictionary<string, object>
             {
                 { ShootingGamePropertyKeys.Turn, this.currentTurnIndex },
-                { ShootingGamePropertyKeys.Round, this.currentRoundIndex }
+                { ShootingGamePropertyKeys.Round, this.currentRoundIndex }          //콜백 - 무조건 -> 유저들 턴을 넘긴것을 알 수 있다. 
             };
 
             RoomPropertyObserver.Instance.SetRoomProperties(props);
-
+  
             //보장이 될 수 있나?
             //photonView.RPC(nameof(RPC_SetCurrentTurn), RpcTarget.All, this.currentTurnIndex, this.currentRoundIndex);
         }
