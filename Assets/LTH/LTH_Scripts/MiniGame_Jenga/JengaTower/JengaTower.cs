@@ -44,6 +44,11 @@ public class JengaTower : MonoBehaviour
     public event Action<int> OnBlockRemoved;
     public event Action OnTowerCollapsed;
 
+    #region Events for collapse animation
+    public event Action CollapseStarted;
+    public event Action CollapseFinished;
+    #endregion
+
     #region Session for side-pair removal
     public bool IsPairSessionActiveOn(int layer)
         => _pairSessionExpectedSide.ContainsKey(layer);
@@ -66,9 +71,25 @@ public class JengaTower : MonoBehaviour
     }
     #endregion
 
+    // 최상단 보호층 여부
+    public bool IsLayerTopProtected(int layer)
+    {
+        if (allowTopRemoval) return false;
+
+        int topAlive = GetTopAliveLayer();
+        if (topAlive < 0) return false;
+
+        int firstProtected = Mathf.Max(0, topAlive - (topSafeLayers - 1));
+        return (layer >= firstProtected && layer <= topAlive);
+    }
+
+
     public bool CanRemoveBlock(JengaBlock b)
     {
         if (b == null || b.IsRemoved) return false;
+
+        if (IsLayerTopProtected(b.Layer))
+            return false;
 
         int topAlive = GetTopAliveLayer();
         if (!allowTopRemoval && topAlive >= 0)
@@ -313,18 +334,10 @@ public class JengaTower : MonoBehaviour
 
         int topAlive = GetTopAliveLayer();
 
-        bool IsProtected(int layer)
-        {
-            if (allowTopRemoval) return false;
-            if (topAlive < 0) return false;
-            int firstProtected = Mathf.Max(0, topAlive - (topSafeLayers - 1));
-            return layer >= firstProtected && layer <= topAlive;
-        }
-
         for (int layer = 0; layer < towerHeight; layer++)
         {
             if (!_blocksByLayer.TryGetValue(layer, out var list)) continue;
-            if (IsProtected(layer)) continue;
+            if (IsLayerTopProtected(layer)) continue; // 보호층 제외
 
             var alive = list.Where(b => !b.IsRemoved).OrderBy(b => b.IndexInLayer).ToList();
 
@@ -384,6 +397,10 @@ public class JengaTower : MonoBehaviour
     {
         if (_isCollapsed) return;
         _isCollapsed = true;
+
+        // 연출 시작 시점 이벤트
+        CollapseStarted?.Invoke();
+
         StartCoroutine(CollapseAnimation());
         OnTowerCollapsed?.Invoke();
     }
@@ -427,6 +444,9 @@ public class JengaTower : MonoBehaviour
         {
             if (block) block.gameObject.SetActive(false);
         }
+
+        // 연출 완전히 끝난 시점 이벤트
+        CollapseFinished?.Invoke();
     }
 
     public void ConfigureTopProtection(bool allowTopRemoval, int topSafeLayers = 1)

@@ -251,22 +251,40 @@ public class TowerFocusOverlay : MonoBehaviour
     {
         if (!active || block == null) return;
 
-        // 1차 클릭(선택) 전달
-        var ped = new PointerEventData(EventSystem.current);
-        block.OnPointerClick(ped);
-
-        // 실제로 1차 선택 상태가 되었는지 확인
-        if (!block.IsCurrentlySelected)
+        // 보호층은 미리 차단
+        var tower = JengaTowerManager.Instance?.GetPlayerTower(block.OwnerActorNumber);
+        if (tower == null || tower.IsLayerTopProtected(block.Layer))
         {
-            // 룰에 막혀 1차가 거부된 케이스 → OK 비활성/선택 박스 숨김
             SetSelection(null);
             return;
         }
 
-        // 호버 표시 제거 후 선택 고정
-        NotifyHover(null);
-        // 유효하게 선택됨 → OK 켬 + 박스 표시
-        SetSelection(block);
+        if (!block.IsCurrentlySelected)
+        {
+            // 1차 클릭(선택)만 대행
+            var ped = new PointerEventData(EventSystem.current);
+            block.OnPointerClick(ped);
+        }
+
+        // 실제로 1차 선택이 되었는지 확인
+        if (block.IsCurrentlySelected)
+        {
+            // 기존 선택과 다르면 이전 선택 정리
+            if (selected && selected != block)
+                selected.ForceClearSelectionForOverlay();
+
+            // 호버 오프 & 선택 고정
+            NotifyHover(null);
+            selected = block;
+            selected.Highlight(true);
+
+            if (okButton) okButton.interactable = true; // OK만 2차 클릭을 보냄
+        }
+        else
+        {
+            // 룰에 막힌 경우 등
+            SetSelection(null);
+        }
     }
 
     private void SetSelection(JengaBlock block)
@@ -299,30 +317,4 @@ public class TowerFocusOverlay : MonoBehaviour
 
         Hide();
     }
-
-    #region Util
-
-    private Rect GetDrawRectLocal(RawImage img)
-    {
-        var rt = (RectTransform)img.transform;
-        var r = rt.rect;
-        if (img.texture == null || !compensateLetterbox) return r;
-
-        float texAspect = (float)img.texture.width / img.texture.height;
-        float rectAspect = r.size.x / r.size.y;
-        if (Mathf.Approximately(texAspect, rectAspect)) return r;
-
-        if (texAspect > rectAspect)
-        {
-            float h = r.size.x / texAspect;
-            return new Rect(r.xMin, -h * 0.5f, r.size.x, h);
-        }
-        else
-        {
-            float w = r.size.y * texAspect;
-            return new Rect(-w * 0.5f, r.yMin, w, r.size.y);
-        }
-    }
-
-    #endregion
 }
