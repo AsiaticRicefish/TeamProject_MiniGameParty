@@ -40,7 +40,6 @@ public class DirectionUIArrow : MonoBehaviourPun
     private void Awake()
     {
         arrowTransform = GetComponent<RectTransform>();
-        player = transform.parent.parent.gameObject;
     }
 
     //return pool

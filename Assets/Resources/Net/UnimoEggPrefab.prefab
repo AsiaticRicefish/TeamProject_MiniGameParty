@@ -167,7 +167,7 @@ MonoBehaviour:
   swingAngle: 50
   swingSpeed: 2
   TargetPos: {fileID: 3518416739283501205}
-  player: {fileID: 0}
+  player: {fileID: 7871336808941981924}
 --- !u!1 &3713057282715791021
 GameObject:
   m_ObjectHideFlags: 0
