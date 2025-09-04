@@ -149,12 +149,10 @@ public class UnimoEgg : MonoBehaviourPun
         //yield return new WaitUntil(() => Camera.main.GetComponent<CinemachineBrain>().ActiveBlend == null);
 
         while (rb.velocity.magnitude > stopSpeed)
-            yield return new WaitForFixedUpdate();
+            yield return new WaitForSeconds(1.0f); //최소 보장시간
 
         Test_ShotFollowCamera.Instance.StopFollowTarget(); //돌아가는 부분
-        yield return new WaitForFixedUpdate();
 
-        isCameraFollowing = false;
         //Test_ShotFollowCamera.Instance.StopFollowTarget(gameObject);
         //yield return new WaitForFixedUpdate();
         //yield return new WaitUntil(() => Camera.main.GetComponent<CinemachineBrain>().ActiveBlend == null);
@@ -165,6 +163,7 @@ public class UnimoEgg : MonoBehaviourPun
             turnEnded = true;
             TurnManager.Instance.photonView.RPC(("RequestTurnEnd"), RpcTarget.MasterClient);
             isLaunched = false;
+            isCameraFollowing = false;
         }
     }
     
