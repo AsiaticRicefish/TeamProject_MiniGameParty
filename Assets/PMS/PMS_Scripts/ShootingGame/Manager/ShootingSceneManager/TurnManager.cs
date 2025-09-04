@@ -339,13 +339,26 @@ namespace ShootingScene
                     
                     //현재 턴인 플레이어가 나갔고, 턴 종료 요청을 하지 못해서 game play state에 멈춰있는 경우 -> 강제로 턴을 넘깁니다.
                     if (PhotonNetwork.IsMasterClient 
-                        && leftPlayerTurnIndex == currentTurnIndex
                         && RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.State) is string
                         && stateValue.ToString().Equals("GamePlayState"))
                     {
-                        Debug.Log("현재 턴 플레이어가 나감 && 현재 상태가 게임 플레이 상태이기 때문에 강제로 턴을 넘깁니다.");
-                        
-                        StartCoroutine(NextTurn());
+                        if (leftPlayerTurnIndex == currentTurnIndex)
+                        {
+                            Debug.Log("현재 턴 플레이어가 나감 && 현재 상태가 게임 플레이 상태이기 때문에 강제로 턴을 넘깁니다.");
+
+                            StartCoroutine(NextTurn());
+                        }
+                        else if (otherPlayer.IsMasterClient)
+                        {
+                            Debug.Log("현재 턴은 아니지만 마스터가 나감 && 현재 상태가 게임 플레이 상태이기 때문에 강제로 턴을 넘깁니다.");
+                            StartCoroutine(NextTurn());
+                        }
+                        else
+                        {
+                            Debug.Log("나간 플레이어가 현재 턴도 아니고 마스터도 아니므로 턴을 넘기지 않습니다. 그냥 둡니다.");
+
+                        }
+
                     }
                 }
                    
@@ -368,12 +381,9 @@ namespace ShootingScene
             Debug.Log($"마스터 변경 콜백 - 플레이어가 나갔을 때 게임 STATE : {currentStateValue}");
             if (currentStateValue is string && currentStateValue.Equals("TurnCheckState"))
             {
-                if (newMasterClient.CustomProperties.TryGetValue("uid", out object value)
-                    && value is string uid && !string.IsNullOrEmpty(uid))
-                {
-                    Debug.Log($"마스터 변경 콜백 - 턴 체크 상태이고,새로운 마스터가 NEXT TURN을 다시 실행시킴");
-                    StartCoroutine(NextTurn());
-                }
+                Debug.Log($"마스터 변경 콜백 - 턴 체크 상태이고,새로운 마스터가 NEXT TURN을 다시 실행시킴");
+                StartCoroutine(NextTurn());
+              
             }
         }
         
