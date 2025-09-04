@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 2606625188703759963}
   - component: {fileID: 8278548560635315240}
   - component: {fileID: 6795706012366953312}
+  - component: {fileID: 4041204040387756981}
   m_Layer: 0
   m_Name: RythmPlayer
   m_TagString: Untagged
@@ -64,7 +65,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: c472db462bd2e4b02a35a65d15182690, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -143,3 +144,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 54797064f4421574c94f5a650f70507e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &4041204040387756981
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2557012146771275627}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16a0d8bbee97744ffb46bac109f79652, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _renderer: {fileID: 3905025938009392500}
+  animator: {fileID: 0}
