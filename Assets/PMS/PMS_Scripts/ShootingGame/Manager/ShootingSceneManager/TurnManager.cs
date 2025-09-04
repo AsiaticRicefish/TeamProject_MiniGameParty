@@ -283,15 +283,20 @@ namespace ShootingScene
             var stateValue = RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.State);
             
             //현재 게임 상태가 game play state가 아니라면 처리할 필요가 없음
-            if (stateValue != null && stateValue is string currentState && currentState.Equals("GamePlayState"))
+            if (stateValue != null && stateValue is string && (stateValue.ToString().Equals("GamePlayState") || stateValue.ToString().Equals("TurnCheckState")))
             {
-                if (otherPlayer.CustomProperties.TryGetValue("uid", out object value) && value is string uid &&
-                    !string.IsNullOrEmpty(uid))
+                if (otherPlayer.CustomProperties.TryGetValue("uid", out object value) 
+                    && value is string uid && !string.IsNullOrEmpty(uid))
                 {
                     var leftPlayerTurnIndex = _turnOrder.GetPlayerTurnIndex(uid);
+                    
                     Debug.Log($"나간 플레이어의 myturnindex : {leftPlayerTurnIndex} / 현재 턴 인덱스 {currentTurnIndex}");
                     _turnOrder.RemovePlayer(uid);
-                    if (PhotonNetwork.IsMasterClient && leftPlayerTurnIndex == currentTurnIndex)
+                    
+                    //현재 턴인 플레이어가 나갔고, 턴 종료 요청을 하지 못해서 game play state에 멈춰있는 경우
+                    if (PhotonNetwork.IsMasterClient && leftPlayerTurnIndex == currentTurnIndex 
+                                                     && RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.State) is string
+                                                     && stateValue.ToString().Equals("GamePlayState"))
                     {
                         Debug.Log("현재 턴 플레이어가 나갔습니다. 강제로 턴을 넘깁니다.");
                         StartCoroutine(WaitForTurnDelay());
@@ -302,9 +307,20 @@ namespace ShootingScene
                 {
                     Debug.Log("[TurnManager] 플레이어의 uid 프로퍼티를 찾을 수 없습니다.");
                 }
-                
-           
             }
+        }
+
+
+        public override void OnMasterClientSwitched(Player newMasterClient)
+        {
+            if (!newMasterClient.IsLocal) return;
+            
+            // 새로운 마스터는 현재 게임의 state가 game play state에 있는 경우
+            // 이전 마스터가 턴 종료 요청을 승인하고 다음 턴을 계산해서 GamePlayState로 넘겨줘야하는데 이걸 완료하지 못하고 나간 것 -> 턴이 멈추게 된다.
+            // 따라서 새로운 마스터는 턴 계산을 다시해서 반영해줘야 한다.
+            var currentStateValue = RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.State);
+            if(currentStateValue is string && currentStateValue.Equals("TurnCheckState"))
+                StartCoroutine(WaitForTurnDelay());
         }
 
         #endregion
