@@ -190,7 +190,7 @@ public class UnimoEgg : MonoBehaviourPun
             TurnManager.Instance.photonView.RPC(("RequestTurnEnd"), RpcTarget.MasterClient);
         }
 
-        if (other.CompareTag("PlayGround"))
+        if (other.CompareTag("FallDownZone"))
         {
             rb.constraints &= ~RigidbodyConstraints.FreezePositionY;
         }

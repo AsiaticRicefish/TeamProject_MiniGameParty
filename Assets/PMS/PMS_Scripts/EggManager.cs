@@ -47,13 +47,13 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
     protected override void OnAwake()
     {
         Debug.Log("[EggManager] - 초기화");
+        isPoolReady = false;
+        registerdPools.Clear();
     }
 
     public void Initialize()
     {
         Debug.Log("EggManager Initialize 시작");
-        isPoolReady = false;
-        registerdPools.Clear();
         StartCoroutine(LocalInitPool());
     }
 
@@ -134,6 +134,8 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
 
     private void CheckRegisterAllPool()
     {
+
+        Debug.Log(registerdPools.Count + " / " + PhotonNetwork.CurrentRoom.PlayerCount + " 플레이어의 풀 등록 상태 확인");
         if (registerdPools.Count == PhotonNetwork.CurrentRoom.PlayerCount) //모든 플레이어의 풀이 등록이 완료 되었을 때
         {
             isPoolReady = true;
