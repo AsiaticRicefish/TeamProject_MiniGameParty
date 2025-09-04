@@ -50,7 +50,7 @@ namespace LDH_MainGame
         {
 
             PhotonNetwork.AutomaticallySyncScene = false;
-            MainGameSceneController.Instance.Register(gameObject);
+            // MainGameSceneController.Instance.Register(gameObject);
 
             base.OnAwake();
         }
