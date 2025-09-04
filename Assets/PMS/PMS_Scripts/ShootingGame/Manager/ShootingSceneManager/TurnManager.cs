@@ -184,19 +184,7 @@ namespace ShootingScene
             //StartTurnCorutine(10.0f);
             ShootingNetworkManager.Instance.SetTurnCoroutine = null;
         }
-
-        public void StartTurnCorutine(float delay)
-        {
-            if (TurnCorutine != null) return;
-            TurnCorutine = StartCoroutine(TurnChangeDelay(delay));
-        }
-
-        private IEnumerator TurnChangeDelay(float delay)
-        {
-            yield return new WaitForSeconds(delay);
-            TurnCorutine = null;
-            NextTurn();
-        }
+        
 
         public void EndTurn()
         {
@@ -257,7 +245,7 @@ namespace ShootingScene
             if (TurnManager.Instance.currentTurnIndex == targetIndex)
             {
                 Debug.Log($"[턴 종료 승인] {info.Sender.NickName}의 턴 종료 요청");
-                StartCoroutine(WaitForTurnDelay());
+                RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "TurnCheckState");
             }
             else
             {
@@ -271,9 +259,21 @@ namespace ShootingScene
         {
             Debug.Log("[TurnManager]  WaitForTurnDelay 호출");
             yield return new WaitForSeconds(delay);
-            Debug.Log("2초가 지났습니다.");
             NextTurn();
+         
         }
+
+        public void TurnCheck()
+        {
+            if (TurnCorutine != null)
+            {
+                Debug.LogWarning("Turn Coroutine != null");
+                return;
+            }
+
+            TurnCorutine = StartCoroutine(WaitForTurnDelay());
+        } 
+        
 
         #region PunCallback
 
