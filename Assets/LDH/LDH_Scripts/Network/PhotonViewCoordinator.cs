@@ -42,7 +42,6 @@ namespace LDH.LDH_Scripts.Network
             
             Debug.Log("======= Complete Coordination =====");
             
-            ActiveObjects();
         }
 
         public PhotonView[] GetSceneViews() => sceneViews;
