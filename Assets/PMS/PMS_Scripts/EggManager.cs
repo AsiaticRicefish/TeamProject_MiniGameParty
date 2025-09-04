@@ -94,7 +94,9 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
         photonView.RPC(nameof(RPC_RegisterEgg), RpcTarget.OthersBuffered, myUid, viewIDs.ToArray());
 
         registerdPools.Add(myUid);
-        Debug.Log($"[EggManager] - {PhotonNetwork.LocalPlayer.NickName}의 모든 풀 초기화 완료");
+        Debug.Log($"[EggManager] - {PhotonNetwork.LocalPlayer.NickName}의 풀 생성 완료");
+
+        CheckRegisterAllPool();
 
     }
 
@@ -126,14 +128,19 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
         registerdPools.Add(uid);
         Debug.Log($"{uid} 의 풀 전달 받아서 등록 완료");
 
-        if(registerdPools.Count == PhotonNetwork.CurrentRoom.PlayerCount) //모든 플레이어의 풀이 등록이 완료 되었을 때
+        CheckRegisterAllPool();
+    }
+
+
+    private void CheckRegisterAllPool()
+    {
+        if (registerdPools.Count == PhotonNetwork.CurrentRoom.PlayerCount) //모든 플레이어의 풀이 등록이 완료 되었을 때
         {
             isPoolReady = true;
             Debug.Log("모든 플레이어의 풀 등록 완료 - isPoolReady true");
         }
-
-
     }
+
 
     // 턴 시작 시 개인이 호출
     public UnimoEgg SpawnEgg(string shooterUid)
