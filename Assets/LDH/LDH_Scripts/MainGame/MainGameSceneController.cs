@@ -29,7 +29,7 @@ namespace LDH_MainGame
 
 
         private UI_Loading _uiLoading;
-        private int[] _spawnedViewIds;   // 마스터가 뿌린 ViewID 목록을 받는 버퍼
+       [SerializeField] private int[] _spawnedViewIds;   // 마스터가 뿌린 ViewID 목록을 받는 버퍼
 
 
         #region 초기화 구현(BasSceneController Implement)
@@ -172,7 +172,11 @@ namespace LDH_MainGame
                 {
                     var ro = PhotonNetwork.InstantiateRoomObject(path, Vector3.zero, Quaternion.identity);
                     if (ro != null && ro.TryGetComponent(out PhotonView pv))
+                    {
+                        Debug.Log(pv.ViewID);
                         ids.Add(pv.ViewID);
+                    }
+                        
                     else
                         Util_LDH.ConsoleLogWarning(this, $"RoomObject spawn failed or missing PhotonView: {path}");
                 }
@@ -189,7 +193,12 @@ namespace LDH_MainGame
             {
                 for (int i = 0; i < _spawnedViewIds.Length; i++)
                 {
-                    if (PhotonView.Find(_spawnedViewIds[i]) == null) return false;
+                    Debug.Log(_spawnedViewIds[i]);
+                    if (PhotonView.Find(_spawnedViewIds[i]) == null)
+                    {
+                        Debug.Log($"Find? {PhotonView.Find(_spawnedViewIds[i]) == null}");
+                        return false;
+                    }
                 }
                 return true;
             });

@@ -23,6 +23,10 @@ namespace LDH_UI
                 cg.alpha = Mathf.Clamp01(t / fadeTime);
                 await UniTask.Yield(ct);
             }
+            
+            cg.alpha = 1f;
+            cg.blocksRaycasts = true;
+            cg.interactable = true;
         }
 
 
@@ -36,6 +40,11 @@ namespace LDH_UI
                 cg.alpha = 1f - Mathf.Clamp01(t / fadeTime);
                 await UniTask.Yield(ct);
             }
+            
+            cg.alpha = 0f;
+            cg.blocksRaycasts = false;
+            cg.interactable = false;
+            gameObject.SetActive(false);
         }
 
         #endregion
@@ -58,9 +67,7 @@ namespace LDH_UI
                 return; // 팝업이 파괴되면 자연스레 취소됨
             }
 
-            // UI 매니저의 표준 닫기 흐름을 타고 싶으면 RequestClose()가 안전
-            UniTask.Void(async () => { await Manager.UI.ClosePopupUI(this); });
-
+            await Manager.UI.ClosePopupUI(this);
         }
     }
 }

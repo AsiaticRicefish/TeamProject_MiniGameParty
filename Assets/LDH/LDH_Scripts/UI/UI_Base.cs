@@ -120,8 +120,6 @@ namespace LDH_UI
                 if (visible)
                 {
                     if (gameObject!=null && !gameObject.activeSelf) gameObject.SetActive(true);
-                        gameObject.SetActive(true);
-                    
                     
                     // 레이아웃 강제 갱신을 위해 추가
                     await ForceReBuildLayout(transform, ct);
@@ -152,6 +150,8 @@ namespace LDH_UI
                 
               
                 _isAnimating = false;
+                
+
             }
             
 

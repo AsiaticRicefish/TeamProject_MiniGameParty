@@ -51,5 +51,6 @@ public class GamePlayer
         WinThisMiniGame = false;
 
         JengaData = new JengaPlayerData(); // 미니게임 데이터 초기화
+        ShootingData = new();
     }
 }

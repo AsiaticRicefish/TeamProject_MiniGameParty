@@ -25,6 +25,7 @@ namespace LDH_UI
 
         private readonly Stack<UI_Popup> _popupStack = new(); // 팝업 UI Stack
         private readonly Dictionary<Type, UI_Base> _screenCache = new(); // Screen 풀
+        private readonly HashSet<UI_Popup> _closing = new();
 
         //---- toast ui ---- //
         private UI_Toast _toast; // 1개 재사용
@@ -40,7 +41,7 @@ namespace LDH_UI
         [SerializeField] private string screenFolder = "Prefabs/UI/Screen";
         [SerializeField] private string popupFolder = "Prefabs/UI/Popup";
         [SerializeField] private string toastFolder = "Prefabs/UI/Toast";
-
+        
         protected override void OnAwake() => Init();
 
         // UI 매니저 초기화
@@ -196,7 +197,7 @@ namespace LDH_UI
         /// 전역 UI를 활성화합니다.
         /// 팝업일 경우 Stack에 Push합니다.
         /// </summary>
-        public async UniTask<T> ShowScreenUI<T>(T screen) where T : UI_Screen
+        public async UniTask<UI_Screen> ShowScreenUI(UI_Screen screen)
         {
             SetCanvas(screen.gameObject, Define_LDH.UILayer.Screen, sort: true);
             await screen.ShowAsync();
@@ -245,11 +246,13 @@ namespace LDH_UI
 
         public async UniTask<T> ShowPopupUI<T>(T popup) where T : UI_Popup
         {
+            
             // 정렬 순서 부여
             SetCanvas(popup.gameObject, Define_LDH.UILayer.Popup, sort: true);
 
             // 최상단으로 Push
             _popupStack.Push(popup);
+            
 
             await popup.ShowAsync();
             return popup;
@@ -260,22 +263,46 @@ namespace LDH_UI
         /// </summary>
         public async UniTask ClosePopupUI(UI_Popup popup, bool destory = true)
         {
+            if (!popup) return;
+            
+            //최상단 보장
             if (_popupStack.Count == 0 || _popupStack.Peek() != popup)
             {
-                Debug.LogWarning($"[{GetType().Name}] 닫으려는 팝업이 최상단 팝업이 아닙니다.");
+                Debug.LogWarning($"[{GetType().Name}] 닫으려는 팝업이 최상단 팝업이 아닙니다.!!!!!");
                 return;
             }
-
-            await popup.CloseAsync();
-
+            
+            // 재진입 방지
+            if (!_closing.Add(popup)) return;
+            
+            
+            // 1) 스택에서 팝부터 하기
             _popupStack.Pop();
             _orderPopup = Mathf.Max(baseOrderPopup, _orderPopup - 1);
-
-            if (destory)
+            
+            //2) 닫기
+            try
             {
-                popup.OnCloseRequested -= HandleCloseRequested;
-                if (popup) Destroy(popup.gameObject);
+                Debug.Log($"{popup.name} 닫기 호출 (pop-first)");
+                await popup.CloseAsync(); // 애니메이션(비동기) 대기
             }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+            finally
+            {
+                _closing.Remove(popup);
+
+                if (destory)
+                {
+                    popup.OnCloseRequested -= HandleCloseRequested;
+                    if (popup) Destroy(popup.gameObject);
+                    Debug.Log($"[UIManager] after-close: count={_popupStack.Count}, nextTop={(_popupStack.Count>0 ? _popupStack.Peek().name : "none")}");
+                }
+            }
+
+        
 
         }
 
@@ -290,6 +317,7 @@ namespace LDH_UI
 
             // 최상단 팝업 Pop 후 제거
             UI_Popup top = _popupStack.Peek();
+            Debug.Log($"top : {top.name}");
             await ClosePopupUI(top, destroy);
         }
 
@@ -298,10 +326,27 @@ namespace LDH_UI
         /// </summary>
         public async UniTask CloseAllPopupUI()
         {
-            while (_popupStack.Count > 0)
-                await CloseTopPopupUI(true);
 
-            _orderPopup = baseOrderPopup;
+            Debug.Log(_popupStack.Count +"개의 팝업을 닫습니다.");
+
+            try
+            {
+                while (_popupStack.Count > 0)
+                {
+                    Debug.Log(_popupStack.Count +"개의 팝업을 닫습니다.");
+                    await CloseTopPopupUI(true);
+                }
+              
+                _orderPopup = baseOrderPopup;
+            
+                Debug.Log(_popupStack.Count +"모든 팝업을 닫았습니다.");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+            
         }
 
         

@@ -73,7 +73,6 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
         }
     }
 
-
     #region 플레이어 결과 보고 → 마스터
 
     /// <summary>
@@ -190,27 +189,20 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
 
     private void ApplyBlockRemoval_OnMaster(int actorNumber, int blockId, int clientSuggestedScore, float clientAccuracy)
     {
-        Debug.Log($"[NET] REQ_Remove recv on Master actor={actorNumber} blockId={blockId} acc={clientAccuracy:0.00}");
-
         var gm = JengaGameManager.Instance;
-        if (gm == null)
+ 
+        if (gm.currentState != JengaGameState.Playing)
         {
-            Debug.LogWarning("[NET] GM NULL → 점수 반영은 스킵하고 검증/적용은 진행");
-        }
-        else if (gm.currentState != JengaGameState.Playing)
-        {
-            Debug.LogWarning($"[NET] Reject: state={gm.currentState}");
             ReplyDeny(actorNumber, blockId, "state-not-playing");
             return;
         }
 
         var tm = JengaTowerManager.Instance;
-        if (tm == null) { Debug.LogError("[NET] Reject: TowerManager null"); ReplyDeny(actorNumber, blockId, "towerMgr-null"); return; }
+        if (tm == null) { ReplyDeny(actorNumber, blockId, "towerMgr-null"); return; }
 
         var tower = tm.GetPlayerTower(actorNumber);
         if (tower == null)
         {
-            Debug.LogWarning($"[NET] Reject: tower null for actor={actorNumber}");
             ReplyDeny(actorNumber, blockId, "tower-null");
             return;
         }
@@ -218,57 +210,40 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
         var block = tower?.GetBlockById(blockId);
         if (block == null)
         {
-            Debug.LogWarning($"[NET] Reject: block null (actor={actorNumber}, blockId={blockId})");
             ReplyDeny(actorNumber, blockId, "block-null");
             return;
         }
         if (block.OwnerActorNumber != actorNumber)
-            Debug.LogWarning($"[NET] Owner mismatch: reqActor={actorNumber} blockOwner={block.OwnerActorNumber} id={blockId}");
 
         if (block.IsRemoved)
         {
-            Debug.LogWarning($"[NET] Reject: already removed (actor={actorNumber}, blockId={blockId})");
             ReplyDeny(actorNumber, blockId, "already-removed");
             return;
         }
 
-        bool removableCache = tower.GetRemovableBlocks().Contains(block);
-        bool removableRule = tower.CanRemoveBlock(block);
+        // 규칙 검증 + (필요 시) 세션 시작
+        bool validated = ValidateRemovalAndMaybeStartPairSession_OnMaster(tower, block);
 
-        if (!removableCache || !removableRule)
+        if (!validated)
         {
-            Debug.LogWarning($"[NET] Not removable (cache={removableCache}, rule={removableRule}) remain={tower.GetRemainingBlocks()}");
-            if (!removableRule)
-            {
-                ReplyDeny(actorNumber, blockId, "not-removable");
-                return;
-            }
-            else
-            {
-                Debug.Log("[NET] Proceeding by RULE (cache stale suspected)");
-            }
+            ReplyDeny(actorNumber, blockId, "illegal-by-rule");
+            return;
         }
 
         int bonus = Mathf.Clamp(Mathf.RoundToInt(clientAccuracy * MAX_BONUS), 0, MAX_BONUS);
         int finalScore = BASE_SCORE + bonus;
 
-        Debug.Log($"[NET] OK → Broadcast Apply owner={actorNumber} blockId={blockId} score={finalScore}");
         thisPhotonView.RPC(nameof(RPC_ApplyBlockRemoval), RpcTarget.All, actorNumber, blockId, true, finalScore, true);
     }
 
     [PunRPC]
     private void RPC_ApplyBlockRemoval(int ownerActorNumber, int blockId, bool withAnimation, int score, bool isSuccess = true)
     {
-        Debug.Log($"[NET] APPLY_Remove recv owner={ownerActorNumber} blockId={blockId} withAnim={withAnimation} succ={isSuccess}");
         
         // 실제 제거 반영
         var tower = JengaTowerManager.Instance?.GetPlayerTower(ownerActorNumber);
 
-        if (tower == null)
-        {
-            Debug.LogError($"[NET] tower NULL for actor={ownerActorNumber}");
-            return;
-        }
+        if (tower == null)  return;
 
         tower.ApplyBlockRemoval(blockId, withAnimation, isSuccess);
 
@@ -323,13 +298,96 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
 
     #endregion
 
+    #region 블록 사이드 제거 세션 동기화
+    private bool ValidateRemovalAndMaybeStartPairSession_OnMaster(JengaTower tower, JengaBlock block)
+    {
+        // 같은 레이어에서 살아있는 블록들(인덱스 순)
+        var alive = tower.allBlocks
+            .Where(b => b.Layer == block.Layer && !b.IsRemoved)
+            .OrderBy(b => b.IndexInLayer)
+            .ToList();
+
+        bool isSide = (block.IndexInLayer == 0 || block.IndexInLayer == 2);
+        bool isCenter = (block.IndexInLayer == 1);
+
+        if (tower.IsPairSessionActiveOn(block.Layer))
+        {
+            var expected = tower.GetExpectedSide(block.Layer);
+            bool isExpectedSide = expected.HasValue && isSide && block.IndexInLayer == expected.Value;
+
+            if (isExpectedSide)
+            {
+                tower.EndPairSession(block.Layer);
+                BroadcastPairSessionEnd(block.OwnerActorNumber, block.Layer);
+            }
+
+            return isExpectedSide;
+        }
+
+
+        // 세션 아님(평상시)
+        if (alive.Count == 3)
+        {
+            if (isCenter)  return true;
+
+            var centerBlock = alive.FirstOrDefault(x => x.IndexInLayer == 1);
+            bool centerAllowed = centerBlock != null && tower.CanRemoveBlock(centerBlock);
+
+            if (isSide && centerAllowed)
+            {
+                tower.BeginPairSession(block.Layer, block.IndexInLayer);
+                BroadcastPairSessionStart(block.OwnerActorNumber, block.Layer, block.IndexInLayer);
+                return true;
+            }
+            return false;
+        }
+
+        else if (alive.Count == 2)
+        {
+            return false;
+        }
+
+        return false;
+    }
+
+    public void BroadcastPairSessionStart(int ownerActorNumber, int layer, int firstSideIndex)
+    {
+        thisPhotonView.RPC(nameof(RPC_StartPairSession), RpcTarget.All, ownerActorNumber, layer, firstSideIndex);
+    }
+
+    [PunRPC]
+    private void RPC_StartPairSession(int ownerActorNumber, int layer, int firstSideIndex)
+    {
+        var tower = JengaTowerManager.Instance?.GetPlayerTower(ownerActorNumber);
+        if (tower != null)
+        {
+            tower.BeginPairSession(layer, firstSideIndex);
+        }
+        else
+        {
+            Debug.LogError($"[NET DEBUG] 타워를 찾을 수 없음: actor = {ownerActorNumber}");
+        }
+    }
+
+    public void BroadcastPairSessionEnd(int ownerActorNumber, int layer)
+    {
+        thisPhotonView.RPC(nameof(RPC_EndPairSession), RpcTarget.All, ownerActorNumber, layer);
+    }
+
+    [PunRPC]
+    private void RPC_EndPairSession(int ownerActorNumber, int layer)
+    {
+        var tower = JengaTowerManager.Instance?.GetPlayerTower(ownerActorNumber);
+        tower?.EndPairSession(layer);
+    }
+
+    #endregion
+
     #region 타워 붕괴 알림
 
     // 클라이언트 → 마스터: "이 사람의 타워를 붕괴시켜 주세요"
     public void RequestTowerCollapse_MasterAuth(int ownerActorNumber)
     {
-        Debug.Log($"[JengaNetwork] RequestTowerCollapse_MasterAuth called. actor={ownerActorNumber}, IsMaster={PhotonNetwork.IsMasterClient}");
-
         if (PhotonNetwork.IsMasterClient)
         {
             // 마스터면 바로 처리
@@ -340,11 +398,9 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
             // 비마스터면 마스터에게 RPC 요청
             if (thisPhotonView == null)
             {
-                Debug.LogError("[JengaNetwork] PhotonView is NULL in RequestTowerCollapse_MasterAuth");
                 return;
             }
 
-            Debug.Log($"[JengaNetwork] Sending collapse request to master for actor {ownerActorNumber}");
             thisPhotonView.RPC(nameof(RPC_RequestTowerCollapse_Master), RpcTarget.MasterClient, ownerActorNumber);
         }
     }
@@ -354,13 +410,11 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     /// </summary>
     private void ProcessTowerCollapseRequest(int ownerActorNumber)
     {
-        Debug.Log($"[JengaNetwork] Processing tower collapse request for actor {ownerActorNumber}");
 
         // TowerManager/타워 존재 검증
         var tm = JengaTowerManager.Instance;
         if (tm == null)
         {
-            Debug.LogError("[JengaNetwork] JengaTowerManager.Instance is NULL");
             return;
         }
 
@@ -368,11 +422,8 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
         if (tower == null)
         {
             var uid = tm.GetOwnerUidByActor(ownerActorNumber);
-            Debug.LogError($"[JengaNetwork] Tower not found for actor={ownerActorNumber}, uid={uid ?? "(null)"}");
             return;
         }
-
-        Debug.Log($"[JengaNetwork] Broadcasting tower collapse for actor={ownerActorNumber}");
 
         // 모든 클라이언트에게 붕괴 적용 브로드캐스트
         thisPhotonView.RPC(nameof(RPC_ApplyTowerCollapse_All), RpcTarget.All, ownerActorNumber);
@@ -381,13 +432,7 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     [PunRPC]
     private void RPC_RequestTowerCollapse_Master(int ownerActorNumber, PhotonMessageInfo info)
     {
-        Debug.Log($"[JengaNetwork] RPC_RequestTowerCollapse_Master received from {info.Sender.ActorNumber} for actor {ownerActorNumber}");
-
-        if (!PhotonNetwork.IsMasterClient)
-        {
-            Debug.LogWarning("[JengaNetwork] Received collapse request but not master");
-            return;
-        }
+        if (!PhotonNetwork.IsMasterClient) return;
 
         ProcessTowerCollapseRequest(ownerActorNumber);
     }
@@ -396,17 +441,9 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     [PunRPC]
     private void RPC_ApplyTowerCollapse_All(int ownerActorNumber)
     {
-        Debug.Log($"[JengaNetwork] RPC_ApplyTowerCollapse_All received for actor={ownerActorNumber}");
-
         var tower = JengaTowerManager.Instance?.GetPlayerTower(ownerActorNumber);
 
-        if (tower == null)
-        {
-            Debug.LogError($"[JengaNetwork] tower NULL for actor={ownerActorNumber} in RPC_ApplyTowerCollapse_All");
-            return;
-        }
-
-        Debug.Log($"[JengaNetwork] Triggering collapse animation for actor={ownerActorNumber}");
+        if (tower == null) return;
 
         // 붕괴 애니메이션 실행
         JengaTowerManager.Instance.WithSuppressedCollapse(() =>
@@ -417,7 +454,6 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
         // 게임 로직 처리 (마스터만)
         if (PhotonNetwork.IsMasterClient)
         {
-            Debug.Log($"[JengaNetwork] Notifying GameManager of collapse for actor={ownerActorNumber}");
             JengaGameManager.Instance?.OnTowerCollapsed(ownerActorNumber);
         }
     }

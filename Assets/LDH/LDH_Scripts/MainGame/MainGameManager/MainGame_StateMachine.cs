@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using LDH_Util;
 using Photon.Pun;
 using UnityEngine;
@@ -61,9 +62,9 @@ namespace LDH_MainGame
 
         #region Coroutine
         
-        public IEnumerator Co_Picking(System.Action onPicking = null, System.Action onPicked= null)
+        public IEnumerator Co_Picking()
         {
-            onPicking?.Invoke();
+            MainGameManager.Instance.OnPicking?.Invoke();
             
             yield return new UnityEngine.WaitForSeconds(1.5f);
 
@@ -76,41 +77,24 @@ namespace LDH_MainGame
                 });
             }
 
-            onPicked?.Invoke();
+            MainGameManager.Instance.OnPicked?.Invoke();;
         }
 
-        public IEnumerator Co_Ready(Action onWaitAllReady = null)
+        public IEnumerator Co_Ready()
         {
             yield return new UnityEngine.WaitForSeconds(0.3f);
             
-            onWaitAllReady?.Invoke();
+            MainGameManager.Instance.OnWaitAllReady?.Invoke();
 
             string id = _pc.GetRoomProps(RoomProps.MiniGameId, "");
             _currentMini = string.IsNullOrEmpty(id) ? null : _registry.Get(id);
             if (_currentMini != null)
                 _uiBinder.BuildReadyPanel(_currentMini, PhotonNetwork.PlayerList, _isMaster(), out _);
-
-            // // 마스터가 모두 준비되면 로딩으로
-            // while (_state == MainState.Ready)
-            // {
-            //     if (_isMaster())
-            //     {
-            //         if (_pc.AllPlayersReady())
-            //         {
-            //             _pc.SetRoomProps(new Dictionary<string, object> {
-            //                 { RoomProps.State, MainState.LoadingMiniGame.ToString() }
-            //             });
-            //             break;
-            //         }
-            //     }
-            //     yield return null;
-            // }
         }
 
-        public IEnumerator Co_LoadingMini(Action onLoadingMiniGame = null)
+        public IEnumerator Co_LoadingMini()
         {
-            
-            
+         
             if (_currentMini == null)
             {
                 if (_isMaster())
@@ -118,36 +102,44 @@ namespace LDH_MainGame
                 yield break;
             }
 
-            // Additive Load
-            yield return MiniGameLoader.LoadAdditive(_sceneName(_currentMini), null);
-
-            _uiBinder.CloseReadyPanel();
-            if (_isMaster())
-                _pc.SetRoomProps(RoomProps.State, MainState.PlayingMiniGame.ToString());
+            //UI 비활성화
+            _uiBinder.SetActiveDebugUI(false);
+            yield return _uiBinder.CloseReadyPanel().ToCoroutine();
             
-            onLoadingMiniGame?.Invoke();
+            //photon view sync 변수 초기화
+            PhotonViewSync.Instance.Clear();
+            
+            // Additive Load
+            yield return MainGameManager.Instance.Loader.LoadAdditive(_sceneName(_currentMini), null);
+            
+            MainGameManager.Instance.OnLoadingMiniGame?.Invoke();
             
         }
 
         public IEnumerator Co_PlayingMini()
         {
             // 미니게임 종료는 외부에서 State=ApplyingResult로 전환한다고 가정
+            MainGame_PropertiesController.SetLocalReady(false);
+            MainGame_PropertiesController.SetLocalDone(false);
             yield break;
         }
 
-        public IEnumerator Co_ApplyingResult(Action onApplyingResult)
+        public IEnumerator Co_ApplyingResult()
         {
-            yield return MiniGameLoader.UnloadAdditive();
+            Debug.Log($"[MainGameStateMachine] local done : {MainGame_PropertiesController.GetDone(PhotonNetwork.LocalPlayer)}");
+            yield return MainGameManager.Instance.Loader.UnloadAdditive();
 
+            
+            _uiBinder.SetActiveDebugUI(true);
+            
             // 각자 자기 Done = true
             MainGame_PropertiesController.SetLocalDone(true);
-            
-            onApplyingResult?.Invoke();
+            MainGameManager.Instance.OnEndMiniGame?.Invoke();
         }
 
-        public IEnumerator Co_End(Action onEndGame)
+        public IEnumerator Co_End()
         {
-            onEndGame?.Invoke();
+            MainGameManager.Instance.OnEndGame?.Invoke();
             yield return new UnityEngine.WaitForSeconds(3f);
             // LeaveRoom은 MainGameManager에서 호출 (씬 전환 담당)
         }

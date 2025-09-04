@@ -85,7 +85,8 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
         isInitializing = true;
 
         Debug.Log($"[{GameType}] === SafeInitialize START ===");
-
+        
+        //----------- base game sceen controller에 할당된 포톤뷰 아이디가 조정됐으므로 이제 rpc 보내도 됨 --------- //
         // 1단계: 내가 씬 로딩 완료했다고 알림
         Debug.Log($"[{GameType}] Step 1: Sending OnPlayerSceneLoaded");
         SendRPCSafely(nameof(OnPlayerSceneLoaded), PhotonNetwork.LocalPlayer.ActorNumber);
@@ -93,13 +94,6 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
         // 2단계: 모든 플레이어 씬 로딩 완료 대기
         Debug.Log($"[{GameType}] Step 2: WaitForAllPlayersLoaded");
         yield return StartCoroutine(WaitForAllPlayersLoaded());
-        
-        // 추가) 포톤뷰 조정이 필요하면 포톤뷰 조정 처리
-        Debug.Log($"[{GameType}] Step 2.5 : Photon View 조정");
-        if (PhotonViewCoordinator.Instance != null)
-        {
-            yield return new WaitUntil(() => PhotonViewCoordinator.Instance.IsComplete);
-        }
 
         // 3단계: 매니저들 Awake 완료 대기
         Debug.Log($"[{GameType}] Step 3: WaitForManagersAwake");

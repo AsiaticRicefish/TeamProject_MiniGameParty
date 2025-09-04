@@ -60,7 +60,6 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
                     score = 0,
                     myTurnIndex = -1
                 };
-
                 // ShootingGame 딕셔너리에 플레이어들을 uid 저장
                 players[uid] = gamePlayer.ShootingData;
                 // 점수를 저장하는 playerScores 딕셔너리에도 해당 UID로 0점 등록 (초기값)
@@ -126,6 +125,8 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
                 break;
             case "GamePlayState": ChangeState(new GamePlayState()); break;
             case "CheckGameWinnderState": ChangeState(new CheckGameWinnderState()); break;
+            case "GameEndState":ChangeState(new GameEndState()); break;
+            case "TurnCheckState": ChangeState(new TurnCheckState()); break;
             default:
                 Debug.LogError($"[ChangeStateByName] {stateName}에 해당하는 상태가 없습니다.");
                 break;
@@ -161,7 +162,7 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
 
         //return winnerUnimo.ShooterUid;
         
-        EndGame();
+        //EndGame();
     }
 
     public void EndGame()
@@ -182,4 +183,14 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
                 Debug.Log($"[ShootingGameManager - RPC_ChangeState] - {stateName}에 해당되는 상태가 존재 하지 않습니다"); break;
         }
     }*/
+
+    public void Timer()
+    {
+        
+    }
+
+    private void ResetTimer()
+    {
+        
+    }
 }

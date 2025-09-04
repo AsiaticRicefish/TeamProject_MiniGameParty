@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
@@ -15,15 +15,17 @@ public class CardSelectState : ShootingGameState
     }
     public override void Update() 
     {
-        if(flag && CardManager.Instance.allPicked) //다 눌렀을 때 플레이어들이 
-        {
-            TurnManager.Instance.SetupTurn();
-            flag = false;
-        }
+
     }
     public override void Exit() 
     {
         Debug.Log("[ShootingGameState] - CardSelectState Exit");
-        //CardUI가 사라지도록
+
+        //카드 선택이 다된 시점
+        ShootingNetworkManager.Instance.ShootingGameTurnAndRoundRoomPropertiesReigster();
+        if (PhotonNetwork.IsMasterClient)
+        {
+            ShootingGameManager.Instance.photonView.RPC("InputOn", RpcTarget.All);
+        }
     }
 }
