@@ -91,7 +91,8 @@ namespace Network
             // 닉네임 자동 설정
             if (string.IsNullOrEmpty(nickName))
                 PhotonNetwork.NickName = $"Player_{UnityEngine.Random.Range(1000, 9999)}";
-
+            else
+                PhotonNetwork.NickName = nickName;
             //아이디 = 닉네임이랑 똑같은 아이디로 부여
             PhotonNetwork.AuthValues = new AuthenticationValues(PhotonNetwork.NickName);
         }
@@ -108,12 +109,6 @@ namespace Network
             {
                 Debug.Log("[NetworkManager] 서버에 연결이 완료되지 않았습니다.");
                 return; // 마스터에 아직 연결 안 됐으면 대기
-            }
-
-            if (PhotonNetwork.NetworkClientState != ClientState.Authenticated)
-            {
-                Debug.Log("[NetworkManager] 인증이 완료된 사용자가 아닙니다.");
-                return; // 인증 완료 안됐으면 대기
             }
 
             if (PhotonNetwork.InLobby || PhotonNetwork.InRoom || PhotonNetwork.NetworkClientState == ClientState.JoiningLobby)
