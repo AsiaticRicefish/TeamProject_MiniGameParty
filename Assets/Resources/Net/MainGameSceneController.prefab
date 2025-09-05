@@ -70,9 +70,7 @@ MonoBehaviour:
   initTimeout: 30
   showDebugLogs: 1
   syncCheckInterval: 0.1
-  roomObjectPaths:
-  - Net/MainGameManager
-  - Net/MainMapManager
-  - Net/PhotonViewSyncManager
+  mainGameManagerPrefabPath: Net/MainGameManager
+  photonViewSyncPrefabPath: Net/PhotonViewSyncManager
   initializeObjects: []
   _spawnedViewIds: 

@@ -18,8 +18,10 @@ namespace LDH_MainGame
         protected override string GameType => "Main";
 
         [Header("초기화 대상 (IGameComponent, ICouroutineGameComponent)")] [SerializeField]
-        private string[] roomObjectPaths;
-
+        private string mainGameManagerPrefabPath;
+        [SerializeField]
+        private string photonViewSyncPrefabPath;
+        
         [SerializeField] private GameObject[] initializeObjects;
 
         private readonly List<IGameComponent> _sequential = new();
@@ -46,7 +48,7 @@ namespace LDH_MainGame
             _sequential.Clear();
             _parallel.Clear();
 
-            StartCoroutine(CreateRoomObjects());
+            PhotonNetwork.InstantiateRoomObject(photonViewSyncPrefabPath, Vector3.zero, Quaternion.identity);
 
         }
 
@@ -61,8 +63,8 @@ namespace LDH_MainGame
             //플레이어 UID가 있는지 확인 (임시 메서드)
             yield return WaitForAllPlayerUids(5f);
 
-            //룸 오브젝트 생성
-            yield return StartCoroutine(CreateRoomObjects());
+            //룸 오브젝트 - 메인 게임 매니저 생성
+            PhotonNetwork.InstantiateRoomObject(mainGameManagerPrefabPath, Vector3.zero, Quaternion.identity);
 
             //타입 체크 및 type list 초기화
             yield return StartCoroutine(SetInitializeList());
@@ -169,53 +171,20 @@ namespace LDH_MainGame
             yield return null;
         }
 
-        private IEnumerator CreateRoomObjects()
-        {
-            
-            Debug.Log("Create room object");
-            if (PhotonNetwork.IsMasterClient)
-            {
-                var ids = new List<int>();
-
-                foreach (var path in roomObjectPaths)
-                {
-                    var ro = PhotonNetwork.InstantiateRoomObject(path, Vector3.zero, Quaternion.identity);
-                    if (ro != null && ro.TryGetComponent(out PhotonView pv))
-                    {
-                        Debug.Log(pv.ViewID);
-                        ids.Add(pv.ViewID);
-                    }
-                        
-                    else
-                        Util_LDH.ConsoleLogWarning(this, $"RoomObject spawn failed or missing PhotonView: {path}");
-                }
-                //
-                // photonView.RPC(nameof(RPC_AnnounceRoomObjects), RpcTarget.AllBuffered, ids.ToArray());
-            }
-            yield return null;
-            
-            // Debug.Log("마스터가 viewid 뿌릴때까지 대기");
-            // // 1) 마스터가 뿌린 ViewID 목록을 받을 때까지 대기
-            // yield return new WaitUntil(() => _spawnedViewIds != null && _spawnedViewIds.Length == roomObjectPaths.Length);
-            // Debug.Log("내 로컬에 뷰 아이디 생길때까지 대기");
-            // // 2) 내 로컬에 해당 ViewID 들이 실제로 생길 때까지 대기
-            // yield return new WaitUntil(() =>
-            // {
-            //     for (int i = 0; i < _spawnedViewIds.Length; i++)
-            //     {
-            //         Debug.Log(_spawnedViewIds[i]);
-            //         if (PhotonView.Find(_spawnedViewIds[i]) == null)
-            //         {
-            //             Debug.Log($"Find? {PhotonView.Find(_spawnedViewIds[i]) == null}");
-            //             return false;
-            //         }
-            //     }
-            //     return true;
-            // });
-            // Debug.Log("완료 1프레임 대기 하고 메서드 종료");
-            // // 3) 컴포넌트 Awake/Start 보장 위해 한 프레임 더 쉼
-            // yield return null;
-        }
+        // private IEnumerator CreateRoomObjects()
+        // {
+        //     Debug.Log("Create room object");
+        //     if (PhotonNetwork.IsMasterClient)
+        //     {
+        //         foreach (var path in roomObjectPaths)
+        //         {
+        //             PhotonNetwork.InstantiateRoomObject(path, Vector3.zero, Quaternion.identity);
+        //         }
+        //      
+        //     }
+        //     yield return null;
+        //     
+        // }
 
         
         [PunRPC]
