@@ -114,6 +114,11 @@ namespace ShootingScene.ShootingGame
            playerRank.UpdateRanks(uids);
        }
 
+        public void LeftUserUpdateRanking(string leftPlayerNickName)
+        {
+            playerRank.LeftUserSetRank(leftPlayerNickName);
+        }
+
        #endregion
 
       
