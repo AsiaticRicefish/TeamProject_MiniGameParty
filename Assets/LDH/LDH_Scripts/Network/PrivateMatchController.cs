@@ -22,7 +22,6 @@ namespace Network
         
         private int? _preferredSlotToJoin; // 로컬 입장 시 희망 슬롯(초대 수락 경로로 설정됨)
         
-        
         public bool starting;  // 중복 시작 방지 플래그
         private bool _requesting; // 중복 로직 실행 방지 플래그
         private bool _isMaster => PhotonNetwork.IsMasterClient;
@@ -543,9 +542,9 @@ namespace Network
    
             // 모두 Ready인지 체크하기
             var players = PhotonNetwork.PlayerList;
-            if (players.Length != MAX_PLAYERS)
+            if (players.Length != MaxPlayers)
             {
-                Debug.Log($"[PrivateMatchController] TryStartGame blocked — players:{players.Length}/{MAX_PLAYERS}");
+                Debug.Log($"[PrivateMatchController] TryStartGame blocked — players:{players.Length}/{MaxPlayers}");
                 return;
             }
 

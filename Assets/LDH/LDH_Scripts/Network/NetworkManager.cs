@@ -141,7 +141,7 @@ namespace Network
         {
             Debug.Log($"[NetworkManager] 빠른 매칭을 시작합니다. 방을 탐색합니다.");
             var expected = new Hashtable { { RoomProps.MatchType, MatchType.Quick.ToString() } };
-            PhotonNetwork.JoinRandomRoom(expected, MAX_PLAYERS);
+            PhotonNetwork.JoinRandomRoom(expected, MaxPlayers);
         }
 
         // 빠른 매칭 방 생성 : 빠른 매칭 방에 입장 실패 시 호출
@@ -153,7 +153,7 @@ namespace Network
 
             var options = new RoomOptions
             {
-                MaxPlayers = MAX_PLAYERS, // 최대 인원 설정
+                MaxPlayers = MaxPlayers, // 최대 인원 설정
                 IsVisible = true, // 로비 노출 여부 
                 IsOpen = true, // 입장 가능 여부 -> 게임 시작 시 false로 만들어야 함
                 CustomRoomProperties =
@@ -198,7 +198,7 @@ namespace Network
         {
             return new RoomOptions
             {
-                MaxPlayers = MAX_PLAYERS, // 최대 인원 설정
+                MaxPlayers = MaxPlayers, // 최대 인원 설정
                 IsVisible = false, // 코드로만 입장하도록 비노출 권장
                 IsOpen = true, // 입장 가능 여부 -> 게임 시작 시 false로 만들어야 함
                 CustomRoomProperties = new Hashtable

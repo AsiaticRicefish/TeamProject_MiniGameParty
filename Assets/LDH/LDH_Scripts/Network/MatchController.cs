@@ -25,15 +25,6 @@ namespace Network
         public QuickMatchController QuickMatch;
         public PrivateMatchController PrivateMatch;
         public float startDelaySec = 0.8f;
-
-
-        #region Match Player Count Control
-
-        private int _maxPlayer;
-        public int MaxPlayer => _maxPlayer;
-        public void SetMaxPlayer(int count) => _maxPlayer = count; 
-
-        #endregion
         
         
         private void Awake()
