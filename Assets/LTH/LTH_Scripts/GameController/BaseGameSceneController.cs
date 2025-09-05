@@ -3,11 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using LDH_MainGame;
-using LDH_Util;
 using LDH.LDH_Scripts.Network;
 using Photon.Pun;
 using UnityEngine;
-using Hashtable = ExitGames.Client.Photon.Hashtable;
 
 [RequireComponent(typeof(PhotonView))]
 public abstract class BaseGameSceneController : MonoBehaviourPun
@@ -38,12 +36,6 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
         Debug.Log("[BaseSceneController] Awake 호출 시점");
         loadedPlayers.Clear();
         initializedPlayers.Clear();
-        
-        // 자신의 awake가 끝났음을 플레이어 프로퍼티에 저장
-        PhotonNetwork.LocalPlayer.SetCustomProperties(new Hashtable
-        {
-            { LDH_Util.Define_LDH.PlayerProps.MiniGameSceneController, true }
-        });
     }
 
     private void OnEnable()
@@ -108,14 +100,11 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
         Debug.Log($"[{GameType}] PhotonViewSync Instance found");
         yield return new WaitUntil(() => PhotonViewSync.Instance.SyncCompleted);
         Debug.Log("[{GameType}] PhotonViewSync completed");
-        yield return new WaitUntil(CheckAllPlayerCompleteAwake);
+        yield return null;
 
         Debug.Log($"[{GameType}] === SafeInitialize START ===");
         
         //----------- base game sceen controller에 할당된 포톤뷰 아이디가 조정됐으므로 이제 rpc 보내도 됨 --------- //
-        // 0단계 : 모든 플레이어가 base game scene controller를 초기화했는지 확인.
-        
-        
         // 1단계: 내가 씬 로딩 완료했다고 알림
         Debug.Log($"[{GameType}] Step 1: Sending OnPlayerSceneLoaded");
         SendRPCSafely(nameof(OnPlayerSceneLoaded), PhotonNetwork.LocalPlayer.ActorNumber);
@@ -153,14 +142,7 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
         }
 
         Debug.Log($"[{GameType}] === SafeInitialize END ===");
-        
-        //변수 초기화
         isInitializing = false;
-        PhotonNetwork.LocalPlayer.SetCustomProperties(new Hashtable
-        {
-            { LDH_Util.Define_LDH.PlayerProps.MiniGameSceneController, false }
-        });
-        
     }
 
     #region 플레이어 동기화 RPC
@@ -265,7 +247,6 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
 
             try
             {
-                Debug.Log($"{component.GetType().Name} Initialize를 시작합니다.");
                 component.Initialize();
             }
             catch (System.Exception e)
@@ -363,23 +344,6 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
         }
 
         tracker[componentName] = true; // 성공/실패 관계없이 완료 표시
-    }
-
-
-    private bool CheckAllPlayerCompleteAwake()
-    {
-        foreach (var player in PhotonNetwork.CurrentRoom.Players.Values)  
-        {
-            if(player.CustomProperties.TryGetValue(Define_LDH.PlayerProps.MiniGameSceneController, out var val)
-               && val is bool isCompleted
-               && isCompleted)
-                continue;
-            
-            return false;
-            
-        }
-
-        return true;
     }
     #endregion
 }

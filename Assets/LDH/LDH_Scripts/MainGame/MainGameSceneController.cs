@@ -43,6 +43,18 @@ namespace LDH_MainGame
             //todo: 로딩 패널 켜는 시점 옮기기(로비 씬에서 켜기)
             _uiLoading = Manager.UI.CreatePopupUI<UI_Loading>();
             Manager.UI.ShowPopupUI(_uiLoading).Forget();
+
+            if (Instance == null)
+                Instance = this;
+            
+            _sequential.Clear();
+            _parallel.Clear();
+
+            // if (PhotonNetwork.IsMasterClient)
+            // {
+            //     PhotonNetwork.InstantiateRoomObject(photonViewSyncPrefabPath, Vector3.zero, Quaternion.identity);
+            // }
+            
         }
         
         
@@ -54,9 +66,6 @@ namespace LDH_MainGame
         /// <returns></returns>
         protected override IEnumerator WaitForManagersAwake()
         {
-            _sequential.Clear();
-            _parallel.Clear();
-            
             //플레이어 UID가 있는지 확인 (임시 메서드)
             yield return WaitForAllPlayerUids(5f);
 
