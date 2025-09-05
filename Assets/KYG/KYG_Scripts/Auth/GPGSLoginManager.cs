@@ -3,21 +3,18 @@ using System.Reflection;
 using Firebase.Auth;
 using Firebase.Extensions;
 using GooglePlayGames;
-using GooglePlayGames.BasicApi;
+using GooglePlayGames.BasicApi; // SignInStatus
 using Photon.Pun;
-using Photon.Realtime;
-using ExitGames.Client.Photon;
 using UnityEngine;
 using UnityEngine.SocialPlatforms;
-using GooglePlayGames.BasicApi; // SignInStatus 사용
 
 namespace KYG.Auth
 {
     /// <summary>
-    /// GPGS 로그인 → Firebase 연동 → Photon 접속/UID 주입
-    /// - GPGS 서버 인증코드가 없으면 IdToken으로 GoogleAuthProvider로 폴백
-    /// - Firebase 반환형(FirebaseUser/AuthResult) 차이를 안전 처리
-    /// - 기존 게스트 로그인 파이프라인과 동일하게 uid/nickname 주입
+    /// GPGS → Firebase Auth → Photon(uid 주입) (v2.1.0 호환)
+    /// - 1순위: RequestServerSideAccess 로 ServerAuthCode 획득
+    /// - 2순위: GetIdToken 리플렉션 폴백
+    /// - Photon.AuthValues 는 완전수식으로 안전 지정
     /// </summary>
     public class GPGSLoginManager : MonoBehaviourPunCallbacks
     {
@@ -27,22 +24,21 @@ namespace KYG.Auth
         private FirebaseAuth _auth;
         private FirebaseUser _user;
 
-        void Awake()
+        private void Awake()
         {
             DontDestroyOnLoad(gameObject);
+            _auth = FirebaseAuth.DefaultInstance;
 
-            // Firebase 핸들: 기존 전역/게스트 초기화를 재활용
-            _auth = FirebaseAuth.DefaultInstance; // BackendManager 통해 공유됨 :contentReference[oaicite:2]{index=2}
-
-            // 일부 버전에서 Activate만 있어도 충분 (InitializeInstance 없음 대응)
-            try { PlayGamesPlatform.Activate(); } catch { /* noop */ }
+            // v2.x에선 Activate만으로 충분
+            try { PlayGamesPlatform.Activate(); } catch { /* no-op */ }
         }
 
         /// <summary>UI 버튼에서 호출</summary>
         public void LoginWithGPGS()
         {
-            // 현재 프로젝트 GPGS 버전은 SignInStatus 콜백을 사용합니다.
-            PlayGamesPlatform.Instance.Authenticate((SignInStatus status) =>
+            PreflightLog();
+#if UNITY_ANDROID && !UNITY_EDITOR
+            PlayGamesPlatform.Instance.Authenticate(status =>
             {
                 if (status != SignInStatus.Success)
                 {
@@ -52,73 +48,62 @@ namespace KYG.Auth
 
                 string displayName = Social.localUser?.userName ?? "Player";
 
-                // 1) ServerAuthCode 우선 시도 (없으면 null)
-                string serverAuthCode = TryGetServerAuthCode();
-                if (!string.IsNullOrEmpty(serverAuthCode))
+                // 1) v2.1.0 정석: 서버 인증코드 먼저
+                try
                 {
-                    var credential = PlayGamesAuthProvider.GetCredential(serverAuthCode);
-                    SignInFirebase(credential, displayName);
-                    return;
-                }
-
-                // 2) 폴백: IdToken으로 GoogleAuthProvider 사용
-                string idToken = TryGetIdToken();
-                if (!string.IsNullOrEmpty(idToken))
-                {
-                    var credential = GoogleAuthProvider.GetCredential(idToken, null);
-                    SignInFirebase(credential, displayName);
-                    return;
-                }
-
-                Debug.LogError("[GPGS] ServerAuthCode/IdToken 모두 획득 실패(콘솔 설정/패키지 확인).");
-            });
-        }
-
-        // --- GPGS 토큰 획득 유틸 ---
-
-        private string TryGetServerAuthCode()
-        {
-            try
-            {
-                // 일부 버전: PlayGamesPlatform.Instance.GetServerAuthCode() 존재
-                var inst = PlayGamesPlatform.Instance;
-                var mi = inst.GetType().GetMethod("GetServerAuthCode", BindingFlags.Public | BindingFlags.Instance);
-                if (mi != null)
-                {
-                    var code = mi.Invoke(inst, null) as string;
-                    if (!string.IsNullOrEmpty(code))
+                    PlayGamesPlatform.Instance.RequestServerSideAccess(false, code =>
                     {
-                        Debug.Log("[GPGS] ServerAuthCode OK");
-                        return code;
-                    }
+                        if (!string.IsNullOrEmpty(code))
+                        {
+                            Debug.Log("[GPGS] ServerAuthCode OK");
+                            Debug.Log($"[GPGS] ServerAuthCode length={code.Length}");
+                            var cred = PlayGamesAuthProvider.GetCredential(code);
+                            SignInFirebase(cred, displayName);
+                        }
+                        else
+                        {
+                            TryIdTokenFallback(displayName);
+                            Debug.LogWarning("[GPGS] ServerAuthCode EMPTY → Try IdToken fallback");
+                        }
+                    });
                 }
-            }
-            catch { /* ignore */ }
-            return null;
+                catch (Exception e)
+                {
+                    Debug.LogWarning($"[GPGS] RequestServerSideAccess 예외: {e.Message} → IdToken 폴백");
+                    TryIdTokenFallback(displayName);
+                }
+            });
+#else
+            Debug.LogWarning("[GPGS] Android 기기에서 테스트하세요. (에디터 미지원)");
+#endif
         }
 
-        private string TryGetIdToken()
+        /// <summary>GetIdToken 공개 API가 없는 환경을 위한 리플렉션 폴백</summary>
+        private void TryIdTokenFallback(string displayName)
         {
+            string idToken = null;
             try
             {
-                // 일부 버전: ((PlayGamesPlatform)Social.Active).GetIdToken()
-                var active = Social.Active as PlayGamesPlatform;
+                // Social.Active 또는 Instance 양쪽 다 시도
+                var active = (Social.Active as PlayGamesPlatform) ?? (PlayGamesPlatform.Instance as PlayGamesPlatform);
                 if (active != null)
                 {
                     var mi = active.GetType().GetMethod("GetIdToken", BindingFlags.Public | BindingFlags.Instance);
-                    if (mi != null)
-                    {
-                        var token = mi.Invoke(active, null) as string;
-                        if (!string.IsNullOrEmpty(token))
-                        {
-                            Debug.Log("[GPGS] IdToken OK (fallback)");
-                            return token;
-                        }
-                    }
+                    if (mi != null) idToken = mi.Invoke(active, null) as string;
                 }
             }
             catch { /* ignore */ }
-            return null;
+
+            if (!string.IsNullOrEmpty(idToken))
+            {
+                Debug.Log("[GPGS] IdToken OK (fallback)");
+                var cred = GoogleAuthProvider.GetCredential(idToken, null);
+                SignInFirebase(cred, displayName);
+            }
+            else
+            {
+                Debug.LogError("[GPGS] ServerAuthCode/IdToken 모두 획득 실패. 콘솔/키/리졸버 설정 확인 필요.");
+            }
         }
 
         // --- Firebase 로그인 & Photon 주입 ---
@@ -133,24 +118,17 @@ namespace KYG.Auth
                     return;
                 }
 
-                // 반환형: FirebaseUser 또는 AuthResult 모두 처리
+                // FirebaseUser 또는 AuthResult.User 모두 대응
                 FirebaseUser fbUser = null;
-                try
-                {
-                    // FirebaseUser 직접 반환 버전
-                    fbUser = t.GetType().GetProperty("Result")?.GetValue(t) as FirebaseUser;
-                }
-                catch { /* ignore */ }
-
+                try { fbUser = t.GetType().GetProperty("Result")?.GetValue(t) as FirebaseUser; } catch { }
                 if (fbUser == null)
                 {
                     try
                     {
-                        // AuthResult 반환 버전: .User 취득
                         var resultObj = t.GetType().GetProperty("Result")?.GetValue(t);
                         fbUser = resultObj?.GetType().GetProperty("User")?.GetValue(resultObj) as FirebaseUser;
                     }
-                    catch { /* ignore */ }
+                    catch { }
                 }
 
                 if (fbUser == null)
@@ -160,10 +138,12 @@ namespace KYG.Auth
                 }
 
                 _user = fbUser;
+
                 if (!string.IsNullOrEmpty(displayName))
                 {
                     var profile = new UserProfile { DisplayName = displayName };
-                    _user.UpdateUserProfileAsync(profile).ContinueWithOnMainThread(_ => ApplyPhotonAndConnect(_user.UserId, displayName));
+                    _user.UpdateUserProfileAsync(profile)
+                         .ContinueWithOnMainThread(_ => ApplyPhotonAndConnect(_user.UserId, displayName));
                 }
                 else
                 {
@@ -179,10 +159,17 @@ namespace KYG.Auth
                 PhotonNetwork.PhotonServerSettings.AppSettings.FixedRegion = defaultRegion;
 
             PhotonNetwork.NickName = string.IsNullOrEmpty(nickname) ? "Player" : nickname;
-            PhotonNetwork.AuthValues = new AuthenticationValues(uid);
 
-            PhotonNetwork.LocalPlayer.SetCustomProperties(new Hashtable { { "uid", uid } });
-            Debug.Log($"[GPGS] Photon uid set: {uid}, nick: {PhotonNetwork.NickName}");
+            // AuthValues (Google UID 기반)
+            var authValues = new Photon.Realtime.AuthenticationValues(uid);
+            PhotonNetwork.AuthValues = authValues;
+
+            PhotonNetwork.LocalPlayer.SetCustomProperties(
+                new ExitGames.Client.Photon.Hashtable { { "uid", uid } });
+
+            // Debug 로그 추가
+            Debug.Log($"[GPGS] Firebase UID={uid}, Nickname={PhotonNetwork.NickName}");
+            Debug.Log($"[GPGS] Photon.AuthValues.UserId={PhotonNetwork.AuthValues?.UserId}");
 
             if (!PhotonNetwork.IsConnected) PhotonNetwork.ConnectUsingSettings();
             else if (!PhotonNetwork.InLobby) PhotonNetwork.JoinLobby();
@@ -190,8 +177,20 @@ namespace KYG.Auth
 
         public override void OnConnectedToMaster()
         {
-            // 기존 게스트 파이프라인과 동일하게 uid 보정/디렉토리 연동과 함께 동작합니다.
-            PhotonNetwork.JoinLobby(); // 로비 진입 후 UidPersistenceGuard/PlayerDirectory 동작 :contentReference[oaicite:3]{index=3} :contentReference[oaicite:4]{index=4} :contentReference[oaicite:5]{index=5} :contentReference[oaicite:6]{index=6}
+            PhotonNetwork.JoinLobby();
+        }
+        
+        private void PreflightLog()
+        {
+            var app = Firebase.FirebaseApp.DefaultInstance;
+            var opts = app?.Options;
+            Debug.Log($"[GPGS] Preflight: Firebase ProjectId={opts?.ProjectId}, AppId={opts?.AppId}, ApiKey={(opts?.ApiKey?.Substring(0,6) ?? "null")}...");
+
+            // GPGS 플랫폼 활성화 여부
+            Debug.Log($"[GPGS] PlayGamesPlatform.Active? {(GooglePlayGames.PlayGamesPlatform.Instance != null)}");
+
+            // Photon 지역/설정
+            Debug.Log($"[GPGS] Photon.FixedRegion={Photon.Pun.PhotonNetwork.PhotonServerSettings?.AppSettings?.FixedRegion}");
         }
     }
 }
