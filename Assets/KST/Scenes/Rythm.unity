@@ -1086,7 +1086,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isPersistent: 0
-  gameTime: 180
+  gameTime: 4
+  gameTimer: {fileID: 1804055936}
   IsGameStart: 0
   missScore: -5
   overHeatPoint: 5
@@ -2610,7 +2611,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isPersistent: 0
-  playerPrefabName: Prefabs/RythmPlayer
+  playerPrefabName: Prefabs/DONOTSAVERythmPlayer
   tempSpawnPos: {x: 0, y: 0, z: 0}
   gameRoomName: RythemTestRoom
   maxPlayers: 2

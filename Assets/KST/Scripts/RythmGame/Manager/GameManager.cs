@@ -3,6 +3,7 @@ using System.Collections;
 using DesignPattern;
 using Photon.Pun;
 using Photon.Realtime;
+using TMPro;
 using UnityEngine;
 
 namespace RhythmGame
@@ -12,6 +13,9 @@ namespace RhythmGame
     {
         // 게임 시간 관리
         [SerializeField] float gameTime = 180f; //게임 플레이타임
+
+        //TODO 김승태 게임 플레이 시간 (임시) 변경 예정
+        [SerializeField] TMP_Text gameTimer;
         public bool IsGameStart = false;
         public event Action OnGameStart; //게임 시작 이벤트
         public event Action OnGameOver; //게임 오버 여부에 따른 이벤트
