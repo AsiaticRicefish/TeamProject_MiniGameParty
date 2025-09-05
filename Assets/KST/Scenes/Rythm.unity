@@ -1086,7 +1086,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isPersistent: 0
-  gameTime: 4
+  gameTime: 100
   gameTimer: {fileID: 1804055936}
   IsGameStart: 0
   missScore: -5

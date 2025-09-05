@@ -157,7 +157,7 @@ namespace RhythmGame
             ScoreManager.Instance.photonView.RPC(
                 nameof(ScoreManager.SetOverheat), RpcTarget.All, overHeatValue
                 );
-            
+
 
         }
 
@@ -220,6 +220,7 @@ namespace RhythmGame
         {
             //과열 시
             photonView.RPC(nameof(DuringOverHeat), RpcTarget.All);
+            PlayerStunAnim(overHeatingTime);
 
             yield return new WaitForSeconds(overHeatingTime);
             //과열 시간 종료 후 로직
@@ -287,6 +288,33 @@ namespace RhythmGame
 
             //위치, 회전
             return new Pose(pos, rot);
+        }
+
+        //플레이어 스턴
+        public void PlayerStunAnim(float time)
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+
+            foreach (var player in PhotonNetwork.PlayerList)
+            {
+                photonView.RPC(nameof(RPC_Stun), RpcTarget.All, player.ActorNumber, time);
+            }
+        }
+
+        [PunRPC]
+        void RPC_Stun(int actorNum, float time)
+        {
+            if (!PlayerController.AvatarByActor.TryGetValue(actorNum, out var avatar)) return;
+
+            if (avatar.TryGetComponent<PlayerAnimController>(out var anim))
+            {
+                Debug.Log("anim 있음");
+                anim.PlayeStunAnim(time);
+            }
+            else
+            {
+                Debug.LogWarning($"actorNum {actorNum}의 아바타에서 PlayerAnimController를 찾지 못함");
+            }
         }
 
 

@@ -11,8 +11,8 @@ public class PlayerAnimController : MonoBehaviourPun
 
     //애니메이션
     [SerializeField] Animator animator;
-    public readonly int idle_Hash = Animator.StringToHash("anim_CH000_Idle");
-    public readonly int stun_Hash = Animator.StringToHash("anim_CH000_Stun");
+    // public readonly int idle_Hash = Animator.StringToHash("anim_CH000_Idle");
+    // public readonly int stun_Hash = Animator.StringToHash("anim_CH000_Stun");
 
     Coroutine _stunCo;
     bool isStun;
@@ -41,13 +41,27 @@ public class PlayerAnimController : MonoBehaviourPun
         }
     }
 
-    // public void PlayeStunAnim()
-    // {
+    public void PlayeStunAnim(float time)
+    {
+        if (_stunCo != null) StopCoroutine(_stunCo);
+        
+        _stunCo = StartCoroutine(IE_Stun(time));
+    }
 
-    // }
-    // IEnumerator IE_Stun()
-    // {
+    IEnumerator IE_Stun(float time)
+    {
+        isStun = true;
+        // animator.Play(stun_Hash);
+        animator.SetBool("isstun", true);
+        Debug.Log("스턴 애니메이션 실행");
 
-    // }
+        yield return new WaitForSeconds(time);
+
+        isStun = false;
+        // animator.Play(idle_Hash);
+        animator.SetBool("isstun", false);
+        Debug.Log("휴지 애니메이션 실행");
+        _stunCo = null;
+    }
 
 }
