@@ -104,14 +104,18 @@ namespace LDH_UI
             {
                 //나가 유저를 마지막 슬롯에 넣기
                 Debug.Log("나간 유저를 마지막 슬롯에 넣기");
+                playerNameTextList[currentPlayerCount].text = leftUserName;
 
                 //UI처리
                 Color color = Color.black;
                 color.a = 0.5f;
-                playerProfileImageList[leftIndex].color = color;
-
-                playerNameTextList[currentPlayerCount].text = leftUserName;
+                playerProfileImageList[currentPlayerCount].color = color;
             }
+        }
+
+        public void OnClick(TMP_Text text)
+        {
+            Debug.Log(text.text);
         }
 
        
