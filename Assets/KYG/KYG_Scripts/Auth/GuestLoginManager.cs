@@ -54,6 +54,8 @@ namespace KYG.Auth
             if (Instance != null && Instance != this) { Destroy(gameObject); return; }
             Instance = this;
             //DontDestroyOnLoad(gameObject);
+
+            
         }
 
         private void Start()
@@ -274,8 +276,6 @@ namespace KYG.Auth
         {
             PhotonNetwork.NickName = nickname;
             PhotonNetwork.AuthValues = new AuthenticationValues(uid);
-            
-            Manager.Network.SetAuthReady();
 
             // Debug 로그 추가
             Debug.Log($"[GuestLogin] Firebase UID={uid}, Nickname={PhotonNetwork.NickName}");
@@ -315,9 +315,11 @@ namespace KYG.Auth
             
          
             if (user == null) return; // Firebase 로그인 전이면 패스
-
+            
+            
             // Photon 기본 로비 들어가기
-            PhotonNetwork.JoinLobby();
+            if (PhotonNetwork.InLobby || PhotonNetwork.NetworkClientState == ClientState.JoiningLobby) return;  // 방어로직 추가
+                PhotonNetwork.JoinLobby();
         }
         
         // ----- NetworkManager로 기능 통합 ----- 0829(이도현)
