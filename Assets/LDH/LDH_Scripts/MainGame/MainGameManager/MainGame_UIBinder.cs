@@ -45,7 +45,6 @@ namespace LDH_MainGame
 
         public void SetActiveDebugUI(bool active)
         {
-            Debug.Log("afasfdsafsafsal;fjks;lafj;klsdfjkl;safj;klsadf;jklsad;fkljsda;jkfsdajkl;fljk");
             _debugUI.SetActiveDebugPanel(active);
         }
         

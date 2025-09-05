@@ -60,6 +60,7 @@ namespace LDH_Util
         {
             public const string ReadyState = "readyState"; //bool 타입으로 true, false
             public const string SlotIndex = "slotIndex"; // 0~4까지의 숫자
+            public const string MiniGameSceneController = "miniGameSceneController"; //bool 타입으로 true, false
         }
 
         #endregion
