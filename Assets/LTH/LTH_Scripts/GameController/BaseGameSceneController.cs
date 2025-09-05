@@ -91,11 +91,15 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
     {
         if (isInitializing) yield break;
         isInitializing = true;
-        
-           
+
+
         // 추가 ------- 모든 플레이어가 포톤뷰 싱크 맞추고 해당하는 오브젝트 활성화를 완료해서 변수 관련 초기화가 다 완료가 보장됨까지 기다림 ------ //
+        yield return null;
+        Debug.Log($"[{GameType}] Waiting for PhotonViewSync Instance...");
         yield return new WaitUntil(() => PhotonViewSync.Instance != null);
+        Debug.Log($"[{GameType}] PhotonViewSync Instance found");
         yield return new WaitUntil(() => PhotonViewSync.Instance.SyncCompleted);
+        Debug.Log("[{GameType}] PhotonViewSync completed");
         yield return null;
 
         Debug.Log($"[{GameType}] === SafeInitialize START ===");
