@@ -70,7 +70,8 @@ namespace LDH_MainGame
 
             if (_isMaster())
             {
-                _currentMini = _registry.PickRandomGame();
+                // 직전에 뽑은 미니게임은 다음에는 뽑지 않도록 함(단, 레지스트리에 1개만 있다면 동일한 미니게임 뽑도록 처리)
+                _currentMini = _registry.PickRandomGame(info => _registry.Count==1 || info.id != _currentMini?.id);
                 _pc.SetRoomProps(new Dictionary<string, object> {
                     { RoomProps.MiniGameId, _currentMini.id },
                     { RoomProps.State, MainState.Ready.ToString() }

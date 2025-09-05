@@ -69,7 +69,7 @@ namespace ShootingScene
         #endregion
 
         #region Turn 넘기기 / 결과 알리기 
-        private IEnumerator NextTurn(float delay = 2.0f)
+        private IEnumerator NextTurn(float delay = 1.0f)
         {
             Debug.Log($"[TurnManager] NextTurn 호출. {delay} 동안 잠시 대기합니다.");
             yield return new WaitForSeconds(delay);

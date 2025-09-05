@@ -12,7 +12,7 @@ using UnityEngine;
 namespace LDH_MainGame
 {
     [RequireComponent(typeof(PhotonView))]
-    public class PhotonViewSync : PunSingleton<PhotonViewSync>, IGameComponent
+    public class PhotonViewSync : PunSingleton<PhotonViewSync>
     {
         [Header("초기화 설정")] [SerializeField] protected float timeout = 30f; // WaitForAllPlayersLoaded()에서 사용하는 안전장치
 
@@ -24,15 +24,12 @@ namespace LDH_MainGame
 
         private bool _syncCompleted = true;
         public bool SyncCompleted => _syncCompleted;
-
-        protected override void OnAwake()
+        
+        
+        private void Awake()
         {
-            base.OnAwake();
-        }
-
-
-        public void Initialize()
-        {
+            Debug.Log($"[photon veiw sync awake] view id {photonView.ViewID}");
+            
             completedPlayers.Clear();
             hasCoordniatorPlayers.Clear();
             activeCompletedPlayers.Clear();
