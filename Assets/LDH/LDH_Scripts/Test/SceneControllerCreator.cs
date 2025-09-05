@@ -20,12 +20,13 @@ namespace LDH.LDH_Scripts.Test
 
         private IEnumerator CreateMainGameSceneController()
         {
+            yield return null;
             if (PhotonNetwork.IsMasterClient)
             {
                 PhotonNetwork.InstantiateRoomObject(path, Vector3.zero, Quaternion.identity);
             }
 
-            yield return null;
+           
         }
     }
 }
