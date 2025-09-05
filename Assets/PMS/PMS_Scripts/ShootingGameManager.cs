@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 using UnityEngine;
 using Photon.Pun;
 using DesignPattern;
@@ -21,6 +22,9 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
 
     public Dictionary<string, ShootingPlayerData> players = new(); // UID를 key로 가지는 플레이어 데이터
     private Dictionary<string, int> playerScores = new();        // 플레이어별 점수
+
+    //Unimo Ranking System
+    private string[] unimoRankingList;
 
     public int CurrentRound { get; private set; } = 0;
     public int MaxRounds { get; private set; } = 1;
@@ -132,6 +136,42 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
                 break;
         }
     }
+
+    public void CheckRanking()
+    {
+        if (!PhotonNetwork.IsMasterClient) return;
+
+        // 1. 현재 맵에 있는 활성화 알 다 찾기
+        UnimoEgg[] activeEggs = GameObject.FindObjectsOfType<UnimoEgg>(true);
+
+        // 2. 거리 기준 오름차순 정렬
+        var sortedEggs = activeEggs
+            .OrderBy(e => Vector3.Distance(e.transform.position, finishLine.transform.position))
+            .ToList();
+
+        // 3. shooterID 중복 제거 (첫 번째만 남기기)
+        var uniqueEggs = sortedEggs
+            .GroupBy(e => e.ShooterUid)
+            .Select(g => g.First())   // 가장 가까운 알만 남김
+            .ToList();
+
+        for(int i = 0; i < uniqueEggs.Count; i++)
+        {
+            unimoRankingList[i] = uniqueEggs[i].ShooterUid;
+        }
+        photonView.RPC("RPC_UpdateRanking", RpcTarget.Others, unimoRankingList);
+    }
+
+    [PunRPC]
+    void RPC_UpdateRanking(string[] rankingList)
+    {
+        // 클라이언트에서 랭킹 업데이트
+        for (int i = 0; i < rankingList.Length; i++)
+        {
+            Debug.Log($"Rank {i + 1}: Player {rankingList[i]}");
+        }
+    }
+
 
     public void CheckGameWinner()
     {
