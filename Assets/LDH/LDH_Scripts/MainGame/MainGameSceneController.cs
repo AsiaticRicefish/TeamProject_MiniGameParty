@@ -50,10 +50,10 @@ namespace LDH_MainGame
             _sequential.Clear();
             _parallel.Clear();
 
-            if (PhotonNetwork.IsMasterClient)
-            {
-                PhotonNetwork.InstantiateRoomObject(photonViewSyncPrefabPath, Vector3.zero, Quaternion.identity);
-            }
+            // if (PhotonNetwork.IsMasterClient)
+            // {
+            //     PhotonNetwork.InstantiateRoomObject(photonViewSyncPrefabPath, Vector3.zero, Quaternion.identity);
+            // }
             
         }
         
