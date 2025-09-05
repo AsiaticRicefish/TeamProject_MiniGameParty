@@ -460,6 +460,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: PhotonViewSyncManager
       objectReference: {fileID: 0}
+    - target: {fileID: 4704265319989073943, guid: 45377571ca1cb4475bdc29400f1c39e4,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6438928640293213941, guid: 45377571ca1cb4475bdc29400f1c39e4,
         type: 3}
       propertyPath: sceneViewId

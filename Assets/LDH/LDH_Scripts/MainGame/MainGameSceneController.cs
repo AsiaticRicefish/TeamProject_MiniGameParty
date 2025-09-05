@@ -7,6 +7,7 @@ using LDH_UI;
 using LDH_Util;
 using Managers;
 using Photon.Pun;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 
@@ -17,10 +18,9 @@ namespace LDH_MainGame
         public static MainGameSceneController Instance { get; private set; }
         protected override string GameType => "Main";
 
-        [Header("초기화 대상 (IGameComponent, ICouroutineGameComponent)")] [SerializeField]
-        private string mainGameManagerPrefabPath;
-        [SerializeField]
-        private string photonViewSyncPrefabPath;
+        [Header("초기화 대상 (IGameComponent, ICouroutineGameComponent)")] 
+        [SerializeField] private string mainGameManagerPrefabPath;
+        [SerializeField] private string photonViewSyncPrefabPath;
         
         [SerializeField] private GameObject[] initializeObjects;
 
@@ -50,10 +50,13 @@ namespace LDH_MainGame
             _sequential.Clear();
             _parallel.Clear();
 
-            // PhotonNetwork.InstantiateRoomObject(photonViewSyncPrefabPath, Vector3.zero, Quaternion.identity);
-
+            if (PhotonNetwork.IsMasterClient)
+            {
+                PhotonNetwork.InstantiateRoomObject(photonViewSyncPrefabPath, Vector3.zero, Quaternion.identity);
+            }
+            
         }
-
+        
         
         /// <summary>
         /// - 메인 게임 씬 UI 활성화 or 배치
