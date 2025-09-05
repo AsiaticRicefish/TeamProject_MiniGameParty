@@ -93,6 +93,10 @@ MonoBehaviour:
   - RPC_CloseCardUI
   - RPC_StartCountDown
   - RPC_StopCountDown
+  - RPC_CompletePhotonViewCoordination
+  - RPC_HasCoordination
+  - RPC_RegisterEgg
+  - RPC_CompleteObjectsActive
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

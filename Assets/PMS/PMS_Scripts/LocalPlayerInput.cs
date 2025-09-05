@@ -67,7 +67,7 @@ public class LocalPlayerInput : MonoBehaviourPun
     private void Awake()
     {
         ShootingGameManager.Instance.OnGameStarted += RegisterInput;
-        ShootingGameManager.Instance.OnGameEnded -= UnRegisterInput;
+        ShootingGameManager.Instance.OnGameEnded += UnRegisterInput;
         player = gameObject.transform;
 
         SetupEvents();
@@ -77,6 +77,17 @@ public class LocalPlayerInput : MonoBehaviourPun
     {
         if (mainCam == null)
             mainCam = Camera.main;
+    }
+
+    private void OnDestroy()
+    {
+        if (currentTimeoutCoroutine != null)
+        {
+            //타이머 정지를 모두에게 알리기
+            NotifyStopCountdown(true);
+            StopCoroutine(currentTimeoutCoroutine);
+            currentTimeoutCoroutine = null;
+        }
     }
 
     //return pool 데이터 리셋 함수

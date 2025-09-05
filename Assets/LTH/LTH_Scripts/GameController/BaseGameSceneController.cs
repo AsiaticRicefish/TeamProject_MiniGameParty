@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using LDH_MainGame;
 using LDH.LDH_Scripts.Network;
 using Photon.Pun;
 using UnityEngine;
@@ -30,10 +31,16 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
     private HashSet<int> initializedPlayers = new();
     private bool isInitializing = false;
 
-    private void OnEnable()
+    protected virtual void Awake()            // enable에서 호출하니 초기화 순서 문제로 awake에서 호출
     {
+        Debug.Log("[BaseSceneController] Awake 호출 시점");
         loadedPlayers.Clear();
         initializedPlayers.Clear();
+    }
+
+    private void OnEnable()
+    {
+        Debug.Log("[BaseSceneController] Enable 호출 시점");
     }
 
     private void Start()
@@ -62,7 +69,8 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
             PhotonNetwork.RegisterPhotonView(photonView);
 #endif
         }
-
+        
+        
         StartCoroutine(SafeInitialize());
     }
 
@@ -84,8 +92,19 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
         if (isInitializing) yield break;
         isInitializing = true;
 
-        Debug.Log($"[{GameType}] === SafeInitialize START ===");
 
+        // 추가 ------- 모든 플레이어가 포톤뷰 싱크 맞추고 해당하는 오브젝트 활성화를 완료해서 변수 관련 초기화가 다 완료가 보장됨까지 기다림 ------ //
+        yield return null;
+        Debug.Log($"[{GameType}] Waiting for PhotonViewSync Instance...");
+        yield return new WaitUntil(() => PhotonViewSync.Instance != null);
+        Debug.Log($"[{GameType}] PhotonViewSync Instance found");
+        yield return new WaitUntil(() => PhotonViewSync.Instance.SyncCompleted);
+        Debug.Log("[{GameType}] PhotonViewSync completed");
+        yield return null;
+
+        Debug.Log($"[{GameType}] === SafeInitialize START ===");
+        
+        //----------- base game sceen controller에 할당된 포톤뷰 아이디가 조정됐으므로 이제 rpc 보내도 됨 --------- //
         // 1단계: 내가 씬 로딩 완료했다고 알림
         Debug.Log($"[{GameType}] Step 1: Sending OnPlayerSceneLoaded");
         SendRPCSafely(nameof(OnPlayerSceneLoaded), PhotonNetwork.LocalPlayer.ActorNumber);
@@ -93,13 +112,6 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
         // 2단계: 모든 플레이어 씬 로딩 완료 대기
         Debug.Log($"[{GameType}] Step 2: WaitForAllPlayersLoaded");
         yield return StartCoroutine(WaitForAllPlayersLoaded());
-        
-        // 추가) 포톤뷰 조정이 필요하면 포톤뷰 조정 처리
-        Debug.Log($"[{GameType}] Step 2.5 : Photon View 조정");
-        if (PhotonViewCoordinator.Instance != null)
-        {
-            yield return new WaitUntil(() => PhotonViewCoordinator.Instance.IsComplete);
-        }
 
         // 3단계: 매니저들 Awake 완료 대기
         Debug.Log($"[{GameType}] Step 3: WaitForManagersAwake");

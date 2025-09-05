@@ -125,6 +125,8 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
                 break;
             case "GamePlayState": ChangeState(new GamePlayState()); break;
             case "CheckGameWinnderState": ChangeState(new CheckGameWinnderState()); break;
+            case "GameEndState":ChangeState(new GameEndState()); break;
+            case "TurnCheckState": ChangeState(new TurnCheckState()); break;
             default:
                 Debug.LogError($"[ChangeStateByName] {stateName}에 해당하는 상태가 없습니다.");
                 break;
@@ -160,7 +162,7 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
 
         //return winnerUnimo.ShooterUid;
         
-        EndGame();
+        //EndGame();
     }
 
     public void EndGame()

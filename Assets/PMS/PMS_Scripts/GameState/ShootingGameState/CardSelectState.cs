@@ -20,7 +20,12 @@ public class CardSelectState : ShootingGameState
     public override void Exit() 
     {
         Debug.Log("[ShootingGameState] - CardSelectState Exit");
-        
+
         //카드 선택이 다된 시점
+        ShootingNetworkManager.Instance.ShootingGameTurnAndRoundRoomPropertiesReigster();
+        if (PhotonNetwork.IsMasterClient)
+        {
+            ShootingGameManager.Instance.photonView.RPC("InputOn", RpcTarget.All);
+        }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using DesignPattern;
+using LDH_MainGame;
 using MiniGameJenga;
 using Photon.Pun;
 using UnityEngine;
@@ -136,6 +137,7 @@ public class JengaSceneController : BaseGameSceneController
             {
                 Debug.Log($"[Scene] About to call JengaGameManager.Instance.StartGame()");
                 JengaGameManager.Instance.StartGame();
+                MainGameManager.Instance?.NotifyMiniGameStart();
             }
             else
             {

@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using LDH_UI;
 using LDH_Util;
+using LDH.LDH_Scripts.Test;
 using Managers;
 using Photon.Realtime;
 using UnityEngine;
@@ -13,9 +15,14 @@ namespace LDH_MainGame
         private readonly MiniGameRegistry _registry;
         private readonly Action<int> _setLocalSlot;
         private readonly Action<int> _onClickReady;
+
+
         
+        private MainGameDebugPanel _debugUI;
         private UI_Popup_PrivateRoom _readyPanel;
         private UI_GameInfo _gameInfo;
+
+        private List<UI_Screen> _mainGameScreenUIs;
         private UI_Popup_QuitGame _quitPopup;
         
         // 생성자
@@ -25,8 +32,22 @@ namespace LDH_MainGame
             _registry = registry;
             _setLocalSlot = setLocalSlot;
             _onClickReady = onClickReady;
+            _mainGameScreenUIs = new List<UI_Screen>();
         }
 
+
+        public void SetDebugUI()
+        {
+            _debugUI = Manager.UI.CreateScreenUI<MainGameDebugPanel>();
+            _mainGameScreenUIs.Add(_debugUI);
+            Manager.UI.ShowScreenUI(_debugUI);
+        }
+
+        public void SetActiveDebugUI(bool active)
+        {
+            Debug.Log("afasfdsafsafsal;fjks;lafj;klsdfjkl;safj;klsadf;jklsad;fkljsda;jkfsdajkl;fljk");
+            _debugUI.SetActiveDebugPanel(active);
+        }
         
         public void BuildReadyPanel(MiniGameInfo mini, Player[] players, bool isMaster, out int localSlot)
         {
@@ -74,6 +95,18 @@ namespace LDH_MainGame
         }
 
 
+
+        public async UniTask CloseAllScreenUI()
+        {
+            List<UniTask> tasks = new List<UniTask>();
+
+            foreach (UI_Screen screenUI in _mainGameScreenUIs)
+            {
+                tasks.Add(Manager.UI.CloseScreenUI(screenUI, true));
+            }
+            await UniTask.WhenAll(tasks);
+        }
+        
 
         #region 게임 강제 종료 팝업
         public void ShowQuitPopup()

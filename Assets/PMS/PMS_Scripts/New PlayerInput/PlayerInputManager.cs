@@ -49,9 +49,22 @@ namespace ShootingScene
             if (touchAction != null)
             {
                 touchAction.started += OnTouchPress;
-                touchAction.performed += OnTouchPress;
-                touchAction.canceled += OnTouchPress;
+                //touchAction.performed += OnTouchPress;
+                //touchAction.canceled += OnTouchPress;
                 touchAction.Enable();
+            }
+        }
+
+
+        public void DisableInput()
+        {
+            // TouchPress 액션의 이벤트를 구독
+            if (touchAction != null)
+            {
+                touchAction.started -= OnTouchPress;
+                //touchAction.performed -= OnTouchPress;
+                //touchAction.canceled -= OnTouchPress;
+                touchAction.Disable();
             }
         }
     }

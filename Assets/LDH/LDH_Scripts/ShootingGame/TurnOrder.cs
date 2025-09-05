@@ -100,6 +100,11 @@ namespace LDH.LDH_Scripts.ShootingGame
             return node.Value.PlayerId == _list.First.Value.PlayerId;
         }
 
+        public bool IsFirstNode(string uid)
+        {
+            return _dicByUid.TryGetValue(uid, out var node) ? IsFirstNode(node) : false;
+        }
+
         public bool IsCurrentFirstNode()
         {
             return IsFirstNode(_current);
