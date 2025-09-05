@@ -6,6 +6,7 @@ using UnityEngine;
 using Photon.Pun;
 using DesignPattern;
 using LDH_MainGame;
+using ShootingScene.ShootingGame;
 
 [RequireComponent(typeof(PhotonView))]
 [DisallowMultipleComponent]
@@ -157,7 +158,7 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
 
         for(int i = 0; i < uniqueEggs.Count; i++)
         {
-            unimoRankingList[i] = uniqueEggs[i].ShooterUid;
+            unimoRankingList[i] = uniqueEggs[i].photonView.Owner.NickName;
         }
         photonView.RPC("RPC_UpdateRanking", RpcTarget.Others, unimoRankingList);
     }
@@ -165,6 +166,7 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
     [PunRPC]
     void RPC_UpdateRanking(string[] rankingList)
     {
+        ShootingUIManager.Instance.UpdateRanking(rankingList);
         // 클라이언트에서 랭킹 업데이트
         for (int i = 0; i < rankingList.Length; i++)
         {
