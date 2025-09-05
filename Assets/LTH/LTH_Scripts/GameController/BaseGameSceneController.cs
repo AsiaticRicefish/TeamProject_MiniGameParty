@@ -109,11 +109,10 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
         yield return new WaitUntil(() => PhotonViewSync.Instance.SyncCompleted);
         Debug.Log("[{GameType}] PhotonViewSync completed");
         yield return new WaitUntil(CheckAllPlayerCompleteAwake);
-
+        Debug.Log("[{GameType}] All Player complete base scene controller's awake");
         Debug.Log($"[{GameType}] === SafeInitialize START ===");
         
         //----------- base game sceen controller에 할당된 포톤뷰 아이디가 조정됐으므로 이제 rpc 보내도 됨 --------- //
-        // 0단계 : 모든 플레이어가 base game scene controller를 초기화했는지 확인.
         
         
         // 1단계: 내가 씬 로딩 완료했다고 알림
@@ -265,7 +264,6 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
 
             try
             {
-                Debug.Log($"{component.GetType().Name} Initialize를 시작합니다.");
                 component.Initialize();
             }
             catch (System.Exception e)
