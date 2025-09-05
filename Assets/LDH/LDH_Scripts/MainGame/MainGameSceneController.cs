@@ -38,16 +38,11 @@ namespace LDH_MainGame
 
         protected override void Awake()
         {
-            if (Instance == null)
-                Instance = this;
-            
+            base.Awake();
             
             //todo: 로딩 패널 켜는 시점 옮기기(로비 씬에서 켜기)
             _uiLoading = Manager.UI.CreatePopupUI<UI_Loading>();
             Manager.UI.ShowPopupUI(_uiLoading).Forget();
-            
-            base.Awake();
-
         }
         
         
@@ -216,6 +211,7 @@ namespace LDH_MainGame
             // 3) 컴포넌트 Awake/Start 보장 위해 한 프레임 더 쉼
             _spawnedViewIds = null;
             yield return null;
+            
         }
 
         

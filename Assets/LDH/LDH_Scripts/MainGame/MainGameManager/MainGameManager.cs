@@ -49,6 +49,7 @@ namespace LDH_MainGame
         protected override void OnAwake()
         {
             PhotonNetwork.AutomaticallySyncScene = false;
+            MainGameSceneController.Instance.Register(gameObject);
             base.OnAwake();
         }
 
