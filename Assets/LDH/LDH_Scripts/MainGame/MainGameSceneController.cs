@@ -88,7 +88,6 @@ namespace LDH_MainGame
         {
             Util_LDH.ConsoleLog(this, "SequenctialManager 초기화를 시작합니다.");
             
-            _sequential.Add(PhotonViewSync.Instance);
             _sequential.Add(MainGameManager.Instance);
             yield return StartCoroutine(InitializeComponentsSafely(_sequential));
         }
