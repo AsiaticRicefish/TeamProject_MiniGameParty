@@ -40,6 +40,7 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
         CardManager = GameObject.FindObjectOfType<CardManager>();
         Debug.Log("[ShootingGameManager] - 슈팅 게임 초기화");
         InitializePlayers();                // 플레이어 정보 세팅 - 따로 instantiate에서 만들 필요는 없음.
+        unimoRankingList = new string[PhotonNetwork.CurrentRoom.MaxPlayers];
         //ChangeState(new InitState());       //전부 InitState 씬 상태
     }
 
@@ -145,9 +146,10 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
         // 1. 현재 맵에 있는 활성화 알 다 찾기
         UnimoEgg[] activeEggs = GameObject.FindObjectsOfType<UnimoEgg>(true);
 
+        Debug.Log($"[GameManager] - {activeEggs.Length}");
         // 2. 거리 기준 오름차순 정렬
         var sortedEggs = activeEggs
-            .OrderBy(e => Vector3.Distance(e.transform.position, finishLine.transform.position))
+            .OrderBy(e => Mathf.Abs(e.transform.position.z - finishLine.transform.position.z))
             .ToList();
 
         // 3. shooterID 중복 제거 (첫 번째만 남기기)
