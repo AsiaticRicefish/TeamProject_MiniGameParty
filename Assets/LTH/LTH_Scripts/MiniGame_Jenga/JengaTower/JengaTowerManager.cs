@@ -5,9 +5,11 @@ using System.Linq;
 using DesignPattern;
 using InputBlocker;
 using Photon.Pun;
+using Photon.Realtime;
 using UnityEngine;
+using Hashtable = ExitGames.Client.Photon.Hashtable;
 
-public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComponent
+public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComponent, IInRoomCallbacks
 {
     public enum BuildMode { Procedural, Prefab }
 
@@ -41,6 +43,7 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
 
     // 룸 커스텀 프로퍼티 키 (관전자/재접속 대비 슬롯 고정)
     private const string ROOMKEY_SLOTS = "JG_SLOTS";
+    private const string PROXY_PREFAB_PATH = "Prefabs/Jenga/Proxy/TowerProxyLoader";
 
     // 네트워크 적용 중 이벤트 재브로드캐스트 방지 플래그
     private bool _suppressCollapseBroadcast;
@@ -54,6 +57,8 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
     private readonly HashSet<int> _mutedActors = new();
     private readonly Dictionary<int, (Action on, Action off)> _towerMuteHandlers = new();
     public bool IsArenaMuted(int ownerActorNumber) => _mutedActors.Contains(ownerActorNumber);
+
+    private bool _isCreatingProxies = false;
 
     public void WithSuppressedCollapse(Action action)
     {
@@ -79,16 +84,108 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
 
     public void Initialize()
     {
-        // 마스터에서만 슬롯맵 고정(오프라인/비마스터는 읽기만)
+        if (PhotonNetwork.InRoom && PhotonNetwork.IsMasterClient)
+        {
+            StartCoroutine(ForceCleanupAndReinitialize());
+            return;
+        }
+
         EnsureSlotMap();
-        CreateAllPlayerTowers();
-        Debug.Log("[JengaTowerManager] 초기화 완료 - 개별 타워 생성");
+
+        _playerTowers.Clear();
+
+        if (PhotonNetwork.IsMasterClient)
+        {
+            StartCoroutine(WaitOneFrameThenEnsure());
+        }
+    }
+
+    private IEnumerator ForceCleanupAndReinitialize()
+    {
+        if (_isCreatingProxies)
+        {
+            yield break;
+        }
+
+        _isCreatingProxies = true;
+
+        // 1. PhotonView 기반으로 더 확실한 정리
+        var allPhotonViews = FindObjectsOfType<PhotonView>()
+            .Where(pv => pv.GetComponent<TowerProxyLoader>() != null)
+            .ToArray();
+
+        foreach (var pv in allPhotonViews)
+        {
+            var proxy = pv.GetComponent<TowerProxyLoader>();
+            PhotonNetwork.Destroy(pv.gameObject);
+        }
+
+        // 2. 더 긴 대기 (네트워크 전파 시간 고려)
+        yield return new WaitForSeconds(2.0f);
+
+        // 3. 여러 방식으로 재확인
+        var remainingProxies = FindObjectsOfType<TowerProxyLoader>(true);
+        var remainingPhotonViews = FindObjectsOfType<PhotonView>()
+            .Where(pv => pv.GetComponent<TowerProxyLoader>() != null)
+            .ToArray();
+
+        // 4. 아직 남아있다면 추가 정리 시도
+        if (remainingPhotonViews.Length > 0)
+        {
+            foreach (var pv in remainingPhotonViews)
+            {
+                PhotonNetwork.Destroy(pv.gameObject);
+            }
+            yield return new WaitForSeconds(1.0f);
+        }
+
+        // 5. 슬롯맵 재설정 전 현재 방 상태 확인
+        var currentPlayers = PhotonNetwork.PlayerList.Select(p => p.ActorNumber).OrderBy(x => x).ToArray();
+
+        EnsureSlotMap();
+        _playerTowers.Clear();
+
+        // 6. ViewID Pool 정리를 위한 충분한 대기
+        yield return new WaitForSeconds(1.5f);
+
+        // 7. 최종 확인 후 생성
+        var finalCheck = FindObjectsOfType<TowerProxyLoader>(true);
+
+        EnsureProxiesForCurrentPlayers();
+        _isCreatingProxies = false;
+    }
+
+    public void CleanupAllProxies()
+    {
+        if (!PhotonNetwork.IsMasterClient) return;
+
+        var existing = UnityEngine.Object.FindObjectsOfType<TowerProxyLoader>(true);
+
+        foreach (var proxy in existing)
+        {
+            PhotonNetwork.Destroy(proxy.gameObject);
+        }
+    }
+
+    private IEnumerator WaitOneFrameThenEnsure()
+    {
+        if (_isCreatingProxies)
+        {
+            yield break;
+        }
+
+        _isCreatingProxies = true;
+        yield return null;
+        EnsureProxiesForCurrentPlayers();
+        _isCreatingProxies = false;
     }
 
     private void OnEnable()
     {
         if (JengaGameManager.Instance != null)
             JengaGameManager.Instance.OnGameStateChanged += HandleStateChanged;
+
+        PhotonNetwork.AddCallbackTarget(this);
     }
 
     private void OnDisable()
@@ -111,6 +208,13 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
 
         ReleaseCollapseLockNow();
         _mutedActors.Clear();
+
+        PhotonNetwork.RemoveCallbackTarget(this);
+
+        if (PhotonNetwork.InRoom && PhotonNetwork.IsMasterClient)
+        {
+            CleanupAllProxies();
+        }
     }
 
     private void HandleStateChanged(JengaGameState state)
@@ -118,6 +222,62 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
         if (state == JengaGameState.Finished)
             ReleaseCollapseLockNow();
     }
+
+    public void RegisterTower(int actorNumber, JengaTower tower, int slotIndex)
+    {
+        if (tower == null) return;
+
+        _playerTowers[actorNumber] = tower;
+
+        ApplyArenaLayer(tower.gameObject, slotIndex);
+        tower.ConfigureTopProtection(allowTopRemoval: false, topSafeLayers: 1);
+
+        // 붕괴 이벤트 → 네트워크 통지(마스터만)
+        // (중복 구독 방지 위해 기존 핸들러 있으면 해제)
+        if (_towerMuteHandlers.TryGetValue(actorNumber, out var prev))
+        {
+            tower.CollapseStarted -= prev.on;
+            tower.CollapseFinished -= prev.off;
+        }
+
+        tower.OnTowerCollapsed += () =>
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+            if (IsSuppressingCollapse) return;
+            JengaNetworkManager.Instance.RequestTowerCollapse_MasterAuth(actorNumber);
+        };
+
+        Action on = () => { MuteArena(actorNumber, true); SetTowerInputEnabled(actorNumber, false); };
+        Action off = () => { MuteArena(actorNumber, false); SetTowerInputEnabled(actorNumber, true); };
+        tower.CollapseStarted += on;
+        tower.CollapseFinished += off;
+        _towerMuteHandlers[actorNumber] = (on, off);
+
+        if (actorNumber == PhotonNetwork.LocalPlayer.ActorNumber)
+        {
+            var cameraAnchor = GetCameraAnchor(slotIndex);
+            var binder = FindFirstObjectByType<JengaLocalCameraBinder>(FindObjectsInactive.Include);
+            if (binder)
+            {
+                binder.BindForLocal(actorNumber, slotIndex, cameraAnchor, tower.transform, arenaLayerNames);
+
+                var overlay = FindFirstObjectByType<TowerFocusOverlay>(FindObjectsInactive.Include);
+                if (overlay)
+                {
+                    var mask = GetArenaLayerMaskBySlot(slotIndex);
+                    overlay.SetArenaMask(mask);
+
+                    overlay.Bind(tower, null);
+
+                    if (overlay.TowerCam != null)
+                    {
+                        overlay.TowerCam.Render();
+                    }
+                }
+            }
+        }
+    }
+
 
     #region Camera Anchor 찾기
     private Transform GetCameraAnchor(int slotIndex)
@@ -141,7 +301,6 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
             if (child) return child;
         }
 
-        Debug.LogWarning($"[JengaTowerManager] CameraAnchor not found for slot={slotIndex}. Fallback to TowerAnchor.");
         return towerAnchor ? towerAnchor : towersParent;
     }
 
@@ -158,103 +317,120 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
 
     #endregion
 
-
-    #region Tower Creation
-
-    // 초기화 단계에서는 p == null이어도 강제로 생성
-    private void CreateAllPlayerTowers(bool allowNullPlayer = true)
-    {
-        _playerTowers.Clear();
-
-        // 슬롯 맵: 시작 시점에 확정된 순서 (관전자 포함 이슈 방지)
-        var slotActors = GetSlotMap(); // int[] actorNumbers
-
-        for (int i = 0; i < slotActors.Length; i++)
-        {
-            var actorNumber = slotActors[i];
-            var p = PhotonNetwork.PlayerList.FirstOrDefault(x => x.ActorNumber == actorNumber);
-
-            if (!allowNullPlayer && p == null)
-            {
-                // 런타임 중 재호출일 경우엔 탈주 처리
-                continue;
-            }
-
-            string ownerUid = TryGetUid(p);
-
-            CreatePlayerTower(actorNumber, i, ownerUid);
-        }
-    }
-
-    private void CreatePlayerTower(int actorNumber, int slotIndex, string ownerUid)
-    {
-        // 앵커 기준 위치/회전
-        var anchor = GetPlayerTowerAnchor(slotIndex);
-        var pos = anchor ? anchor.position : Vector3.zero;
-        var rot = anchor ? anchor.rotation : Quaternion.identity;
-        var parent = parentTowerUnderAnchor && anchor ? anchor : towersParent;
-
-        GameObject towerRootGO;
-        JengaTower tower;
-
-        if (buildMode == BuildMode.Prefab)
-        {
-            // 완성된 타워 프리팹을 그대로 소환
-            towerRootGO = Instantiate(towerPrefab, pos, rot, parent);
-            towerRootGO.name = $"JengaTower_Player{actorNumber}";
-            tower = towerRootGO.GetComponent<JengaTower>() ?? towerRootGO.AddComponent<JengaTower>();
-
-            tower.InitializeOwner(actorNumber, ownerUid);
-            tower.InitializeFromExistingHierarchy();
-
-            ApplyArenaLayer(towerRootGO, slotIndex);
-        }
-        else
-        {
-            // 기존 프로시저럴 방식 유지
-            towerRootGO = new GameObject($"JengaTower_Player{actorNumber}");
-            towerRootGO.transform.SetParent(towersParent, false);
-            towerRootGO.transform.SetPositionAndRotation(pos, rot);
-
-            tower = towerRootGO.AddComponent<JengaTower>();
-            tower.InitializeOwner(actorNumber, ownerUid);
-
-            ApplyArenaLayer(towerRootGO, slotIndex);
-        }
-
-        // 붕괴 이벤트 → 네트워크 통지(마스터만)
-        tower.OnTowerCollapsed += () =>
+    #region Tower Proxy Management
+    private void EnsureProxiesForCurrentPlayers()
     {
         if (!PhotonNetwork.IsMasterClient) return;
-        if (IsSuppressingCollapse) return;
 
-        JengaNetworkManager.Instance.RequestTowerCollapse_MasterAuth(actorNumber);
-    };
+        var slotMap = GetSlotMap(); // actorNumbers in slot order
+        var aliveActors = new HashSet<int>(slotMap);
 
-        _playerTowers[actorNumber] = tower;
-        tower.ConfigureTopProtection(allowTopRemoval: false, topSafeLayers: 1);
+        var existing = UnityEngine.Object.FindObjectsOfType<TowerProxyLoader>(true);
 
-        // 전역락 대신: 이 타워만 mute on/off 
-        Action on = () => { MuteArena(actorNumber, true); SetTowerInputEnabled(actorNumber, false); };
-        Action off = () => { MuteArena(actorNumber, false); SetTowerInputEnabled(actorNumber, true); };
-        tower.CollapseStarted += on;
-        tower.CollapseFinished += off;
-        _towerMuteHandlers[actorNumber] = (on, off);
-
-        if (actorNumber == PhotonNetwork.LocalPlayer.ActorNumber)
+        var byOwner = new Dictionary<int, List<TowerProxyLoader>>();
+        foreach (var p in existing)
         {
-            int slot = slotIndex; // 재계산하지 말고 생성에 사용한 동일 값 사용
-            var cameraAnchor = GetCameraAnchor(slot);
-            var lookTarget = tower.transform;
-
-            var binder = FindFirstObjectByType<JengaLocalCameraBinder>(FindObjectsInactive.Include);
-            if (binder)
+            var key = p.OwnerActorNumber;
+            if (!byOwner.TryGetValue(key, out var list))
             {
-                binder.BindForLocal(actorNumber, slot, cameraAnchor, lookTarget, arenaLayerNames);
+                list = new List<TowerProxyLoader>();
+                byOwner[key] = list;
+            }
+            list.Add(p);
+        }
+
+        foreach (var kv in byOwner)
+        {
+            int actor = kv.Key;
+            var list = kv.Value;
+
+            if (actor != -1 && !aliveActors.Contains(actor))
+            {
+                foreach (var proxy in list)
+                    PhotonNetwork.Destroy(proxy.gameObject);
             }
         }
 
+        if (byOwner.TryGetValue(-1, out var zombieList))
+        {
+            foreach (var proxy in zombieList)
+                PhotonNetwork.Destroy(proxy.gameObject);
+        }
+
+        foreach (var kv in byOwner)
+        {
+            int actor = kv.Key;
+            var list = kv.Value;
+
+            if (actor == -1) continue;
+            if (!aliveActors.Contains(actor)) continue;
+
+            if (list.Count > 1)
+            {
+                list.Sort((a, b) =>
+                {
+                    var va = a.GetComponent<PhotonView>();
+                    var vb = b.GetComponent<PhotonView>();
+                    int ia = va ? va.ViewID : int.MaxValue;
+                    int ib = vb ? vb.ViewID : int.MaxValue;
+                    return ia.CompareTo(ib);
+                });
+
+                for (int i = 1; i < list.Count; i++)
+                    PhotonNetwork.Destroy(list[i].gameObject);
+            }
+        }
+
+        StartCoroutine(DelayedProxyCreation(slotMap));
     }
+
+    private IEnumerator DelayedProxyCreation(int[] slotMap)
+    {
+        yield return new WaitForEndOfFrame(); // 기존 프록시 파괴 완료 대기
+
+        // 현재 남아있는 프록시들 재확인
+        var remaining = UnityEngine.Object.FindObjectsOfType<TowerProxyLoader>(true);
+        var have = new HashSet<int>(remaining.Select(p => p.OwnerActorNumber).Where(a => a != -1));
+
+        for (int slot = 0; slot < slotMap.Length; slot++)
+        {
+            int actor = slotMap[slot];
+            if (have.Contains(actor)) continue;
+
+            var anchor = GetPlayerTowerAnchor(slot);
+            var pos = anchor ? anchor.position : Vector3.zero;
+            var rot = anchor ? anchor.rotation : Quaternion.identity;
+
+            PhotonNetwork.InstantiateRoomObject(
+                PROXY_PREFAB_PATH,
+                pos, rot, 0,
+                new object[] { actor, GetOwnerUidByActorSafe(actor), slot }
+            );
+        }
+
+        yield return null;
+
+        remaining = UnityEngine.Object.FindObjectsOfType<TowerProxyLoader>(true);
+        foreach (var proxy in remaining)
+        {
+            if (proxy.OwnerActorNumber == -1) continue; // 아직 초기화 중
+
+            int slot = GetSlotIndexOf(proxy.OwnerActorNumber);
+            var anchor = GetPlayerTowerAnchor(slot);
+
+            if (parentTowerUnderAnchor && anchor && proxy.transform.parent != anchor)
+                proxy.transform.SetParent(anchor, true);
+            else if (!parentTowerUnderAnchor && towersParent && proxy.transform.parent != towersParent)
+                proxy.transform.SetParent(towersParent, true);
+
+            if (anchor)
+            {
+                proxy.transform.position = anchor.position;
+                proxy.transform.rotation = anchor.rotation;
+            }
+        }
+    }
+
     #endregion
 
     #region Slot Map (Room Properties)
@@ -264,6 +440,7 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
 
         var room = PhotonNetwork.CurrentRoom;
         if (room == null) return;
+
 
         // 기존 슬롯맵이 있는지 확인하고, 현재 플레이어와 맞지 않으면 갱신
         bool needsUpdate = false;
@@ -277,13 +454,11 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
             if (!existingSlots.OrderBy(x => x).SequenceEqual(currentActors))
             {
                 needsUpdate = true;
-                Debug.Log($"[JengaTowerManager] Slot map mismatch - updating. Existing: [{string.Join(",", existingSlots)}], Current: [{string.Join(",", currentActors)}]");
             }
         }
         else
         {
             needsUpdate = true;
-            Debug.Log("[JengaTowerManager] No existing slot map - creating new one");
         }
 
         if (needsUpdate)
@@ -344,15 +519,15 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
         return null;
     }
 
-    private static string TryGetUid(Photon.Realtime.Player p)
+    // Photon Player → UID 보조 조회 유틸 (없으면 null)
+    private string GetOwnerUidByActorSafe(int actorNumber)
     {
-        if (p?.CustomProperties != null &&
-            p.CustomProperties.TryGetValue("uid", out var uidObj))
-        {
+        var p = PhotonNetwork.PlayerList.FirstOrDefault(x => x.ActorNumber == actorNumber);
+        if (p != null && p.CustomProperties != null && p.CustomProperties.TryGetValue("uid", out var uidObj))
             return uidObj as string;
-        }
         return null;
     }
+
     #endregion
 
     #region Public API
@@ -467,4 +642,56 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
         foreach (Transform c in go.transform)
             SetLayerRecursively(c.gameObject, layer);
     }
+
+    #region 플레이어가 탈주했을 때
+
+
+    // 플레이어 퇴장
+    public void OnPlayerLeftRoom(Player other)
+    {
+        if (!PhotonNetwork.IsMasterClient) return;
+
+        // 정책 1: 이탈 시 타워 붕괴 처리
+        JengaNetworkManager.Instance?.RequestTowerCollapse_MasterAuth(other.ActorNumber);
+
+        // 해당 플레이어의 프록시도 명시적으로 제거
+        var leaverProxies = FindObjectsOfType<TowerProxyLoader>()
+            .Where(p => p.OwnerActorNumber == other.ActorNumber);
+
+        foreach (var proxy in leaverProxies)
+        {
+            PhotonNetwork.Destroy(proxy.gameObject);
+        }
+    }
+
+    public void OnMasterClientSwitched(Player newMaster)
+    {
+        if (!PhotonNetwork.IsMasterClient) return;
+
+        StartCoroutine(WaitOneFrameThenEnsure());
+
+        var gm = JengaGameManager.Instance;
+        if (gm && gm.currentState == JengaGameState.Playing)
+        {
+            JengaNetworkManager.Instance.BroadcastGameState(gm.currentState);
+            JengaNetworkManager.Instance.BroadcastTimeSync(gm.remainingTime);
+        }
+    }
+
+    // 플레이어 입장
+    public void OnPlayerEnteredRoom(Player newPlayer)
+    {
+        if (!PhotonNetwork.IsMasterClient) return;
+
+        StartCoroutine(WaitOneFrameThenEnsure());
+    }
+
+    // 룸 프로퍼티 변경
+    public void OnRoomPropertiesUpdate(Hashtable propertiesThatChanged) { }
+
+    // 플레이어 프로퍼티 변경 (uid 등)
+    public void OnPlayerPropertiesUpdate(Player targetPlayer, Hashtable changedProps) { }
+
+    #endregion
+
 }

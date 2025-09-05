@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Photon.Pun.Demo.Procedural;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.SocialPlatforms;
 using UnityEngine.UI;
 
 /// <summary>
@@ -68,6 +69,19 @@ public class TowerFocusOverlay : MonoBehaviour
         if (backdrop) backdrop.onClick.RemoveListener(Hide);
     }
 
+    void OnEnable()
+    {
+        // 오버레이가 늦게 켜졌을 때도 안전하게 마스크/RT 보정
+        EnsureCameraAndTexture();
+        if (arenaMask == 0 && JengaTowerManager.Instance != null)
+        {
+            var local = Photon.Pun.PhotonNetwork.LocalPlayer?.ActorNumber ?? 0;
+            SetArenaMask(JengaTowerManager.Instance.GetArenaLayerMaskByActor(local));
+        }
+    }
+
+
+
     // 오버레이 내부에서 마우스가 가리키는 블록 임시 하이라이트
     public void NotifyHover(JengaBlock block)
     {
@@ -86,6 +100,25 @@ public class TowerFocusOverlay : MonoBehaviour
     }
 
 
+    private void EnsureCameraAndTexture()
+    {
+        if (!towerCam) return;
+        // 1) RT 없으면 생성하고 카메라/미리보기에 연결
+        if (towerCam.targetTexture == null)
+        {
+            var rt = new RenderTexture(1024, 1024, 16, RenderTextureFormat.ARGB32);
+            rt.name = "TowerFocus_RT";
+            towerCam.targetTexture = rt;
+            if (preview) preview.texture = rt;
+        }
+        else if (preview && preview.texture == null)
+        {
+            preview.texture = towerCam.targetTexture;
+        }
+        if (!towerCam.gameObject.activeSelf) towerCam.gameObject.SetActive(true);
+        towerCam.enabled = true;
+    }
+
     public void Bind(JengaTower targetTower, RenderTexture rt)
     {
         if (!preview) return;
@@ -95,11 +128,13 @@ public class TowerFocusOverlay : MonoBehaviour
 
         if (tex != null && towerCam)
         {
+            // 카메라에도 확실히 연결
+            if (towerCam.targetTexture != tex) towerCam.targetTexture = tex;
             towerCam.aspect = (float)tex.width / tex.height;
         }
         else
         {
-            Debug.LogWarning("[TowerFocusOverlay] Preview RenderTexture가 비어 있습니다.");
+            EnsureCameraAndTexture();
         }
     }
 
@@ -112,6 +147,7 @@ public class TowerFocusOverlay : MonoBehaviour
         if (towerCam) towerCam.cullingMask = mask;
         if (forwarder) forwarder.SetMask(mask);
     }
+
 
     /// <summary>
     /// 월드에서 블록이 선택되었을 때 호출: 면 정면 프레이밍 + 오버레이 표시
@@ -126,7 +162,7 @@ public class TowerFocusOverlay : MonoBehaviour
         if (tex != null)
         {
             float rtAspect = (float)tex.width / tex.height;
-            towerCam.aspect = rtAspect;  
+            towerCam.aspect = rtAspect;
             towerCam.rect = new Rect(0, 0, 1, 1);
         }
 
@@ -239,6 +275,8 @@ public class TowerFocusOverlay : MonoBehaviour
                 towerCam.gameObject.SetActive(on);
             towerCam.enabled = on;
         }
+
+        if (on) EnsureCameraAndTexture();
     }
 
     public bool IsActive => active;
