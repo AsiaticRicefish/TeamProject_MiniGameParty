@@ -94,7 +94,7 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
         
            
         // 추가 ------- 모든 플레이어가 포톤뷰 싱크 맞추고 해당하는 오브젝트 활성화를 완료해서 변수 관련 초기화가 다 완료가 보장됨까지 기다림 ------ //
-   
+        yield return new WaitUntil(() => PhotonViewSync.Instance != null);
         yield return new WaitUntil(() => PhotonViewSync.Instance.SyncCompleted);
         yield return null;
 

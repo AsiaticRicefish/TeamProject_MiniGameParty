@@ -50,7 +50,7 @@ namespace LDH_MainGame
             _sequential.Clear();
             _parallel.Clear();
 
-            PhotonNetwork.InstantiateRoomObject(photonViewSyncPrefabPath, Vector3.zero, Quaternion.identity);
+            // PhotonNetwork.InstantiateRoomObject(photonViewSyncPrefabPath, Vector3.zero, Quaternion.identity);
 
         }
 
