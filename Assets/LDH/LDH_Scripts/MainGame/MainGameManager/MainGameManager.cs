@@ -149,16 +149,10 @@ namespace LDH_MainGame
             {
                 Debug.Log($"[PlayerProps chagned] my done : {changedProps[PlayerProps.InGameDone]}");
             }
-
-
-            if (PhotonNetwork.CurrentRoom != null && PhotonNetwork.CurrentRoom.PlayerCount > 1 &&
-                FSM.Get() == MainState.Ready)
-            {
-                // UI Ready 표시 갱신: PlayerProps 기반으로 계산해서 UI에만 전달
-                int readyMask = PropertiesCtrl.BuildReadyMaskFromPlayers();
-                UI.UpdateReady(readyMask);
-            }
-           
+            
+            // UI Ready 표시 갱신: PlayerProps 기반으로 계산해서 UI에만 전달
+            int readyMask = PropertiesCtrl.BuildReadyMaskFromPlayers();
+            UI.UpdateReady(readyMask);
 
             if (IsMaster && PhotonNetwork.CurrentRoom != null && PhotonNetwork.CurrentRoom.PlayerCount > 1)
             {
