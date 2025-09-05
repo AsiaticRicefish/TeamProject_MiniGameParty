@@ -54,21 +54,12 @@ public class CardManager : PunSingleton<CardManager>
         // 씬 자동 동기화 권장
         // ------ 미니게임을 additive로 로컬에서 각자 올리기 때문에 automatically sync scene 을 해제해야 합니다. -------- //
         // PhotonNetwork.AutomaticallySyncScene = true;
-
-        if (PhotonNetwork.IsMasterClient)
-        {
-            BuildAndBroadcastDeck();
-        }
-        else
-        {
-            // 이미 방에 deck이 있을 수 있으니 즉시 읽기 시도
-            TryInitFromRoomProps();
-        }
+        
     }
 
     #region Deck Build & Sync
 
-    private void BuildAndBroadcastDeck()
+    public void BuildAndBroadcastDeck()
     {
         int playerCount = Mathf.Clamp(PhotonNetwork.CurrentRoom.PlayerCount, 2, 4);
         _deckValues = Enumerable.Range(1, playerCount).ToArray();
@@ -90,7 +81,7 @@ public class CardManager : PunSingleton<CardManager>
         BuildCardUIs();
     }
 
-    private void TryInitFromRoomProps()
+    public void TryInitFromRoomProps()
     {
         var room = PhotonNetwork.CurrentRoom;
         if (room == null || room.CustomProperties == null) return;
