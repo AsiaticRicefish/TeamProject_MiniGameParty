@@ -28,6 +28,7 @@ namespace LDH_MainGame
         
         private void Awake()
         {
+            Debug.Log($"[photon veiw sync awake] view id {photonView.ViewID}");
             completedPlayers.Clear();
             hasCoordniatorPlayers.Clear();
             activeCompletedPlayers.Clear();

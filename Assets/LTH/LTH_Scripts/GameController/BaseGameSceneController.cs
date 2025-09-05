@@ -31,7 +31,7 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
     private HashSet<int> initializedPlayers = new();
     private bool isInitializing = false;
 
-    private void Awake()            // enable에서 호출하니 초기화 순서 문제로 awake에서 호출
+    protected virtual void Awake()            // enable에서 호출하니 초기화 순서 문제로 awake에서 호출
     {
         Debug.Log("[BaseSceneController] Awake 호출 시점");
         loadedPlayers.Clear();
@@ -69,17 +69,7 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
             PhotonNetwork.RegisterPhotonView(photonView);
 #endif
         }
-
         
-        // 추가 ------- 모든 플레이어가 포톤뷰 싱크 맞추고 해당하는 오브젝트 활성화를 완료해서 변수 관련 초기화가 다 완료가 보장됨까지 기다림 ------ //
-        // 메인 맵의 MainGameSceneController가 photon view sync를 생성하기 때문에 메인 맵에서만 null이 됨
-        // 미니게임에서는 메인 맵이 만들었기 때문에 가능하다.
-        // if (PhotonViewSync.Instance != null)
-        // {
-            yield return new WaitUntil(() => PhotonViewSync.Instance.SyncCompleted);
-            yield return null;
-        // }
-
         
         StartCoroutine(SafeInitialize());
     }
@@ -101,6 +91,12 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
     {
         if (isInitializing) yield break;
         isInitializing = true;
+        
+           
+        // 추가 ------- 모든 플레이어가 포톤뷰 싱크 맞추고 해당하는 오브젝트 활성화를 완료해서 변수 관련 초기화가 다 완료가 보장됨까지 기다림 ------ //
+   
+        yield return new WaitUntil(() => PhotonViewSync.Instance.SyncCompleted);
+        yield return null;
 
         Debug.Log($"[{GameType}] === SafeInitialize START ===");
         
