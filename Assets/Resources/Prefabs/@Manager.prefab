@@ -46,5 +46,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   isPersistent: 1
   gameSceneName: LDH_MainMapScene
-  lobbySceneName: LDH_MainScene
+  lobbySceneName: LDH_LobbyScene
   autoSyncScene: 1

@@ -21,6 +21,7 @@ namespace LDH.LDH_Scripts.ShootingGame
         public GamePlayer Current => _current?.Value;
         public LinkedListNode<GamePlayer> CurrentNode => _current;
         public LinkedListNode<GamePlayer> NextNode => _current.Next ?? _list.First;
+
         
         public void Clear()
         {

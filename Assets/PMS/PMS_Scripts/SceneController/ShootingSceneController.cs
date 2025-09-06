@@ -78,7 +78,7 @@ public class ShootingSceneController : BaseGameSceneController
             if (PhotonNetwork.IsMasterClient)
             {
                 MainGameManager.Instance?.NotifyMiniGameStart();
-                RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "CardSelectState");
+                RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "CardSelectState");   
             }
             // else if(RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.State).ToString() == "CardSelectState")
             // {

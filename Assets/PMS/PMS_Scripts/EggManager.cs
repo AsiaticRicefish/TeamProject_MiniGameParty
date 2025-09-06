@@ -62,21 +62,26 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
     {
         Debug.Log("각자 EggManager 유니모 오브젝트 생성 시작");
         
-        string myUid = PMS_Util.PMS_Util.GetMyUid();                    // 내 UID를 가져오기
+        Debug.Log("1");
+        
+        string myUid = PMS_Util.PMS_Util.GetMyUid();     
+        Debug.Log($"{myUid}");// 내 UID를 가져오기
         List<int> viewIDs = new List<int>();                            //UnimoEgg를 viewID 매핑하기 위하여 초기화
 
         //만약 내이름에 풀이 있으면 안되니깐 먼저 확인하고 새로운 풀리스트 생성
         if (!playerEggPools.ContainsKey(myUid))
         {
+            Debug.Log($"{myUid} uid에 해당하는 풀이 없어서 풀을 만듭니다.");
             playerEggPools[myUid] = new List<UnimoEgg>();               //풀 리스트 초기화                
         }
         else
         {
             Debug.Log("[UnimoEgg] - 이미 내 UID에 맞는 pool이 존재함!");
         }
-
+        Debug.Log($"{myUid} 에그 생성 시작");
         for (int i = 0; i < poolSizePerPlayer; i++)
         {
+            
             GameObject eggObj = PhotonNetwork.Instantiate(unimoEggPrefabPath, Vector3.zero, Quaternion.identity);
             UnimoEgg egg = eggObj.GetComponent<UnimoEgg>();
 
@@ -90,12 +95,16 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
             yield return null;
         }
 
+        registerdPools.Add(myUid);
+        Debug.Log($"[EggManager] - (로컬) {PhotonNetwork.LocalPlayer.NickName}의 풀 생성 완료");
+
+        
+        Debug.Log($"[EggManager] - 내 풀을 남한테 전달합니다.");
         // 모든 유저에게 생성된 egg의 내가 생성한 viewIDs 전달
         photonView.RPC(nameof(RPC_RegisterEgg), RpcTarget.OthersBuffered, myUid, viewIDs.ToArray());
 
-        registerdPools.Add(myUid);
-        Debug.Log($"[EggManager] - {PhotonNetwork.LocalPlayer.NickName}의 풀 생성 완료");
-
+       
+       
         CheckRegisterAllPool();
 
     }

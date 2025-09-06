@@ -1,10 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 using UnityEngine;
 using Photon.Pun;
 using DesignPattern;
 using LDH_MainGame;
+using ShootingScene.ShootingGame;
+using Photon.Realtime;
 
 [RequireComponent(typeof(PhotonView))]
 [DisallowMultipleComponent]
@@ -21,6 +24,9 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
 
     public Dictionary<string, ShootingPlayerData> players = new(); // UID를 key로 가지는 플레이어 데이터
     private Dictionary<string, int> playerScores = new();        // 플레이어별 점수
+    
+    //Unimo Ranking System
+    private List<string> unimoRankingList = new List<string>();
 
     public int CurrentRound { get; private set; } = 0;
     public int MaxRounds { get; private set; } = 1;
@@ -133,6 +139,60 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
         }
     }
 
+    public void CheckRanking()
+    {
+        if (!PhotonNetwork.IsMasterClient) return;
+
+        // 0. 리스트 초기화
+        unimoRankingList.Clear();
+
+        // 1. 현재 맵에 있는 활성화 알 다 찾기
+        UnimoEgg[] activeEggs = GameObject.FindObjectsOfType<UnimoEgg>();
+
+        Debug.Log($"[GameManager] - 활성화 된 알 개수 : {activeEggs.Length}");
+
+        // 2. 거리 기준 오름차순 정렬
+        var sortedEggs = activeEggs
+            .OrderBy(e => Mathf.Abs(e.transform.position.z - finishLine.transform.position.z))
+            .ToList();
+
+        // 3. shooterID 중복 제거 (첫 번째만 남기기) -> 각 유저의 1등 UnimoEgg만 남도록 
+        var uniqueEggs = sortedEggs
+            .GroupBy(e => e.ShooterUid)
+            .Select(g => g.First())   // 가장 가까운 알만 남김
+            .ToList();
+
+        //해당 턴에서 쏜 알이 비활성화 됬다는걸 보장 할 수 있는가? 값을 받아오면 안된다. - 보장이된다.
+
+        //현재 방안의 플레이어 인원수만 받아오면 됨
+        for(int i = 0; i < uniqueEggs.Count; i++)
+        {
+            unimoRankingList.Add(uniqueEggs[i].photonView.Owner.NickName);
+        }
+
+        //만약 나간 유저가 있다면 추가적으로 처리를 해줘야함
+        
+
+        // 배열을 문자열로 조합
+        string rankingString = string.Join(",", unimoRankingList);
+
+        photonView.RPC("RPC_UpdateRanking", RpcTarget.All, rankingString);
+    }
+
+    [PunRPC]
+    void RPC_UpdateRanking(string rankingString)
+    {
+        // 문자열을 배열로 분해
+        string[] rankingList = rankingString.Split(',');
+
+        ShootingUIManager.Instance.UpdateRanking(rankingList);
+        // 클라이언트에서 랭킹 업데이트
+        for (int i = 0; i < rankingList.Length; i++)
+        {
+            Debug.Log($"Rank {i + 1}: Player {rankingList[i]}");
+        }
+    }
+
     public void CheckGameWinner()
     {
         if (!PhotonNetwork.IsMasterClient) return;
@@ -193,4 +253,15 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
     {
         
     }
+
+    //나간 플레이어의 닉네임을 저장하는 곳
+    //private List<string> leftUserNickName = new List<string>();
+
+    public override void OnPlayerLeftRoom(Player otherPlayer)
+    {
+        /*if(RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.State) == "TurnCheckState" ||
+            "GamePlayState""CheckGameWinnderState")*/
+        ShootingUIManager.Instance.LeftUserUpdateRanking(otherPlayer.NickName);
+    }
+
 }

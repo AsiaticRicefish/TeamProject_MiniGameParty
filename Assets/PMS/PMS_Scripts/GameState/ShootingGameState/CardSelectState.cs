@@ -10,8 +10,17 @@ public class CardSelectState : ShootingGameState
     public override void Enter()
     {
         Debug.Log("[ShootingGameState] - CardSelectState Enter");
-        //TurnManager.Instance.SetupTurn();
-        //TurnManager.Instance.TestSetupTurn();
+        if (PhotonNetwork.IsMasterClient)
+        {
+            CardManager.Instance.BuildAndBroadcastDeck();  
+        }
+        else
+        {
+            // 이미 방에 deck이 있을 수 있으니 즉시 읽기 시도
+            CardManager.Instance.TryInitFromRoomProps();
+        }
+        
+         
     }
     public override void Update() 
     {
