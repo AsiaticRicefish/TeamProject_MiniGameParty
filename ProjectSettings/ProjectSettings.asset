@@ -261,7 +261,7 @@ PlayerSettings:
   useCustomMainManifest: 0
   useCustomLauncherManifest: 0
   useCustomMainGradleTemplate: 1
-  useCustomLauncherGradleManifest: 1
+  useCustomLauncherGradleManifest: 0
   useCustomBaseGradleTemplate: 0
   useCustomGradlePropertiesTemplate: 1
   useCustomGradleSettingsTemplate: 1
@@ -270,7 +270,9 @@ PlayerSettings:
   AndroidTargetDevices: 0
   AndroidSplashScreenScale: 0
   androidSplashScreen: {fileID: 0}
-  AndroidKeystoreName: '{dedicated}: Downloads/UNIMO.keystore'
+  AndroidKeystoreName: "/Users/dohyun/Desktop/XRClass/\u1111\u1173\u1105\u1169\u110C\u1166\u11A8\u1110\u1173
+    \u1100\u116A\u11AB\u1105\u1167\u11AB \u110C\u1161\u1105\u116D \u1106\u1175\u11BE
+    \u1106\u116E\u11AB\u1109\u1165/\u1100\u1175\u110B\u1165\u11B8\u1112\u1167\u11B8\u110B\u1163\u11A8_1\u110C\u1169/UNIMO.keystore"
   AndroidKeyaliasName: team1
   AndroidEnableArmv9SecurityFeatures: 0
   AndroidBuildApkPerCpuArchitecture: 0
@@ -813,7 +815,7 @@ PlayerSettings:
   webGLMemoryGeometricGrowthCap: 96
   webGLPowerPreference: 2
   scriptingDefineSymbols:
-    Android: PHOTON_UNITY_NETWORKING;PUN_2_0_OR_NEWER;PUN_2_OR_NEWER;PUN_2_19_OR_NEWER;GOOGLE_SIGNIN;TEST_WITHOUT_LOGIN;UNITASK_DOTWEEN_SUPPORT;DOTWEEN
+    Android: PHOTON_UNITY_NETWORKING;PUN_2_0_OR_NEWER;PUN_2_OR_NEWER;PUN_2_19_OR_NEWER;GOOGLE_SIGNIN;TEST_WITHOUT_LOGIN1;UNITASK_DOTWEEN_SUPPORT;DOTWEEN
     EmbeddedLinux: PHOTON_UNITY_NETWORKING;PUN_2_0_OR_NEWER;PUN_2_OR_NEWER;PUN_2_19_OR_NEWER;DOTWEEN
     GameCoreScarlett: PHOTON_UNITY_NETWORKING;PUN_2_0_OR_NEWER;PUN_2_OR_NEWER;PUN_2_19_OR_NEWER;DOTWEEN
     GameCoreXboxOne: PHOTON_UNITY_NETWORKING;PUN_2_0_OR_NEWER;PUN_2_OR_NEWER;PUN_2_19_OR_NEWER;DOTWEEN

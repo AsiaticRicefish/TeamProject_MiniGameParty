@@ -17,7 +17,7 @@ public class LocalPlayerInput : MonoBehaviourPun
     public ChargeController charger;
     public Camera mainCam;
 
-    private float stepLimitTime = 10.0f;
+    private float stepLimitTime = 5f;
     //public float coneAngle = 100f;
     //public float coneDistance = 5f;
     //public Color coneColor = new Color(0f, 1f, 0f, 0.3f);
