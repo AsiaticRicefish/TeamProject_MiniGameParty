@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using DesignPattern;
+using InputBlocker;
 using Photon.Pun;
 using UnityEngine;
 
@@ -44,6 +45,16 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
     // 네트워크 적용 중 이벤트 재브로드캐스트 방지 플래그
     private bool _suppressCollapseBroadcast;
 
+    // 붕괴 연출 동안 전역 입력 올-락/해제
+    private InputLockToken _collapseLock;
+    private Coroutine _collapseReleaseCo;
+    private int _collapseNesting = 0;
+
+    // 개별 타워별로 구독한 델리게이트를 보관(해제용)
+    private readonly HashSet<int> _mutedActors = new();
+    private readonly Dictionary<int, (Action on, Action off)> _towerMuteHandlers = new();
+    public bool IsArenaMuted(int ownerActorNumber) => _mutedActors.Contains(ownerActorNumber);
+
     public void WithSuppressedCollapse(Action action)
     {
         _suppressCollapseBroadcast = true;
@@ -72,6 +83,40 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
         EnsureSlotMap();
         CreateAllPlayerTowers();
         Debug.Log("[JengaTowerManager] 초기화 완료 - 개별 타워 생성");
+    }
+
+    private void OnEnable()
+    {
+        if (JengaGameManager.Instance != null)
+            JengaGameManager.Instance.OnGameStateChanged += HandleStateChanged;
+    }
+
+    private void OnDisable()
+    {
+        if (JengaGameManager.Instance != null)
+            JengaGameManager.Instance.OnGameStateChanged -= HandleStateChanged;
+
+        foreach (var kv in _towerMuteHandlers)
+        {
+            var actor = kv.Key;
+            var pair = kv.Value;
+            var tower = GetPlayerTower(actor);
+            if (tower != null)
+            {
+                if (pair.on != null) tower.CollapseStarted -= pair.on;
+                if (pair.off != null) tower.CollapseFinished -= pair.off;
+            }
+        }
+        _towerMuteHandlers.Clear();
+
+        ReleaseCollapseLockNow();
+        _mutedActors.Clear();
+    }
+
+    private void HandleStateChanged(JengaGameState state)
+    {
+        if (state == JengaGameState.Finished)
+            ReleaseCollapseLockNow();
     }
 
     #region Camera Anchor 찾기
@@ -188,6 +233,13 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
 
         _playerTowers[actorNumber] = tower;
         tower.ConfigureTopProtection(allowTopRemoval: false, topSafeLayers: 1);
+
+        // 전역락 대신: 이 타워만 mute on/off 
+        Action on = () => { MuteArena(actorNumber, true); SetTowerInputEnabled(actorNumber, false); };
+        Action off = () => { MuteArena(actorNumber, false); SetTowerInputEnabled(actorNumber, true); };
+        tower.CollapseStarted += on;
+        tower.CollapseFinished += off;
+        _towerMuteHandlers[actorNumber] = (on, off);
 
         if (actorNumber == PhotonNetwork.LocalPlayer.ActorNumber)
         {
@@ -348,6 +400,52 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
     {
         int slot = GetSlotIndexOf(actorNumber);
         return GetArenaLayerMaskBySlot(slot);
+    }
+
+    #endregion
+
+    #region collapse input lock
+    private void HandleAnyCollapseStarted()
+    {
+        // 첫 진입에서만 락 획득
+        if (_collapseNesting++ == 0)
+            AcquireCollapseLockNow();
+    }
+
+    private void HandleAnyCollapseFinished()
+    {
+        if (_collapseNesting > 0 && --_collapseNesting == 0)
+            ReleaseCollapseLockNow();
+    }
+
+    private void AcquireCollapseLockNow()
+    {
+        if (_collapseLock == null)
+            _collapseLock = InputManager.Instance?.Acquire(InputType.All);
+    }
+
+    private void ReleaseCollapseLockNow()
+    {
+        _collapseLock?.Dispose();
+        _collapseLock = null;
+    }
+
+    private void MuteArena(int ownerActorNumber, bool on)
+    {
+        if (on) _mutedActors.Add(ownerActorNumber);
+        else _mutedActors.Remove(ownerActorNumber);
+    }
+
+    private void SetTowerInputEnabled(int ownerActorNumber, bool enabled)
+    {
+        var tower = GetPlayerTower(ownerActorNumber);
+        if (tower == null) return;
+
+        foreach (var b in tower.allBlocks)
+        {
+            if (b && b.TryGetComponent<Collider>(out var col))
+                col.enabled = enabled;
+        }
     }
 
     #endregion

@@ -61,7 +61,8 @@ namespace Network
             //if (autoConnectOnAwake)
 
 #if TEST_WITHOUT_LOGIN
-            ConnectServer();
+            if(SceneManager.GetActiveScene().name.Equals(lobbySceneName))
+                ConnectServer();
 #endif
         }
 
@@ -85,27 +86,22 @@ namespace Network
         // 임시 추가
         //todo: 파이어베이스 연결후 파이어베이스 닉네임을 적용하는 것으로 수정..? 아닌가? + 처음 계정 연동시 닉네임 설정 UI 제공 , 이후 프로필에서 수정가능 
         //지금은 임시 테스트를 위해 닉네임 임시 할당
-        public void SetTestNicknameAndID()
+        public void SetTestNicknameAndID(string nickName = null)
         {
             // 닉네임 자동 설정
-            if (string.IsNullOrEmpty(PhotonNetwork.NickName))
+            if (string.IsNullOrEmpty(nickName))
                 PhotonNetwork.NickName = $"Player_{UnityEngine.Random.Range(1000, 9999)}";
-
+            else
+                PhotonNetwork.NickName = nickName;
             //아이디 = 닉네임이랑 똑같은 아이디로 부여
             PhotonNetwork.AuthValues = new AuthenticationValues(PhotonNetwork.NickName);
-
-
-            SetAuthReady();
         }
 
         #endregion
 
 
         #region Lobby 진입 관련 로직
-
-        //파이어베이스 로그인 완료 시점에서 호출하면 됨
-        public void SetAuthReady(bool ready = true) => _authReady = ready;
-
+        
 
         private void TryJoinLobby()
         {
@@ -115,15 +111,9 @@ namespace Network
                 return; // 마스터에 아직 연결 안 됐으면 대기
             }
 
-            if (!_authReady)
+            if (PhotonNetwork.InLobby || PhotonNetwork.InRoom || PhotonNetwork.NetworkClientState == ClientState.JoiningLobby)
             {
-                Debug.Log("[NetworkManager] 파이어베이스 인증이 완료되지 않았습니다.");
-                return; // 인증 완료 안됐으면 대기
-            }
-
-            if (PhotonNetwork.InLobby || PhotonNetwork.InRoom)
-            {
-                Debug.Log("[NetworkManager] 이미 로비거나 현재 룸에 들어온 상태입니다.");
+                Debug.Log("[NetworkManager] 로비로 진입 중이거나 이미 로비거나 현재 룸에 들어온 상태입니다.");
                 return;
             }
 

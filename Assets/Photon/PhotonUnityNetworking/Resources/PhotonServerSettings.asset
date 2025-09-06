@@ -97,6 +97,7 @@ MonoBehaviour:
   - RPC_HasCoordination
   - RPC_RegisterEgg
   - RPC_CompleteObjectsActive
+  - RPC_UpdateRanking
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1
