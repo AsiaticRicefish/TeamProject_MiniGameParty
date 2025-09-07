@@ -1,17 +1,14 @@
 using System.Collections.Generic;
-using Photon.Pun.Demo.Procedural;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.SocialPlatforms;
 using UnityEngine.UI;
 
 /// <summary>
-/// 젠가 타워 확대 모달 UI 컨트롤러
+/// 젠가 타워 확대 모달 UI 컨트롤러 (월드 고정 정면 방식)
 /// - Preview(RawImage)에 RenderTexture 표시
 /// - RawImage 클릭 = 오버레이 내부 1차 선택
 /// - OK = 2차 클릭(타이밍 시작) 대행
-/// - 월드 1차 클릭으로 열린 경우, 즉시 롤백해 상태가 남지 않도록 처리
-/// - 선택 박스는 카메라 뷰포트(0~1) → RawImage drawRect 로 매핑해 정확히 맞춤
+/// - 카메라는 항상 같은 '월드 정면'에서 타워를 본다
 /// </summary>
 
 public class TowerFocusOverlay : MonoBehaviour
@@ -34,8 +31,11 @@ public class TowerFocusOverlay : MonoBehaviour
     [SerializeField] private float layerHeightMultiplier = 2.5f;    // 블록 높이 배수 (3층 기준)
     [SerializeField] private float zoomFactor = 1.0f;               // 줌 조정 (1.0 = 기본, 0.7 = 더 가깝게)
 
-    [Header("Debug")]
-    [SerializeField] private bool debugLogs = true;
+    [Header("World Front (고정 시선)")]
+    [Tooltip("비워두면 월드 Vector3.forward 사용. 지정하면 그 Transform.forward를 '앞'으로 사용")]
+    [SerializeField] private Transform worldFrontBasis;
+    [Tooltip("앞/뒤가 반대로 보이면 체크")]
+    [SerializeField] private bool invertWorldFront = false;
 
     // 상태
     private bool active;
@@ -44,12 +44,35 @@ public class TowerFocusOverlay : MonoBehaviour
     private JengaBlock selected;    // 오버레이 내부에서 사용자가 고른 블록(OK 대상)
     private RawImageClickForwarder forwarder;
 
+    // 캐시 (회전 시 지속적으로 사용)
+    private JengaTower _boundTower;     // 지금 오버레이가 보고 있는 타워
+    private float _targetY;             // 뷰의 높이(선택한 블록의 Y)
+    private float _cachedBlockHeight;   // 지금 오버레이가 보고 있는 타워의 블록 높이
 
     // 현재 적용된 아레나 마스크
     [SerializeField] private LayerMask arenaMask;
 
-    // RawImage가 비율 유지(레터박스)라면 true
-    [SerializeField] private bool compensateLetterbox = true;
+    #region 타워 피벗 찾기 (카메라 타깃 중심만 잡는 용도)
+    private Transform Basis => GetBasis(_boundTower);
+
+    private Transform GetBasis(JengaTower tower)
+    {
+        if (tower == null) return null;
+        var cur = tower.transform;
+
+        // 부모들 중에 회전 컨트롤러가 붙은 트랜스폼을 찾는다
+        while (cur != null)
+        {
+            if (cur.GetComponent<JengaRotateController>() != null)
+                return cur;
+            cur = cur.parent;
+        }
+
+        // 못 찾으면 타워 본체를 기준으로
+        return tower.transform;
+    }
+    #endregion
+
 
     void Awake()
     {
@@ -80,30 +103,26 @@ public class TowerFocusOverlay : MonoBehaviour
         }
     }
 
-
-
-    // 오버레이 내부에서 마우스가 가리키는 블록 임시 하이라이트
-    public void NotifyHover(JengaBlock block)
+    private void LateUpdate()
     {
-        if (!active) return;
-        if (hovered == block) return;
+        if (!active || _boundTower == null || towerCam == null) return;
 
-        // 이전 호버 끄기(선택된 블록과 다를 때만)
-        if (hovered && hovered != selected)
-            hovered.Highlight(false);
-
-        hovered = block;
-
-        // 새 호버 켜기(선택된 블록과 다를 때만)
-        if (hovered && hovered != selected)
-            hovered.Highlight(true);
+        Reframe(); // 클릭한 면(_faceLocalDir) 기준으로 리프레임
     }
 
+    private void DetachAndSanitizeCamera()
+    {
+        var t = towerCam.transform;
+
+        if (t.parent != null) t.SetParent(null, worldPositionStays: true);
+
+        t.localScale = Vector3.one;
+    }
 
     private void EnsureCameraAndTexture()
     {
         if (!towerCam) return;
-        // 1) RT 없으면 생성하고 카메라/미리보기에 연결
+
         if (towerCam.targetTexture == null)
         {
             var rt = new RenderTexture(1024, 1024, 16, RenderTextureFormat.ARGB32);
@@ -115,8 +134,11 @@ public class TowerFocusOverlay : MonoBehaviour
         {
             preview.texture = towerCam.targetTexture;
         }
+
         if (!towerCam.gameObject.activeSelf) towerCam.gameObject.SetActive(true);
         towerCam.enabled = true;
+
+        DetachAndSanitizeCamera();
     }
 
     public void Bind(JengaTower targetTower, RenderTexture rt)
@@ -148,94 +170,34 @@ public class TowerFocusOverlay : MonoBehaviour
         if (forwarder) forwarder.SetMask(mask);
     }
 
-
     /// <summary>
-    /// 월드에서 블록이 선택되었을 때 호출: 면 정면 프레이밍 + 오버레이 표시
-    /// → 동시에 월드의 1차 선택 상태는 즉시 롤백(취소시 2차로 안 넘어가게)
+    /// 월드에서 블록이 선택되었을 때 호출: 고정 정면 프레이밍 + 오버레이 표시
+    /// (면 판정 없이, 선택된 블록의 Y만 맞춤)
     /// </summary>
     public void ShowFacing(JengaBlock block)
     {
         if (!towerCam || !preview || !block) return;
 
-        // 카메라/RT 비율 동기화
         var tex = preview.texture as RenderTexture;
         if (tex != null)
         {
-            float rtAspect = (float)tex.width / tex.height;
-            towerCam.aspect = rtAspect;
+            towerCam.aspect = (float)tex.width / tex.height;
             towerCam.rect = new Rect(0, 0, 1, 1);
         }
 
-        // 아레나 마스크 적용
         var mgr = JengaTowerManager.Instance;
-        if (mgr != null)
-        {
-            SetArenaMask(mgr.GetArenaLayerMaskByActor(block.OwnerActorNumber));
-        }
+        if (mgr != null) SetArenaMask(mgr.GetArenaLayerMaskByActor(block.OwnerActorNumber));
 
-        var ownerTower = JengaTowerManager.Instance?.GetPlayerTower(block.OwnerActorNumber);
+        var ownerTower = mgr?.GetPlayerTower(block.OwnerActorNumber);
         var rend = block.GetComponentInChildren<Renderer>();
         if (!ownerTower || !rend) return;
 
         var blockBounds = rend.bounds;
+        _boundTower = ownerTower;
+        _targetY = blockBounds.center.y;
+        _cachedBlockHeight = blockBounds.size.y;
 
-        // 선택된 블록의 Y 좌표를 기준으로 3층 영역의 중심 계산
-        float selectedBlockY = blockBounds.center.y;
-        float blockHeight = blockBounds.size.y;
-
-        // 뷰 타겟: 선택된 블록과 같은 Y 높이
-        Vector3 viewTarget = new Vector3(
-            ownerTower.transform.position.x,
-            selectedBlockY,
-            ownerTower.transform.position.z
-        );
-
-        // 카메라 방향 설정
-        Vector3 normal = -ownerTower.transform.forward;
-
-        float halfW = layerWidth * 0.5f * padding;
-        float halfH = (blockHeight * layerHeightMultiplier) * 0.5f * padding;
-
-        // ---- 카메라 프레이밍 ----
-
-        float rtAspect2 = 1f;
-        if (tex != null) rtAspect2 = (float)tex.width / tex.height;
-
-        if (useOrthographic)
-        {
-            towerCam.orthographic = true;
-
-            float baseOrthoSize = Mathf.Max(halfH, halfW / rtAspect2);
-            towerCam.orthographicSize = baseOrthoSize * zoomFactor;
-
-            towerCam.transform.position = viewTarget - normal * orthoCamDist;
-            towerCam.transform.rotation = Quaternion.LookRotation(normal, Vector3.up)
-                                        * Quaternion.Euler(slightTiltDeg, 0f, 0f);
-
-            towerCam.nearClipPlane = 0.05f;
-            towerCam.farClipPlane = 100f;
-        }
-        else
-        {
-            towerCam.orthographic = false;
-
-            // 가로 FOV를 rtAspect 기준으로 계산
-            float vFov = towerCam.fieldOfView * Mathf.Deg2Rad;
-            float hFov = 2f * Mathf.Atan(Mathf.Tan(vFov * 0.5f) * rtAspect2);
-
-            float distV = halfH / Mathf.Tan(vFov * 0.5f);
-            float distH = halfW / Mathf.Tan(hFov * 0.5f);
-            float baseDist = Mathf.Max(distV, distH);
-
-            float dist = baseDist * zoomFactor;
-
-            towerCam.transform.position = viewTarget - normal * dist;
-            towerCam.transform.rotation = Quaternion.LookRotation(normal, Vector3.up)
-                                        * Quaternion.Euler(slightTiltDeg, 0f, 0f);
-
-            towerCam.nearClipPlane = 0.05f;
-            towerCam.farClipPlane = Mathf.Max(100f, dist + 10f);
-        }
+        Reframe();
 
         primed = block;
         NotifyHover(null);
@@ -244,17 +206,86 @@ public class TowerFocusOverlay : MonoBehaviour
         primed.ForceClearSelectionForOverlay();
     }
 
+
+    /// <summary>
+    /// 회전해도 카메라는 같은 월드 방향에서 본다.
+    /// </summary>
+    private void Reframe()
+    {
+        var tex = preview ? preview.texture as RenderTexture : null;
+        float rtAspect = tex ? (float)tex.width / tex.height : 1f;
+
+        var basis = Basis;
+        if (basis == null || towerCam == null) return;
+
+        // 월드 고정 방향 설정 (타워 회전과 무관하게 고정)
+        Vector3 outward = worldFrontBasis ? worldFrontBasis.forward : Vector3.forward;
+        if (invertWorldFront) outward = -outward;
+
+        Vector3 flat = Vector3.ProjectOnPlane(outward, Vector3.up);
+        if (flat.sqrMagnitude < 1e-6f) flat = Vector3.forward;
+        flat.Normalize();
+
+        float yaw = Mathf.Atan2(flat.x, flat.z) * Mathf.Rad2Deg;
+        yaw = Mathf.Round(yaw / 90f) * 90f;
+        Vector3 dir = Quaternion.Euler(0f, yaw, 0f) * Vector3.forward;
+
+        // 기본 카메라 회전 (월드 기준 수평)
+        Quaternion baseLook = Quaternion.LookRotation(-dir, Vector3.up);
+
+        // 타워의 물리적 기울어짐만 보정 (X,Z축만 - Y축 회전은 무시)
+        Vector3 towerEuler = basis.rotation.eulerAngles;
+
+        // X,Z축 기울어짐만 보정 (Y축은 0으로 설정하여 무시)
+        Quaternion tiltCompensation = Quaternion.Euler(-towerEuler.x, 0, -towerEuler.z);
+
+        // 최종 카메라 회전: 월드 고정 방향 + 기울어짐 보정
+        Quaternion finalLook = baseLook * tiltCompensation;
+
+        if (!Mathf.Approximately(slightTiltDeg, 0f))
+            finalLook = finalLook * Quaternion.Euler(slightTiltDeg, 0f, 0f);
+
+        Vector3 viewTarget = new Vector3(basis.position.x, _targetY, basis.position.z);
+        float halfW = layerWidth * 0.5f * padding;
+        float halfH = (_cachedBlockHeight * layerHeightMultiplier) * 0.5f * padding;
+
+        if (useOrthographic)
+        {
+            towerCam.orthographic = true;
+            float baseOrtho = Mathf.Max(halfH, halfW / rtAspect);
+            towerCam.orthographicSize = baseOrtho * zoomFactor;
+
+            towerCam.transform.SetPositionAndRotation(viewTarget + dir * orthoCamDist, finalLook);
+            towerCam.nearClipPlane = 0.05f;
+            towerCam.farClipPlane = 100f;
+        }
+        else
+        {
+            towerCam.orthographic = false;
+
+            float vFov = towerCam.fieldOfView * Mathf.Deg2Rad;
+            float hFov = 2f * Mathf.Atan(Mathf.Tan(vFov * 0.5f) * rtAspect);
+            float distV = halfH / Mathf.Tan(vFov * 0.5f);
+            float distH = halfW / Mathf.Tan(hFov * 0.5f);
+            float dist = Mathf.Max(distV, distH) * zoomFactor;
+
+            towerCam.transform.SetPositionAndRotation(viewTarget + dir * dist, finalLook);
+            towerCam.nearClipPlane = 0.05f;
+            towerCam.farClipPlane = useOrthographic ? 100f : Mathf.Max(100f, dist + 10f);
+        }
+    }
+
     public void Hide()
     {
-        // 최소 하는 경우 오버레이 내부에서 선택된 블록이 타이밍 시작된 상태가 됨
         if (selected) selected.ForceClearSelectionForOverlay();
-
         if (primed && primed != selected) primed.ForceClearSelectionForOverlay();
 
         primed = null;
         selected = null;
 
         if (okButton) okButton.interactable = false;
+
+        _boundTower = null;
 
         SetVisible(false);
     }
@@ -270,17 +301,42 @@ public class TowerFocusOverlay : MonoBehaviour
 
         if (towerCam)
         {
-            // 카메라 GO 자체도 토글 (비활성 GO면 enabled만으론 렌더 안 됨)
             if (towerCam.gameObject.activeSelf != on)
                 towerCam.gameObject.SetActive(on);
             towerCam.enabled = on;
         }
 
         if (on) EnsureCameraAndTexture();
+
+        var ui = JengaUIManager.Instance;
+        if (ui) ui.SetRotateButtonInteractable(!on);
+    }
+
+    public void SetWorldFrontBasis(Transform basis, bool invert = false)
+    {
+        worldFrontBasis = basis;
+        invertWorldFront = invert;
     }
 
     public bool IsActive => active;
     public Camera TowerCam => towerCam;
+
+    // 오버레이 내부에서 마우스가 가리키는 블록 임시 하이라이트
+    public void NotifyHover(JengaBlock block)
+    {
+        if (!active) return;
+        if (hovered == block) return;
+
+        // 이전 호버 끄기(선택된 블록과 다를 때만)
+        if (hovered && hovered != selected)
+            hovered.Highlight(false);
+
+        hovered = block;
+
+        // 새 호버 켜기(선택된 블록과 다를 때만)
+        if (hovered && hovered != selected)
+            hovered.Highlight(true);
+    }
 
     /// <summary>
     /// RawImageClickForwarder가 호출: 1차 선택 처리

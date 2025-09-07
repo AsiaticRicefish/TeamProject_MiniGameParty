@@ -247,7 +247,13 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
             JengaNetworkManager.Instance.RequestTowerCollapse_MasterAuth(actorNumber);
         };
 
-        Action on = () => { MuteArena(actorNumber, true); SetTowerInputEnabled(actorNumber, false); };
+        Action on = () => { 
+            MuteArena(actorNumber, true); 
+            SetTowerInputEnabled(actorNumber, false);
+
+            if (actorNumber == PhotonNetwork.LocalPlayer.ActorNumber)
+                JengaUIManager.Instance.HideRotateButton();
+        };
         Action off = () => { MuteArena(actorNumber, false); SetTowerInputEnabled(actorNumber, true); };
         tower.CollapseStarted += on;
         tower.CollapseFinished += off;
