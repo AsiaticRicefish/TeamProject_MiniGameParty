@@ -11,9 +11,13 @@ namespace ShootingScene
     public class PlayerInputManager : CombinedSingleton<PlayerInputManager>, IGameComponent
     {
         private PlayerInput playerInput; // PlayerInput 컴포넌트 참조 변수
-        private InputAction touchAction; // TouchPress 액션 참조 변수
+
+        private InputAction touchAction; // 유니모 터치 액션 참조 변수 (실질적인 게임 플레이 액션)
+        private InputAction cameraControlAction; // 카메라 액션 참조 변수 (스와이프, 줌 등 -> 부가적인 카메라 연출을 하기 위한 인풋액션)
 
         public event Action<InputAction.CallbackContext> onTouchPress;
+        public event Action<InputAction.CallbackContext> onCameraGesture;
+
         protected override void OnAwake()
         {
            isPersistent = false;
@@ -21,36 +25,66 @@ namespace ShootingScene
 
         }
 
-        protected override void Awake()
-        {
-            base.Awake();
-        }
-
         public void OnTouchPress(InputAction.CallbackContext ctx)
         {
             onTouchPress?.Invoke(ctx); // 구독자에게 전달
         }
 
-        public void Initialize()
+        public void OnCameraGesture(InputAction.CallbackContext ctx)
         {
-            Debug.Log("PlayerInputManager 초기화");
-            playerInput = GetComponent<PlayerInput>();
-            if (playerInput != null)
-            {
-                touchAction = playerInput.actions.FindAction("TouchPress");
-            }
-            EnableInput();
-            
+            onCameraGesture?.Invoke(ctx); // 구독자에게 전달
         }
 
+        public void Initialize()
+        {
+            Debug.Log("PlayerInputManager 초기화 시도");
+
+            // PlayerInput 컴포넌트 초기화
+            InitializePlayerInput();
+
+            // Input Actions 초기화
+            InitializeInputActions();
+
+            // 입력 활성화
+            EnableInput();
+            EnableCameraControl();
+        }
+
+        private void InitializePlayerInput()
+        {
+            playerInput = GetComponent<PlayerInput>();
+            if (playerInput == null)
+            {
+                Debug.LogError("PlayerInput 컴포넌트를 찾을 수 없습니다!");
+            }
+        }
+
+        private void InitializeInputActions()
+        {
+            if (playerInput == null) return;
+
+            // Touch Action 초기화
+            touchAction = playerInput.actions.FindAction("TouchPress");
+            if (touchAction == null)
+            {
+                Debug.LogError("TouchPress 액션을 찾을 수 없습니다!");
+            }
+
+            // Camera Action 초기화
+            cameraControlAction = playerInput.actions.FindAction("CameraControl");
+            if (cameraControlAction == null)
+            {
+                Debug.LogError("CameraControl 액션을 찾을 수 없습니다!");
+            }
+        }
+
+
+        #region 유니모 터치 클릭 관련 활성/비활성화 함수
         public void EnableInput()
         {
-            // TouchPress 액션의 이벤트를 구독
             if (touchAction != null)
             {
                 touchAction.started += OnTouchPress;
-                //touchAction.performed += OnTouchPress;
-                //touchAction.canceled += OnTouchPress;
                 touchAction.Enable();
             }
         }
@@ -58,15 +92,37 @@ namespace ShootingScene
 
         public void DisableInput()
         {
-            // TouchPress 액션의 이벤트를 구독
             if (touchAction != null)
             {
                 touchAction.started -= OnTouchPress;
-                //touchAction.performed -= OnTouchPress;
-                //touchAction.canceled -= OnTouchPress;
                 touchAction.Disable();
             }
         }
+        #endregion
+
+        #region 카메라 관련 InputAction 구독,구독해제 함수 (스와이프,줌인줌아웃 관련 활성/비활성화 함수)
+        public void EnableCameraControl()
+        {
+            if (cameraControlAction != null)
+            {
+                cameraControlAction.started += OnCameraGesture;
+                cameraControlAction.performed += OnCameraGesture;
+                cameraControlAction.canceled += OnCameraGesture;
+                cameraControlAction.Enable();
+            }
+        }
+
+        public void DisableCameraControl()
+        {
+            if (cameraControlAction != null)
+            {
+                cameraControlAction.started -= OnCameraGesture;
+                cameraControlAction.performed -= OnCameraGesture;
+                cameraControlAction.canceled -= OnCameraGesture;
+                cameraControlAction.Disable();
+            }
+        }
+        #endregion
     }
 }
 
