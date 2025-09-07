@@ -1,4 +1,7 @@
+using Cysharp.Threading.Tasks;
 using LDH_Util;
+using Managers;
+using Network;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem.HID;
@@ -11,27 +14,43 @@ namespace LDH_UI
         [SerializeField] private Button increaseButton;
         [SerializeField] private Button decreaseButton;
         [SerializeField] private TMP_Text currentCountText;
+        [SerializeField] private Button okButton;
         
-        private int _minPlayCount = 2;
-        private int _maxPlayerCount = 2;
-
+        
+        private const int MinPlayCount = 2;
+        private const int MaxPlayerCount = 4;
+        private int _value = 0;
         protected override void Init()
         {
             base.Init();
 
+            _value = Define_LDH.MaxPlayers;
             currentCountText.text = Define_LDH.MaxPlayers.ToString();
-            
             
             increaseButton.onClick.AddListener(()=> AdjustCount(true));
             decreaseButton.onClick.AddListener(() => AdjustCount(false));
+            okButton.onClick.AddListener(SetCountAndStartMatch);
         }
+        
 
 
         private void AdjustCount(bool up)
         {
-            int value = Mathf.Clamp(Define_LDH.MaxPlayers + (up ? 1 : -1), _minPlayCount, _maxPlayerCount + 1);
-            Define_LDH.MaxPlayers = value;
-            currentCountText.text = value.ToString();
+            _value = Mathf.Clamp(_value + (up ? 1 : -1), MinPlayCount, MaxPlayerCount);
+            currentCountText.text = _value.ToString();
+        }
+
+        private void AdjustCount(int count)
+        {
+            _value = Mathf.Clamp(count, MinPlayCount, MaxPlayerCount);
+            currentCountText.text = _value.ToString();
+        }
+
+        private void SetCountAndStartMatch()
+        {
+            Define_LDH.MaxPlayers = _value;
+            Manager.UI.ClosePopupUI(this).Forget();
+            MatchController.Instance.StartMatching();
         }
     }
 }

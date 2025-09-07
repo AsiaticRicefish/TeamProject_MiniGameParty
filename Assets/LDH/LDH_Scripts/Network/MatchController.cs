@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using Cysharp.Threading.Tasks;
+using LDH_UI;
 using LDH_Util;
 using Managers;
 using Photon.Pun;
@@ -63,6 +65,40 @@ namespace Network
             RefreshButtons();
         }
 
+        #region PlayerCount
+
+        
+
+#if TEST_PLAYER_COUNT
+        public void ShowPlayerCount(MatchType matchType)
+        {
+            if(IsMatching) return;
+            
+            SetMatching(matchType, true);
+            
+            var playerCount = Manager.UI.CreatePopupUI<UI_Popup_PlayerCount>();
+            Manager.UI.ShowPopupUI(playerCount).Forget();
+        }
+        
+        
+        public void StartMatching()
+        {
+            switch (CurrentMatchType)
+            {
+                case MatchType.Quick :
+                    QuickMatch.OnClickMatchingStart();
+                    break;
+                case MatchType.Private:
+                    PrivateMatch.RequestCreatePrivateRoom();
+                    break;
+                default:
+                    return;
+            }
+        }
+
+#endif
+       
+        #endregion
         
         
         #region Matching Button Control
