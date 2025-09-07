@@ -14,8 +14,8 @@ using InputBlocker;
 /// - 블록 제거 애니메이션
 /// - 타이밍 게임 결과
 /// - 게임 상태
-/// 등의 네트워크 통신을 Photon RPC를 통해 처리
-/// <summary>
+/// - 카운트다운 (룸 프로퍼티 기반)
+/// 등의 네트워크 통신을 처리
 
 [RequireComponent(typeof(PhotonView))]
 public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameComponent
@@ -32,6 +32,10 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     // 입력 차단 토큰
     private InputLockToken _countdownLock;
     private Coroutine _countdownFailsafeCo;
+
+    // 카운트다운 상태 추적
+    private CountdownState currentCountdownState = CountdownState.None;
+    private Coroutine countdownMasterTimer;
 
     /// <summary>
     /// 젠가 씬에서만 살아있는 일시적 싱글톤
@@ -59,6 +63,71 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
         {
             Debug.LogError("[JengaNetworkManager] PhotonView is NULL - RPC will fail!");
             return;
+        }
+
+        // 초기화 시 기존 룸 프로퍼티 확인 (늦게 조인한 경우 대응)
+        CheckAndApplyExistingRoomProperties();
+    }
+
+    /// <summary>
+    /// 초기화 시 기존 룸 프로퍼티 확인 및 적용
+    /// </summary>
+    private void CheckAndApplyExistingRoomProperties()
+    {
+        var room = PhotonNetwork.CurrentRoom;
+        if (room == null) return;
+
+        // 카운트다운 상태 확인
+        if (JengaRoomProps.TryGet(room.CustomProperties, JengaRoomProps.KEY_COUNTDOWN_STATE, out byte stateVal))
+        {
+            var countdownState = (CountdownState)stateVal;
+            Debug.Log($"[JengaNetwork] Found existing countdown state: {countdownState}");
+
+            if (countdownState == CountdownState.InProgress)
+            {
+                // 진행 중인 카운트다운 상태 복구
+                if (JengaRoomProps.TryGet(room.CustomProperties, JengaRoomProps.KEY_COUNTDOWN_START, out double startTime) &&
+                    JengaRoomProps.TryGet(room.CustomProperties, JengaRoomProps.KEY_COUNTDOWN_DURATION, out float duration))
+                {
+                    Debug.Log($"[JengaNetwork] Applying existing countdown: remaining time calculation");
+
+                    currentCountdownState = countdownState;
+
+                    // 현재 남은 시간 계산 후 UI 적용
+                    double elapsed = PhotonNetwork.Time - startTime;
+                    float remaining = Mathf.Max(0f, duration - (float)elapsed);
+
+                    if (remaining > 0f)
+                    {
+                        StartCountdownUI(startTime, duration);
+
+                        // 마스터만 타이머 시작
+                        if (PhotonNetwork.IsMasterClient)
+                        {
+                            StartMasterCountdownTimer(startTime, duration);
+                        }
+                    }
+                    else
+                    {
+                        // 이미 끝난 경우
+                        if (PhotonNetwork.IsMasterClient)
+                        {
+                            var props = new PhotonHashtable
+                        {
+                            { JengaRoomProps.KEY_COUNTDOWN_STATE, (byte)CountdownState.Completed }
+                        };
+                            PhotonNetwork.CurrentRoom.SetCustomProperties(props);
+                        }
+                    }
+                }
+            }
+        }
+
+        // 게임 타이머 상태도 확인
+        if (JengaRoomProps.TryGet(room.CustomProperties, JengaRoomProps.KEY_START_TIME, out double gameStartTime) &&
+            JengaRoomProps.TryGet(room.CustomProperties, JengaRoomProps.KEY_DURATION, out double gameDuration))
+        {
+            JengaGameManager.Instance?.ApplySyncedTimerFromRoomProps(gameStartTime, gameDuration);
         }
     }
 
@@ -467,7 +536,7 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
 
     #endregion
 
-    #region 타이머 동기화: 마스터 → 전체 클라이언트
+    #region 타이머 동기화
 
     /// <summary>
     /// 마스터에서 모든 클라이언트에게 현재 남은 시간을 동기화
@@ -487,58 +556,256 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
 
     #endregion
 
-    #region 카운트다운 동기화: 마스터 → 전체 클라이언트
-
+    #region 카운트다운 동기화: 룸 프로퍼티 기반
     /// <summary>
-    /// 마스터에서 모든 클라이언트에게 카운트다운 시작 신호 송신
+    /// 마스터가 카운트다운 시작 (룸 프로퍼티 설정)
     /// </summary>
-    public void BroadcastStartCountdown(float countdownDuration)
+    public void StartCountdownSync(float duration)
     {
         if (!PhotonNetwork.IsMasterClient) return;
 
-        Debug.Log($"[JengaNetwork] Broadcasting countdown start: {countdownDuration}s");
-        thisPhotonView.RPC(nameof(RPC_StartCountdown), RpcTarget.All, countdownDuration);
+        Debug.Log($"[JengaNetwork] Starting countdown sync with duration: {duration}s");
+
+        var props = new PhotonHashtable
+        {
+            { JengaRoomProps.KEY_COUNTDOWN_STATE, (byte)CountdownState.InProgress },
+            { JengaRoomProps.KEY_COUNTDOWN_START, PhotonNetwork.Time },
+            { JengaRoomProps.KEY_COUNTDOWN_DURATION, duration }
+        };
+        PhotonNetwork.CurrentRoom.SetCustomProperties(props);
     }
 
     /// <summary>
-    /// [RPC] 모든 클라이언트에서 동시에 카운트다운 시작
+    /// 룸 프로퍼티 변경 감지
     /// </summary>
-    [PunRPC]
-    private void RPC_StartCountdown(float duration)
+    public override void OnRoomPropertiesUpdate(PhotonHashtable propertiesThatChanged)
     {
-        Debug.Log($"[JengaNetwork] Received countdown start RPC: {duration}s");
+        // 카운트다운 상태 변경 처리
+        if (JengaRoomProps.TryGet(propertiesThatChanged, JengaRoomProps.KEY_COUNTDOWN_STATE, out byte stateVal))
+        {
+            var newState = (CountdownState)stateVal;
+            HandleCountdownStateChange(newState, propertiesThatChanged);
+        }
 
-        // 카운트다운 동안 입력 잠금 (모든 클라 공통)
-        AcquireCountdownLock(duration);
-
-        // UI 매니저에게 카운트다운 시작 알림
-        JengaUIManager.Instance?.StartCountdown(duration);
+        // 게임 시작 시간 처리 (기존 로직)
+        if (JengaRoomProps.TryGet(propertiesThatChanged, JengaRoomProps.KEY_START_TIME, out double gameStartTime) &&
+            JengaRoomProps.TryGet(propertiesThatChanged, JengaRoomProps.KEY_DURATION, out double gameDuration))
+        {
+            JengaGameManager.Instance?.ApplySyncedTimerFromRoomProps(gameStartTime, gameDuration);
+        }
     }
 
     /// <summary>
-    /// 마스터에서 카운트다운 완료 후 게임 시작 신호 송신
+    /// 카운트다운 상태 변경 처리
     /// </summary>
-    public void BroadcastCountdownComplete()
+    private void HandleCountdownStateChange(CountdownState newState, PhotonHashtable props)
     {
-        if (!PhotonNetwork.IsMasterClient) return;
+        if (currentCountdownState == newState) return;
+        currentCountdownState = newState;
 
-        thisPhotonView.RPC(nameof(RPC_CountdownComplete), RpcTarget.All);
+        Debug.Log($"[JengaNetwork] Countdown state changed to: {newState}");
+
+        switch (newState)
+        {
+            case CountdownState.InProgress:
+                if (JengaRoomProps.TryGet(props, JengaRoomProps.KEY_COUNTDOWN_START, out double startTime) &&
+                    JengaRoomProps.TryGet(props, JengaRoomProps.KEY_COUNTDOWN_DURATION, out float duration))
+                {
+                    StartCountdownUI(startTime, duration);
+
+                    // 마스터는 완료 타이머 시작
+                    if (PhotonNetwork.IsMasterClient)
+                    {
+                        StartMasterCountdownTimer(startTime, duration);
+                    }
+                }
+                break;
+
+            case CountdownState.Completed:
+                CompleteCountdown();
+                break;
+
+            case CountdownState.None:
+                // 카운트다운 취소/리셋
+                JengaUIManager.Instance?.HideCountdown();
+                break;
+        }
     }
 
     /// <summary>
-    /// [RPC] 카운트다운 완료 처리
+    /// UI 카운트다운 시작 (모든 클라이언트)
     /// </summary>
-    [PunRPC]
-    private void RPC_CountdownComplete()
+    private void StartCountdownUI(double startTime, float duration)
     {
-        Debug.Log("[JengaNetwork] Received countdown complete RPC");
+        // 현재 남은 카운트다운 시간 계산
+        double elapsed = PhotonNetwork.Time - startTime;
+        float remaining = Mathf.Max(0f, duration - (float)elapsed);
 
-        // 카운트다운 락 해제
-        ReleaseCountdownLock();
+        Debug.Log($"[JengaNetwork] Starting countdown UI with remaining time: {remaining}s");
 
-        // UI에서 카운트다운 숨기기
+        if (remaining > 0f)
+        {
+            JengaUIManager.Instance?.StartCountdownWithRemaining(remaining);
+        }
+        else
+        {
+            // 이미 끝났다면 바로 완료 처리
+            CompleteCountdown();
+        }
+    }
+
+    /// <summary>
+    /// 마스터 전용: 카운트다운 완료 타이머
+    /// </summary>
+    private void StartMasterCountdownTimer(double startTime, float duration)
+    {
+        if (countdownMasterTimer != null)
+        {
+            StopCoroutine(countdownMasterTimer);
+        }
+        countdownMasterTimer = StartCoroutine(CountdownCompletionTimer(startTime, duration));
+    }
+
+    private IEnumerator CountdownCompletionTimer(double startTime, float duration)
+    {
+        double targetTime = startTime + duration;
+        while (PhotonNetwork.Time < targetTime)
+        {
+            yield return new WaitForSeconds(0.1f);
+        }
+
+        Debug.Log("[JengaNetwork] Countdown completion timer finished - setting state to Completed");
+
+        // 카운트다운 완료 상태로 변경
+        var props = new PhotonHashtable
+        {
+            { JengaRoomProps.KEY_COUNTDOWN_STATE, (byte)CountdownState.Completed }
+        };
+        PhotonNetwork.CurrentRoom.SetCustomProperties(props);
+
+        countdownMasterTimer = null;
+    }
+
+    /// <summary>
+    /// 카운트다운 완료 처리 (모든 클라이언트)
+    /// </summary>
+    private void CompleteCountdown()
+    {
+        Debug.Log("[JengaNetwork] Countdown completed - hiding UI and notifying game manager");
+
         JengaUIManager.Instance?.HideCountdown();
+
+        // 게임 매니저에게 카운트다운 완료 알림
+        JengaGameManager.Instance?.OnCountdownCompleted();
     }
+
+    /// <summary>
+    /// 마스터 교체 시 호출
+    /// </summary>
+    public override void OnMasterClientSwitched(Player newMasterClient)
+    {
+        Debug.Log($"[JengaNetwork] Master client switched to: {newMasterClient?.NickName}");
+
+        // 새 마스터가 된 경우, 현재 룸 상태를 확인하고 복구
+        if (PhotonNetwork.IsMasterClient)
+        {
+            var room = PhotonNetwork.CurrentRoom;
+
+            // 카운트다운 상태 확인 및 복구
+            if (JengaRoomProps.TryGet(room.CustomProperties, JengaRoomProps.KEY_COUNTDOWN_STATE, out byte stateVal))
+            {
+                var countdownState = (CountdownState)stateVal;
+                Debug.Log($"[JengaNetwork] New master detected countdown state: {countdownState}");
+
+                if (countdownState == CountdownState.InProgress)
+                {
+                    // 진행 중인 카운트다운이 있으면 상태 복구 및 타이머 재시작
+                    if (JengaRoomProps.TryGet(room.CustomProperties, JengaRoomProps.KEY_COUNTDOWN_START, out double startTime) &&
+                        JengaRoomProps.TryGet(room.CustomProperties, JengaRoomProps.KEY_COUNTDOWN_DURATION, out float duration))
+                    {
+                        Debug.Log($"[JengaNetwork] Recovering countdown: startTime={startTime}, duration={duration}");
+
+                        // 현재 상태 업데이트
+                        currentCountdownState = countdownState;
+
+                        // 남은 시간 계산
+                        double elapsed = PhotonNetwork.Time - startTime;
+                        float remaining = Mathf.Max(0f, duration - (float)elapsed);
+
+                        if (remaining > 0f)
+                        {
+                            // 아직 카운트다운이 진행 중이면 UI 복구 및 타이머 재시작
+                            StartCountdownUI(startTime, duration);
+                            StartMasterCountdownTimer(startTime, duration);
+                        }
+                        else
+                        {
+                            // 이미 끝났다면 완료 상태로 전환
+                            Debug.Log("[JengaNetwork] Countdown already finished - completing now");
+                            var props = new PhotonHashtable
+                        {
+                            { JengaRoomProps.KEY_COUNTDOWN_STATE, (byte)CountdownState.Completed }
+                        };
+                            PhotonNetwork.CurrentRoom.SetCustomProperties(props);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #region (구버전) 카운트다운 RPC 동기화 - 사용 안 함
+    ///// <summary>
+    ///// 마스터에서 모든 클라이언트에게 카운트다운 시작 신호 송신
+    ///// </summary>
+    //public void BroadcastStartCountdown(float countdownDuration)
+    //{
+    //    if (!PhotonNetwork.IsMasterClient) return;
+
+    //    Debug.Log($"[JengaNetwork] Broadcasting countdown start: {countdownDuration}s");
+    //    thisPhotonView.RPC(nameof(RPC_StartCountdown), RpcTarget.All, countdownDuration);
+    //}
+
+    ///// <summary>
+    ///// [RPC] 모든 클라이언트에서 동시에 카운트다운 시작
+    ///// </summary>
+    //[PunRPC]
+    //private void RPC_StartCountdown(float duration)
+    //{
+    //    Debug.Log($"[JengaNetwork] Received countdown start RPC: {duration}s");
+
+    //    // 카운트다운 동안 입력 잠금 (모든 클라 공통)
+    //    AcquireCountdownLock(duration);
+
+    //    // UI 매니저에게 카운트다운 시작 알림
+    //    JengaUIManager.Instance?.StartCountdown(duration);
+    //}
+
+    ///// <summary>
+    ///// 마스터에서 카운트다운 완료 후 게임 시작 신호 송신
+    ///// </summary>
+    //public void BroadcastCountdownComplete()
+    //{
+    //    if (!PhotonNetwork.IsMasterClient) return;
+
+    //    thisPhotonView.RPC(nameof(RPC_CountdownComplete), RpcTarget.All);
+    //}
+
+    ///// <summary>
+    ///// [RPC] 카운트다운 완료 처리
+    ///// </summary>
+    //[PunRPC]
+    //private void RPC_CountdownComplete()
+    //{
+    //    Debug.Log("[JengaNetwork] Received countdown complete RPC");
+
+    //    // 카운트다운 락 해제
+    //    ReleaseCountdownLock();
+
+    //    // UI에서 카운트다운 숨기기
+    //    JengaUIManager.Instance?.HideCountdown();
+    //}
+    #endregion
 
     #endregion
 

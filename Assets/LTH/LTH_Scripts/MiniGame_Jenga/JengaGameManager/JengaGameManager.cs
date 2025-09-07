@@ -11,7 +11,8 @@ using Photon.Pun.Demo.PunBasics;
 using UnityEngine;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
 
-// === [추가] Room Properties 키 묶음 ===
+
+// 룸 프로퍼티 키
 public static class JengaRoomProps
 {
     public const string KEY_PREFIX = "jg_";
@@ -20,6 +21,11 @@ public static class JengaRoomProps
     public const string KEY_DURATION = KEY_PREFIX + "dur";          // int/float (seconds)
     public const string KEY_RANK_UIDS = KEY_PREFIX + "rank_uids";   // string[]
     public const string KEY_RANK_VALS = KEY_PREFIX + "rank_vals";   // int[]
+
+    // 카운트다운 관련 키
+    public const string KEY_COUNTDOWN_STATE = KEY_PREFIX + "countdown_state";    // CountdownState enum
+    public const string KEY_COUNTDOWN_START = KEY_PREFIX + "countdown_start";    // PhotonNetwork.Time
+    public const string KEY_COUNTDOWN_DURATION = KEY_PREFIX + "countdown_dur";   // float
 
     public static bool TryGet<T>(Hashtable table, string key, out T value)
     {
@@ -108,9 +114,6 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
                 continue;
             }
 
-            //// UID를 기반으로 PlayerManager에서 해당 플레이어의 GamePlayer 객체를 가져옴
-            //var gamePlayer = PlayerManager.Instance.GetPlayer(uid);
-
             // CreateOrGetPlayer를 사용하여 플레이어가 없으면 자동 생성
             var gamePlayer = PlayerManager.Instance.CreateOrGetPlayer(uid, photonPlayer.NickName);
 
@@ -193,7 +196,6 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         StartGameWithCountdown();
     }
 
-
     /// <summary>
     /// 게임 초기화 완료 후 카운트다운 시작 (마스터만 호출)
     /// </summary>
@@ -217,44 +219,36 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
 
         if (useCountdown)
         {
-            // 네트워크 매니저를 통해 모든 클라이언트에게 카운트다운 시작 신호
-            JengaNetworkManager.Instance?.BroadcastStartCountdown(countdownDuration);
-
-            // 카운트다운 완료 후 게임 시작을 위한 코루틴
-            StartCoroutine(CountdownToGameStart());
+            // 네트워크 매니저에게 카운트다운 시작 위임 (룸 프로퍼티 기반)
+            JengaNetworkManager.Instance?.StartCountdownSync(countdownDuration);
         }
         else
         {
-            // 카운트다운 없이 바로 게임 시작
-            StartGame();
+            OnCountdownCompleted();
         }
     }
 
     /// <summary>
-    /// 카운트다운 완료를 기다린 후 게임 시작
+    /// 네트워크 매니저에서 카운트다운 완료 시 호출되는 콜백
     /// </summary>
-    private IEnumerator CountdownToGameStart()
+    public void OnCountdownCompleted()
     {
-        // 카운트다운 시간만큼 대기
-        yield return new WaitForSeconds(countdownDuration + 1f); // +1초는 "START!" 표시 시간
+        if (!PhotonNetwork.IsMasterClient) return;
 
-        // 모든 클라이언트에게 카운트다운 완료 알림
-        JengaNetworkManager.Instance?.BroadcastCountdownComplete();
+        Debug.Log("[JengaGameManager] Countdown completed - starting game timer");
 
-        // 마스터: 시작시각/지속시간을 룸 프로퍼티에 기록
-        if (PhotonNetwork.IsMasterClient)
+        // 게임 시작 시간을 룸 프로퍼티에 기록
+        var props = new Hashtable
         {
-            var props = new Hashtable
-        {
-            { JengaRoomProps.KEY_START_TIME, PhotonNetwork.Time },   // 절대 동기 시간
-            { JengaRoomProps.KEY_DURATION,   (double)gameTime }      // seconds (double로 통일)
+            { JengaRoomProps.KEY_START_TIME, PhotonNetwork.Time },
+            { JengaRoomProps.KEY_DURATION, (double)gameTime }
         };
-            PhotonNetwork.CurrentRoom.SetCustomProperties(props);
-        }
+        PhotonNetwork.CurrentRoom.SetCustomProperties(props);
 
         // 타이머 시작
         StartCoroutine(GameTimer());
     }
+
 
     // 룸 프로퍼티(START_TIME, DURATION)로부터 남은 시간을 재계산해 UI에 반영
     public void ApplySyncedTimerFromRoomProps(double startTime, double durationSec)

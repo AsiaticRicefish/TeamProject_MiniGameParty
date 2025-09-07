@@ -14,6 +14,7 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
     [Header("카운트다운 UI")]
     [SerializeField] private GameObject countdownPanel;      // 카운트다운 패널
     [SerializeField] private TMP_Text countdownText;         // 카운트다운 텍스트 (3, 2, 1, START!)
+    private Coroutine countdownCoroutine;
 
     [Header("랭킹 UI")]
     [SerializeField] private JengaRankingUIAnimated rankingUI;
@@ -112,21 +113,34 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
     #region 카운트다운 UI
 
     /// <summary>
-    /// 네트워크를 통해 동기화된 카운트다운 시작 (모든 클라이언트에서 동시 실행)
+    /// 네트워크 매니저에서 호출 - 남은 시간부터 카운트다운 시작
     /// </summary>
-    public void StartCountdown(float duration)
+    public void StartCountdownWithRemaining(float remainingTime)
     {
         if (countdownPanel != null && countdownText != null)
         {
+            Debug.Log($"[JengaUIManager] Starting countdown with remaining time: {remainingTime}s");
+
             countdownPanel.SetActive(true);
 
-            if (rotateButton) 
-            { 
-                rotateButton.gameObject.SetActive(false); 
+            if (rotateButton)
+            {
+                rotateButton.gameObject.SetActive(false);
             }
 
-            StartCoroutine(CountdownCoroutine(duration));
+            // 기존 카운트다운이 있다면 정지
+            if (countdownCoroutine != null)
+            {
+                StopCoroutine(countdownCoroutine);
+            }
+
+            countdownCoroutine = StartCoroutine(CountdownCoroutineWithRemaining(remainingTime));
         }
+    }
+
+    public void StartCountdown(float duration)
+    {
+        StartCountdownWithRemaining(duration);
     }
 
     /// <summary>
@@ -134,34 +148,16 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
     /// </summary>
     public void HideCountdown()
     {
+        if (countdownCoroutine != null)
+        {
+            StopCoroutine(countdownCoroutine);
+            countdownCoroutine = null;
+        }
+
         if (countdownPanel != null)
         {
             countdownPanel.SetActive(false);
         }
-    }
-
-    /// <summary>
-    /// 동기화된 카운트다운 코루틴
-    /// </summary>
-    private IEnumerator CountdownCoroutine(float duration)
-    {
-        int countdown = Mathf.RoundToInt(duration);
-
-        // 숫자 카운트다운 (3, 2, 1)
-        while (countdown > 0)
-        {
-            countdownText.text = countdown.ToString();
-            StartCoroutine(ScaleAnimation(countdownText.transform));
-
-            yield return new WaitForSeconds(1f);
-            countdown--;
-        }
-
-        // "START!" 표시
-        countdownText.text = "START!";
-        StartCoroutine(ScaleAnimation(countdownText.transform));
-
-        yield return new WaitForSeconds(1f);
 
         if (rotateButton)
         {
@@ -169,6 +165,41 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
             rotateButton.interactable = true;
         }
     }
+
+    /// <summary>
+    /// 남은 시간부터 시작하는 카운트다운 코루틴
+    /// </summary>
+    private IEnumerator CountdownCoroutineWithRemaining(float remainingTime)
+    {
+        int countdown = Mathf.CeilToInt(remainingTime);
+
+        Debug.Log($"[JengaUIManager] Starting countdown from {countdown}");
+
+        // 숫자 카운트다운
+        while (countdown > 0 && remainingTime > 0)
+        {
+            countdownText.text = countdown.ToString();
+            StartCoroutine(ScaleAnimation(countdownText.transform));
+
+            yield return new WaitForSeconds(1f);
+            countdown--;
+            remainingTime -= 1f;
+        }
+
+        // "START!" 표시
+        if (remainingTime > -1f) // 약간의 여유를 둠
+        {
+            countdownText.text = "START!";
+            StartCoroutine(ScaleAnimation(countdownText.transform));
+            yield return new WaitForSeconds(1f);
+        }
+
+        Debug.Log("[JengaUIManager] Countdown animation finished");
+
+        // UI 정리는 네트워크 매니저의 CountdownState.Completed에서 처리됨
+        countdownCoroutine = null;
+    }
+
 
     /// <summary>
     /// 간단한 스케일 애니메이션 (임시로 만든 코드로 제거하거나 대폭 수정 예정)
