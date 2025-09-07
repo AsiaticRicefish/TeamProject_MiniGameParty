@@ -81,6 +81,8 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         currentState = JengaGameState.Waiting;
         remainingTime = gameTime;
 
+        JengaUIManager.Instance?.HideRotateButton();
+
         Debug.Log("[JengaGameManager - Initialize] 초기화 완료");
 
         // 초기화 완료 후 카운트다운 시작 (마스터만)
@@ -293,6 +295,7 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         else if (newState == JengaGameState.Finished)
         {
             StopRoomPropTimer();
+            JengaUIManager.Instance.HideRotateButton();
         }
     }
 
@@ -321,6 +324,7 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
             {
                 playerFinished[uid] = true;
                 OnPlayerFinished?.Invoke(uid);
+
                 CheckAllPlayersFinished();
             }
         }
