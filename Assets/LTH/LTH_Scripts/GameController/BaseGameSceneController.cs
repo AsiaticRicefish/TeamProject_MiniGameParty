@@ -34,8 +34,8 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
     protected virtual void Awake()            // enable에서 호출하니 초기화 순서 문제로 awake에서 호출
     {
         Debug.Log("[BaseSceneController] Awake 호출 시점");
-        loadedPlayers.Clear();
-        initializedPlayers.Clear();
+        //loadedPlayers.Clear();
+        //initializedPlayers.Clear();
     }
 
     private void OnEnable()

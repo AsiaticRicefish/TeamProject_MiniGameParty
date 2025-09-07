@@ -7,6 +7,7 @@ using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
 using PhotonHashtable = ExitGames.Client.Photon.Hashtable;
+using InputBlocker;
 
 /// <summary>
 /// 젠가 게임의 네트워크 동기화를 담당하는 전용 매니저
@@ -27,6 +28,10 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     // 점수 계산 상수
     private const int BASE_SCORE = 10;
     private const int MAX_BONUS = 10;
+
+    // 입력 차단 토큰
+    private InputLockToken _countdownLock;
+    private Coroutine _countdownFailsafeCo;
 
     /// <summary>
     /// 젠가 씬에서만 살아있는 일시적 싱글톤
@@ -213,11 +218,22 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
             ReplyDeny(actorNumber, blockId, "block-null");
             return;
         }
+
         if (block.OwnerActorNumber != actorNumber)
+        {
+            ReplyDeny(actorNumber, blockId, "owner-mismatch");
+            return;
+        }
 
         if (block.IsRemoved)
         {
             ReplyDeny(actorNumber, blockId, "already-removed");
+            return;
+        }
+
+        if (tower.IsLayerTopProtected(block.Layer))
+        {
+            ReplyDeny(actorNumber, blockId, "top-protected");
             return;
         }
 
@@ -274,6 +290,10 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     {
         var myTower = JengaTowerManager.Instance?.GetPlayerTower(PhotonNetwork.LocalPlayer.ActorNumber);
         var block = myTower?.GetBlockById(blockId);
+        if (block != null)
+        {
+            block.OnRemovalDenied(reason);
+        }
     }
 
     /// <summary>
@@ -301,6 +321,9 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     #region 블록 사이드 제거 세션 동기화
     private bool ValidateRemovalAndMaybeStartPairSession_OnMaster(JengaTower tower, JengaBlock block)
     {
+        if (tower.IsLayerTopProtected(block.Layer))
+            return false;
+
         // 같은 레이어에서 살아있는 블록들(인덱스 순)
         var alive = tower.allBlocks
             .Where(b => b.Layer == block.Layer && !b.IsRemoved)
@@ -437,7 +460,7 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
         ProcessTowerCollapseRequest(ownerActorNumber);
     }
 
-    // RPC_ApplyTowerCollapse_All은 기존과 동일하되 로그 추가
+
     [PunRPC]
     private void RPC_ApplyTowerCollapse_All(int ownerActorNumber)
     {
@@ -448,7 +471,7 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
         // 붕괴 애니메이션 실행
         JengaTowerManager.Instance.WithSuppressedCollapse(() =>
         {
-            tower.TriggerCollapseOnce();
+            tower.TriggerCollapseOnce(); // 여기서 붕괴 연출 시작부터 끝까지 이벤트까지 발생
         });
 
         // 게임 로직 처리 (마스터만)
@@ -501,6 +524,9 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     {
         Debug.Log($"[JengaNetwork] Received countdown start RPC: {duration}s");
 
+        // 카운트다운 동안 입력 잠금 (모든 클라 공통)
+        AcquireCountdownLock(duration);
+
         // UI 매니저에게 카운트다운 시작 알림
         JengaUIManager.Instance?.StartCountdown(duration);
     }
@@ -522,6 +548,10 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     private void RPC_CountdownComplete()
     {
         Debug.Log("[JengaNetwork] Received countdown complete RPC");
+
+        // 카운트다운 락 해제
+        ReleaseCountdownLock();
+
         // UI에서 카운트다운 숨기기
         JengaUIManager.Instance?.HideCountdown();
     }
@@ -634,6 +664,34 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
 
         JengaTowerManager.Instance?.ApplySnapshot(dict);
         Debug.Log($"[JengaNetwork - ApplySnapshotHashtable] 스냅샷 적용 완료 (actors = {dict.Count})");
+    }
+
+    #endregion
+
+    #region Util
+    // === 카운트다운용 락 유틸 ===
+    private void AcquireCountdownLock(float duration)
+    {
+        _countdownLock?.Dispose();
+        _countdownLock = InputManager.Instance?.Acquire(
+            InputType.Interaction | InputType.UI
+        );
+
+        if (_countdownFailsafeCo != null) StopCoroutine(_countdownFailsafeCo);
+        _countdownFailsafeCo = StartCoroutine(CoReleaseCountdownAfter(duration + 1.2f));
+    }
+
+    private IEnumerator CoReleaseCountdownAfter(float sec)
+    {
+        yield return new WaitForSeconds(sec);
+        ReleaseCountdownLock();
+    }
+
+    private void ReleaseCountdownLock()
+    {
+        if (_countdownFailsafeCo != null) { StopCoroutine(_countdownFailsafeCo); _countdownFailsafeCo = null; }
+        _countdownLock?.Dispose();
+        _countdownLock = null;
     }
 
     #endregion

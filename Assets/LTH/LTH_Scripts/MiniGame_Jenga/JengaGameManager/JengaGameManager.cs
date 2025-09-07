@@ -3,11 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using DesignPattern;
+using ExitGames.Client.Photon;
+using InputBlocker;
+using LDH_MainGame;
 using Photon.Pun;
 using Photon.Pun.Demo.PunBasics;
 using UnityEngine;
-using ExitGames.Client.Photon;
-using LDH_MainGame;
 
 
 /// <summary>
@@ -186,8 +187,6 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
 
         if (useCountdown)
         {
-            Debug.Log("[JengaGameManager] Starting countdown...");
-
             // 네트워크 매니저를 통해 모든 클라이언트에게 카운트다운 시작 신호
             JengaNetworkManager.Instance?.BroadcastStartCountdown(countdownDuration);
 
