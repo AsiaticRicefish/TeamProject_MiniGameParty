@@ -3,7 +3,12 @@ public enum SfX_Game
 {
     SFX_Timer,
     SFX_Destory,
+    SFX_GameStart,
+    SFX_GameOver,
     SFX_CardFlip,
+    SFX_Rhythm_NoteDestory,
+    SFX_Rhythm_Miss,
+    SFX_Rhythm_Stun,
 }
 
 //UI 관련 SFX 사운드
