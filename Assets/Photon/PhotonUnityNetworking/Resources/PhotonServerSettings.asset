@@ -19,7 +19,7 @@ MonoBehaviour:
     AppIdVoice: 
     AppVersion: 
     UseNameServer: 1
-    FixedRegion: asia
+    FixedRegion: 
     Server: 
     Port: 0
     ProxyServer: 
@@ -88,6 +88,7 @@ MonoBehaviour:
   - InputOn
   - RPC_StartPairSession
   - RPC_EndPairSession
+  - RPC_OnEndingReached
   - RequestTurnEnd
   - RPC_PickResult
   - RPC_CloseCardUI
@@ -99,5 +100,5 @@ MonoBehaviour:
   - RPC_CompleteObjectsActive
   - RPC_UpdateRanking
   DisableAutoOpenWizard: 1
-  ShowSettings: 1
+  ShowSettings: 0
   DevRegionSetOnce: 1

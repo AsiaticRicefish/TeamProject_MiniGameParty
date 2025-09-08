@@ -26,21 +26,29 @@ public class RawImageClickForwarder : MonoBehaviour, IPointerClickHandler, IPoin
         if (!overlay) overlay = GetComponentInParent<TowerFocusOverlay>();
     }
 
-    public void SetMask(LayerMask mask) => jengaMask = mask;
+    public void SetMask(LayerMask mask)
+    {
+        jengaMask = mask;
+    }
 
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        // UI/Interaction 둘 다 차단되면 무시
         if (InputManager.Instance &&
             (InputManager.Instance.IsBlocked(InputType.UI) ||
              InputManager.Instance.IsBlocked(InputType.Interaction)))
+        {
             return;
+        }
 
-        if (!PrepareRay(eventData, out var ray)) return;
+        if (!PrepareRay(eventData, out var ray))
+        {
+            return;
+        }
 
         var hits = Physics.RaycastAll(ray, rayDistance, jengaMask);
         System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+
         if (hits.Length == 0) return;
 
         var block = hits[0].collider.GetComponentInParent<JengaBlock>();
@@ -48,7 +56,9 @@ public class RawImageClickForwarder : MonoBehaviour, IPointerClickHandler, IPoin
         if (block != null &&
            JengaTowerManager.Instance != null &&
            JengaTowerManager.Instance.IsArenaMuted(block.OwnerActorNumber))
+        {
             return;
+        }
 
         if (block != null) overlay.NotifyBlockTapped(block);
     }
@@ -90,14 +100,26 @@ public class RawImageClickForwarder : MonoBehaviour, IPointerClickHandler, IPoin
         var cam = overlay.TowerCam;
         if (cam == null) return false;
 
+        if (jengaMask == 0)
+        {
+            jengaMask = cam.cullingMask;
+            if (jengaMask == 0) return false; // 그래도 0이면 클릭 불가
+        }
+
         if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
             rt, eventData.position, eventData.pressEventCamera, out var local))
+        {
             return false;
+        }
 
         Rect draw = GetDrawRectLocal(raw);
         if (!draw.Contains(local))
         {
-            if (ignoreClicksOutsideDraw) return false;
+            if (ignoreClicksOutsideDraw)
+            {
+                return false;
+            }
+
             local = new Vector2(
                 Mathf.Clamp(local.x, draw.xMin, draw.xMax),
                 Mathf.Clamp(local.y, draw.yMin, draw.yMax));
@@ -106,6 +128,7 @@ public class RawImageClickForwarder : MonoBehaviour, IPointerClickHandler, IPoin
         float u = Mathf.InverseLerp(draw.xMin, draw.xMax, local.x);
         float v = Mathf.InverseLerp(draw.yMin, draw.yMax, local.y);
         ray = cam.ViewportPointToRay(new Vector3(u, v, 0f));
+
         return true;
     }
 
