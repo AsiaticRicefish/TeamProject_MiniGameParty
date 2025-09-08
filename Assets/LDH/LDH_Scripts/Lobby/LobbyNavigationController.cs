@@ -44,10 +44,20 @@ namespace LDH_Lobby
             _instance = this;
             RegisterCams();
             RegisterMenus();
-
+            
             CloseAllUI().Forget();
         }
-        
+
+        private void Start()
+        {
+            RequestFocus("Home");
+        }
+
+        private void OnDestroy()
+        {
+            _instance = null;
+        }
+
         #region Register
 
         private void RegisterCams()
@@ -85,42 +95,84 @@ namespace LDH_Lobby
             
             inputLock?.Lock();   // 전환하는 동안 입력 막기
             
-            await CloseCurrentUI();  // 활성화된 현재 팝업이 있다면 닫기
-            
-            SetVCamPriority(id);               // 카메라 전환 시작
-            await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate);    // 브레인이 블렌드를 시작할 프레임을 한번 넘겨줌
-            
-            await WaitBlendCompleteAsync(_camDict[id].VCam, default);  // 블렌드 끝날 때까지 대기
+            try
+            {
+                // 1) ID 검증
+                if (!_camDict.TryGetValue(id, out var cam))
+                {
+                    Debug.LogWarning($"[LobbyNav] unknown id: {id}");
+                    return;
+                }
 
-            await ShowUI(id);   // 해당하는 UI 활성화
-            
-            inputLock?.Unlock();   // input 입력 차단 해제
-            _isSwitching = false;
+                // 2) 현재 UI 먼저 닫기(예외 안전)
+                await CloseCurrentUI();
+
+                // 3) 카메라 전환
+                SetVCamPriority(id);
+                
+                await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate);
+
+                // 4) 블렌드 완료 대기 + 타임아웃(예: 2초)
+                await WaitBlendCompleteAsync(cam.VCam, this.GetCancellationTokenOnDestroy(), 2f);
+
+                // 5) 대상 UI가 있으면 열기(없으면 스킵)
+                await ShowUI(id);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[LobbyNav] Switch error: {e}");
+            }
+            finally
+            {
+                inputLock?.Unlock(); 
+                _isSwitching = false;
+            }
         }
 
 
         private void SetVCamPriority(string id)
         {
+            Debug.Log($"id : {id}");
+            
             foreach (var(camId, cam) in _camDict)
             {
                 if (camId == id)
+                {
                     cam.VCam.Priority = cam.FocusPriority;
+                }
+  
                 else
                     cam.VCam.Priority = cam.OffPriority;
             }
+            
+            // 타겟 가상 카메라를 서브큐 최상단으로 올려 동점/기존 라이브 깨기
+            var target = _camDict[id].VCam;
+            target.MoveToTopOfPrioritySubqueue();
         }
 
-        private async UniTask WaitBlendCompleteAsync(CinemachineVirtualCamera target, CancellationToken ct)
+        private async UniTask WaitBlendCompleteAsync(
+            CinemachineVirtualCamera target,
+            CancellationToken ct,
+            float timeoutSec = 2f)
         {
+            float start = Time.realtimeSinceStartup;
             await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, ct);
+            
             while (!ct.IsCancellationRequested)
             {
+                if (brain == null || target == null) break;
+                
                 var active = brain.ActiveVirtualCamera;
+               
                 bool isTarget = active != null &&  active.VirtualCameraGameObject == target.gameObject;
 
                 if (!brain.IsBlending && isTarget)
                     break;
-
+                if (Time.realtimeSinceStartup - start > timeoutSec)
+                {
+                    Debug.LogWarning("[LobbyNav] Blend wait timed out.");
+                    break;
+                }
                 await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, ct);
 
             }
@@ -129,21 +181,28 @@ namespace LDH_Lobby
 
         private async UniTask CloseCurrentUI()
         {
-            if (_currentPopupInstance != null)
-            {
-                await Manager.UI.ClosePopupUI(_currentPopupInstance, false);
-                _currentPopupInstance = null;
-            }
-
+            if (_currentPopupInstance == null) return;
+            try { await Manager.UI.ClosePopupUI(_currentPopupInstance, false); }
+            catch (Exception e) { Debug.LogWarning($"[LobbyNav] Close UI error: {e}"); }
+            finally { _currentPopupInstance = null; }
+            
         }
         
         private async UniTask ShowUI(string id)
         {
            
-            if (_uiDict.TryGetValue(id, out UI_Popup popup))
+            if (_uiDict.TryGetValue(id, out var popup) && popup != null)
             {
-                _currentPopupInstance = popup;
-                await Manager.UI.ShowPopupUI(popup);
+                try
+                {
+                    _currentPopupInstance = popup;
+                    await Manager.UI.ShowPopupUI(popup);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning($"[LobbyNav] Show UI error: {e}");
+                    _currentPopupInstance = null;
+                }
             }
         }
 

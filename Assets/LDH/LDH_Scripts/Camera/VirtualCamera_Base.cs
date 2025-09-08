@@ -33,7 +33,7 @@ namespace LDH_Camera
         protected virtual void OnDestroy()
         {
             if (!string.IsNullOrEmpty(cameraID))
-                Manager.Camera.UnregisterCamera(cameraID);
+                Manager.Camera?.UnregisterCamera(cameraID);
         }
         
     }

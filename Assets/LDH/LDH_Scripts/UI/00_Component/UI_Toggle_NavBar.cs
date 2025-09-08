@@ -13,7 +13,6 @@ namespace LDH_UI
         [Header("Virtual Camera")]
         [SerializeField] private VirtualCamera_Lobby myVcam;
 
-        [SerializeField] private bool isOnOnStart;
         
         private void Awake()
         {
@@ -23,9 +22,6 @@ namespace LDH_UI
         private void Start()
         {
             Subscribe();
-            
-            if(isOnOnStart)
-                LobbyNavigationController.Instance.RequestFocus(myVcam.cameraID);
         }
         private void OnDestroy() => Unsubscribe();
 
@@ -44,6 +40,8 @@ namespace LDH_UI
         private void OnValueChanged(bool isOn)
         {
             if (!isOn) return; // 꺼질 때 콜백 무시
+         Debug.Log("toggle is one");
+            
             LobbyNavigationController.Instance?.RequestFocus(myVcam.cameraID);
         }
         
