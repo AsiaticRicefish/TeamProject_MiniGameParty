@@ -93,6 +93,7 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         }
     }
 
+
     #region 플레이어 초기화
     private void InitializePlayers()
     {
@@ -138,6 +139,7 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         }
         Debug.Log($"[JengaGameManager - InitializePlayers] Initialized {players.Count} players");
     }
+
     #endregion
 
     public void StartGame()
@@ -347,9 +349,18 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
     /// </summary>
     private void EndGame()
     {
-        JengaNetworkManager.Instance.BroadcastGameState(JengaGameState.Finished); // 게임 상태를 "Finished"로 변경
+        // 1) 타이머 0으로 고정 & 즉시 UI 반영
+        remainingTime = 0f;
+        OnTimeUpdated?.Invoke(remainingTime);
 
-        // 순위 계산 (점수 기준, 완료 시간도 고려)
+        // 2) 상태 전환 (ApplyGameStateChange 내부에서 KEY_STATE를 룸 프로퍼티로 기록)
+        ApplyGameStateChange(JengaGameState.Finished);
+
+        // 3) 네트워크로 상태 브로드캐스트 (RPC)
+        JengaNetworkManager.Instance.BroadcastGameState(JengaGameState.Finished); // 게임 상태를 "Finished"로 변경
+        JengaNetworkManager.Instance.BroadcastTimeSync(0f); // 전 클라 타이머 0 표시
+
+        // 4) 순위 계산 & UI/룸프로퍼티 반영(랭킹만 기록; KEY_STATE는 위에서 이미 기록됨)
         var rankings = CalculateRankings();
         OnGameFinished?.Invoke(rankings); // OnGameFinished로 외부에 알림
 
@@ -363,12 +374,11 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         {
             { JengaRoomProps.KEY_RANK_UIDS, uids },
             { JengaRoomProps.KEY_RANK_VALS, rks  },
-            { JengaRoomProps.KEY_STATE,     (byte)JengaGameState.Finished }
         };
             PhotonNetwork.CurrentRoom.SetCustomProperties(props);
         }
 
-        // 메인 게임에 결과 전달
+        // 5) 메인 게임에 결과 전달
         SendResultToMainGame(rankings);
     }
 

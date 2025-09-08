@@ -5,6 +5,7 @@ using Photon.Pun;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using InputBlocker;
 
 public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
 {
@@ -20,6 +21,13 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
 
     [Header("회전 버튼")]
     [SerializeField] private Button rotateButton;
+
+    [Header("대기 UI")]
+    [SerializeField] private GameObject waitingPanel;
+    [SerializeField] private RawImage waitingPreview; // 선택: 없으면 null 유지
+    private bool _iAmEliminated = false;
+    private InputLockToken _eliminateLock;
+
 
     protected override void OnAwake()
     {
@@ -64,10 +72,17 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
                 // 게임 시작 시 카운트다운 UI 숨김 (혹시 남아있을 경우를 대비)
                 HideCountdown();
                 if (rankingUI != null) rankingUI.Hide();
+
+                _iAmEliminated = false;
+                if (waitingPanel) waitingPanel.SetActive(false);
+
+                _eliminateLock?.Dispose();
+                _eliminateLock = null;
                 break;
 
             case JengaGameState.Finished:
-                // 게임 종료 시 처리
+                // 게임 종료 시 00:00
+                if (timerText != null) timerText.text = "00:00";
                 break;
         }
     }
@@ -106,6 +121,12 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
         {
             rotateButton.gameObject.SetActive(false);
         }
+
+        if (waitingPanel)
+        {
+            waitingPanel.SetActive(false);
+        }
+        _iAmEliminated = false;
     }
     #endregion
 
@@ -262,6 +283,24 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
 
     #endregion
 
+    #region 대기 UI
+    public void ShowWaiting(RenderTexture rt = null)
+    {
+        _iAmEliminated = true;
+
+        if (waitingPreview && rt) waitingPreview.texture = rt;
+        if (waitingPanel) waitingPanel.SetActive(true);
+
+        if (_eliminateLock == null)
+            _eliminateLock = InputManager.Instance?.Acquire(InputType.Interaction, "Jenga eliminated");
+
+        HideRotateButton(); // 조작 불가
+    }
+
+
+    #endregion
+
+
     #region 강제 정리 (플레이어 1명이라도 이탈 시 호출)
     protected override void OnDestroy()
     {
@@ -274,6 +313,8 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
             JengaGameManager.Instance.OnGameStateChanged -= OnGameStateChanged;
             JengaGameManager.Instance.OnGameFinished -= OnGameFinished_ShowRanking;
         }
+        _eliminateLock?.Dispose();
+        _eliminateLock = null;
         base.OnDestroy();
     }
     #endregion
