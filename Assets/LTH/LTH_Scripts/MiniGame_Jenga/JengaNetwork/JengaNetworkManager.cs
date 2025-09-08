@@ -679,4 +679,31 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     }
 
     #endregion
+
+    #region 강제 정리 (플레이어 1명이라도 이탈 시 호출)
+
+    protected override void OnDestroy()
+    {
+        Debug.Log("[JengaNetworkManager] OnDestroy - cleaning up resources");
+
+        // 실행 중인 코루틴들 정리
+        if (_pendingApplyCo != null)
+        {
+            StopCoroutine(_pendingApplyCo);
+            _pendingApplyCo = null;
+        }
+
+        if (_countdownFailsafeCo != null)
+        {
+            StopCoroutine(_countdownFailsafeCo);
+            _countdownFailsafeCo = null;
+        }
+
+        // 입력 락 해제
+        ReleaseCountdownLock();
+
+        base.OnDestroy();
+    }
+
+    #endregion
 }

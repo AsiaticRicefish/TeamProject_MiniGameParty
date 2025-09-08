@@ -224,6 +224,26 @@ namespace MiniGameJenga
             ResetTimingState();
         }
 
+        #region 강제 정리 (플레이어 1명이라도 이탈 시 호출)
+        protected override void OnDestroy()
+        {
+            Debug.Log("[JengaTimingManager] OnDestroy - cleaning up resources");
+
+            // 진행 중인 타이밍 게임 취소
+            if (_isTimingActive)
+            {
+                CancelTiming();
+            }
+
+            // 이벤트 구독 해제 (OnDisable에서도 하지만 안전장치)
+            JengaBlock.OnAnyBlockTimingStart -= HandleTimingStart;
+            UnsubscribeFromTimingUI();
+
+            base.OnDestroy();
+        }
+        #endregion
+
+
 #if UNITY_EDITOR
         /// <summary>
         /// 에디터에서 TimingUI 수동 설정용 (Inspector에서 드래그&드롭)

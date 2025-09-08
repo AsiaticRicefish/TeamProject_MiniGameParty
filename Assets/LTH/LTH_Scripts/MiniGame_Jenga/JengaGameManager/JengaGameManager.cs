@@ -594,4 +594,50 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         // OnTowerCollapsed의 종료 조건 판단에 사용함
         return players.Count(kv => kv.Value.isAlive);
     }
+
+
+    #region 강제 정리 (플레이어 1명이라도 이탈 시 호출)
+
+    protected override void OnDestroy()
+    {
+        Debug.Log("[JengaGameManager] OnDestroy - cleaning up resources");
+
+        // 1. 이벤트 해제 (메모리 누수 방지)
+        OnTimeUpdated = null;
+        OnGameStateChanged = null;
+        OnPlayerAction = null;
+        OnPlayerFinished = null;
+        OnGameFinished = null;
+
+        // 2. 전역 플레이어 데이터에서 젠가 관련 데이터만 정리
+        if (PlayerManager.Instance != null)
+        {
+            foreach (var player in PlayerManager.Instance.Players.Values)
+            {
+                if (player != null)
+                {
+                    player.JengaData = null;
+                    player.WinThisMiniGame = false;
+                }
+            }
+        }
+
+        // 3. 룸 프로퍼티에서 젠가 관련 데이터 제거 (다음 게임을 위해)
+        if (PhotonNetwork.InRoom)
+        {
+            var clearProps = new Hashtable
+            {
+                { JengaRoomProps.KEY_STATE, null },
+                { JengaRoomProps.KEY_START_TIME, null },
+                { JengaRoomProps.KEY_DURATION, null },
+                { JengaRoomProps.KEY_RANK_UIDS, null },
+                { JengaRoomProps.KEY_RANK_VALS, null }
+            };
+            PhotonNetwork.CurrentRoom.SetCustomProperties(clearProps);
+        }
+
+        base.OnDestroy();
+    }
+
+    #endregion
 }

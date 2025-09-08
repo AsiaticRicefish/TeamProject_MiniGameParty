@@ -188,35 +188,6 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
         PhotonNetwork.AddCallbackTarget(this);
     }
 
-    private void OnDisable()
-    {
-        if (JengaGameManager.Instance != null)
-            JengaGameManager.Instance.OnGameStateChanged -= HandleStateChanged;
-
-        foreach (var kv in _towerMuteHandlers)
-        {
-            var actor = kv.Key;
-            var pair = kv.Value;
-            var tower = GetPlayerTower(actor);
-            if (tower != null)
-            {
-                if (pair.on != null) tower.CollapseStarted -= pair.on;
-                if (pair.off != null) tower.CollapseFinished -= pair.off;
-            }
-        }
-        _towerMuteHandlers.Clear();
-
-        ReleaseCollapseLockNow();
-        _mutedActors.Clear();
-
-        PhotonNetwork.RemoveCallbackTarget(this);
-
-        if (PhotonNetwork.InRoom && PhotonNetwork.IsMasterClient)
-        {
-            CleanupAllProxies();
-        }
-    }
-
     private void HandleStateChanged(JengaGameState state)
     {
         if (state == JengaGameState.Finished)
@@ -697,6 +668,52 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
 
     // 플레이어 프로퍼티 변경 (uid 등)
     public void OnPlayerPropertiesUpdate(Player targetPlayer, Hashtable changedProps) { }
+
+    #endregion
+
+    #region 강제 정리 (플레이어 1명이라도 이탈 시 호출)
+    protected override void OnDestroy()
+    {
+        Debug.Log("[JengaTowerManager] OnDestroy - cleaning up resources");
+
+        // 게임 매니저 이벤트 해제
+        if (JengaGameManager.Instance != null)
+            JengaGameManager.Instance.OnGameStateChanged -= HandleStateChanged;
+
+        // 타워별 이벤트 핸들러 정리
+        foreach (var kv in _towerMuteHandlers)
+        {
+            var actor = kv.Key;
+            var pair = kv.Value;
+            var tower = GetPlayerTower(actor);
+            if (tower != null)
+            {
+                if (pair.on != null) tower.CollapseStarted -= pair.on;
+                if (pair.off != null) tower.CollapseFinished -= pair.off;
+            }
+        }
+        _towerMuteHandlers.Clear();
+
+        // 입력 락 해제 및 상태 정리
+        ReleaseCollapseLockNow();
+        _mutedActors.Clear();
+
+        // Photon 콜백 해제
+        PhotonNetwork.RemoveCallbackTarget(this);
+
+        // 마스터라면 프록시 정리
+        if (PhotonNetwork.InRoom && PhotonNetwork.IsMasterClient)
+        {
+            CleanupAllProxies();
+        }
+
+        base.OnDestroy();
+    }
+
+    private void OnDisable()
+    {
+        PhotonNetwork.RemoveCallbackTarget(this);
+    }
 
     #endregion
 

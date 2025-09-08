@@ -262,15 +262,20 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
 
     #endregion
 
+    #region 강제 정리 (플레이어 1명이라도 이탈 시 호출)
     protected override void OnDestroy()
     {
+        Debug.Log("[JengaUIManager] OnDestroy - cleaning up resources");
+
         // 메모리 누수 방지를 위한 이벤트 구독 해제
         if (JengaGameManager.Instance != null)
         {
             JengaGameManager.Instance.OnTimeUpdated -= UpdateTimerUI;
             JengaGameManager.Instance.OnGameStateChanged -= OnGameStateChanged;
+            JengaGameManager.Instance.OnGameFinished -= OnGameFinished_ShowRanking;
         }
         base.OnDestroy();
     }
+    #endregion
 
 }
