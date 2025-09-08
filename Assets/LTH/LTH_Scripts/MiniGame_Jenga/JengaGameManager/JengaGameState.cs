@@ -9,11 +9,3 @@ public enum JengaGameState
     Paused,
     Finished
 }
-
-// 카운트다운 상태 열거형
-public enum CountdownState
-{
-    None,        // 카운트다운 없음
-    InProgress,  // 카운트다운 진행중
-    Completed    // 카운트다운 완료
-}
