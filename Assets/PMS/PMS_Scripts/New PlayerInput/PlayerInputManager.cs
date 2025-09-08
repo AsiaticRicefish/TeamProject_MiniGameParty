@@ -30,6 +30,12 @@ namespace ShootingScene
 
         }
 
+        //테스트코드
+        private void Start()
+        {
+            Initialize();
+        }
+
         public void OnTouchPress(InputAction.CallbackContext ctx)
         {
             onTouchPress?.Invoke(ctx); // 구독자에게 전달
@@ -58,6 +64,7 @@ namespace ShootingScene
             // 입력 활성화
             EnableInput();
             EnableCameraControl();
+            EnableCameraPosition();
         }
 
         private void InitializePlayerInput()
@@ -116,6 +123,7 @@ namespace ShootingScene
             if (cameraControlAction != null)
             {
                 cameraControlAction.started += OnCameraGesture;
+                //cameraControlAction.performed += OnCameraGesture;
                 cameraControlAction.canceled += OnCameraGesture;
                 cameraControlAction.Enable();
             }
@@ -126,6 +134,7 @@ namespace ShootingScene
             if (cameraControlAction != null)
             {
                 cameraControlAction.started -= OnCameraGesture;
+                //cameraControlAction.performed -= OnCameraGesture;
                 cameraControlAction.canceled -= OnCameraGesture;
                 cameraControlAction.Disable();
             }

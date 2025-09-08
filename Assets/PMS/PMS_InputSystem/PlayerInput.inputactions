@@ -29,7 +29,7 @@
                 {
                     "name": "",
                     "id": "12ed1b2e-9507-431d-b3b4-506d5ef99da2",
-                    "path": "<Touchscreen>/Press",
+                    "path": "<Touchscreen>/primaryTouch/press",
                     "interactions": "",
                     "processors": "",
                     "groups": ";Mobile",
@@ -78,9 +78,9 @@
             "actions": [
                 {
                     "name": "PrimaryTouch",
-                    "type": "PassThrough",
+                    "type": "Button",
                     "id": "8369bbc0-9b2d-4804-8834-ec70e386735e",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
@@ -99,7 +99,7 @@
                 {
                     "name": "",
                     "id": "aef31400-8157-462f-85c7-e2962a4959aa",
-                    "path": "<Touchscreen>/primaryTouch/press",
+                    "path": "<Touchscreen>/Press",
                     "interactions": "",
                     "processors": "",
                     "groups": ";Mobile",
