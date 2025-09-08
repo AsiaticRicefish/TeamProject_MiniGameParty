@@ -6,6 +6,7 @@ using Firebase.Extensions;
 using Photon.Pun;
 using Photon.Realtime;
 using ExitGames.Client.Photon;
+using Managers;
 using UnityEngine;
 using Network;
 
@@ -21,7 +22,6 @@ using Network;
 
 namespace KYG.Auth
 {
-    
     public class GuestLoginManager : MonoBehaviourPunCallbacks
     {
         public static GuestLoginManager Instance { get; private set; }
@@ -54,6 +54,8 @@ namespace KYG.Auth
             if (Instance != null && Instance != this) { Destroy(gameObject); return; }
             Instance = this;
             //DontDestroyOnLoad(gameObject);
+
+            
         }
 
         private void Start()
@@ -303,10 +305,21 @@ namespace KYG.Auth
         public override void OnConnectedToMaster()
         {
             Debug.Log("[GuestLoginManager] ConnectedToMaster.");
+            //SafeReapplyUid();
+            
+            if (user == null)
+            {                   // 아직 Firebase 로그인 전
+                Debug.Log("[GuestLoginManager] Photon connected before auth; skip JoinLobby until user != null");
+                return;
+            }
+            
+         
             if (user == null) return; // Firebase 로그인 전이면 패스
-
+            
+            
             // Photon 기본 로비 들어가기
-            PhotonNetwork.JoinLobby();
+            if (PhotonNetwork.InLobby || PhotonNetwork.NetworkClientState == ClientState.JoiningLobby) return;  // 방어로직 추가
+                PhotonNetwork.JoinLobby();
         }
         
         // ----- NetworkManager로 기능 통합 ----- 0829(이도현)

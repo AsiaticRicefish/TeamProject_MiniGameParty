@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
-// ╧л╢о╟тюс Shooting©║╪╜ ╟╒ гц╥╧юл╬Нюг ╣╔юлем╦╕ юЗюЕго╢б е╛╥║╫╨
+// О©╫л╢о╟О©╫О©╫О©╫ ShootingО©╫О©╫О©╫О©╫ О©╫О©╫ О©╫ц╥О©╫О©╫л╬О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫м╦О©╫ О©╫О©╫О©╫О©╫О©╫о╢О©╫ е╛О©╫О©╫О©╫О©╫
 [Serializable]
 public class ShootingPlayerData
 {
-    public int score = 0;           //а║╪Ж╦╕ еКгя ╪Ью╖ ╟Х╩Й
-    public int myTurnIndex = -1;    //еоюл 0╧Ь ╨нем ╫цюш
+    public int score = 0;           //О©╫О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫ О©╫О©╫О©╫
+    public int myTurnIndex = -1;    //О©╫О©╫О©╫О©╫ 0О©╫О©╫ О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫
+
+
+
 }

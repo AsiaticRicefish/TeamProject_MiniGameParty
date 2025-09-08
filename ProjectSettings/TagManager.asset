@@ -5,6 +5,8 @@ TagManager:
   serializedVersion: 2
   tags:
   - UnimoEgg
+  - PlayGround
+  - FallDownZone
   layers:
   - Default
   - TransparentFX

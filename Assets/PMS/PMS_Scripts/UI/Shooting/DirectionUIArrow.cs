@@ -1,10 +1,10 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Photon.Pun;
 
-[RequireComponent(typeof(PhotonView))]
 public class DirectionUIArrow : MonoBehaviourPun
 {
     [Header("Swing Settings")]
@@ -18,7 +18,9 @@ public class DirectionUIArrow : MonoBehaviourPun
     private float freezeAngle;   // 멈췄을 때 각도
 
     [SerializeField] GameObject player;
-
+    
+        
+    
     public float CurrentAngle => isSwing ? currentAngle : freezeAngle;
 
     public Vector3 CurrentDir
@@ -38,7 +40,19 @@ public class DirectionUIArrow : MonoBehaviourPun
     private void Awake()
     {
         arrowTransform = GetComponent<RectTransform>();
-        player = transform.parent.parent.gameObject;
+    }
+
+    //return pool
+    public void Initialize()
+    {
+        isSwing = true;
+        currentAngle = 0f;
+        freezeAngle = 0f;
+
+        if (arrowTransform != null)
+        {
+            arrowTransform.localRotation = Quaternion.identity;
+        }
     }
 
     private void Update()

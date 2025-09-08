@@ -51,7 +51,7 @@ namespace LDH_Util
 
         public enum MatchType { Quick, Private, None }
         public enum MatchState { Matching, Complete, None}
-
+        
         public const int MAX_PLAYERS = 2;
         public const int PRIVATE_MAX_RETRY = 5;
         
@@ -85,6 +85,19 @@ namespace LDH_Util
             public const string InGameDone = "inGameDone";
         }
         
+        #endregion
+
+
+        #region Shooting Game
+
+        public enum WindDirection
+        {
+            North,
+            South,
+            West,
+            East,
+        }
+
         #endregion
     }
 

@@ -21,14 +21,14 @@ namespace Network
 
         [SerializeField] private bool autoSyncScene = true;
 
-        [SerializeField] private bool autoConnectOnAwake = false;
-
-        private MatchType _createType = MatchType.None;
+        // ---- 인증 여부, 로비 진입과 관련 플래그
+        private bool _authReady = false;
 
         //--- private matching ---- 
+        private MatchType _createType = MatchType.None;
         private int _privateRetryCount;
-
         private bool _isNavigating = false;
+
 
         #region Events
 
@@ -61,42 +61,67 @@ namespace Network
             //if (autoConnectOnAwake)
 
 #if TEST_WITHOUT_LOGIN
-            ConnectServer();
+            if(SceneManager.GetActiveScene().name.Equals(lobbySceneName))
+                ConnectServer();
 #endif
         }
 
 
-        //필요한 시점에 호출하기 
-        //구글 로그인 성공 후 메인 씬으로 이동하기 전에 진행하면 될 것으로 판단
+        #region Connect Server(로그인 없이 게임 테스트 시 사용할 메서드)
+
         public void ConnectServer()
         {
-            
 #if TEST_WITHOUT_LOGIN
             SetTestNicknameAndID();
-#endif
             
             if (!PhotonNetwork.IsConnected)
                 PhotonNetwork.ConnectUsingSettings();
             else
             {
-                if (PhotonNetwork.IsConnectedAndReady &&!PhotonNetwork.InLobby)
-                    PhotonNetwork.JoinLobby();
+                TryJoinLobby();
             }
-
+#endif
         }
 
         // 임시 추가
         //todo: 파이어베이스 연결후 파이어베이스 닉네임을 적용하는 것으로 수정..? 아닌가? + 처음 계정 연동시 닉네임 설정 UI 제공 , 이후 프로필에서 수정가능 
         //지금은 임시 테스트를 위해 닉네임 임시 할당
-        public void SetTestNicknameAndID()
+        public void SetTestNicknameAndID(string nickName = null)
         {
             // 닉네임 자동 설정
-            if (string.IsNullOrEmpty(PhotonNetwork.NickName))
+            if (string.IsNullOrEmpty(nickName))
                 PhotonNetwork.NickName = $"Player_{UnityEngine.Random.Range(1000, 9999)}";
-
+            else
+                PhotonNetwork.NickName = nickName;
             //아이디 = 닉네임이랑 똑같은 아이디로 부여
             PhotonNetwork.AuthValues = new AuthenticationValues(PhotonNetwork.NickName);
         }
+
+        #endregion
+
+
+        #region Lobby 진입 관련 로직
+        
+
+        private void TryJoinLobby()
+        {
+            if (!PhotonNetwork.IsConnectedAndReady)
+            {
+                Debug.Log("[NetworkManager] 서버에 연결이 완료되지 않았습니다.");
+                return; // 마스터에 아직 연결 안 됐으면 대기
+            }
+
+            if (PhotonNetwork.InLobby || PhotonNetwork.InRoom || PhotonNetwork.NetworkClientState == ClientState.JoiningLobby)
+            {
+                Debug.Log("[NetworkManager] 로비로 진입 중이거나 이미 로비거나 현재 룸에 들어온 상태입니다.");
+                return;
+            }
+
+            Debug.Log("[NetworkManager] TryJoinLobby -> JoinLobby()");
+            PhotonNetwork.JoinLobby();
+        }
+
+        #endregion
 
 
         #region Quick Matching API
@@ -229,11 +254,7 @@ namespace Network
         public override void OnConnectedToMaster()
         {
             Debug.Log("[NetworkManager] 마스터 서버에 연결 완료");
-
-#if TEST_WITHOUT_LOGIN
-            PhotonNetwork.JoinLobby();
-#endif
-
+            TryJoinLobby(); // 로비로 가겠다는 요청이 아니므로 tryjoinlobby를 사용. 로비로 가겠다는 요청이 있었다면 로비로 진입하고 없었다면 로비로 진입하지 않음.
             ConnectedToMaster?.Invoke();
         }
 
@@ -261,7 +282,8 @@ namespace Network
                 var props = new Hashtable { { "uid", PhotonNetwork.AuthValues?.UserId }, };
                 PhotonNetwork.LocalPlayer.SetCustomProperties(props);
             }
-            
+
+
             var current = SceneManager.GetActiveScene().name;
             if (!string.Equals(current, lobbySceneName, System.StringComparison.Ordinal) && !_isNavigating)
             {
@@ -272,6 +294,7 @@ namespace Network
             {
                 Debug.Log("[NetworkManager] 현재 로비 씬입니다.");
             }
+
 
             JoinedLobby?.Invoke();
         }
@@ -305,6 +328,8 @@ namespace Network
         {
             Debug.Log($"[NetworkManager] 비공개 방 입장에 실패했습니다. ({returnCode}) {message}");
             JoinFailed?.Invoke(returnCode, message);
+
+            TryJoinLobby();
         }
 
         #endregion
@@ -317,8 +342,10 @@ namespace Network
 
             PlayerManager.Instance.ClearAllPlayers();
             ClearAllPlayerProperty();
-
             LeftRoom?.Invoke();
+
+            //로비로 복귀 시도
+            TryJoinLobby();
         }
 
         #endregion

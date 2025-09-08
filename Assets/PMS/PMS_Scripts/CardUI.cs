@@ -97,10 +97,10 @@ namespace ShootingScene
         }
 
         /// <summary>카드 공개 애니메이션</summary>
-        public void RevealFace()
+        public IEnumerator RevealFace()
         {
-            if (isFace || isFlipping) return;
-            StartCoroutine(CoFlipToFace());
+            if (isFace || isFlipping) yield break;
+            yield return StartCoroutine(CoFlipToFace());
         }
 
         private IEnumerator CoFlipToFace()

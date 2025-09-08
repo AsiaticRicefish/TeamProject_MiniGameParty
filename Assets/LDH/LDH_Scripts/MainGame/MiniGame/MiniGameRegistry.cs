@@ -11,6 +11,7 @@ namespace LDH_MainGame
         [SerializeField] private List<MiniGameInfo> miniGameInfos;
 
         private Dictionary<string, MiniGameInfo> _infoMap;
+        public int Count => miniGameInfos?.Count ?? 0;
 
         private void Awake()
         {
@@ -20,14 +21,22 @@ namespace LDH_MainGame
         public MiniGameInfo Get(string id) => _infoMap[id];
         public MiniGameInfo PickRandomGame(Func<MiniGameInfo, bool> filter = null)
         {
-            var candidates = (filter == null) ? miniGameInfos : miniGameInfos.Where(filter).ToList();
+            var baseList = miniGameInfos;
+            var candidates = (filter == null) ? baseList : baseList.Where(filter).ToList();
+
+            // 필터로 0개가 되었는데 레지스트리에 1개뿐이라면 그 1개 반환
+            if (candidates.Count == 0 && baseList.Count == 1)
+            {
+                if (candidates.Count == 0 && baseList.Count == 1)
+                    return baseList[0];
+            }
 
             if (candidates.Count == 0)
             {
                 Util_LDH.ConsoleLog(this, "선택 가능한 미니게임 후보가 없습니다.");
                 return null;
             }
-
+            
             int idx = Util_LDH.GetRandomInt(0, candidates.Count);
 
             return candidates[idx];
