@@ -10,7 +10,8 @@ namespace LDH_Camera
         [Header("Camera Properties")]
         public string cameraID;
         protected CinemachineVirtualCamera _vcam;
-
+        public CinemachineVirtualCamera VCam => _vcam;
+        
         protected virtual void Awake() => Init();
 
         /// <summary>

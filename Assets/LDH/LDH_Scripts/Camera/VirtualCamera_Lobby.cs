@@ -6,12 +6,11 @@ namespace LDH_Camera
 {
     public class VirtualCamera_Lobby : VirtualCam_Base
     {
-        [SerializeField] private bool pushCameraOnAwake;
+        [SerializeField] private int focusPriority = 10; // 활성
+        [SerializeField] private int offPriority = 0;     // 비활성
 
-        private void Start()
-        {
-            if(pushCameraOnAwake)
-                Manager.Camera.PushCamera(cameraID);
-        }
+        public int FocusPriority => focusPriority;
+        public int OffPriority => offPriority;
+        
     }
 }
