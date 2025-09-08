@@ -7,6 +7,7 @@ using LDH_UI;
 using LDH_Util;
 using Managers;
 using Photon.Pun;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 
@@ -17,9 +18,10 @@ namespace LDH_MainGame
         public static MainGameSceneController Instance { get; private set; }
         protected override string GameType => "Main";
 
-        [Header("초기화 대상 (IGameComponent, ICouroutineGameComponent)")] [SerializeField]
-        private string[] roomObjectPaths;
-
+        [Header("초기화 대상 (IGameComponent, ICouroutineGameComponent)")] 
+        [SerializeField] private string mainGameManagerPrefabPath;
+        [SerializeField] private string photonViewSyncPrefabPath;
+        
         [SerializeField] private GameObject[] initializeObjects;
 
         private readonly List<IGameComponent> _sequential = new();
@@ -29,13 +31,15 @@ namespace LDH_MainGame
 
 
         private UI_Loading _uiLoading;
-        private int[] _spawnedViewIds;   // 마스터가 뿌린 ViewID 목록을 받는 버퍼
+       [SerializeField] private int[] _spawnedViewIds;   // 마스터가 뿌린 ViewID 목록을 받는 버퍼
 
 
         #region 초기화 구현(BasSceneController Implement)
 
-        private void Awake()
+        protected override void Awake()
         {
+            base.Awake();
+            
             //todo: 로딩 패널 켜는 시점 옮기기(로비 씬에서 켜기)
             _uiLoading = Manager.UI.CreatePopupUI<UI_Loading>();
             Manager.UI.ShowPopupUI(_uiLoading).Forget();
@@ -45,8 +49,15 @@ namespace LDH_MainGame
             
             _sequential.Clear();
             _parallel.Clear();
-        }
 
+            // if (PhotonNetwork.IsMasterClient)
+            // {
+            //     PhotonNetwork.InstantiateRoomObject(photonViewSyncPrefabPath, Vector3.zero, Quaternion.identity);
+            // }
+            
+        }
+        
+        
         /// <summary>
         /// - 메인 게임 씬 UI 활성화 or 배치
         /// - 메인 게임 매니저 초기화
@@ -58,8 +69,8 @@ namespace LDH_MainGame
             //플레이어 UID가 있는지 확인 (임시 메서드)
             yield return WaitForAllPlayerUids(5f);
 
-            //룸 오브젝트 생성
-            yield return StartCoroutine(CreateRoomObjects());
+            //룸 오브젝트 - 메인 게임 매니저 생성
+            yield return StartCoroutine(CreateRoomObjects(new[] { mainGameManagerPrefabPath }));
 
             //타입 체크 및 type list 초기화
             yield return StartCoroutine(SetInitializeList());
@@ -96,6 +107,9 @@ namespace LDH_MainGame
             // 모든 초기화가 완료되고 게임 시작을 알림
             Util_LDH.ConsoleLog(this, "모든 초기화가 완료되었습니다. 게임을 시작합니다.");
 
+            // 포톤뷰 싱크 플래그 끄기
+            PhotonViewSync.Instance.Clear();
+            
             // 로딩 패널을 꺼주기
             Manager.UI.CloseTopPopupUI();
 
@@ -159,8 +173,8 @@ namespace LDH_MainGame
             Util_LDH.ConsoleLog(this, "초기화 대상 리스트, 맵 세팅 완료");
             yield return null;
         }
-
-        private IEnumerator CreateRoomObjects()
+        
+        private IEnumerator CreateRoomObjects(string[] roomObjectPaths)
         {
             
             Debug.Log("Create room object");
@@ -172,7 +186,11 @@ namespace LDH_MainGame
                 {
                     var ro = PhotonNetwork.InstantiateRoomObject(path, Vector3.zero, Quaternion.identity);
                     if (ro != null && ro.TryGetComponent(out PhotonView pv))
+                    {
+                        Debug.Log(pv.ViewID);
                         ids.Add(pv.ViewID);
+                    }
+                        
                     else
                         Util_LDH.ConsoleLogWarning(this, $"RoomObject spawn failed or missing PhotonView: {path}");
                 }
@@ -189,13 +207,20 @@ namespace LDH_MainGame
             {
                 for (int i = 0; i < _spawnedViewIds.Length; i++)
                 {
-                    if (PhotonView.Find(_spawnedViewIds[i]) == null) return false;
+                    Debug.Log(_spawnedViewIds[i]);
+                    if (PhotonView.Find(_spawnedViewIds[i]) == null)
+                    {
+                        Debug.Log($"Find? {PhotonView.Find(_spawnedViewIds[i]) == null}");
+                        return false;
+                    }
                 }
                 return true;
             });
             Debug.Log("완료 1프레임 대기 하고 메서드 종료");
             // 3) 컴포넌트 Awake/Start 보장 위해 한 프레임 더 쉼
+            _spawnedViewIds = null;
             yield return null;
+            
         }
 
         

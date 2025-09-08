@@ -52,9 +52,12 @@ namespace LDH_Util
         public enum MatchType { Quick, Private, None }
         public enum MatchState { Matching, Complete, None}
 
-        public const int MAX_PLAYERS = 2;
+        public static int MaxPlayers { get; set; } = 4;
         public const int PRIVATE_MAX_RETRY = 5;
-        
+        public const int QUICK_MAX_RETRY = 3;
+        public const float QUICK_DELAY_MIN = 0.15f; // 초
+        public const float QUICK_DELAY_MAX = 0.60f;
+        public const int QUICK_INTERVAL = 5000;
         
         public static partial class PlayerProps
         {
@@ -85,6 +88,19 @@ namespace LDH_Util
             public const string InGameDone = "inGameDone";
         }
         
+        #endregion
+
+
+        #region Shooting Game
+
+        public enum WindDirection
+        {
+            North,
+            South,
+            West,
+            East,
+        }
+
         #endregion
     }
 

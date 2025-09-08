@@ -1,8 +1,11 @@
 using System;
 using System.Collections;
+using Cysharp.Threading.Tasks;
+using LDH_UI;
 using LDH_Util;
 using Managers;
 using Photon.Pun;
+using Photon.Realtime;
 using UnityEngine;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
 using static LDH_Util.Define_LDH;
@@ -16,15 +19,15 @@ namespace Network
         
         // 매칭 모드
         public MatchType CurrentMatchType { get; private set; } = MatchType.None;
-        
         public bool IsMatching { get; private set; }
         public event Action<MatchType, bool> MatchTypeChanged;
         
-
+        
         [Header("Match Controller")]
         public QuickMatchController QuickMatch;
         public PrivateMatchController PrivateMatch;
         public float startDelaySec = 0.8f;
+        
         
         private void Awake()
         {
@@ -34,23 +37,93 @@ namespace Network
         private void Start()
         {
             QuickMatch ??= GetComponent<QuickMatchController>();
-
             PrivateMatch ??= GetComponent<PrivateMatchController>();
+            
+            Subscribe();
         }
+
+        private void OnDestroy() => Unsubscribe();
+
+        private void Subscribe()
+        {
+            PhotonNetwork.NetworkingClient.StateChanged += OnPhotonStateChanged;
+        }
+
+        private void Unsubscribe()
+        {
+            PhotonNetwork.NetworkingClient.StateChanged -= OnPhotonStateChanged;
+
+        }
+
 
         public void SetMatching(MatchType type, bool isMatching)
         {
             IsMatching = isMatching;
             CurrentMatchType = type;
             
-            QuickMatch?.SetButtonInteractable(!isMatching);
-            PrivateMatch?.SetButtonInteractable(!isMatching);
-            
             MatchTypeChanged?.Invoke(type, isMatching);
+            RefreshButtons();
         }
 
+        #region PlayerCount
+
+        
+
+#if TEST_PLAYER_COUNT
+        public void ShowPlayerCount(MatchType matchType)
+        {
+            if(IsMatching) return;
+            
+            SetMatching(matchType, true);
+            
+            var playerCount = Manager.UI.CreatePopupUI<UI_Popup_PlayerCount>();
+            Manager.UI.ShowPopupUI(playerCount).Forget();
+        }
+        
+        
+        public void StartMatching()
+        {
+            switch (CurrentMatchType)
+            {
+                case MatchType.Quick :
+                    QuickMatch.OnClickMatchingStart();
+                    break;
+                case MatchType.Private:
+                    PrivateMatch.RequestCreatePrivateRoom();
+                    break;
+                default:
+                    return;
+            }
+        }
+
+#endif
+       
+        #endregion
+        
+        
+        #region Matching Button Control
+
+        private void OnPhotonStateChanged(ClientState prev, ClientState curr)
+        {
+            RefreshButtons();
+        }   
 
 
+        private bool ReadyToMatch() =>
+            PhotonNetwork.IsConnected && PhotonNetwork.InLobby && !PhotonNetwork.InRoom && !IsMatching;
+
+        private void RefreshButtons()
+        {
+            bool ready = ReadyToMatch();
+            
+            //Debug.Log($"[MatchController] isconnected :{PhotonNetwork.IsConnected} / inlobby : {PhotonNetwork.InLobby} / inroom : {PhotonNetwork.InRoom} / is maching : {IsMatching} ");
+            QuickMatch?.SetButtonInteractable(ready);
+            PrivateMatch?.SetButtonInteractable(ready);
+        }
+
+        #endregion
+        
+ 
         #region Game Start Logic
 
         /// 방 상태를 Complete로 전파하고(취소 불가), 짧은 지연 후 씬 로드.

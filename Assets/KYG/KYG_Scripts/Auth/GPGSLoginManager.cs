@@ -3,8 +3,10 @@ using System.Reflection;
 using Firebase.Auth;
 using Firebase.Extensions;
 using GooglePlayGames;
-using GooglePlayGames.BasicApi; // SignInStatus
+using GooglePlayGames.BasicApi;
+using Managers; // SignInStatus
 using Photon.Pun;
+using Photon.Realtime;
 using UnityEngine;
 using UnityEngine.SocialPlatforms;
 
@@ -170,14 +172,17 @@ namespace KYG.Auth
             // Debug 로그 추가
             Debug.Log($"[GPGS] Firebase UID={uid}, Nickname={PhotonNetwork.NickName}");
             Debug.Log($"[GPGS] Photon.AuthValues.UserId={PhotonNetwork.AuthValues?.UserId}");
-
+            
+            
             if (!PhotonNetwork.IsConnected) PhotonNetwork.ConnectUsingSettings();
-            else if (!PhotonNetwork.InLobby) PhotonNetwork.JoinLobby();
+            else if (!PhotonNetwork.InLobby && PhotonNetwork.NetworkClientState != ClientState.JoiningLobby) // 방어로직 추가
+                PhotonNetwork.JoinLobby();
         }
 
         public override void OnConnectedToMaster()
         {
-            PhotonNetwork.JoinLobby();
+            if (!PhotonNetwork.InLobby && PhotonNetwork.NetworkClientState != ClientState.JoiningLobby) // 방어로직 추가
+                PhotonNetwork.JoinLobby();
         }
         
         private void PreflightLog()

@@ -2,25 +2,24 @@ using System;
 using System.Collections;
 using System.Linq;
 using LDH_MainGame;
+using LDH_UI;
 using Managers;
 using TMPro;
 using UnityEngine;
 
 namespace LDH.LDH_Scripts.Test
 {
-    public class MainGameDebugPanel : MonoBehaviour
+    public class MainGameDebugPanel : UI_Screen
     {
         [SerializeField] private TextMeshProUGUI logText;
         [SerializeField] private TextMeshProUGUI roundText;
         [SerializeField] private TextMeshProUGUI totalRoundText;
-        
-        
 
-        private IEnumerator Start()
+
+        protected override void Init()
         {
-            yield return new WaitUntil(() => MainGameManager.Instance != null);
-
             
+            Debug.Log("[Debug Panel] MainGameManager Event Subscribe start");
             MainGameManager.Instance.OnGameStart += () =>
             {
                 SetLogText("Game Start!");
@@ -41,8 +40,12 @@ namespace LDH.LDH_Scripts.Test
             };
 
             MainGameManager.Instance.OnWaitAllReady += () => logText.gameObject.SetActive(false);
-            MainGameManager.Instance.OnLoadingMiniGame += () => gameObject.SetActive(false);
-            MainGameManager.Instance.OnEndMiniGame += () => gameObject.SetActive(true);
+            // MainGameManager.Instance.OnLoadingMiniGame += () =>
+            // {
+            //     Debug.Log("[MainGameDebugPanel] 미니게임 진입. 디버그 패널을 안보이게 설정합니다.");
+            //     gameObject.SetActive(false);
+            // };
+            // MainGameManager.Instance.OnEndMiniGame += () => gameObject.SetActive(true);
             
             MainGameManager.Instance.OnEndGame += () =>
             {
@@ -50,15 +53,22 @@ namespace LDH.LDH_Scripts.Test
             };
             
             totalRoundText.text = $"Total Round : {MainGameManager.Instance.TotalRound}";
-            
-            
         }
+
+        
 
         private void SetLogText(string logText)
         {
             this.logText.gameObject.SetActive(true);
             this.logText.text = logText;
         }
+
+        public void SetActiveDebugPanel(bool active)
+        {
+           gameObject.SetActive(active);
+
+        }
+        
 
     }
 }

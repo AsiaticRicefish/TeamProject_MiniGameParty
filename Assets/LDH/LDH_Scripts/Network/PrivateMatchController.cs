@@ -22,25 +22,12 @@ namespace Network
         
         private int? _preferredSlotToJoin; // 로컬 입장 시 희망 슬롯(초대 수락 경로로 설정됨)
         
-        
         public bool starting;  // 중복 시작 방지 플래그
         private bool _requesting; // 중복 로직 실행 방지 플래그
         private bool _isMaster => PhotonNetwork.IsMasterClient;
-        
-        
-        private void Start()
-        {
-            privateMatchOptions.CreateRoomButton.onClick.AddListener(RequestCreatePrivateRoom);
-            privateMatchOptions.RoomCodeInputField.onEndEdit.AddListener(RequestJoinPrivateRoom);
-        }
 
-        private void OnDestroy()
-        {
-            privateMatchOptions.CreateRoomButton.onClick.RemoveAllListeners();
-            privateMatchOptions.RoomCodeInputField.onEndEdit.RemoveAllListeners();
-            UnsubscribeNetwork();
-        }
-
+        private void OnDestroy() => UnsubscribeNetwork();
+        
 
         #region 이벤트 구독 / 구독 해제
         
@@ -119,7 +106,7 @@ namespace Network
         
         #region Request Create/Join/Leave Room
 
-        private void RequestJoinPrivateRoom(string input)
+        public void RequestJoinPrivateRoom(string input)
         {
             if (!PhotonNetwork.IsConnected || !PhotonNetwork.InLobby)
             {
@@ -146,9 +133,9 @@ namespace Network
             Manager.Network.JoinPrivateRoomByCode(input.Trim());
         }
 
-        private void RequestCreatePrivateRoom()
+        public void RequestCreatePrivateRoom()
         {
-            
+            // 방어로직 (조건 체크) --------
             if (!PhotonNetwork.IsConnected || !PhotonNetwork.InLobby)
             {
                 Util_LDH.ConsoleLog(this, "Server와 연결되지 않았거나 현재 로비가 아닙니다.");
@@ -164,20 +151,19 @@ namespace Network
             
             if (_requesting || PhotonNetwork.InRoom) return;
             
+            
+            // 조건 만족 방 생성 시작 --------
             Debug.Log($"[PrivateMatchController] RequestCreatePrivateRoom()");
             
-            _requesting = true;
-            SubscribeNetwork();
-            
-            
-            MatchController.Instance.SetMatching(MatchType.Private, true);
-            
+            _requesting = true;  // 플래그 설정
+            SubscribeNetwork();  // 이벤트 구독 처리
+            MatchController.Instance.SetMatching(MatchType.Private, true);   // 매칭 컨트롤러의 매칭 설정
             //마스터는 반드시 0번 슬롯에 위치해야 하므로!
             //방에 입장했을 때 로컬에서 자기 선호 슬롯으로 배치될 수 있는지를 판단하고 플레이어 프로퍼티를 설정하기 때문에
-            //
             //마스터의 선호 슬롯 인덱스를 0번으로 설정하고 방을 생성한다.
-            _preferredSlotToJoin = 0;
+            _preferredSlotToJoin = 0; // 슬롯 설정
             
+            // 최종 방 생성 요청
             Manager.Network.CreatePrivateRoom();
         }
         
@@ -543,9 +529,9 @@ namespace Network
    
             // 모두 Ready인지 체크하기
             var players = PhotonNetwork.PlayerList;
-            if (players.Length != MAX_PLAYERS)
+            if (players.Length != MaxPlayers)
             {
-                Debug.Log($"[PrivateMatchController] TryStartGame blocked — players:{players.Length}/{MAX_PLAYERS}");
+                Debug.Log($"[PrivateMatchController] TryStartGame blocked — players:{players.Length}/{MaxPlayers}");
                 return;
             }
 

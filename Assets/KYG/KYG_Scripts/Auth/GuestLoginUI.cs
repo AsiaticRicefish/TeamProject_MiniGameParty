@@ -2,37 +2,37 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections;
-using KYG.Auth; // GuestLoginManager 참조
+using KYG.Auth;
+using Managers;
+using Photon.Pun; // GuestLoginManager 참조
 
 public class GuestLoginUI : MonoBehaviour
 {
-    [Header("UI Roots")]
-    [SerializeField] private GameObject buttonRoot;
-    [SerializeField] private Button     guestLoginButton;
+    [Header("UI Roots")] [SerializeField] private GameObject buttonRoot;
+    [SerializeField] private Button guestLoginButton;
     [SerializeField] private GameObject inputRoot;
     [SerializeField] private GameObject loadingRoot;
 
-    [Header("Input")]
-    [SerializeField] private TMP_InputField    nicknameInput;
-    [SerializeField] private TextMeshProUGUI   hintText;
-    [SerializeField] private Button            confirmButton;
+    [Header("Input")] [SerializeField] private TMP_InputField nicknameInput;
+    [SerializeField] private TextMeshProUGUI hintText;
+    [SerializeField] private Button confirmButton;
 
-    [Header("옵션")]
-    [SerializeField] private int   minLength = 2;
-    [SerializeField] private int   maxLength = 16;
+    [Header("옵션")] [SerializeField] private int minLength = 2;
+    [SerializeField] private int maxLength = 16;
     [SerializeField] private float idleSubmitSec = 1.0f;
-    
-    [Header("Hint Style")]
-    [SerializeField] private Color normalHintColor = new Color(1, 1, 1, 0.75f);
-    [SerializeField] private Color errorHintColor  = new Color(1, 0.25f, 0.25f, 1f);
-    [SerializeField] private CanvasGroup toastGroup;   // 힌트 텍스트를 감싸는 CanvasGroup (선택)
-    [SerializeField] private float toastFade = 0.15f;  // 페이드 시간
-    [SerializeField] private float toastHold = 1.5f;   // 보여주는 시간
+
+    [Header("Hint Style")] [SerializeField]
+    private Color normalHintColor = new Color(1, 1, 1, 0.75f);
+
+    [SerializeField] private Color errorHintColor = new Color(1, 0.25f, 0.25f, 1f);
+    [SerializeField] private CanvasGroup toastGroup; // 힌트 텍스트를 감싸는 CanvasGroup (선택)
+    [SerializeField] private float toastFade = 0.15f; // 페이드 시간
+    [SerializeField] private float toastHold = 1.5f; // 보여주는 시간
 
     private float _lastTypeTime;
-    private bool  _submitting;
-    private bool  _destroyed;
-    private bool  _lastReady;
+    private bool _submitting;
+    private bool _destroyed;
+    private bool _lastReady;
 
     private void Awake()
     {
@@ -103,7 +103,9 @@ public class GuestLoginUI : MonoBehaviour
     public void SetInteractable(bool value) // ★ 추가
     {
         if (nicknameInput) nicknameInput.interactable = value;
-        if (confirmButton) confirmButton.interactable = value && nicknameInput && nicknameInput.text.Trim().Length >= minLength && IsReady();
+        if (confirmButton)
+            confirmButton.interactable =
+                value && nicknameInput && nicknameInput.text.Trim().Length >= minLength && IsReady();
     }
 
     /// <summary>실패 후 재입력 플로우: 입력창 다시 보여주고 포커스</summary>
@@ -116,11 +118,12 @@ public class GuestLoginUI : MonoBehaviour
             nicknameInput.text = "";
             ActivateInput();
         }
+
         if (confirmButton) confirmButton.interactable = false;
     }
 
     /// <summary>힌트 문구 안전하게 교체</summary>
-    public void SafeSetHint(string msg)  // 기존 메서드는 그대로 두고
+    public void SafeSetHint(string msg) // 기존 메서드는 그대로 두고
     {
         if (hintText)
         {
@@ -128,7 +131,7 @@ public class GuestLoginUI : MonoBehaviour
             hintText.text = msg ?? "";
         }
     }
-    
+
     public void ShowErrorHint(string msg)
     {
         if (!hintText) return;
@@ -141,7 +144,7 @@ public class GuestLoginUI : MonoBehaviour
         else
             StartCoroutine(CoShake(hintText.transform)); // toastGroup 없으면 살짝 흔들기
     }
-    
+
     private IEnumerator CoShake(Transform tr, float amp = 10f, float dur = 0.18f)
     {
         Vector3 basePos = tr.localPosition;
@@ -153,22 +156,35 @@ public class GuestLoginUI : MonoBehaviour
             tr.localPosition = basePos + Vector3.right * p * amp;
             yield return null;
         }
+
         tr.localPosition = basePos;
     }
-    
+
     private IEnumerator CoToast()
     {
         // fade in
         toastGroup.gameObject.SetActive(true);
         float t = 0f;
-        while (t < toastFade) { t += Time.unscaledDeltaTime; toastGroup.alpha = Mathf.Lerp(0f, 1f, t / toastFade); yield return null; }
+        while (t < toastFade)
+        {
+            t += Time.unscaledDeltaTime;
+            toastGroup.alpha = Mathf.Lerp(0f, 1f, t / toastFade);
+            yield return null;
+        }
+
         toastGroup.alpha = 1f;
 
         yield return new WaitForSecondsRealtime(toastHold);
 
         // fade out
         t = 0f;
-        while (t < toastFade) { t += Time.unscaledDeltaTime; toastGroup.alpha = Mathf.Lerp(1f, 0f, t / toastFade); yield return null; }
+        while (t < toastFade)
+        {
+            t += Time.unscaledDeltaTime;
+            toastGroup.alpha = Mathf.Lerp(1f, 0f, t / toastFade);
+            yield return null;
+        }
+
         toastGroup.alpha = 0f;
         toastGroup.gameObject.SetActive(false);
     }
@@ -240,8 +256,15 @@ public class GuestLoginUI : MonoBehaviour
         if (confirmButton) confirmButton.interactable = lenOk && ready;
     }
 
-    private void OnSubmit(string _) { if (!_destroyed && nicknameInput != null) TrySubmit(nicknameInput.text); }
-    private void OnClickConfirm()   { if (!_destroyed && nicknameInput != null) TrySubmit(nicknameInput.text); }
+    private void OnSubmit(string _)
+    {
+        if (!_destroyed && nicknameInput != null) TrySubmit(nicknameInput.text);
+    }
+
+    private void OnClickConfirm()
+    {
+        if (!_destroyed && nicknameInput != null) TrySubmit(nicknameInput.text);
+    }
 
     private void TrySubmit(string raw)
     {
@@ -282,7 +305,13 @@ public class GuestLoginUI : MonoBehaviour
 
         try
         {
-            mgr.LoginAsGuestWithNickname(nick);
+#if TEST_WITHOUT_LOGIN
+            Debug.Log("asdfasfsafaasdf");
+            Managers.Manager.Network.SetTestNicknameAndID(nick);
+            PhotonNetwork.ConnectUsingSettings();
+#else
+             mgr.LoginAsGuestWithNickname(nick);
+#endif
         }
         catch (System.Exception e)
         {
