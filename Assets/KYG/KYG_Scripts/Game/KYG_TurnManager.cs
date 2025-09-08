@@ -14,6 +14,8 @@ namespace KYG
         //public UnimoEgg currentUnimoEgg;
 
         //private List<int> turnOrder = new List<int>();
+        
+        [SerializeField] private bool nextTurnDrivenByMiniGame = true; // 미니게임에서 턴을 넘길지 여부
         private int currentTurnIndex = 0; 
         private int currentRound = 1;    
         private int totalRounds = 1;
@@ -160,8 +162,11 @@ namespace KYG
 
             //턴 타이머 동기화
             if (PhotonNetwork.IsMasterClient)
-            { 
-                StartTurnCorutine(10.0f);
+            {
+                if (!nextTurnDrivenByMiniGame) // 미니게임이 주도하지 않을 때만 자동 타이머 사용
+                {
+                    StartTurnCorutine(10.0f);
+                }
             }
             
             var mini = FindObjectOfType<MeteorTapMiniGame>();
