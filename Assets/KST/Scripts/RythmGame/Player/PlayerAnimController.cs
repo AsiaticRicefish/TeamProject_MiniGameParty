@@ -1,5 +1,6 @@
 using System.Collections;
 using Photon.Pun;
+using RhythmGame;
 using UnityEngine;
 
 public class PlayerAnimController : MonoBehaviourPun
@@ -55,12 +56,19 @@ public class PlayerAnimController : MonoBehaviourPun
         animator.SetBool("isstun", true);
         Debug.Log("스턴 애니메이션 실행");
 
+        //스턴 사운드 실행
+        SoundManager.Instance.PlaySFX_GAME(SfX_Game.SFX_Rhythm_Stun);
+
         yield return new WaitForSeconds(time);
 
         isStun = false;
         // animator.Play(idle_Hash);
         animator.SetBool("isstun", false);
         Debug.Log("휴지 애니메이션 실행");
+
+        //스턴 사운드 종료
+        SoundManager.Instance.StopSFX();
+
         _stunCo = null;
     }
 

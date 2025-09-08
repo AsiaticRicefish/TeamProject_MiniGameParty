@@ -16,8 +16,7 @@ namespace RhythmGame
             Status = NoteStatus.None;
             OnDespawn?.Invoke(this);
             _pooled.ReturnPool();
-
-        } 
+        }
 
         void OnDisable()
         {

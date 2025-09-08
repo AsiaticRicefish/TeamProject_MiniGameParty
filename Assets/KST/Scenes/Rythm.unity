@@ -2358,13 +2358,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isPersistent: 1
-  _bgmList: []
-  _gameSfxList: []
+  _bgmList:
+  - {fileID: 8300000, guid: e915b70bc404eda44891990d8738bac1, type: 3}
+  _gameSfxList:
+  - {fileID: 8300000, guid: 0bbf519493bf329468b93a3e3c7d78bb, type: 3}
   _uiSfxList: []
   _bgmAudioSource: {fileID: 1725985995}
   _sfxAudioSource: {fileID: 1725985994}
-  bgmSoundVolume: 0
-  sfxSoundVolume: 0
+  bgmSoundVolume: 100
+  sfxSoundVolume: 100
 --- !u!4 &1725985997
 Transform:
   m_ObjectHideFlags: 0

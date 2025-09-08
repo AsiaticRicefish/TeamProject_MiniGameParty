@@ -67,6 +67,7 @@ namespace RhythmGame
             if (timerCo != null) StopCoroutine(timerCo);
             timerCo = StartCoroutine(IE_Timer());
 
+            //게임 설정관련
             photonView.RPC(nameof(GameStartSettings), RpcTarget.All);
         }
 
@@ -75,15 +76,23 @@ namespace RhythmGame
         {
             //게임 시작 플래그 설정
             IsGameStart = true;
+
+            //TODO 김승태 : 임시 bgm 및 순서 추후 enum 변경과 함께 파라미터도 변경 필수.
+
+            //리듬게임 브금 시작(랜덤으로 정하려면 새로운 enum 그룹 만든 후, 오버로드 추가하여 랜덤선택 방식으로 변경 필요)
+            SoundManager.Instance.PlayBGM(0);
             OnGameStart?.Invoke();
         }
 
-
+        //TODO 김승태 : 마스터만 게임 종료하게끔 하고 클라이언트는 전파받기.
         /// <summary>
         /// 게임 종료 시
         /// </summary>
         public void EndGame()
         {
+
+            // if (!PhotonNetwork.IsMasterClient) return;
+
             //타이머 코루틴 초기화
             if (timerCo != null)
             {
@@ -92,11 +101,18 @@ namespace RhythmGame
             }
 
             NoteSpawner.Instance.StopSpawn();
+            SoundManager.Instance.StopBGM();
 
             //게임 종료 이벤트 호출
             OnGameOver?.Invoke();
             Debug.Log("게임 오버");
         }
+
+        // [PunRPC]
+        // public void GameEndSettings()
+        // {
+            
+        // }
         #endregion
 
         IEnumerator IE_Timer()
@@ -202,15 +218,12 @@ namespace RhythmGame
         {
             Debug.Log("과열 발생");
             IsOverHeat = true;
-            //TODO 김승태 : 과열에 따른 플레이어 기절 애니메이션 실행시키기
         }
         [PunRPC]
         public void AfterOverHeat()
         {
             Debug.Log("과열 종료");
             IsOverHeat = false;
-            //TODO 김승태 : 과열에 따른 플레이어 기절 애니메이션 중지시키고 원래 IDLE 애니메이션으로 변경하기.
-
         }
 
         /// <summary>

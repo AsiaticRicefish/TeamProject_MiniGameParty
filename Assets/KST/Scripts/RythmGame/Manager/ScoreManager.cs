@@ -132,12 +132,17 @@ namespace RhythmGame
             if (isCanInteract)
             {
                 GameManager.Instance.GoodHitScore(type, info.Sender);
+
+                // SoundManager.Instance.PlaySFX_GAME(SfX_Game.SFX_Rhythm_NoteDestory);
+                SoundManager.Instance.PlaySFX_GAME(0);
+
             }
             else
             {
                 GameManager.Instance.OverHeatCheck();
 
                 GameManager.Instance.MissBlock(info.Sender);
+                // SoundManager.Instance.PlaySFX_GAME(SfX_Game.SFX_Rhythm_Miss);
 
             }
 
