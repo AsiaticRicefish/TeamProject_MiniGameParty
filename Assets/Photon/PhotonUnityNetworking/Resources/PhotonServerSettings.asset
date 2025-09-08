@@ -88,7 +88,6 @@ MonoBehaviour:
   - InputOn
   - RPC_StartPairSession
   - RPC_EndPairSession
-  - RPC_OnEndingReached
   - RequestTurnEnd
   - RPC_PickResult
   - RPC_CloseCardUI
@@ -99,6 +98,7 @@ MonoBehaviour:
   - RPC_RegisterEgg
   - RPC_CompleteObjectsActive
   - RPC_UpdateRanking
+  - RPC_OnEndingReached
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1
