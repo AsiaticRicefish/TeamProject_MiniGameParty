@@ -52,7 +52,18 @@ namespace LDH_MainGame
         public IEnumerator SafePhotonViewSync(PhotonViewCoordinator coordinator)
         {
             _coordinator = coordinator;
-            //0단계 : 코디네이터 캐싱 완료
+
+            // 0단계 : 포톤뷰 조정이 필요한지 체크 (여기서 조기 종료)
+            if (_coordinator == null || _coordinator.GetSceneViews() == null || _coordinator.GetSceneViews().Length == 0)
+            {
+                Debug.Log("[PhotonViewSync] 조정할 포톤 뷰가 없습니다. (skip coordination)");
+                _syncCompleted = true;     // BaseGameSceneController가 기다리는 플래그 만족
+                _coordinator = null;
+                Debug.Log("=== SafePhotonViewSync Completed (skipped) ===");
+                yield break;
+            }
+
+            // 0.5단계 : 코디네이터 캐싱 완료
             photonView.RPC(nameof(RPC_HasCoordination), RpcTarget.All,
                 PhotonNetwork.LocalPlayer.ActorNumber);
             
