@@ -1,6 +1,11 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/Resources/Net/MainGameSceneController.prefab.meta
 guid: 915d9e12a5d4245ad9b3361d924a6ac8
 PrefabImporter:
+========
+guid: 283fedc45df300541890d7c2ab657f1b
+DefaultImporter:
+>>>>>>>> develop:Assets/KYG/KYG_Scene/MiniGameScene.unity.meta
   externalObjects: {}
   userData: 
   assetBundleName: 
