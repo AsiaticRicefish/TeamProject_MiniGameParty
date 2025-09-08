@@ -60,22 +60,6 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
             Debug.LogError("[JengaNetworkManager] PhotonView is NULL - RPC will fail!");
             return;
         }
-
-        // ViewID가 0이면 씬에서 미리 설정된 ViewID 권장
-        if (thisPhotonView.ViewID == 0)
-        {
-            Debug.LogError("[JengaNetworkManager] ViewID is 0! Set Scene ViewID in Inspector or use PhotonNetwork.AllocateViewID before Initialize");
-
-            // 동적 할당 재시도
-            if (PhotonNetwork.InRoom && !PhotonNetwork.AllocateViewID(thisPhotonView))
-            {
-                Debug.LogError("[JengaNetworkManager] AllocateViewID failed - RPC communication will not work");
-            }
-            else
-            {
-                Debug.Log($"[JengaNetworkManager] ViewID allocated: {thisPhotonView.ViewID}");
-            }
-        }
     }
 
     #region 플레이어 결과 보고 → 마스터
