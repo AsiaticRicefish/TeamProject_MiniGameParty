@@ -46,29 +46,21 @@ public class LocalPlayerInput : MonoBehaviourPun
     public event Action OnStep3Completed;  // 차징 완료
     public event Action OnAllCompleted;    // 모든 단계 완료
 
-    private void RegisterInput()
-    {
-        ShootingScene.PlayerInputManager.Instance.onTouchPress += HandleTouch;
-    }
-
-    private void UnRegisterInput()
-    {
-        ShootingScene.PlayerInputManager.Instance.onTouchPress -= HandleTouch;
-    }
-
     public void EnableInput()
     {
         Debug.Log("EnableInpute처리 완료 - Input 활성화!");
         inputEnabled = true;
-        //UI 마이턴 시작 뛰우기
+        ShootingScene.PlayerInputManager.Instance.onTouchPress += HandleTouch;
         StartStep1(); // 첫 번째 단계 시작!
     }
-    public void DisableInput() => inputEnabled = false;
+    public void DisableInput()
+    {
+        inputEnabled = false;
+    }
 
     private void Awake()
     {
-        ShootingGameManager.Instance.OnGameStarted += RegisterInput;
-        ShootingGameManager.Instance.OnGameEnded += UnRegisterInput;
+        //ShootingScene.PlayerInputManager.Instance.onTouchPress += HandleTouch;
         player = gameObject.transform;
 
         SetupEvents();
@@ -80,16 +72,34 @@ public class LocalPlayerInput : MonoBehaviourPun
             mainCam = Camera.main;
     }
 
-    private void OnDestroy()
+    private void OnDisable()
     {
-        if (currentTimeoutCoroutine != null)
+        if (photonView.IsMine)
         {
+            Debug.Log("구독 해제");
+            ShootingScene.PlayerInputManager.Instance.onTouchPress -= HandleTouch;
             //타이머 정지를 모두에게 알리기
             NotifyStopCountdown(true);
-            StopCoroutine(currentTimeoutCoroutine);
-            currentTimeoutCoroutine = null;
+
+            if (currentTimeoutCoroutine != null)
+            {
+                StopCoroutine(currentTimeoutCoroutine);
+                currentTimeoutCoroutine = null;
+            }
         }
     }
+
+    //private void OnDestroy()
+    //{
+    //    if (currentTimeoutCoroutine != null)
+    //    {
+    //        ShootingScene.PlayerInputManager.Instance.onTouchPress -= HandleTouch;
+    //        //타이머 정지를 모두에게 알리기
+    //        NotifyStopCountdown(true);
+    //        StopCoroutine(currentTimeoutCoroutine);
+    //        currentTimeoutCoroutine = null;
+    //    }
+    //}
 
     //return pool 데이터 리셋 함수
     public void Initialize()

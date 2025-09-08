@@ -8,6 +8,7 @@ public class InitState : ShootingGameState
     public override void Enter()
     {
         Debug.Log("[ShootingGameState] - InitState 상태에 진입");
+        ShootingScene.PlayerInputManager.Instance.DisableAllInput2();
         //SetupUI();
         //manager.ChangeState(new CardPlacementState(manager));
     }
@@ -24,6 +25,6 @@ public class InitState : ShootingGameState
 
     public override void Exit()
     {
-        Debug.Log("[ShootingGameState] - InitState 상태에서 벗어남");
+        Debug.Log("[ShootingGameState] - InitState 상태에서 벗어남");       
     }
 }

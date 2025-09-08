@@ -125,6 +125,8 @@ public class UnimoEgg : MonoBehaviourPun
     {
         if (!photonView.IsMine) return;
 
+        ShootingScene.PlayerInputManager.Instance.DisableInput();
+
         // 자기 화면에서 AddForce 적용
         isLaunched = true;
         ApplyForce(dir);
@@ -200,11 +202,6 @@ public class UnimoEgg : MonoBehaviourPun
             rb.constraints &= ~RigidbodyConstraints.FreezePositionY;
         }
     }
-
-    //OnCollistion
-    //맞은대상이 이미 쏜 친구
-
-    //
 
     private void OnDisable()
     {

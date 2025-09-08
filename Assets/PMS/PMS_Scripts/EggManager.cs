@@ -220,10 +220,15 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
     private void RPC_DeactivateEgg(int viewID)
     {
         if (!viewIdToEgg.TryGetValue(viewID, out var egg)) return;
-        egg.gameObject.SetActive(false);
 
-        egg.Initialize();
-        egg.GetComponent<LocalPlayerInput>().Initialize();
+        if (egg.photonView.IsMine)
+        {
+            Debug.Log("Egg의 주인만 초기화 진행");
+            egg.Initialize();
+            egg.GetComponent<LocalPlayerInput>().Initialize();
+        }
+
+        egg.gameObject.SetActive(false);
 
         if (currentUnimoEgg == egg)
             currentUnimoEgg = null;

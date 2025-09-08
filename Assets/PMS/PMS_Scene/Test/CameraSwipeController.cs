@@ -11,45 +11,44 @@ public class CameraSwipeController : MonoBehaviour
     [SerializeField] private float minZ;
     [SerializeField] private float maxZ;
 
+    [SerializeField] private GameObject finishLine; 
+
     private bool isSwiping = false;
     private Vector2 lastPosition;
 
     private void Start()
     {
-        Debug.LogWarning("구독 처리 완료");
-        var inputMgr = ShootingScene.PlayerInputManager.Instance;
-        inputMgr.onCameraGesture += HandleTouch;        // PrimaryTouch     // Press 액션
-        inputMgr.onCameraPosition += HandlePosition;    // PrimaryPosition  // Position 액션
-
+        EnableInput();
         //z축 범위 지정
         minZ = transform.position.z;
-        maxZ = transform.position.z + 25.0f;
+        maxZ = finishLine.transform.position.z;
     }
 
-    private void EnableInput()
+    public void EnableInput()
     {
+        Debug.Log("구독 처리 완료");
         ShootingScene.PlayerInputManager.Instance.onCameraGesture += HandleTouch;        // PrimaryTouch
         ShootingScene.PlayerInputManager.Instance.onCameraPosition += HandlePosition;    // PrimaryPosition
     }
 
-    private void DisableInput()
+    public void DisableInput()
     {
+        Debug.Log("구독 해제 처리 완료");
         ShootingScene.PlayerInputManager.Instance.onCameraGesture -= HandleTouch;
         ShootingScene.PlayerInputManager.Instance.onCameraPosition -= HandlePosition;
     }
 
     private void HandleTouch(InputAction.CallbackContext ctx)
     {
-        if (ctx.started)
+        switch (ctx.phase)
         {
-            Debug.LogWarning("터치함");
-            lastPosition = Vector2.zero; //이동 좌표 초기화
-            isSwiping = true;
-        }
-        if (ctx.canceled)
-        {
-            Debug.LogWarning("뗌");
-            isSwiping = false;
+            case InputActionPhase.Started:
+                lastPosition = Vector2.zero;
+                isSwiping = true;
+                break;
+            case InputActionPhase.Canceled:
+                isSwiping = false;
+                break;
         }
     }
 
@@ -57,7 +56,7 @@ public class CameraSwipeController : MonoBehaviour
     {
         if (!isSwiping) return;
 
-        Debug.LogWarning("터치중");
+        //Debug.Log("터치중");
 
         Vector2 current = ctx.ReadValue<Vector2>();
         Vector2 delta = lastPosition == Vector2.zero ? Vector2.zero : current - lastPosition;
