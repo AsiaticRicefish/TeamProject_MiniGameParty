@@ -12,12 +12,19 @@ namespace LDH_UI
         [Header("Virtual Camera")]
         [SerializeField] private VirtualCamera_Lobby myVcam;
 
+        [SerializeField] private bool isOnOnStart;
+        
         private void Awake()
         {
             _toggle = GetComponent<Toggle>();
         }
 
-        private void Start() => Subscribe();
+        private void Start()
+        {
+            Subscribe();
+            if (isOnOnStart) _toggle.isOn = true;
+            Debug.Log(_toggle.isOn);
+        }
         private void OnDestroy() => Unsubscribe();
 
         private void Subscribe()
@@ -35,8 +42,7 @@ namespace LDH_UI
         private void OnValueChanged(bool isOn)
         {
             myVcam.VCam.Priority = isOn ? myVcam.FocusPriority : myVcam.OffPriority;
-            
-            Debug.Log($"vcam priority : {myVcam.VCam.Priority}");
+            Debug.Log($"{myVcam.cameraID} isOn : {isOn} /  priority : {myVcam.VCam.Priority}");
         }
         
     }

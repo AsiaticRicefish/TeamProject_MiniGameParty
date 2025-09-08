@@ -23,6 +23,7 @@ namespace Managers
 
             manager.AddComponent<PlayerManager>();
             manager.AddComponent<UIManager>();
+            manager.AddComponent<CameraManager>();
 
             SceneManager.sceneLoaded += OnSceneLoaded;
         }

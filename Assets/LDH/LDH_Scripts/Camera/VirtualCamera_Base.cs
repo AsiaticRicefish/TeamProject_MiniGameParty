@@ -26,7 +26,6 @@ namespace LDH_Camera
                 Debug.LogWarning($"[{name}] cameraID가 비어 있습니다.");
                 return;
             }
-            
             Manager.Camera.RegisterCamera(cameraID, _vcam);
             _vcam.Priority = 0; //초기화
         }
