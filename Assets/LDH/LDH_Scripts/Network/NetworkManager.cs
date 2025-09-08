@@ -9,6 +9,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
 using static LDH_Util.Define_LDH;
+using Random = System.Random;
 
 namespace Network
 {
@@ -24,8 +25,9 @@ namespace Network
         // ---- 인증 여부, 로비 진입과 관련 플래그
         private bool _authReady = false;
 
-        //--- private matching ---- 
-        private MatchType _createType = MatchType.None;
+        //--- matching ---- 
+        private MatchType _matchType = MatchType.None;
+        private int _quickRetryCount;
         private int _privateRetryCount;
         private bool _isNavigating = false;
 
@@ -125,7 +127,7 @@ namespace Network
 
 
         #region Quick Matching API
-
+        
         // 빠른 매칭 : 빠른 매칭 방에 랜덤 입장
         public void JoinQuickMatchRoom()
         {
@@ -137,11 +139,17 @@ namespace Network
         // 빠른 매칭 방 생성 : 빠른 매칭 방에 입장 실패 시 호출
         public void CreateQuickMatchRoom()
         {
-            if (_createType != MatchType.None) return;
+            if (_matchType != MatchType.None) return;
 
-            _createType = MatchType.Quick;
-
-            var options = new RoomOptions
+            _matchType = MatchType.Quick;
+            
+            string roomName = $"QUICK-{UnityEngine.Random.Range(100000, 999999)}";
+            PhotonNetwork.CreateRoom(roomName, SetQuickRoomOptions());
+        }
+        
+        private RoomOptions SetQuickRoomOptions()
+        {
+            return new RoomOptions
             {
                 MaxPlayers = MaxPlayers, // 최대 인원 설정
                 IsVisible = true, // 로비 노출 여부 
@@ -154,23 +162,21 @@ namespace Network
                     },
                 CustomRoomPropertiesForLobby = new[] { RoomProps.MatchType, RoomProps.MatchState }
             };
-            string roomName = $"QUICK-{UnityEngine.Random.Range(100000, 999999)}";
-            PhotonNetwork.CreateRoom(roomName, options);
+            
         }
 
         #endregion
-
 
         #region Private Matching API
 
         #region Create Private Room Logic
 
-        // 빠른 매칭 방 생성 : 빠른 매칭 방에 입장 실패 시 호출
+        // 비공개 방 생성
         public void CreatePrivateRoom()
         {
-            if (_createType != MatchType.None) return;
+            if (_matchType != MatchType.None) return;
 
-            _createType = MatchType.Private;
+            _matchType = MatchType.Private;
             _privateRetryCount = 0;
             StartCoroutine(TryCreatePrivateRoom());
         }
@@ -178,7 +184,7 @@ namespace Network
         private IEnumerator TryCreatePrivateRoom()
         {
             yield return null; // 한 프레임 대기
-
+            _privateRetryCount++;
             string roomCode = Util_LDH.Generate4DigitString();
             string roomName = $"PRIV-{roomCode}";
             PhotonNetwork.CreateRoom(roomName, SetPrivateRoomOptions(roomCode));
@@ -328,7 +334,7 @@ namespace Network
         {
             Debug.Log($"[NetworkManager] 비공개 방 입장에 실패했습니다. ({returnCode}) {message}");
             JoinFailed?.Invoke(returnCode, message);
-
+            
             TryJoinLobby();
         }
 
@@ -377,20 +383,20 @@ namespace Network
 
         public override void OnCreatedRoom()
         {
-            Debug.Log($"[NetworkManager] 방 생성 완료(타입 : {_createType}) : {PhotonNetwork.CurrentRoom.Name}");
-            _createType = MatchType.None;
+            Debug.Log($"[NetworkManager] 방 생성 완료(타입 : {_matchType}) : {PhotonNetwork.CurrentRoom.Name}");
+            _matchType = MatchType.None;
             CreatedRoom?.Invoke();
         }
 
 
         public override void OnCreateRoomFailed(short returnCode, string message)
         {
-            Debug.LogWarning($"[NetworkManager] 방 생성 실패(타입 : {_createType})  - {returnCode} : {message}");
+            Debug.LogWarning($"[NetworkManager] 방 생성 실패(타입 : {_matchType})  - {returnCode} : {message}");
 
             // 비공개 방 생성 & 방 이름(방 코드) 중복인 경우 재시도
-            if (_createType == MatchType.Private && returnCode == ErrorCode.GameIdAlreadyExists)
+            if (_matchType == MatchType.Private && returnCode == ErrorCode.GameIdAlreadyExists)
             {
-                if (_privateRetryCount++ < PRIVATE_MAX_RETRY)
+                if (_privateRetryCount < PRIVATE_MAX_RETRY)
                 {
                     StartCoroutine(TryCreatePrivateRoom());
                     return;
@@ -401,7 +407,7 @@ namespace Network
                 }
             }
 
-            _createType = MatchType.None;
+            _matchType = MatchType.None;
         }
 
         #endregion

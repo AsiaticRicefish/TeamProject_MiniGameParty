@@ -50,7 +50,9 @@ namespace LDH_UI
         {
             Define_LDH.MaxPlayers = _value;
             Manager.UI.ClosePopupUI(this).Forget();
+#if TEST_PLAYER_COUNT
             MatchController.Instance.StartMatching();
+#endif
         }
     }
 }

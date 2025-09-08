@@ -6,7 +6,7 @@ using Photon.Pun;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
-
+using Random = System.Random;
 
 
 namespace LDH_Util
@@ -125,6 +125,17 @@ namespace LDH_Util
         {
             Debug.LogWarning($"[{type.GetType().Name}] {message}");
         }
+
+        public static float GetRandomFloat2dp(int seed, float min, float max)
+        {
+            var rng  = new System.Random(seed);
+            double value = rng.NextDouble();
+            float f  = min + (float)value * (max - min);
+            
+            return Mathf.Round(f * 100f) * 0.01f;
+
+        }
+        
         
         #endregion
         
