@@ -11,6 +11,11 @@ namespace LDH_Camera
 
         public int FocusPriority => focusPriority;
         public int OffPriority => offPriority;
-        
+
+        protected override void Init()
+        {
+            base.Init();
+            
+        }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using Cinemachine;
 using LDH_Camera;
+using LDH_Lobby;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -22,8 +23,9 @@ namespace LDH_UI
         private void Start()
         {
             Subscribe();
-            if (isOnOnStart) _toggle.isOn = true;
-            Debug.Log(_toggle.isOn);
+            
+            if(isOnOnStart)
+                LobbyNavigationController.Instance.RequestFocus(myVcam.cameraID);
         }
         private void OnDestroy() => Unsubscribe();
 
@@ -41,8 +43,8 @@ namespace LDH_UI
 
         private void OnValueChanged(bool isOn)
         {
-            myVcam.VCam.Priority = isOn ? myVcam.FocusPriority : myVcam.OffPriority;
-            Debug.Log($"{myVcam.cameraID} isOn : {isOn} /  priority : {myVcam.VCam.Priority}");
+            if (!isOn) return; // 꺼질 때 콜백 무시
+            LobbyNavigationController.Instance?.RequestFocus(myVcam.cameraID);
         }
         
     }
