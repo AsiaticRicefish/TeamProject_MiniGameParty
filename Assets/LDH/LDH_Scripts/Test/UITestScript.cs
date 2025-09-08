@@ -26,7 +26,8 @@ namespace LDH.LDH_Scripts.Test
 
         private void OnDestroy()
         {
-            Manager.Network.JoinedLobby -= UpdatePlayerInfo;
+            if(Manager.Network!=null)
+                Manager.Network.JoinedLobby -= UpdatePlayerInfo;
         }
 
         private void UpdatePlayerInfo()

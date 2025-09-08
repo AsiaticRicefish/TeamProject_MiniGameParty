@@ -37,14 +37,20 @@ namespace Network
         private void Start()
         {
             // 빠른 매칭 버튼 클릭 이벤트 바인딩
-            quickMatchButton.onClick.AddListener(OnClickMatchingStart);
+#if TEST_PLAYER_COUNT
+            quickMatchButton.onClick.AddListener(()=> MatchController.Instance.ShowPlayerCount(Define_LDH.MatchType.Quick));
+            
+#else
+             quickMatchButton.onClick.AddListener(OnClickMatchingStart);
+#endif
+           
             
         }
 
         private void OnDestroy()
         {
             // 구독했던 이벤트 모두 해제
-            quickMatchButton.onClick.RemoveListener(OnClickMatchingStart);
+            quickMatchButton.onClick.RemoveAllListeners();
             Unsubscribe();
         }
 
