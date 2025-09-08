@@ -14,9 +14,14 @@ namespace ShootingScene
 
         private InputAction touchAction; // 유니모 터치 액션 참조 변수 (실질적인 게임 플레이 액션)
         private InputAction cameraControlAction; // 카메라 액션 참조 변수 (스와이프, 줌 등 -> 부가적인 카메라 연출을 하기 위한 인풋액션)
+        private InputAction cameraPositionAction; // PrimaryPosition
 
+        //유니모 터치 액션
         public event Action<InputAction.CallbackContext> onTouchPress;
+
+        //카메라 터치 액션
         public event Action<InputAction.CallbackContext> onCameraGesture;
+        public event Action<InputAction.CallbackContext> onCameraPosition;
 
         protected override void OnAwake()
         {
@@ -33,6 +38,11 @@ namespace ShootingScene
         public void OnCameraGesture(InputAction.CallbackContext ctx)
         {
             onCameraGesture?.Invoke(ctx); // 구독자에게 전달
+        }
+
+        public void OnCameraPosition(InputAction.CallbackContext ctx)
+        {
+            onCameraPosition?.Invoke(ctx); // 구독자들에게 이벤트 전달
         }
 
         public void Initialize()
@@ -63,19 +73,19 @@ namespace ShootingScene
         {
             if (playerInput == null) return;
 
-            // Touch Action 초기화
-            touchAction = playerInput.actions.FindAction("TouchPress");
-            if (touchAction == null)
-            {
-                Debug.LogError("TouchPress 액션을 찾을 수 없습니다!");
-            }
+            // TouchPress
+            var touchMap = playerInput.actions.FindActionMap("Player");
+            touchAction = touchMap.FindAction("TouchPress");
+            if (touchAction == null) Debug.LogError("TouchPress 액션을 찾을 수 없습니다!");
 
-            // Camera Action 초기화
-            cameraControlAction = playerInput.actions.FindAction("CameraControl");
-            if (cameraControlAction == null)
-            {
-                Debug.LogError("CameraControl 액션을 찾을 수 없습니다!");
-            }
+            // PrimaryTouch
+            var cameraMap = playerInput.actions.FindActionMap("Camera");
+            cameraControlAction = cameraMap.FindAction("PrimaryTouch");
+            if (cameraControlAction == null) Debug.LogError("PrimaryTouch 액션을 찾을 수 없습니다!");
+
+            // PrimaryPosition
+            cameraPositionAction = cameraMap.FindAction("PrimaryPosition");
+            if (cameraPositionAction == null) Debug.LogError("PrimaryPosition 액션을 찾을 수 없습니다!");
         }
 
 
@@ -106,7 +116,6 @@ namespace ShootingScene
             if (cameraControlAction != null)
             {
                 cameraControlAction.started += OnCameraGesture;
-                cameraControlAction.performed += OnCameraGesture;
                 cameraControlAction.canceled += OnCameraGesture;
                 cameraControlAction.Enable();
             }
@@ -117,9 +126,26 @@ namespace ShootingScene
             if (cameraControlAction != null)
             {
                 cameraControlAction.started -= OnCameraGesture;
-                cameraControlAction.performed -= OnCameraGesture;
                 cameraControlAction.canceled -= OnCameraGesture;
                 cameraControlAction.Disable();
+            }
+        }
+
+        public void EnableCameraPosition()
+        {
+            if (cameraPositionAction != null)
+            {
+                cameraPositionAction.performed += OnCameraPosition;
+                cameraPositionAction.Enable();
+            }
+        }
+
+        public void DisableCameraPosition()
+        {
+            if (cameraPositionAction != null)
+            {
+                cameraPositionAction.performed -= OnCameraPosition;
+                cameraPositionAction.Disable();
             }
         }
         #endregion
