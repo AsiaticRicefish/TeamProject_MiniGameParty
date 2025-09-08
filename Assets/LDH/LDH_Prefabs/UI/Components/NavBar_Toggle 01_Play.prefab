@@ -236,7 +236,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   myVcam: {fileID: 0}
-  isOnOnStart: 0
 --- !u!1 &3612205748665200964
 GameObject:
   m_ObjectHideFlags: 0
@@ -304,8 +303,9 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uD50C\uB808\uC774"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 65a5fa6103cf1c04c8143ad71b851b50, type: 2}
+  m_sharedMaterial: {fileID: -637672605668102529, guid: 65a5fa6103cf1c04c8143ad71b851b50,
+    type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
