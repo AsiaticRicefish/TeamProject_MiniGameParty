@@ -18,6 +18,9 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
     [Header("랭킹 UI")]
     [SerializeField] private JengaRankingUIAnimated rankingUI;
 
+    [Header("회전 버튼")]
+    [SerializeField] private Button rotateButton;
+
     protected override void OnAwake()
     {
         base.isPersistent = false; // 젠가 씬에서만 사용
@@ -98,6 +101,11 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
         {
             rankingUI.Hide();
         }
+
+        if (rotateButton)
+        {
+            rotateButton.gameObject.SetActive(false);
+        }
     }
     #endregion
 
@@ -111,6 +119,12 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
         if (countdownPanel != null && countdownText != null)
         {
             countdownPanel.SetActive(true);
+
+            if (rotateButton) 
+            { 
+                rotateButton.gameObject.SetActive(false); 
+            }
+
             StartCoroutine(CountdownCoroutine(duration));
         }
     }
@@ -148,6 +162,12 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
         StartCoroutine(ScaleAnimation(countdownText.transform));
 
         yield return new WaitForSeconds(1f);
+
+        if (rotateButton)
+        {
+            rotateButton.gameObject.SetActive(true);
+            rotateButton.interactable = true;
+        }
     }
 
     /// <summary>
@@ -191,6 +211,36 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
             timerText.text = JengaGameManager.Instance.GetFormattedTime();
         }
     }
+
+    #endregion
+
+    #region 회전 UI
+
+    public void OnClick_RotateTower()
+    {
+        var mgr = JengaTowerManager.Instance;
+        if (mgr == null)  return;
+
+        int myActor = PhotonNetwork.LocalPlayer.ActorNumber;
+        var tower = mgr.GetPlayerTower(myActor);
+        if (tower == null) return;
+
+        var rot = tower.GetComponentInParent<JengaRotateController>()
+              ?? tower.GetComponent<JengaRotateController>()
+              ?? (tower.transform.parent ? tower.transform.parent.GetComponent<JengaRotateController>() : null);
+
+        if (rot == null) return; 
+
+        rot.Toggle();
+    }
+
+    public void SetRotateButtonInteractable(bool interactable)
+    {
+        if (rotateButton) rotateButton.interactable = interactable;
+    }
+
+    public void HideRotateButton() { if (rotateButton) rotateButton.gameObject.SetActive(false); }
+    public void ShowRotateButton() { if (rotateButton) rotateButton.gameObject.SetActive(true); }
 
     #endregion
 

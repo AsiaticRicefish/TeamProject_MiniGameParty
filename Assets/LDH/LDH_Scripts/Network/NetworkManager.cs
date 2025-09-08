@@ -9,6 +9,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
 using static LDH_Util.Define_LDH;
+using Random = System.Random;
 
 namespace Network
 {
@@ -24,8 +25,9 @@ namespace Network
         // ---- 인증 여부, 로비 진입과 관련 플래그
         private bool _authReady = false;
 
-        //--- private matching ---- 
-        private MatchType _createType = MatchType.None;
+        //--- matching ---- 
+        private MatchType _matchType = MatchType.None;
+        private int _quickRetryCount;
         private int _privateRetryCount;
         private bool _isNavigating = false;
 
@@ -61,7 +63,8 @@ namespace Network
             //if (autoConnectOnAwake)
 
 #if TEST_WITHOUT_LOGIN
-            ConnectServer();
+            if(SceneManager.GetActiveScene().name.Equals(lobbySceneName))
+                ConnectServer();
 #endif
         }
 
@@ -85,27 +88,22 @@ namespace Network
         // 임시 추가
         //todo: 파이어베이스 연결후 파이어베이스 닉네임을 적용하는 것으로 수정..? 아닌가? + 처음 계정 연동시 닉네임 설정 UI 제공 , 이후 프로필에서 수정가능 
         //지금은 임시 테스트를 위해 닉네임 임시 할당
-        public void SetTestNicknameAndID()
+        public void SetTestNicknameAndID(string nickName = null)
         {
             // 닉네임 자동 설정
-            if (string.IsNullOrEmpty(PhotonNetwork.NickName))
+            if (string.IsNullOrEmpty(nickName))
                 PhotonNetwork.NickName = $"Player_{UnityEngine.Random.Range(1000, 9999)}";
-
+            else
+                PhotonNetwork.NickName = nickName;
             //아이디 = 닉네임이랑 똑같은 아이디로 부여
             PhotonNetwork.AuthValues = new AuthenticationValues(PhotonNetwork.NickName);
-
-
-            SetAuthReady();
         }
 
         #endregion
 
 
         #region Lobby 진입 관련 로직
-
-        //파이어베이스 로그인 완료 시점에서 호출하면 됨
-        public void SetAuthReady(bool ready = true) => _authReady = ready;
-
+        
 
         private void TryJoinLobby()
         {
@@ -115,15 +113,9 @@ namespace Network
                 return; // 마스터에 아직 연결 안 됐으면 대기
             }
 
-            if (!_authReady)
+            if (PhotonNetwork.InLobby || PhotonNetwork.InRoom || PhotonNetwork.NetworkClientState == ClientState.JoiningLobby)
             {
-                Debug.Log("[NetworkManager] 파이어베이스 인증이 완료되지 않았습니다.");
-                return; // 인증 완료 안됐으면 대기
-            }
-
-            if (PhotonNetwork.InLobby || PhotonNetwork.InRoom)
-            {
-                Debug.Log("[NetworkManager] 이미 로비거나 현재 룸에 들어온 상태입니다.");
+                Debug.Log("[NetworkManager] 로비로 진입 중이거나 이미 로비거나 현재 룸에 들어온 상태입니다.");
                 return;
             }
 
@@ -135,25 +127,31 @@ namespace Network
 
 
         #region Quick Matching API
-
+        
         // 빠른 매칭 : 빠른 매칭 방에 랜덤 입장
         public void JoinQuickMatchRoom()
         {
             Debug.Log($"[NetworkManager] 빠른 매칭을 시작합니다. 방을 탐색합니다.");
             var expected = new Hashtable { { RoomProps.MatchType, MatchType.Quick.ToString() } };
-            PhotonNetwork.JoinRandomRoom(expected, MAX_PLAYERS);
+            PhotonNetwork.JoinRandomRoom(expected, MaxPlayers);
         }
 
         // 빠른 매칭 방 생성 : 빠른 매칭 방에 입장 실패 시 호출
         public void CreateQuickMatchRoom()
         {
-            if (_createType != MatchType.None) return;
+            if (_matchType != MatchType.None) return;
 
-            _createType = MatchType.Quick;
-
-            var options = new RoomOptions
+            _matchType = MatchType.Quick;
+            
+            string roomName = $"QUICK-{UnityEngine.Random.Range(100000, 999999)}";
+            PhotonNetwork.CreateRoom(roomName, SetQuickRoomOptions());
+        }
+        
+        private RoomOptions SetQuickRoomOptions()
+        {
+            return new RoomOptions
             {
-                MaxPlayers = MAX_PLAYERS, // 최대 인원 설정
+                MaxPlayers = MaxPlayers, // 최대 인원 설정
                 IsVisible = true, // 로비 노출 여부 
                 IsOpen = true, // 입장 가능 여부 -> 게임 시작 시 false로 만들어야 함
                 CustomRoomProperties =
@@ -164,23 +162,21 @@ namespace Network
                     },
                 CustomRoomPropertiesForLobby = new[] { RoomProps.MatchType, RoomProps.MatchState }
             };
-            string roomName = $"QUICK-{UnityEngine.Random.Range(100000, 999999)}";
-            PhotonNetwork.CreateRoom(roomName, options);
+            
         }
 
         #endregion
-
 
         #region Private Matching API
 
         #region Create Private Room Logic
 
-        // 빠른 매칭 방 생성 : 빠른 매칭 방에 입장 실패 시 호출
+        // 비공개 방 생성
         public void CreatePrivateRoom()
         {
-            if (_createType != MatchType.None) return;
+            if (_matchType != MatchType.None) return;
 
-            _createType = MatchType.Private;
+            _matchType = MatchType.Private;
             _privateRetryCount = 0;
             StartCoroutine(TryCreatePrivateRoom());
         }
@@ -188,7 +184,7 @@ namespace Network
         private IEnumerator TryCreatePrivateRoom()
         {
             yield return null; // 한 프레임 대기
-
+            _privateRetryCount++;
             string roomCode = Util_LDH.Generate4DigitString();
             string roomName = $"PRIV-{roomCode}";
             PhotonNetwork.CreateRoom(roomName, SetPrivateRoomOptions(roomCode));
@@ -198,7 +194,7 @@ namespace Network
         {
             return new RoomOptions
             {
-                MaxPlayers = MAX_PLAYERS, // 최대 인원 설정
+                MaxPlayers = MaxPlayers, // 최대 인원 설정
                 IsVisible = false, // 코드로만 입장하도록 비노출 권장
                 IsOpen = true, // 입장 가능 여부 -> 게임 시작 시 false로 만들어야 함
                 CustomRoomProperties = new Hashtable
@@ -338,7 +334,7 @@ namespace Network
         {
             Debug.Log($"[NetworkManager] 비공개 방 입장에 실패했습니다. ({returnCode}) {message}");
             JoinFailed?.Invoke(returnCode, message);
-
+            
             TryJoinLobby();
         }
 
@@ -387,20 +383,20 @@ namespace Network
 
         public override void OnCreatedRoom()
         {
-            Debug.Log($"[NetworkManager] 방 생성 완료(타입 : {_createType}) : {PhotonNetwork.CurrentRoom.Name}");
-            _createType = MatchType.None;
+            Debug.Log($"[NetworkManager] 방 생성 완료(타입 : {_matchType}) : {PhotonNetwork.CurrentRoom.Name}");
+            _matchType = MatchType.None;
             CreatedRoom?.Invoke();
         }
 
 
         public override void OnCreateRoomFailed(short returnCode, string message)
         {
-            Debug.LogWarning($"[NetworkManager] 방 생성 실패(타입 : {_createType})  - {returnCode} : {message}");
+            Debug.LogWarning($"[NetworkManager] 방 생성 실패(타입 : {_matchType})  - {returnCode} : {message}");
 
             // 비공개 방 생성 & 방 이름(방 코드) 중복인 경우 재시도
-            if (_createType == MatchType.Private && returnCode == ErrorCode.GameIdAlreadyExists)
+            if (_matchType == MatchType.Private && returnCode == ErrorCode.GameIdAlreadyExists)
             {
-                if (_privateRetryCount++ < PRIVATE_MAX_RETRY)
+                if (_privateRetryCount < PRIVATE_MAX_RETRY)
                 {
                     StartCoroutine(TryCreatePrivateRoom());
                     return;
@@ -411,7 +407,7 @@ namespace Network
                 }
             }
 
-            _createType = MatchType.None;
+            _matchType = MatchType.None;
         }
 
         #endregion

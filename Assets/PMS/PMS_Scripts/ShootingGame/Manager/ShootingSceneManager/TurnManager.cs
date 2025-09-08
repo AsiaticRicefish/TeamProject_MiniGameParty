@@ -184,6 +184,9 @@ namespace ShootingScene
 
             Debug.Log($"[TurnManager] 현재 라운드 = {currentRoundIndex}, 현재 턴 = {currentTurnIndex}, 내턴인가? = {isMyTurn}");
 
+            //현재 턴이 설정되었다는 이벤트 알림
+            OnSetCurrentTurn?.Invoke(isMyTurn, currentTurnIndex);
+            
             if (isMyTurn)
             {
                 Debug.Log("내 턴 입니다!");
@@ -202,10 +205,10 @@ namespace ShootingScene
             else
             {
                 Debug.Log("상대방 턴 입니다");
+                
             }
             
-            //현재 턴이 설정되었다는 이벤트 알림
-            OnSetCurrentTurn?.Invoke(isMyTurn, currentTurnIndex);
+           
 
             //StartTurnCorutine(10.0f);
             ShootingNetworkManager.Instance.SetTurnCoroutine = null;

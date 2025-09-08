@@ -1,0 +1,17 @@
+<dependencies>
+  <androidPackages>
+    <!-- Google Play Games Services v2 핵심 라이브러리 -->
+    <androidPackage spec="com.google.android.gms:play-services-games-v2:+">
+      <repositories>
+        <repository>https://maven.google.com</repository>
+      </repositories>
+    </androidPackage>
+
+    <!-- 로그인에 필요한 Auth (권장) -->
+    <androidPackage spec="com.google.android.gms:play-services-auth:+">
+      <repositories>
+        <repository>https://maven.google.com</repository>
+      </repositories>
+    </androidPackage>
+  </androidPackages>
+</dependencies>
