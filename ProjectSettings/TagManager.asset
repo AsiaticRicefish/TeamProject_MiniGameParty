@@ -6,6 +6,7 @@ TagManager:
   tags:
   - UnimoEgg
   - PlayGround
+  - FallDownZone
   layers:
   - Default
   - TransparentFX

@@ -48,10 +48,8 @@ namespace LDH_MainGame
 
         protected override void OnAwake()
         {
-
             PhotonNetwork.AutomaticallySyncScene = false;
             MainGameSceneController.Instance.Register(gameObject);
-
             base.OnAwake();
         }
 
@@ -92,7 +90,8 @@ namespace LDH_MainGame
         public void StartGame()
         {
             Util_LDH.ConsoleLog(this, "게임을 시작합니다. (Enter 'Picking' State)");
-
+            
+            
             // 필수 서비스 준비 확인
             if (PropertiesCtrl == null || FSM == null || UI == null)
             {

@@ -153,10 +153,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 860bafcf47cc9234189cfc08dd6d11c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  databaseUrl: https://unimo-56ebc-default-rtdb.asia-southeast1.firebasedatabase.app
   defaultRegion: asia
-  lobbySceneName: LDH_MainScene
-  gameplaySceneName: PMS_ShootingTestScene
-  loadLobbyOnJoinedRoom: 1
 --- !u!4 &99408737
 Transform:
   m_ObjectHideFlags: 0
@@ -194,6 +192,11 @@ MonoBehaviour:
   minLength: 2
   maxLength: 16
   idleSubmitSec: 999
+  normalHintColor: {r: 0, g: 0, b: 0, a: 1}
+  errorHintColor: {r: 1, g: 0.25, b: 0.25, a: 1}
+  toastGroup: {fileID: 0}
+  toastFade: 0.15
+  toastHold: 1.5
 --- !u!1 &400221143
 GameObject:
   m_ObjectHideFlags: 0
@@ -483,6 +486,52 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 412228146}
   m_CullTransparentMesh: 1
+--- !u!1 &501258901
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 501258903}
+  - component: {fileID: 501258902}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &501258902
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 501258901}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c91af150ea515748b7f20fda649b64e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  databaseUrl: https://unimo-56ebc-default-rtdb.asia-southeast1.firebasedatabase.app
+  verbose: 1
+--- !u!4 &501258903
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 501258901}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1157.7113, y: 905.2235, z: -7.359135}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &512678758
 GameObject:
   m_ObjectHideFlags: 0
@@ -1528,9 +1577,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1974923858}
-        m_TargetAssemblyTypeName: GPGS, Assembly-CSharp
-        m_MethodName: GpgsTest
+      - m_Target: {fileID: 1974923860}
+        m_TargetAssemblyTypeName: KYG.Auth.GPGSLoginManager, Assembly-CSharp
+        m_MethodName: LoginWithGPGS
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2137,7 +2186,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1974923859}
-  - component: {fileID: 1974923858}
+  - component: {fileID: 1974923860}
   m_Layer: 0
   m_Name: GPGS
   m_TagString: Untagged
@@ -2145,18 +2194,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1974923858
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1974923857}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 82a75ac7066a17a4caaa39b268898a30, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!4 &1974923859
 Transform:
   m_ObjectHideFlags: 0
@@ -2172,6 +2209,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1974923860
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1974923857}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f094fee73b8ae134ab79352b134c3314, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultRegion: asia
 --- !u!1 &2124661288
 GameObject:
   m_ObjectHideFlags: 0
@@ -2316,7 +2366,8 @@ SceneRoots:
   - {fileID: 1749410763}
   - {fileID: 590628686}
   - {fileID: 1974923859}
-  - {fileID: 99408737}
   - {fileID: 923891977}
   - {fileID: 1589312110}
   - {fileID: 1522349953}
+  - {fileID: 99408737}
+  - {fileID: 501258903}

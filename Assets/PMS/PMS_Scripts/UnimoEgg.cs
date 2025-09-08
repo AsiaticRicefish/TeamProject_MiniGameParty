@@ -144,20 +144,11 @@ public class UnimoEgg : MonoBehaviourPun
         yield return new WaitForFixedUpdate();   //AddForce 보장                                     
         yield return new WaitForFixedUpdate();
 
-        //Test_ShotFollowCamera.Instance.StartFollowTarget(gameObject);
-        //yield return new WaitForFixedUpdate();
-        //yield return new WaitUntil(() => Camera.main.GetComponent<CinemachineBrain>().ActiveBlend == null);
-
         while (rb.velocity.magnitude > stopSpeed)
-            yield return new WaitForFixedUpdate();
+            yield return new WaitForFixedUpdate(); //업데이트 프레임
 
+        yield return new WaitForSeconds(1.0f);
         Test_ShotFollowCamera.Instance.StopFollowTarget(); //돌아가는 부분
-        yield return new WaitForFixedUpdate();
-
-        isCameraFollowing = false;
-        //Test_ShotFollowCamera.Instance.StopFollowTarget(gameObject);
-        //yield return new WaitForFixedUpdate();
-        //yield return new WaitUntil(() => Camera.main.GetComponent<CinemachineBrain>().ActiveBlend == null);
 
         // 내가 던진 알일 때만 마스터에게 턴 종료 요청
         if (photonView.IsMine && !turnEnded)
@@ -165,6 +156,7 @@ public class UnimoEgg : MonoBehaviourPun
             turnEnded = true;
             TurnManager.Instance.photonView.RPC(("RequestTurnEnd"), RpcTarget.MasterClient);
             isLaunched = false;
+            isCameraFollowing = false;
         }
     }
     
@@ -190,14 +182,29 @@ public class UnimoEgg : MonoBehaviourPun
         //if (!photonView.IsMine || turnEnded) return; // 내 알이 아니면 아무것도 안 함
 
             //모두가 비활성처리를 해줘야한다.
-        EggManager.Instance.photonView.RPC("RPC_DeactivateEgg", RpcTarget.All, photonView.ViewID);
+        
 
-        if (other.CompareTag("PlayGround") && isLaunched)
+        if (other.CompareTag("PlayGround"))
+        {
+            EggManager.Instance.photonView.RPC("RPC_DeactivateEgg", RpcTarget.All, photonView.ViewID);
+        }
+
+        if (other.CompareTag("FallDownZone") && isLaunched)
         {
             isLaunched = false; // 바깥으로 나가며 턴 종료 → 발사 상태 해제
-            TurnManager.Instance.photonView.RPC(("RequestTurnEnd"), RpcTarget.MasterClient);
+            TurnManager.Instance.photonView.RPC(("RequestTurnEnd"), RpcTarget.MasterClient);    
+        }
+
+        if (other.CompareTag("FallDownZone"))
+        {
+            rb.constraints &= ~RigidbodyConstraints.FreezePositionY;
         }
     }
+
+    //OnCollistion
+    //맞은대상이 이미 쏜 친구
+
+    //
 
     private void OnDisable()
     {

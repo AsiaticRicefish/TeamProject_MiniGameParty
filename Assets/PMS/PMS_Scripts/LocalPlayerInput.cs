@@ -17,6 +17,7 @@ public class LocalPlayerInput : MonoBehaviourPun
     public ChargeController charger;
     public Camera mainCam;
 
+    private float stepLimitTime = 5f;
     //public float coneAngle = 100f;
     //public float coneDistance = 5f;
     //public Color coneColor = new Color(0f, 1f, 0f, 0.3f);
@@ -67,7 +68,7 @@ public class LocalPlayerInput : MonoBehaviourPun
     private void Awake()
     {
         ShootingGameManager.Instance.OnGameStarted += RegisterInput;
-        ShootingGameManager.Instance.OnGameEnded -= UnRegisterInput;
+        ShootingGameManager.Instance.OnGameEnded += UnRegisterInput;
         player = gameObject.transform;
 
         SetupEvents();
@@ -77,6 +78,17 @@ public class LocalPlayerInput : MonoBehaviourPun
     {
         if (mainCam == null)
             mainCam = Camera.main;
+    }
+
+    private void OnDestroy()
+    {
+        if (currentTimeoutCoroutine != null)
+        {
+            //타이머 정지를 모두에게 알리기
+            NotifyStopCountdown(true);
+            StopCoroutine(currentTimeoutCoroutine);
+            currentTimeoutCoroutine = null;
+        }
     }
 
     //return pool 데이터 리셋 함수
@@ -187,7 +199,7 @@ public class LocalPlayerInput : MonoBehaviourPun
         currentStep = 1;
         stepCompleted = false;
         OnStep1Started?.Invoke();
-        currentTimeoutCoroutine = StartCoroutine(StepTimeout(5f));
+        currentTimeoutCoroutine = StartCoroutine(StepTimeout(stepLimitTime));
     }
 
     private void StartStep2()
@@ -196,7 +208,7 @@ public class LocalPlayerInput : MonoBehaviourPun
         currentStep = 2;
         stepCompleted = false;
         OnStep2Started?.Invoke();
-        currentTimeoutCoroutine = StartCoroutine(StepTimeout(5f));
+        currentTimeoutCoroutine = StartCoroutine(StepTimeout(stepLimitTime));
     }
 
     private void StartStep3()
@@ -205,7 +217,7 @@ public class LocalPlayerInput : MonoBehaviourPun
         currentStep = 3;
         stepCompleted = false;
         OnStep3Started?.Invoke();
-        currentTimeoutCoroutine = StartCoroutine(StepTimeout(5f));
+        currentTimeoutCoroutine = StartCoroutine(StepTimeout(stepLimitTime));
     }
 
     private void StopCurrentTimeout()
