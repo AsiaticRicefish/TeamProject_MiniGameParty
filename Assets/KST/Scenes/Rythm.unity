@@ -2617,6 +2617,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   isPersistent: 0
   playerPrefabName: Prefabs/DONOTSAVERythmPlayer
+  backupPrefabName: Prefabs/RythmPlayer
   tempSpawnPos: {x: 0, y: 0, z: 0}
   gameRoomName: RythemTestRoom
   maxPlayers: 2

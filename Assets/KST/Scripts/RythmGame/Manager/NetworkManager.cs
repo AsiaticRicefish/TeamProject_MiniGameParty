@@ -9,6 +9,7 @@ namespace RhythmGame
     {
         [Header("플레이어 프리팹 이름")]
         [SerializeField] string playerPrefabName = "RythmPlayer";
+        [SerializeField] string backupPrefabName = "Prefabs/RythmPlayer"; //테스트용
         [SerializeField] Vector3 tempSpawnPos = Vector3.zero; // 임시 스폰 위치
 
         [Header("룸 옵션")]
@@ -64,6 +65,14 @@ namespace RhythmGame
         public override void OnJoinedRoom()
         {
             Debug.Log($"방접속, 현재 방 참여 인원 수 : {PhotonNetwork.CurrentRoom.PlayerCount}");
+
+            //테스트 환경에서 리소스 없는 것을 방지
+            var prefab = Resources.Load<GameObject>(playerPrefabName);
+            if (prefab == null)
+            {
+                Debug.Log($"{playerPrefabName}가 없어서 {backupPrefabName}로 플레이어 캐릭터 모델 변경 ");
+                playerPrefabName = backupPrefabName;
+            }
 
             // 캐릭터 생성
             PhotonNetwork.Instantiate(playerPrefabName, tempSpawnPos, Quaternion.identity);
