@@ -1172,6 +1172,8 @@ MonoBehaviour:
   - {fileID: 3163768741583221442, guid: 6707e7daac9cbc34db208abc74270a38, type: 3}
   - {fileID: 5578723783930544825, guid: 074dd5c68293f3648958b4cdb0a0e206, type: 3}
   - {fileID: 7399149748938395269, guid: 0a722b1decae9694f81723a270052692, type: 3}
+  _hitEffect: {fileID: 5732806957617258665, guid: add9d2ba9f14c924f90d22e29d350f13,
+    type: 3}
   _spawnTiming: 2
 --- !u!114 &847317607
 MonoBehaviour:
@@ -2360,6 +2362,7 @@ MonoBehaviour:
   isPersistent: 1
   _bgmList:
   - {fileID: 8300000, guid: e915b70bc404eda44891990d8738bac1, type: 3}
+  _rhythmList: []
   _gameSfxList:
   - {fileID: 8300000, guid: 0bbf519493bf329468b93a3e3c7d78bb, type: 3}
   _uiSfxList: []

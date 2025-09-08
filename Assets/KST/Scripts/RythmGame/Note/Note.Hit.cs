@@ -1,13 +1,23 @@
+// using DesignPattern;
 // using UnityEngine;
 
 // namespace RhythmGame
 // {
 //     partial class Note : MonoBehaviour
 //     {
-//         public void RequestHit()
+//         [SerializeField] PooledObject _hitEffectPrefab;
+//         private ObjectPool _effectPool;
+
+//         void Start()
 //         {
-//             bool isGood = _status == NoteStatus.CanInteract;
-//             LaneManager.Instance.RequestHit(NoteId, isGood);
+//             _effectPool = new(null, _hitEffectPrefab, 5);
+//         }
+//         public void HitEffect()
+//         {
+//             var effect = _effectPool.PopPool();
+//             effect.transform.SetPositionAndRotation(transform.position, Quaternion.identity);
+
+//             var ps = effect.GetComponent<par
 //         }
 //     }
 // }

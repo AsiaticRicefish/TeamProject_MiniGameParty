@@ -15,7 +15,9 @@ namespace RhythmGame
     public class NoteSpawner : PunSingleton<NoteSpawner>
     {
         //오브젝트 풀 관련
-        [SerializeField] PooledObject[] _notePrefabs; // 풀링 프리팹들(로컬용)
+        [SerializeField] PooledObject[] _notePrefabs; // 노트 풀링 프리팹들(로컬용)
+        [SerializeField] PooledObject _hitEffect; //적중 시 파티클
+        private ObjectPool _effectPool; //이펙트 풀
         Dictionary<string, ObjectPool> _notePools = new();
         Dictionary<int, PooledObject> _activeById = new();
 
@@ -48,10 +50,14 @@ namespace RhythmGame
         /// </summary>
         private void InitPools()
         {
+            _effectPool = new(null, _hitEffect, 5);
+
             foreach (var prefab in _notePrefabs)
                 if (!_notePools.ContainsKey(prefab.name))
                     _notePools.Add(prefab.name, new ObjectPool(transform, prefab, 5));
         }
+
+        public PooledObject GetEffectPool() => _effectPool.PopPool();
 
         private IEnumerator IE_Spawn()
         {
@@ -108,14 +114,24 @@ namespace RhythmGame
         }
 
         [PunRPC]
-        private void RPC_DestroyNote(int noteId)
+        private void RPC_DestroyNote(int noteId, bool isHit)
         {
             // noteId에 해당하는 로컬 인스턴스만 반납
             if (_activeById.TryGetValue(noteId, out var inst))
             {
                 _activeById.Remove(noteId);
-                if(inst.TryGetComponent(out Note mover))
+                if (inst.TryGetComponent(out Note mover))
                 {
+                    //적중 시 히트 이펙트
+                    if (isHit)
+                    {
+                        // mover.HitEffect();
+                        var effect = GetEffectPool();
+                        var particle = effect.GetComponent<PooledEffect>();
+                        particle.PlayEffect(mover.transform.position, Quaternion.identity);
+                        Debug.Log("적중");
+                    }
+
                     mover.ReturnPool();
                 }
             }
@@ -135,10 +151,10 @@ namespace RhythmGame
         }
 
         // 마스터가 검증 후 파괴 브로드캐스트할 때 씀
-        public void DestoryNote(int noteId)
+        public void DestoryNote(int noteId, bool isHit)
         {
             if (!PhotonNetwork.IsMasterClient) return;
-            photonView.RPC(nameof(RPC_DestroyNote), RpcTarget.All, noteId);
+            photonView.RPC(nameof(RPC_DestroyNote), RpcTarget.All, noteId, isHit);
         }
     }
 }

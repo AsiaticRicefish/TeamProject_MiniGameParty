@@ -8,6 +8,7 @@ namespace RhythmGame //추후 다른 스크립트에서도 사용할 경우 해�
     {
         // ScriptableObject에서 사운드 관리해도 됨.
         [SerializeField] AudioClip[] _bgmList;
+        [SerializeField] AudioClip[] _rhythmList;
         [SerializeField] AudioClip[] _gameSfxList;
         [SerializeField] AudioClip[] _uiSfxList;
 
@@ -26,6 +27,17 @@ namespace RhythmGame //추후 다른 스크립트에서도 사용할 경우 해�
         {
             //현재 플레이 중인 BGM과 플레이 하려는 BGM과 동일한 경우 return
             if (_bgmAudioSource.isPlaying && _bgmAudioSource.clip == _bgmList[(int)bgms])
+                return;
+
+            _bgmAudioSource.clip = _bgmList[(int)bgms];
+            _bgmAudioSource.loop = true;
+            _bgmAudioSource.Play();
+        }
+
+        public void PlayBGM(Bgm_RhythmGame bgms)
+        {
+            //현재 플레이 중인 BGM과 플레이 하려는 BGM과 동일한 경우 return
+            if (_bgmAudioSource.isPlaying && _bgmAudioSource.clip == _rhythmList[(int)bgms])
                 return;
 
             _bgmAudioSource.clip = _bgmList[(int)bgms];

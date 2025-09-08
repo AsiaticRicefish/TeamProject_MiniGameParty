@@ -80,7 +80,7 @@ namespace RhythmGame
             //TODO 김승태 : 임시 bgm 및 순서 추후 enum 변경과 함께 파라미터도 변경 필수.
 
             //리듬게임 브금 시작(랜덤으로 정하려면 새로운 enum 그룹 만든 후, 오버로드 추가하여 랜덤선택 방식으로 변경 필요)
-            SoundManager.Instance.PlayBGM(0);
+            SoundManager.Instance.PlayBGM(Bgm_RhythmGame.BGM_1);
             OnGameStart?.Invoke();
         }
 

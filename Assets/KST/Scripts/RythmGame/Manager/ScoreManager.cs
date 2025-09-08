@@ -113,6 +113,7 @@ namespace RhythmGame
         void RPC_RequestHit(int noteId, bool isCanInteract, NoteType type, PhotonMessageInfo info)
         {
             if (!PhotonNetwork.IsMasterClient) return;
+            bool isHit = false;
 
             // 라인 검증 (내 라인의 노트인지 판별하기)
 
@@ -131,6 +132,7 @@ namespace RhythmGame
             // 득점 및 과열 처리
             if (isCanInteract)
             {
+                isHit = true;
                 GameManager.Instance.GoodHitScore(type, info.Sender);
 
                 // SoundManager.Instance.PlaySFX_GAME(SfX_Game.SFX_Rhythm_NoteDestory);
@@ -139,16 +141,16 @@ namespace RhythmGame
             }
             else
             {
+                isHit = false;
                 GameManager.Instance.OverHeatCheck();
 
                 GameManager.Instance.MissBlock(info.Sender);
                 // SoundManager.Instance.PlaySFX_GAME(SfX_Game.SFX_Rhythm_Miss);
-
             }
 
             // 파괴
             LaneManager.Instance.LaneByNoteId.Remove(noteId);
-            NoteSpawner.Instance.DestoryNote(noteId);
+            NoteSpawner.Instance.DestoryNote(noteId, isHit);
         }
 
         public void RequestMiss()
