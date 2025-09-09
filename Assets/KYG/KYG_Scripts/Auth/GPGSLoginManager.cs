@@ -35,9 +35,9 @@ namespace KYG.Auth
             try { PlayGamesPlatform.Activate(); } catch { /* no-op */ }
             
             // Photon 단계별 로그
-            gameObject.AddComponent<Photon.Pun.UtilityScripts.PhotonStatsGui>().enabled = false; 
+            /*gameObject.AddComponent<Photon.Pun.UtilityScripts.PhotonStatsGui>().enabled = false; 
             gameObject.AddComponent<Photon.Pun.UtilityScripts.ConnectAndJoinRandom>(); 
-            gameObject.AddComponent<Photon.Realtime.SupportLogger>(); 
+            gameObject.AddComponent<Photon.Realtime.SupportLogger>();*/ 
         }
 
         /// <summary>UI 버튼에서 호출</summary>
