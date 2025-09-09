@@ -1,0 +1,35 @@
+{
+    "version": 1,
+    "name": "RythmInput",
+    "maps": [
+        {
+            "name": "RythmGame",
+            "id": "c8f91740-b251-4517-8802-8f3d3631d622",
+            "actions": [
+                {
+                    "name": "Tap",
+                    "type": "Button",
+                    "id": "8d97f13b-a294-4f3c-bc28-34e4cbb1fe36",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "be74dba9-d86a-4cfb-ad4c-3e6ac08c062c",
+                    "path": "<Pointer>/press",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Tap",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

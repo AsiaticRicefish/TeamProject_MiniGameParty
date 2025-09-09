@@ -1,12 +1,12 @@
 public enum NoteType
 {
-    Fake = 0, //¼ÓÀÓ¼ö ºí·Ï
-    Touch, //ÅÍÄ¡ ºí·Ï
-    Continue, //Áö¼Ó ºí·Ï
+    Fake = 0, //ì†ì„ìˆ˜ ë¸”ë¡
+    Touch, //í„°ì¹˜ ë¸”ë¡
+    Continue, //ì§€ì† ë¸”ë¡
 }
 
 public enum NoteStatus
 {
     None = 0,
-    Good,
+    CanInteract,
 }
