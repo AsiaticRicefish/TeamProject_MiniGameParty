@@ -57,10 +57,12 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
     public Action<string, bool, int> OnPlayerAction;        // 플레이어ID, 성공여부, 점수
     public Action<string> OnPlayerFinished;                 // 플레이어가 게임 완료
     public Action<Dictionary<string, int>> OnGameFinished;  // 최종 순위
+    public Action<Dictionary<string, int>> OnRankingsUpdated; // 실시간 순위 갱신 이벤트
 
     private Dictionary<string, JengaPlayerData> players = new(); // UID를 key로 가지는 플레이어 데이터
     private Dictionary<string, int> playerScores = new();        // 플레이어별 점수
     private Dictionary<string, bool> playerFinished = new();     // 플레이어별 게임 완료 여부
+    public Dictionary<string, int> GetCurrentRanks() => CalculateRankings();
 
     private double? _roomStartTime;
     private double? _roomDuration;
@@ -314,12 +316,24 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
             player.score += scoreGained; // JengaPlayerData 자체에 저장된 점수 업데이트
             playerScores[uid] += scoreGained; // 순위 계산을 위한 점수
 
-            // 마지막 성공 시각 저장 (상대 시간) => 동점일 경우 먼저 성공한 플레이어가 우선 순위 배치
-            player.lastSuccessTime = Time.time - player.gameStartTime;
+            float elapsed;
+            if (_roomStartTime.HasValue)
+                elapsed = (float)(PhotonNetwork.Time - _roomStartTime.Value);
+            else
+                elapsed = Time.time - player.gameStartTime;
+
+            player.lastSuccessTime = elapsed;
+
+            Debug.Log($"[JengaRanking] SUCCESS uid={uid}, +{scoreGained} → score={player.score}, last={elapsed:0.00}s");
         }
         else
         {
             player.isAlive = false;
+
+            // 탈락자는 자동 뒤로 밀리도록
+            player.lastSuccessTime = float.MaxValue;
+
+            Debug.Log($"[JengaRanking] FAIL uid={uid}, eliminated");
 
             // 젠가가 붕괴할 때만 완료 처리
             if (!playerFinished[uid])
@@ -331,7 +345,26 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
             }
         }
         OnPlayerAction?.Invoke(uid, success, scoreGained);
+
+        if (PhotonNetwork.IsMasterClient)
+        {
+            var ranks = GetCurrentRanks();
+            JengaNetworkManager.Instance?.BroadcastRankSnapshot(ranks);
+        }
     }
+
+    public void ApplyBlockRemovalSuccess(string uid, int scoreGained = 0)
+    {
+        if (!players.TryGetValue(uid, out var player)) return;
+
+        // 점수/시간 처리
+        ApplyPlayerActionResult(uid, true, scoreGained);
+
+        // 제거 개수는 여기서만 증가 (타이밍 성공은 개수 아님)
+        player.removedCount++;
+        Debug.Log($"[JengaRanking] REMOVE++ uid={uid}, removedCount={player.removedCount}");
+    }
+
 
     private void CheckAllPlayersFinished()
     {
@@ -362,6 +395,7 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
 
         // 4) 순위 계산 & UI/룸프로퍼티 반영(랭킹만 기록; KEY_STATE는 위에서 이미 기록됨)
         var rankings = CalculateRankings();
+        JengaNetworkManager.Instance?.BroadcastRankSnapshot(rankings);
         OnGameFinished?.Invoke(rankings); // OnGameFinished로 외부에 알림
 
         // 마스터: 랭킹을 룸 프로퍼티에 기록
@@ -382,22 +416,31 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         SendResultToMainGame(rankings);
     }
 
+    public void ApplyRankSnapshot(Dictionary<string, int> ranks)
+    {
+        OnRankingsUpdated?.Invoke(ranks);
+    }
+
     private Dictionary<string, int> CalculateRankings()
     {
         // 점수순으로 정렬, 동점일 경우 생존 여부로 판단
         var sortedPlayers = players
-            .OrderByDescending(pair => pair.Value.score) // 먼저 블록 개수
-            .ThenBy(pair => pair.Value.lastSuccessTime) // 동점 시 빠른 사람
+            .OrderByDescending(p => p.Value.removedCount)   // 1순위: 더 많이 뺀 사람
+            .ThenBy(p => p.Value.lastSuccessTime)           // 2순위: 더 빨리 성공한 사람
+            .ThenByDescending(p => p.Value.score)           // 3순위: (같은 개수/시간일 때) 점수 큰 사람
             .ToList();
 
         // 딕셔너리 형태로 UID별 순위를 저장
         // { "playerA": 1, "playerB": 2, "playerC": 3, "playerD": 4 }
         var rankings = new Dictionary<string, int>();
         for (int i = 0; i < sortedPlayers.Count; i++)
-        {
-            string uid = sortedPlayers[i].Key; // Key는 UID
-            rankings[uid] = i + 1; // 1등, 2등, 3등, 4등 순으로 번호 매김
-        }
+            rankings[sortedPlayers[i].Key] = i + 1;
+
+        Debug.Log("[JengaRanking] RANKINGS: " + string.Join(", ",
+            sortedPlayers.Select(p =>
+                $"{p.Key}: rank={rankings[p.Key]}, removed={p.Value.removedCount}, score={p.Value.score}, last={p.Value.lastSuccessTime:0.00}, alive={p.Value.isAlive}"
+            )));
+
         return rankings;
     }
 
