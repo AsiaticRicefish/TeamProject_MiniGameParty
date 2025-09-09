@@ -6,9 +6,9 @@ using UnityEngine;
 public struct WindData
 {
     public Vector3 direction;
-    public float speed;
+    public int speed;
 
-    public WindData(Vector3 dir, float spd)
+    public WindData(Vector3 dir, int spd)
     {
         direction = dir;
         speed = spd;

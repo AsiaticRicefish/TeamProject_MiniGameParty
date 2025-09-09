@@ -4,7 +4,7 @@ using UnityEngine;
 
 public static class WindHelper
 {
-    public static void AddForceWithWind(Rigidbody rb, Vector3 baseForce, ForceMode mode = ForceMode.Force)
+    public static void AddForceWithWind(Rigidbody rb, Vector3 baseForce, ForceMode mode = ForceMode.Impulse)
     {
         var windSystem = Object.FindObjectOfType<WindSystem>();
         if (windSystem == null)
@@ -17,8 +17,12 @@ public static class WindHelper
         // WindData 가져오기
         WindData newData = windSystem.GetWind();
 
-        // 최종 힘 = (원래 힘 * 방향) + (바람 방향 * 속도) -> 기존 벡터 + 벡터
-        Vector3 windForce = newData.direction * newData.speed;
+        // 최종 힘 = (원래 힘 * 방향) + (방향 * ((기존 힘 * 보정치(0.1~0.3))) -> 기존 벡터 + 벡터
+        //0.1
+
+        Vector3 windForce = newData.direction * (baseForce.magnitude * (float)newData.speed / 10);
+        Debug.Log($"[WindHelper] - {baseForce.magnitude}");
+        Debug.Log($"[WindHelper] - {baseForce.magnitude + windForce.magnitude}");
         rb.AddForce(baseForce + windForce, mode);
     }
 }

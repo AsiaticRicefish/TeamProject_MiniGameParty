@@ -129,7 +129,8 @@ public class UnimoEgg : MonoBehaviourPun
 
         // 자기 화면에서 AddForce 적용
         isLaunched = true;
-        ApplyForce(dir);
+        //ApplyForce(dir);
+        WindHelper.AddForceWithWind(rb, dir);
         // 다른 클라이언트에도 RPC 전송
         photonView.RPC("RPC_Shot", RpcTarget.Others, dir);
         isCameraFollowing = true;
@@ -174,7 +175,8 @@ public class UnimoEgg : MonoBehaviourPun
     [PunRPC]
     private void RPC_Shot(Vector3 dir)
     {
-        ApplyForce(dir);
+        //ApplyForce(dir);
+        WindHelper.AddForceWithWind(rb, dir);
     }
 
     //떨어졌을때

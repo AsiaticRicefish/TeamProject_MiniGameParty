@@ -7,11 +7,11 @@ using DesignPattern;
 public class WindSystem : PunSingleton<WindSystem>
 {
     [Header("현재 바람 상태")]
-    public WindData currentWind = new WindData(Vector3.zero, 0f);
+    public WindData currentWind = new WindData(Vector3.zero, 0);
 
     [Header("설정값")]
-    public float minWindSpeed = 1f;
-    public float maxWindSpeed = 4f;
+    [SerializeField] private int minWindSpeed = 0;
+    [SerializeField] private int maxWindSpeed = 4;
 
     /// <summary>
     /// 바람 방향과 풍속을 무작위로 갱신
@@ -25,7 +25,7 @@ public class WindSystem : PunSingleton<WindSystem>
         WindDirection dir = (WindDirection)randomDir;
 
         // 속도 뽑기
-        float speed = Random.Range(minWindSpeed, maxWindSpeed);
+        int speed = Random.Range(minWindSpeed, maxWindSpeed);
 
         // 구조체 갱신
         currentWind = new WindData(DirectionEnumToVector(dir), speed);
@@ -37,7 +37,7 @@ public class WindSystem : PunSingleton<WindSystem>
     }
 
     [PunRPC]
-    private void RPC_UpdateWind(WindDirection dir, float speed)
+    private void RPC_UpdateWind(WindDirection dir, int speed)
     {
         currentWind = new WindData(DirectionEnumToVector(dir), speed);
     }
