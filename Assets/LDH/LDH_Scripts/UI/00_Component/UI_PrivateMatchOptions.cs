@@ -6,18 +6,25 @@ using Network;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Vector3 = System.Numerics.Vector3;
 
 namespace LDH_UI
 {
     public class UI_PrivateMatchOptions : MonoBehaviour
     {
-        [Header("Component UI")] [SerializeField]
+        [Header("Component UI")] 
+        [SerializeField]
         private Toggle privateMatchToggle;
 
+        [SerializeField] private Transform optionSpawnRectTransform;
+        
+        
+        
         [SerializeField] private GameObject optionObj;
         [SerializeField] private Button createRoomButton;
         [SerializeField] private TMP_InputField roomCodeInputField;
 
+        private RectTransform _optionRect;
         public Toggle PrivateMatchToggle => privateMatchToggle;
         
 
@@ -26,6 +33,8 @@ namespace LDH_UI
 
         private void Init()
         {
+            _optionRect = optionObj.GetComponent<RectTransform>();
+            
             //이벤트 구독 처리
             Subscribe();
 
@@ -49,7 +58,10 @@ namespace LDH_UI
 
                 //방 생성 버튼
 #if TEST_PLAYER_COUNT
-                createRoomButton.onClick.AddListener(()=>MatchController.Instance.ShowPlayerCount(Define_LDH.MatchType.Private));
+                createRoomButton.onClick.AddListener(()=>
+                {
+                    MatchController.Instance.ShowPlayerCount(Define_LDH.MatchType.Private);
+                });
 #else
                 createRoomButton.onClick.AddListener(MatchController.Instance.PrivateMatch.RequestCreatePrivateRoom);
 #endif
@@ -70,6 +82,9 @@ namespace LDH_UI
         private void ActivePrivateMatchOption(bool isOn)
         {
             if (!isOn) ClearUI();
+
+            _optionRect.position = optionSpawnRectTransform.position;
+            
             optionObj.SetActive(isOn);
         }
 

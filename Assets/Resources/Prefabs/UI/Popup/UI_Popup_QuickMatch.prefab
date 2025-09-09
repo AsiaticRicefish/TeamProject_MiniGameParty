@@ -115,7 +115,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -320}
+  m_AnchoredPosition: {x: 0, y: -3}
   m_SizeDelta: {x: 550, y: 398.655}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &965877349170615372
@@ -770,9 +770,9 @@ MonoBehaviour:
   playerCntText: {fileID: 3928378309919792906}
   elpasedText: {fileID: 7261803108623511696}
   cancelButton: {fileID: 6981149270313642209}
-  targetRectOffset: {x: 0, y: -60}
-  matchingInProgressMessage: Finding...
-  matchingCompleteMessage: Complete!
+  targetRectOffset: {x: 0, y: -320}
+  matchingInProgressMessage: "\uBE60\uB978 \uB9E4\uCE6D \uC911..."
+  matchingCompleteMessage: "\uB9E4\uCE6D \uC644\uB8CC!!"
 --- !u!1001 &400251787444086974
 PrefabInstance:
   m_ObjectHideFlags: 0
