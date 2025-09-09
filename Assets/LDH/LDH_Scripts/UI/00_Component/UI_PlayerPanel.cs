@@ -22,7 +22,7 @@ namespace LDH_UI
         [SerializeField] private Image profileImage; // 프로필 이미지지
         [SerializeField] private Button readyButton; // 준비 버튼
         [SerializeField] private TextMeshProUGUI readyText;
-        [SerializeField] private TextMeshProUGUI masterIcon;
+        [SerializeField] private GameObject masterIcon;
 
 
         [Header("Styles")] 
@@ -95,7 +95,7 @@ namespace LDH_UI
 
         public void SetMasterIcon(bool isMaster)
         {
-            masterIcon.enabled = isMaster;
+            masterIcon.SetActive(isMaster);
         }
 
         /// <summary>
