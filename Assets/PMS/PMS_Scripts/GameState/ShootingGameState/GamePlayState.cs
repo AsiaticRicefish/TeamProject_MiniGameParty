@@ -11,8 +11,10 @@ public class GamePlayState : ShootingGameState
 
         if (PhotonNetwork.IsMasterClient)
         {
+            WindSystem.Instance.UpdateWind();
             TurnManager.Instance.BroadcastCurrentTurn();
         }       
+
         if (!TurnManager.Instance.IsMyTurn())       //턴 정보 업데이트 전에 호출
         {
             Test_ShotFollowCamera.Instance.SwipePosInit();
