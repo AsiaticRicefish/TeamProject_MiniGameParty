@@ -153,7 +153,7 @@ public class JengaTower : MonoBehaviour
         }
         else
         {
-            byLayer = GroupByY(blocks);
+            byLayer = GroupByY(blocks, yQuantizeEpsilon);
         }
 
         AssignIdsAndSlots(byLayer);
@@ -218,16 +218,15 @@ public class JengaTower : MonoBehaviour
     }
 
 
-    private static Dictionary<int, List<JengaBlock>> GroupByY(IEnumerable<JengaBlock> blocks)
+    private static Dictionary<int, List<JengaBlock>> GroupByY(IEnumerable<JengaBlock> blocks, float eps)
     {
         // 블록들을 Y 좌표로 그룹핑
         var ys = new SortedDictionary<int, List<JengaBlock>>();
-        float eps = 0.01f; // 오차 허용치
 
         foreach (var b in blocks)
         {
             float y = b.transform.localPosition.y;
-            int key = Mathf.RoundToInt(y / eps);
+            int key = Mathf.RoundToInt(y / Mathf.Max(1e-6f, eps));
 
             if (!ys.TryGetValue(key, out var list))
             {
@@ -275,17 +274,24 @@ public class JengaTower : MonoBehaviour
             int layer = kv.Key;
             var list = kv.Value;
 
-            bool isHorizontal = (layer % 2 == 0);
+            // 회전값 대신, 블록들의 위치 분포로 축을 결정
+            float minX = float.PositiveInfinity, maxX = float.NegativeInfinity;
+            float minZ = float.PositiveInfinity, maxZ = float.NegativeInfinity;
 
-            Transform commonParent = list[0].transform.parent;
-            if (commonParent != null)
+            foreach (var b in list)
             {
-                float y = Mathf.Abs(Mathf.DeltaAngle(commonParent.eulerAngles.y, 0f));
-                if (Mathf.Abs(y) > 45f) isHorizontal = false;
-                else isHorizontal = true;
+                var p = b.transform.localPosition;
+                if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x;
+                if (p.z < minZ) minZ = p.z; if (p.z > maxZ) maxZ = p.z;
             }
 
-            list = isHorizontal
+            float rangeX = maxX - minX;
+            float rangeZ = maxZ - minZ;
+
+            // 퍼짐이 더 큰 축으로 정렬 (X가 더 벌어져 있으면 X축 정렬)
+            bool sortByX = rangeX >= rangeZ;
+
+            list = sortByX
                 ? list.OrderBy(b => b.transform.localPosition.x).ToList()
                 : list.OrderBy(b => b.transform.localPosition.z).ToList();
 

@@ -210,7 +210,7 @@ public class TowerFocusOverlay : MonoBehaviour
     /// <summary>
     /// 회전해도 카메라는 같은 월드 방향에서 본다.
     /// </summary>
-    private void Reframe()
+    public void Reframe()
     {
         var tex = preview ? preview.texture as RenderTexture : null;
         float rtAspect = tex ? (float)tex.width / tex.height : 1f;

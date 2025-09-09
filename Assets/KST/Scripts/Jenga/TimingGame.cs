@@ -206,12 +206,12 @@ public class TimingGame : MonoBehaviour
         _finishPanel.SetActive(true);
         if (isSuccess)
         {
-            _finishText.text = "Success!";
+            _finishText.text = "성공!";
             //TODO 김승태 : 성공 SFX 실행
         }
         else
         {
-            _finishText.text = "Fail!";
+            _finishText.text = "실패...";
             //TODO 김승태 : 실패 SFX 실행
             //TODO 김승태 : 추후 젠가 실패 애니메이션 추가.
         }
