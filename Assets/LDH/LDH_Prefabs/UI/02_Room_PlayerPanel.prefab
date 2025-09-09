@@ -219,7 +219,7 @@ MonoBehaviour:
   profileImage: {fileID: 7085154291777132502}
   readyButton: {fileID: 2254227954740070375}
   readyText: {fileID: 6091312537284146386}
-  masterIcon: {fileID: 0}
+  masterIcon: {fileID: 7432835306986297919}
   readyTheme:
     label: "\uC900\uBE44\uC644\uB8CC"
     labelColor: {r: 0, g: 0, b: 0, a: 1}
@@ -287,14 +287,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.9490197, g: 0.8352942, b: 0.2901961, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 39d0b0571199f6e4f8c350c2239cd32e, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6209fc6d192802b4e9fd6e9e218ff1a7, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
