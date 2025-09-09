@@ -8,6 +8,7 @@ using LDH_UI;
 using LDH_Util;
 using Managers;
 using UnityEngine;
+using WebSocketSharp;
 
 namespace LDH_Lobby
 {
@@ -38,6 +39,7 @@ namespace LDH_Lobby
         
         private bool _isSwitching;
         private UI_Popup _currentPopupInstance;
+        private string _currentFocusId;
 
         private void Awake()
         {
@@ -91,6 +93,8 @@ namespace LDH_Lobby
         private async UniTaskVoid SwitchToAsync(string id)
         {
             if(_isSwitching) return;
+            if(!_currentFocusId.IsNullOrEmpty() && _currentFocusId.Equals(id)) return; //이미 focus인 걸 또 focus 하는 경우 return
+            
             _isSwitching = true;
             
             inputLock?.Lock();   // 전환하는 동안 입력 막기
@@ -103,6 +107,9 @@ namespace LDH_Lobby
                     Debug.LogWarning($"[LobbyNav] unknown id: {id}");
                     return;
                 }
+                
+                // 현재 focus 업데이트
+                _currentFocusId = id;
 
                 // 2) 현재 UI 먼저 닫기(예외 안전)
                 await CloseCurrentUI();

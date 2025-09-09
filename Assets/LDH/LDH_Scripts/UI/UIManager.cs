@@ -298,7 +298,7 @@ namespace LDH_UI
                 {
                     popup.OnCloseRequested -= HandleCloseRequested;
                     if (popup) Destroy(popup.gameObject);
-                    Debug.Log($"[UIManager] after-close: count={_popupStack.Count}, nextTop={(_popupStack.Count>0 ? _popupStack.Peek().name : "none")}");
+                    // Debug.Log($"[UIManager] after-close: count={_popupStack.Count}, nextTop={(_popupStack.Count>0 ? _popupStack.Peek().name : "none")}");
                 }
             }
 

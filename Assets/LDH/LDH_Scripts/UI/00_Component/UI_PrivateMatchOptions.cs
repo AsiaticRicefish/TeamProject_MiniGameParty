@@ -12,6 +12,7 @@ namespace LDH_UI
 {
     public class UI_PrivateMatchOptions : MonoBehaviour
     {
+        
         [Header("Component UI")] 
         [SerializeField]
         private Toggle privateMatchToggle;

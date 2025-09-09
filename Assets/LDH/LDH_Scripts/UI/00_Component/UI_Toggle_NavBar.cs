@@ -10,10 +10,11 @@ namespace LDH_UI
     public class UI_Toggle_NavBar : MonoBehaviour
     {
         private Toggle _toggle;
-        [Header("Virtual Camera")]
-        [SerializeField] private VirtualCamera_Lobby myVcam;
 
-        
+        [Header("Virtual Camera")] [SerializeField]
+        private VirtualCamera_Lobby myVcam;
+
+
         private void Awake()
         {
             _toggle = GetComponent<Toggle>();
@@ -23,6 +24,7 @@ namespace LDH_UI
         {
             Subscribe();
         }
+
         private void OnDestroy() => Unsubscribe();
 
         private void Subscribe()
@@ -40,10 +42,10 @@ namespace LDH_UI
         private void OnValueChanged(bool isOn)
         {
             if (!isOn) return; // 꺼질 때 콜백 무시
-         Debug.Log("toggle is one");
-            
+
+            Debug.Log("toggle is on");
+
             LobbyNavigationController.Instance?.RequestFocus(myVcam.cameraID);
         }
-        
     }
 }
