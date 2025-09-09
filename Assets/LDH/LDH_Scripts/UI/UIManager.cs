@@ -261,7 +261,7 @@ namespace LDH_UI
         /// <summary>
         /// 특정 팝업을 닫습니다. (최상단일 때만 가능)
         /// </summary>
-        public async UniTask ClosePopupUI(UI_Popup popup, bool destory = true)
+        public async UniTask ClosePopupUI(UI_Popup popup, bool destroy = true)
         {
             if (!popup) return;
             
@@ -294,12 +294,15 @@ namespace LDH_UI
             {
                 _closing.Remove(popup);
 
-                if (destory)
+                if (destroy && popup)
                 {
                     popup.OnCloseRequested -= HandleCloseRequested;
-                    if (popup) Destroy(popup.gameObject);
-                    // Debug.Log($"[UIManager] after-close: count={_popupStack.Count}, nextTop={(_popupStack.Count>0 ? _popupStack.Peek().name : "none")}");
+                    Destroy(popup.gameObject);
                 }
+                
+                UI_Popup nextTop = (_popupStack.Count > 0) ? _popupStack.Peek() : null;
+                string nextTopName = nextTop ? nextTop.name : "none";
+                Debug.Log($"[UIManager] after-close: count={_popupStack.Count}, nextTop={nextTopName}");
             }
 
         

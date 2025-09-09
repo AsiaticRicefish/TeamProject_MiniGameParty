@@ -3,7 +3,6 @@ using Cysharp.Threading.Tasks;
 using Managers;
 using ShootingScene;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 
 namespace LDH_UI
