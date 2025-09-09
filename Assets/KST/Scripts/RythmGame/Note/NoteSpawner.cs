@@ -1,126 +1,160 @@
+using System.Collections;
 using System.Collections.Generic;
 using Photon.Pun;
 using UnityEngine;
 using DesignPattern;
-using System.Collections;
 
 namespace RhythmGame
 {
     /// <summary>
-    /// Note¸¦ ½ºÆùÇÏ´Â Å¬·¡½º·Î, 
-    /// ¸¶½ºÅÍ Å¬¶óÀÌ¾ğÆ®°¡ ´ã´çÇÏ¿© ½ÇÇàÇÏ¸ç, Note »ı¼º ½Ã ¼Óµµ, Á¾·ù µîÀ» ¼³Á¤ÇÔ.
+    /// Noteë¥¼ ìŠ¤í°í•˜ëŠ” í´ë˜ìŠ¤ë¡œ, 
+    /// ë§ˆìŠ¤í„° í´ë¼ì´ì–¸íŠ¸ê°€ ë‹´ë‹¹í•˜ì—¬ ì‹¤í–‰í•˜ë©°, Note ìƒì„± ì‹œ ì†ë„, ì¢…ë¥˜ ë“±ì„ ì„¤ì •í•¨.
     /// 
-    /// ÇØ´ç Å¬·¡½º´Â µ¶¸³¼ºÀÌ º¸ÀåµÇ¾î¾ß ÇÏ¸ç, ÃßÈÄ °ÔÀÓ¸Å´ÏÀú ¹× ³×Æ®¿öÅ© ¸Å´ÏÀú¿¡¼­µµ ÀÌ¿ëÇÒ °¡´É¼ºÀÌ ÀÖ±â¿¡, ½Ì±ÛÅæÀ¸·Î ±¸Çö
+    /// í•´ë‹¹ í´ë˜ìŠ¤ëŠ” ë…ë¦½ì„±ì´ ë³´ì¥ë˜ì–´ì•¼ í•˜ë©°, ì¶”í›„ ê²Œì„ë§¤ë‹ˆì € ë° ë„¤íŠ¸ì›Œí¬ ë§¤ë‹ˆì €ì—ì„œë„ ì´ìš©í•  ê°€ëŠ¥ì„±ì´ ìˆê¸°ì—, ì‹±ê¸€í†¤ìœ¼ë¡œ êµ¬í˜„
     /// </summary>
     public class NoteSpawner : PunSingleton<NoteSpawner>
     {
-        //¿ÀºêÁ§Æ® Ç® °ü·Ã
-        [SerializeField] private PooledObject[] _notePrefabs;
-        private Dictionary<string, ObjectPool> _notePools = new();
-        //½ºÆù °ü·Ã
-        [SerializeField] private float _spawnTiming = 2f;
+        //ì˜¤ë¸Œì íŠ¸ í’€ ê´€ë ¨
+        [SerializeField] PooledObject[] _notePrefabs; // ë…¸íŠ¸ í’€ë§ í”„ë¦¬íŒ¹ë“¤(ë¡œì»¬ìš©)
+        [SerializeField] PooledObject _hitEffect; //ì ì¤‘ ì‹œ íŒŒí‹°í´
+        private ObjectPool _effectPool; //ì´í™íŠ¸ í’€
+        Dictionary<string, ObjectPool> _notePools = new();
+        Dictionary<int, PooledObject> _activeById = new();
 
-        private bool _isSpawning = false;
-        private Coroutine _spawnCoroutine;
+        //ìŠ¤í° ê´€ë ¨
+        [SerializeField] float _spawnTiming = 2f; // ë…¸íŠ¸ ìƒì„± ê°„ê²© -> ì¶”í›„ bpmì— ë§ì¶°ì„œ ë³€ê²½í•˜ê¸°
+        bool _isSpawning;
+        Coroutine _spawnCo;
+        int _seqId = 0; // ë§ˆìŠ¤í„°ê°€ ì¦ê°€ì‹œí‚¤ëŠ” ì „ì—­ ë…¸íŠ¸ ID ì‹œí€€ìŠ¤
 
-        /// <summary>
-        /// Note ½ºÆù ½ÃÀÛÇÏ´Â ·ÎÁ÷
-        /// ¸¶½ºÅÍÅ¬¶óÀÌ¾ğÆ®°¡ ´ã´çÇÏ¿© Note ½ºÆù
-        /// ½ºÆù ÁßÀÏ °æ¿ì return µÈ´Ù.
-        /// </summary>
         public void StartSpawn()
         {
-            //½ºÆù ÁßÀÏ °æ¿ì ¸®ÅÏ
             if (_isSpawning) return;
 
             _isSpawning = true;
 
-            //Pool ¼ÂÆÃ
             InitPools();
 
-            //¸¶½ºÅÍ Å¬¶óÀÌ¾ğÆ®¸¸ ½ºÆùÇÒ ¼ö ÀÖµµ·Ï ¼³Á¤
             if (PhotonNetwork.IsMasterClient)
-                _spawnCoroutine = StartCoroutine(IE_Spawn());
+                _spawnCo = StartCoroutine(IE_Spawn());
         }
 
+        [PunRPC]
+        public void RPC_StartSpawn() => StartSpawn(); // ìŠ¤í° ì‹œì‘
+
+
         /// <summary>
-        /// °¢ Note ÇÁ¸®Æé¿¡ ÇØ´çÇÏ´Â Ç® »ı¼º
+        /// í’€ ì´ˆê¸°í™”
+        /// 
+        /// ê° ë…¸íŠ¸ ë³„ ìµœì†Œ í”„ë¦¬í© ìˆ˜ ì§€ì •
         /// </summary>
         private void InitPools()
         {
+            _effectPool = new(null, _hitEffect, 5);
+
             foreach (var prefab in _notePrefabs)
-            {
                 if (!_notePools.ContainsKey(prefab.name))
-                {
-                    var pool = new ObjectPool(transform, prefab, 4);
-                    _notePools.Add(prefab.name, pool);
-                }
-            }
+                    _notePools.Add(prefab.name, new ObjectPool(transform, prefab, 5));
         }
 
-        /// <summary>
-        /// ¸¶½ºÅÍ Å¬¶óÀÌ¾ğÆ®°¡ Note Á¾·ù¿Í À§Ä¡ °áÁ¤ ÈÄ,
-        /// ¸ğµç Å¬¶óÀÌ¾ğÆ®¿¡°Ô µ¿±âÈ­ ½ÃÅ°´Â ·ÎÁ÷
-        /// </summary>
-        /// <returns> spawnTiming ¸¶´Ù ½ÇÇà </returns>
+        public PooledObject GetEffectPool() => _effectPool.PopPool();
+
         private IEnumerator IE_Spawn()
         {
             while (true)
             {
                 yield return new WaitForSeconds(_spawnTiming);
 
-                // ¸¶½ºÅÍ Å¬¶óÀÌ¾ğÆ®°¡ Note Á¾·ù¿Í À§Ä¡ °áÁ¤
+                //ë ˆì¸ í™œì„±í™” ìˆ˜(ì‹¤ì œ ì”¬ì— í™œì„±í™” í•œ ë ˆì¸ ìˆ˜ ~ ì‹¤ì œ ì ‘ì†ì¤‘ì¸ í”Œë ˆì´ì–´ ìˆ˜ ì¤‘ ìµœì†Œ ê°’)
+                int activeLaneCount = Mathf.Min(LaneManager.Instance.ActiveLaneCount, GameManager.Instance.LaneCapacity
+            );
+                if (activeLaneCount <= 0)
+                {
+                    Debug.Log("ì•¡í‹°ë¸Œ ë¼ì¸ ì¹´ìš´íŠ¸ê°€ 0ì´í•˜ì„");
+                    continue; //í”Œë ˆì´ì–´ ì—†ìœ¼ë©´ whilte ë£¨í”„ ë‹¤ì‹œ ëŒê¸°
+                }
 
-                //·£´ıÀ¸·Î Note ÇÁ¸®Æé Áß ÇÏ³ª ¼±ÅÃ
-                int index = Random.Range(0, _notePrefabs.Length);
-                string noteName = _notePrefabs[index].name;
+                //ë…¸íŠ¸ ëœë¤ ì„ íƒ
+                string noteName = _notePrefabs[Random.Range(0, _notePrefabs.Length)].name;
+                // ë ˆì¸ ì¤‘ 1ê°œ ëœë¤ ì„ íƒ
+                int lane = Random.Range(1, activeLaneCount + 1);
+                //ì†ë„ ëœë¤ ì„ íƒ
+                // float speed = Random.Range(1.5f, 4.0f);
+                float speed = 1.5f;
 
-                //TODO ±è½ÂÅÂ : ·¹ÀÏ À§Ä¡ ¼³Á¤ ÇÒ ÇÊ¿ä ÀÖÀ½
-                // -> °ÔÀÓ ½ÃÀÛ ½Ã ÇÊ¿ä ·¹ÀÏ ¼ö(ÇÃ·¹ÀÌ¾î ÀÎ¿ø ¼ö)¸¦ ¹Ş¾Æ¿Â ÈÄ, ·¹ÀÏ ¼ö¸¦ ÃÊ±âÈ­ ÇÑ ÈÄ,
-                // ¿©±â¼­ ÇØ´ç ·¹ÀÏ ¼ö¿¡ ¸Â°Ô À§Ä¡ Á¶Á¤(spawnPos)ÇÏ¸é µÉ µí.
-                
-                //·£´ı ÀÌµ¿ ¼Óµµ ¼³Á¤
-                float randomSpeed = Random.Range(1f, 4f);
+                // ë§ˆìŠ¤í„°ê°€ ê° noteId ìƒì„± & ë“±ë¡
+                int noteId = ++_seqId;
+                LaneManager.Instance.RegisterNote(noteId, lane);
 
-                // ¸ğµç Å¬¶óÀÌ¾ğÆ®¿¡°Ô µ¿±âÈ­
-                // photonView.RPC(nameof(NoteSpawn), RpcTarget.All, noteName, spawnPos, randomSpeed);
+                // ëª¨ë“  í´ë¼ì— ë¡œì»¬ ìŠ¤í° ëª…ë ¹
+                photonView.RPC(nameof(RPC_NoteSpawn), RpcTarget.All, noteName, lane, speed, noteId);
             }
         }
 
-        /// <summary>
-        /// Note ÀÌ¸§, ½ºÆù À§Ä¡, ÀÌµ¿¼Óµµ¸¦ ¸Å°³º¯¼ö·Î ¹ŞÀº ÈÄ,
-        /// Ç®¿¡¼­ ²¨³½ ÈÄ ÇØ´ç ¿É¼Ç ¼³Á¤ÇÏ´Â ·ÎÁ÷
-        /// </summary>
-        /// <param name="noteName">NoteÀÇ ÀÌ¸§</param>
-        /// <param name="spawnPos">Note°¡ ½ºÆùµÉ À§Ä¡</param>
-        /// <param name="speed">NoteÀÇ ³«ÇÏ ¼Óµµ</param>
         [PunRPC]
-        private void NoteSpawn(string noteName, Vector3 spawnPos, float speed)
+        private void RPC_NoteSpawn(string noteName, int lane, float speed, int noteId)
         {
-            if (_notePools.TryGetValue(noteName, out var pool))
+            if (!_notePools.TryGetValue(noteName, out var pool)) return;
+
+            var pose = GameManager.Instance.GetLaneSpawnPose(lane);
+
+            //ë…¸íŠ¸ í’€ì—ì„œ êº¼ë‚´ê³  ìœ„ì¹˜, íšŒì „ ì„¤ì •
+            var note = pool.PopPool();
+            note.transform.SetPositionAndRotation(pose.position, pose.rotation);
+
+            //  Note ì†ë„, Id, ë ˆì¸ ì„¤ì •
+            if (note.TryGetComponent(out Note mover))
             {
-                var note = pool.PopPool();
-                note.transform.SetPositionAndRotation(spawnPos, Quaternion.identity);
-                if (note.TryGetComponent(out Note mover))
-                    mover.SetSpeed(speed);
+                mover.SetSpeed(speed);
+                mover.SetMoveDirection(pose.rotation * Vector3.forward);
+                mover.Init(noteId, lane);
+            }
+
+            _activeById[noteId] = note; // ë¡œì»¬ì—ì„œ í™œì„±í™”ëœ ë…¸íŠ¸ ì¶”ì í•˜ê¸° ìœ„í•´ ë“±ë¡
+        }
+
+        [PunRPC]
+        private void RPC_DestroyNote(int noteId, bool isHit)
+        {
+            // noteIdì— í•´ë‹¹í•˜ëŠ” ë¡œì»¬ ì¸ìŠ¤í„´ìŠ¤ë§Œ ë°˜ë‚©
+            if (_activeById.TryGetValue(noteId, out var inst))
+            {
+                _activeById.Remove(noteId);
+                if (inst.TryGetComponent(out Note mover))
+                {
+                    //ì ì¤‘ ì‹œ íˆíŠ¸ ì´í™íŠ¸
+                    if (isHit)
+                    {
+                        // mover.HitEffect();
+                        var effect = GetEffectPool();
+                        var particle = effect.GetComponent<PooledEffect>();
+                        particle.PlayEffect(mover.transform.position, Quaternion.identity);
+                        Debug.Log("ì ì¤‘");
+                    }
+
+                    mover.ReturnPool();
+                }
             }
         }
 
-        /// <summary>
-        /// ½ºÆùÀ» ¸ØÃß´Â ·ÎÁ÷
-        /// </summary>
+        //ìŠ¤í° ì •ì§€
         public void StopSpawn()
         {
             if (!_isSpawning) return;
 
-
             _isSpawning = false;
-
-            if (_spawnCoroutine != null)
+            if (_spawnCo != null)
             {
-                StopCoroutine(_spawnCoroutine);
-                _spawnCoroutine = null;
+                StopCoroutine(_spawnCo);
+                _spawnCo = null;
             }
+        }
+
+        // ë§ˆìŠ¤í„°ê°€ ê²€ì¦ í›„ íŒŒê´´ ë¸Œë¡œë“œìºìŠ¤íŠ¸í•  ë•Œ ì”€
+        public void DestoryNote(int noteId, bool isHit)
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+            photonView.RPC(nameof(RPC_DestroyNote), RpcTarget.All, noteId, isHit);
         }
     }
 }

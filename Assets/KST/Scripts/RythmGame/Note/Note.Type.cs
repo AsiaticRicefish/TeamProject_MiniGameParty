@@ -3,22 +3,37 @@ using UnityEngine;
 namespace RhythmGame
 {
     /// <summary>
-    /// NoteType°ú °ü·ÃÇÏ¿© Á¤ÀÇÇÑ Å¬·¡½º
+    /// NoteTypeê³¼ ê´€ë ¨í•˜ì—¬ ì •ì˜í•œ í´ë˜ìŠ¤
     /// </summary>
     partial class Note : MonoBehaviour
     {
-        private NoteType _type;
-        public NoteType GetObstacleType() => _type;
+        [SerializeField] NoteType _type;
+        public NoteType Type => _type;
 
-        private NoteStatus _status;
-        public NoteStatus Status { get { return _status; }  set { _status = value; } }
+        [SerializeField] NoteStatus _status;
+        public NoteStatus Status { get { return _status; } set { _status = value; } }
+
+        [SerializeField] int _noteId;
+        public int NoteId { get { return _noteId; } set { _noteId = value; } }
+        [SerializeField] int _lane;
+        public int Lane { get { return _lane; } set { _lane = value; } }
+
+        //ì´ˆê¸°í™”
+        public void Init(int noteId, int lane)
+        {
+            _spawnPos = transform.position;
+            _noteId = noteId;
+            _lane = lane;
+            _status = NoteStatus.None;
+        }
+
 
         /// <summary>
-        /// Àå¾Ö¹° ³ëÆ®ÀÇ Á¾·ù¿¡ µû¸¥ °ú¿­ ½ºÄÚ¾î
+        /// ì¥ì• ë¬¼ ë…¸íŠ¸ì˜ ì¢…ë¥˜ì— ë”°ë¥¸ ê³¼ì—´ ìŠ¤ì½”ì–´
         /// </summary>
         public int GetOverLoadScore()
         {
-            //¾ÆÁ÷ ÆÇÁ¤¹Ù ±ÙÃ³¿¡ Note°¡ Á¢±ÙÇÏÁö ¾Ê¾ÒÀ½¿¡µµ ÆÄ±«¸¦ ½ÃµµÇÑ´Ù¸é °ú¿­ ½ºÅÃÀÌ ½×ÀÌµµ·Ï ÇØ¾ß ÇÔ.
+            //ì•„ì§ íŒì •ë°” ê·¼ì²˜ì— Noteê°€ ì ‘ê·¼í•˜ì§€ ì•Šì•˜ìŒì—ë„ íŒŒê´´ë¥¼ ì‹œë„í•œë‹¤ë©´ ê³¼ì—´ ìŠ¤íƒì´ ìŒ“ì´ë„ë¡ í•´ì•¼ í•¨.
             if (_status == NoteStatus.None) return 1;
 
             return _type switch

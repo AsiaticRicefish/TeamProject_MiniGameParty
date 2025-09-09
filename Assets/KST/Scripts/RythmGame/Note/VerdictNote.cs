@@ -1,42 +1,55 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace RhythmGame
 {
     /// <summary>
-    /// ÆÇÁ¤¹Ù ±ÙÃ³¿¡ ³ëÆ®°¡ ÀÖ´ÂÁö ¿©ºÎ¿¡ µû¶ó 
-    /// °ú¿­ÆÇÁ¤ µîÀÌ ´Ş¶óÁú ¼ö ÀÖµµ·Ï ÇÏ´Â Å¬·¡½º
+    /// íŒì •ë°” ê·¼ì²˜ì— ë…¸íŠ¸ê°€ ìˆëŠ”ì§€ ì—¬ë¶€ì— ë”°ë¼ 
+    /// ê³¼ì—´íŒì • ë“±ì´ ë‹¬ë¼ì§ˆ ìˆ˜ ìˆë„ë¡ í•˜ëŠ” í´ë˜ìŠ¤
     /// </summary>
+    [RequireComponent(typeof(Collider))]
     public class VerdictNote : MonoBehaviour
     {
+        //ì •í™•ë„ íŒì •ì„ í•´ë‹¹ íŒì •ë°”ì˜ í•œ ì¶•ì„ ê¸°ì¤€ìœ¼ë¡œ 
+        //ì–¼ë§ˆë‚˜ ì¤‘ì•™ì— ìˆëŠ”ì§€ ì—¬ë¶€ì— ë”°ë¼ accuracyê°€ ë‹¬ë¼ì§€ë„ë¡ í•  í•„ìš”ê°€ ì‡ìŒ.
+        //noteì˜ ì¶©ëŒ ìœ„ì¹˜ì— ë”°ë¼ status ë³€í™”ë¥¼ ì¤˜ë„ ë ì§€ë„?
+
+
+        private List<Note> _notes = new();//íŒì • ë°”ì— ë“¤ì–´ì˜¨ ë…¸íŠ¸ë“¤
+        public List<Note> Notes => _notes;
 
         /// <summary>
-        /// Ãæµ¹Ã¼°¡ NoteÀÌ¸é¼­ None »óÅÂÀÏ °æ¿ì Good »óÅÂ·Î º¯°æ
+        /// ì¶©ëŒì²´ê°€ Noteì´ë©´ì„œ None ìƒíƒœì¼ ê²½ìš° Good ìƒíƒœë¡œ ë³€ê²½
         /// </summary>
         /// <param name="other"></param>
         void OnTriggerStay(Collider other)
         {
-            if (other.TryGetComponent(out Note note))
-            {
-                if (note.Status == NoteStatus.None)
-                {
-                    note.Status = NoteStatus.Good;
-                }
-            }
+            if (!other.TryGetComponent(out Note note)) return;
+            if (_notes.Contains(note)) return;
+
+            _notes.Add(note);
+            note.Status = NoteStatus.CanInteract;
+
+            note.OnDespawn -= Despawn;
+            note.OnDespawn += Despawn;
         }
 
         /// <summary>
-        /// Note°¡ ÆÇÁ¤¹Ù ¹ÛÀ¸·Î ³ª°¬À» °æ¿ì, None»óÅÂ·Î º¯°æ
+        /// Noteê°€ íŒì •ë°” ë°–ìœ¼ë¡œ ë‚˜ê°”ì„ ê²½ìš°, Noneìƒíƒœë¡œ ë³€ê²½
         /// </summary>
         /// <param name="other"></param>
         void OnTriggerExit(Collider other)
         {
-            if (other.TryGetComponent(out Note note))
-            {
-                if (note.Status != NoteStatus.None)
-                {
-                    note.Status = NoteStatus.None;
-                }
-            }
+            if (!other.TryGetComponent(out Note note)) return;
+            if (!_notes.Contains(note)) return;
+
+            note.ReturnPool();
+        }
+
+        void Despawn(Note note)
+        {
+            if (_notes.Remove(note))
+                note.OnDespawn -= Despawn;
         }
     }
 }
