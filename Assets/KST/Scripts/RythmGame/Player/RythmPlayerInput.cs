@@ -13,61 +13,71 @@ namespace RhythmGame
         //판정바
         public VerdictNote verdictNote;
 
-        Note _holdtarget;
+        Note _holdTarget;
         float _holdTimer;
         float _requireHoldTime;
         bool _isPress;
+        bool _isDone; //필요시간 도달로 성공 처리 시 cancel에서 중복처리 방지
+
+        Note _noteToTap; // performed 시점 노트(지속 아니면 cancel에서 판정)
 
         void Update()
         {
-            if (!_isPress || _holdtarget == null) return;
+            if (!_isPress || _holdTarget == null) return;
 
-            if (IsInVerdictBar(_holdtarget) && _holdtarget.Status == NoteStatus.CanInteract)
+            if (IsInVerdictBar(_holdTarget) && _holdTarget.Status == NoteStatus.CanInteract)
             {
                 _holdTimer += Time.deltaTime;
 
                 if (_holdTimer >= _requireHoldTime)
                 {
-                    ScoreManager.Instance.RequestHit(_holdtarget.NoteId, true, NoteType.Continue);
-                    Debug.Log("7");
+                    ScoreManager.Instance.RequestHit(_holdTarget.NoteId, true, NoteType.Continue);
+                    _isDone = true;
                     InitHold();
                 }
             }
-        }
-
-        /// <summary>
-        /// 탭/ 터치 : Fake, Touch 노트 전용
-        /// </summary>
-        public void OnTap()
-        {
-            if (!CanInput()) return;
-
-            //초기화
-            Note t = PickNote();
-
-            //노트가 없는데도 클릭 시도
-
-            if (t == null)
+            else
             {
                 ScoreManager.Instance.RequestMiss();
-                Debug.Log("1");
-                return;
+                InitHold();
             }
-
-            //노트가  continue일 경우 tap 시도 시 미스처리
-            if (t.Type == NoteType.Continue)
-            {
-                ScoreManager.Instance.RequestMiss();
-                Debug.Log("2");
-
-                return;
-            }
-
-            //클릭 시 동작 (정확하게 note 누르면 마스터한테 요청),아니면 미스했다는 로직 호출
-            ScoreManager.Instance.RequestHit(t.NoteId, t.Status == NoteStatus.CanInteract, t.Type);
-            Debug.Log("5");
-
         }
+        /*
+                /// <summary>
+                /// 탭/ 터치 : Fake, Touch 노트 전용
+                /// </summary>
+                public void OnTap()
+                {
+                    if (!CanInput()) return;
+
+                    //초기화
+                    Note t = PickNote();
+
+                    //노트가 없는데도 클릭 시도
+
+                    if (t == null)
+                    {
+                        ScoreManager.Instance.RequestMiss();
+                        Debug.Log("1");
+                        return;
+                    }
+
+                    //노트가  continue일 경우 tap 시도 시 미스처리
+                    if (t.Type == NoteType.Continue)
+                    {
+                        ScoreManager.Instance.RequestMiss();
+                        Debug.Log("2");
+
+                        return;
+                    }
+
+                    //클릭 시 동작 (정확하게 note 누르면 마스터한테 요청),아니면 미스했다는 로직 호출
+                    ScoreManager.Instance.RequestHit(t.NoteId, t.Status == NoteStatus.CanInteract, t.Type);
+                    Debug.Log("5");
+
+                }
+
+        */
 
 
         /// <summary>
@@ -91,54 +101,79 @@ namespace RhythmGame
         void BeginHold()
         {
             if (!CanInput()) return;
-            if (_holdtarget != null) return;
+            if (_holdTarget != null) return;
 
             var t = PickNote();
             //미스처리
-            if (t == null || t.Type != NoteType.Continue || t.Status != NoteStatus.CanInteract)
+            if (t == null)
             {
+                _noteToTap = null;
                 // ScoreManager.Instance.RequestMiss();
-                Debug.Log("3");
-
                 return;
             }
 
-            //홀드 값 지정
-            _holdtarget = t;
-            _holdTimer = 0f;
-            _requireHoldTime = _holdtarget.GetHoldTime();
-            _isPress = true;
+            //지속 노트일 경우
+            if (t.Type == NoteType.Continue && t.Status == NoteStatus.CanInteract)
+            {
+                //홀드 값 지정
+                _holdTarget = t;
+                _holdTimer = 0f;
+                _requireHoldTime = _holdTarget.GetHoldTime();
+                _isPress = true;
+                _isDone = false;
+                _noteToTap = null;
+            }
+            else
+            {
+                _noteToTap = t;
+            }
 
         }
         void EndHold()
         {
-            if (_holdtarget == null)
+            if (_holdTarget != null)
             {
-                _isPress = false;
+                if (_isDone)
+                {
+                    InitHold();
+                    return;
+                }
+
+                bool success = _holdTimer >= _requireHoldTime && IsInVerdictBar(_holdTarget);
+                if (success)
+                    ScoreManager.Instance.RequestHit(_holdTarget.NoteId, true, NoteType.Continue);
+                else
+                    ScoreManager.Instance.RequestMiss();
+
+                InitHold();
+
                 return;
             }
-
-            bool success = _holdTimer >= _requireHoldTime && IsInVerdictBar(_holdtarget);
-            if (success)
+            if (_noteToTap != null)
             {
-                ScoreManager.Instance.RequestHit(_holdtarget.NoteId, true, NoteType.Continue);
-                Debug.Log("6");
+                var t = _noteToTap;
+                _noteToTap = null;
+
+                if (t.Type == NoteType.Continue) return;
+
+                bool isCan = t.Status == NoteStatus.CanInteract;
+
+                if (isCan)
+                    ScoreManager.Instance.RequestHit(t.NoteId, true, t.Type);
+                else
+                    ScoreManager.Instance.RequestMiss();
             }
             else
             {
                 ScoreManager.Instance.RequestMiss();
-                Debug.Log("4");
-
             }
-
-            InitHold();
 
         }
 
         private void InitHold()
         {
             //홀드 값 초기화
-            _holdtarget = null;
+            _holdTarget = null;
             _holdTimer = 0f;
             _requireHoldTime = 0f;
             _isPress = false;
