@@ -11,8 +11,8 @@
     </androidPackage>
     <androidPackage spec="com.google.android.gms:play-services-games-v2:+">
       <repositories>
-              <repository>Assets/GooglePlayGames/com.google.play.games/Editor/m2repository</repository>
-              </repositories>
+        <repository>Assets/GooglePlayGames/com.google.play.games/Editor/m2repository</repository>
+      </repositories>
     </androidPackage>
   </androidPackages>
 </dependencies>
