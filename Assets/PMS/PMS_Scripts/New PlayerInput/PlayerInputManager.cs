@@ -68,6 +68,7 @@ namespace ShootingScene
             InitializeInputActions();
 
             RegisterActions();          // 액션 구독 등록하고
+            DisableAllInput2();
             //DisableAllInput();          // 액션을 비활성화
         }
 

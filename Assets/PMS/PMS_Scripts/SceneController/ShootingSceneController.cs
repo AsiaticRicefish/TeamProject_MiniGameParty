@@ -22,9 +22,7 @@ public class ShootingSceneController : BaseGameSceneController
         yield return WaitForSingletonReady<ShootingGameManager>();
         yield return WaitForSingletonReady<RoomPropertyObserver>();
         yield return WaitForSingletonReady<PlayerInputManager>();
-        //턴매니저 추가
         yield return WaitForSingletonReady<TurnManager>();
-        //카드 매니저 추가 
         yield return WaitForSingletonReady<CardManager>();
         yield return WaitForSingletonReady<Test_ShotFollowCamera>();
         yield return WaitForSingletonReady<EggManager>();
@@ -74,12 +72,16 @@ public class ShootingSceneController : BaseGameSceneController
             return;
         }
         try
-        {
+        {           
+            //모든 Scene Controller의 작업 처리 완료를 알림
+            //TaskSyncManager.Instance.SetTaskDone(ShootingGamePlayerPropertyKeys.TaskType.Initialized);
+
             if (PhotonNetwork.IsMasterClient)
             {
                 MainGameManager.Instance?.NotifyMiniGameStart();
                 RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "CardSelectState");   
             }
+
             //else if(RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.State).ToString() == "CardSelectState")
             //{
             //     Debug.Log("호출?");

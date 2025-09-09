@@ -77,7 +77,15 @@ public class LocalPlayerInput : MonoBehaviourPun
         if (photonView.IsMine)
         {
             Debug.Log("구독 해제");
-            ShootingScene.PlayerInputManager.Instance.onTouchPress -= HandleTouch;
+            if(ShootingScene.PlayerInputManager.Instance != null)
+            {
+                ShootingScene.PlayerInputManager.Instance.onTouchPress -= HandleTouch;
+            }
+            else
+            {
+                Debug.LogWarning("구독해제가 안됬어요");
+            }
+
             //타이머 정지를 모두에게 알리기
             NotifyStopCountdown(true);
 
