@@ -142,7 +142,7 @@ namespace RhythmGame
             else
             {
                 isHit = false;
-                GameManager.Instance.OverHeatCheck();
+                // GameManager.Instance.OverHeatCheck();
 
                 GameManager.Instance.MissBlock(info.Sender);
                 // SoundManager.Instance.PlaySFX_GAME(SfX_Game.SFX_Rhythm_Miss);
@@ -162,7 +162,7 @@ namespace RhythmGame
         void RPC_RequestMiss(PhotonMessageInfo info)
         {
             if (!PhotonNetwork.IsMasterClient) return;
-            GameManager.Instance.OverHeatCheck();
+            // GameManager.Instance.OverHeatCheck();
             GameManager.Instance.MissBlock(info.Sender);
         }
 

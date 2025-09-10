@@ -13,7 +13,7 @@ namespace RhythmGame
     {
         // 게임 시간 관리
         [SerializeField] float gameTime = 180f; //게임 플레이타임
-
+        [SerializeField] float countDown = 3f; //카운트 다운
         //TODO 김승태 게임 플레이 시간 (임시) 변경 예정
         [SerializeField] TMP_Text gameTimer;
         public bool IsGameStart = false;
@@ -49,14 +49,14 @@ namespace RhythmGame
             if (!PhotonNetwork.IsMasterClient) return;
 
             // 초기화
-
+/*
             // 모든 클라의 과열 스코어를 0으로 세팅 
             overHeatValue = 0;
 
             //과열 값 초기값 설정
             ScoreManager.Instance.photonView.
             RPC(nameof(ScoreManager.SetOverheat), RpcTarget.All, overHeatValue);
-
+*/
             // 플레이어 자리 배정
             LaneManager.Instance.SetLane();
 
@@ -145,17 +145,17 @@ namespace RhythmGame
             {
                 case NoteType.Fake:
                     score = -1;
-                    OverHeatCheck();
+                    // OverHeatCheck();
                     break;
 
                 case NoteType.Touch:
                     score = 2;
-                    FrozenHeat();
+                    // FrozenHeat();
                     break;
 
                 case NoteType.Continue:
                     score = 10;
-                    FrozenHeat();
+                    // FrozenHeat();
                     break;
             }
 
