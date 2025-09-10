@@ -91,8 +91,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cardBackGround: {fileID: 0}
-  faceImage: {fileID: 0}
-  numberText: {fileID: 0}
+  faceImage: {fileID: 7346636407581019090}
+  numberText: {fileID: 5335168923200997033}
   backSprite: {fileID: 0}
   faceSpriteBase: {fileID: 0}
   normalColor: {r: 1, g: 1, b: 1, a: 1}
