@@ -51,7 +51,6 @@ public class JengaRankingUIAnimated : MonoBehaviour
     private bool _reordering = false;
     private bool _pendingAfterReorder = false;
 
-    // 라이브 업데이트 디바운싱/큐잉
     private float _lastUpdateTime = -999f;
     private bool _updateQueued = false;
     private Dictionary<string, int> _pendingRanks;
@@ -60,7 +59,6 @@ public class JengaRankingUIAnimated : MonoBehaviour
     private CanvasGroup _rootCg;
     private Tween _rootFadeTween;
     private bool _liveOpened = false;
-    private bool _finalShown = false;
 
     // 레이아웃 컴포넌트
     private VerticalLayoutGroup _vlg;
@@ -68,6 +66,21 @@ public class JengaRankingUIAnimated : MonoBehaviour
 
     // 중복 인스턴스 생성 방지
     private readonly HashSet<string> _creating = new();
+
+    #region 색상 파렛트
+    [SerializeField]
+    private Color[] playerPalette = {
+        new(0.96f,0.77f,0.06f), // 노랑
+        new(0.25f,0.67f,0.96f), // 파랑
+        new(0.97f,0.43f,0.43f), // 빨강
+        new(0.37f,0.88f,0.58f), // 초록
+    };
+    private readonly Dictionary<string, Color> _uidColor = new();
+
+    // 현재 매치에서 쓰고 있는 색 집합 (중복 방지용)
+    private readonly HashSet<Color> _usedColors = new();
+
+    #endregion
 
     private void Awake()
     {
@@ -106,7 +119,6 @@ public class JengaRankingUIAnimated : MonoBehaviour
     // ======================= 최종 결과 표시 =======================
     public void Show(Dictionary<string, int> uidToRank)
     {
-        _finalShown = true;
         _liveOpened = false;
         _updateQueued = false;
         StartCoroutine(ShowRoutine(uidToRank));
@@ -188,6 +200,8 @@ public class JengaRankingUIAnimated : MonoBehaviour
     {
         var ordered = newRanks.OrderBy(kv => kv.Value).ToList();
 
+        EnsureUniqueColors(ordered);
+
         // 새/빠진 행 처리 + 텍스트 갱신
         yield return EnsureRowsRoutine(ordered);
 
@@ -200,9 +214,10 @@ public class JengaRankingUIAnimated : MonoBehaviour
             int oldRank = _lastRanks.TryGetValue(uid, out var r) ? r : int.MaxValue;
             int delta = oldRank - rank;
 
-            row.SetName(ResolveNickname(uid));
+            row.SetColor(ResolveColor(uid));
             if (delta != 0) row.SetRankAnimated(rank);
-            else row.SetContent(rank, row.CurrentNickname);
+            else row.SetContent(rank);
+            row.SetFirstPlace(rank == 1);
 
             if (delta != 0)
             {
@@ -227,12 +242,15 @@ public class JengaRankingUIAnimated : MonoBehaviour
             yield break;
         }
 
+        EnsureUniqueColors(ordered);
+
         foreach (var kv in ordered)
         {
             var uid = kv.Key;
             if (_rows.ContainsKey(uid) || _creating.Contains(uid)) continue;
 
             _creating.Add(uid);
+
             var handle = Addressables.InstantiateAsync(rowAddress, content);
             yield return handle;
             _creating.Remove(uid);
@@ -264,7 +282,9 @@ public class JengaRankingUIAnimated : MonoBehaviour
             le.flexibleHeight = 0f;
 
             // 초기 내용
-            row.SetContent(kv.Value, ResolveNickname(uid));
+            row.SetContent(kv.Value);
+            row.SetColor(ResolveColor(uid));
+            row.SetFirstPlace(kv.Value == 1);
 
             _rows[uid] = row;
             _rowHandles[uid] = handle;
@@ -284,6 +304,7 @@ public class JengaRankingUIAnimated : MonoBehaviour
 
         // 레이아웃 한 번 강제 갱신
         LayoutRebuilder.ForceRebuildLayoutImmediate(content);
+        yield break;
     }
 
     // 원하는 순서대로 siblingIndex 세팅 후, DOTween으로 부드럽게 따라가게 만드는 핵심 함수
@@ -395,19 +416,104 @@ public class JengaRankingUIAnimated : MonoBehaviour
         root.SetActive(false);
     }
 
-    // ======================= 유틸 =======================
-    private string ResolveNickname(string uid)
+    private void OnDestroy()
     {
-        var gp = PlayerManager.Instance?.GetPlayer(uid);
-        if (gp != null && !string.IsNullOrEmpty(gp.Nickname)) return gp.Nickname;
+        foreach (var kv in _rowHandles)
+            if (kv.Value.IsValid()) Addressables.ReleaseInstance(kv.Value);
 
-        Player p = PhotonNetwork.PlayerList.FirstOrDefault(pp =>
-            pp.CustomProperties != null &&
-            pp.CustomProperties.TryGetValue("uid", out var v) && v as string == uid);
-
-        if (p != null && !string.IsNullOrEmpty(p.NickName)) return p.NickName;
-        return $"Player({(uid?.Substring(0, Mathf.Min(6, uid.Length)) ?? "???")})";
+        _rowHandles.Clear();
+        _rows.Clear();
+        _lastRanks.Clear();
+        _moveTweens.Clear();
+        _creating.Clear();
     }
 
-    private void OnDestroy() => ClearRows();
+    #region 중복 없는 색 배정 유틸
+    // 팔레트에서 아직 안쓴 인덱스를 찾아 반환 (충돌 시 선형탐색)
+    private int FindFreePaletteIndex(int start, HashSet<int> takenIdx, int paletteLen)
+    {
+        if (paletteLen <= 0) return -1;
+        for (int k = 0; k < paletteLen; k++)
+        {
+            int idx = (start + k) % paletteLen;
+            if (!takenIdx.Contains(idx)) return idx;
+        }
+        return -1;
+    }
+
+    // 팔레트가 다 찼을 때 추가 색 생성 (황금비 간격으로 Hue 분산)
+    private Color MakeExtraColor(int order)
+    {
+        const float PHI = 0.6180339887f;          // golden ratio conjugate
+        float h = Mathf.Repeat(order * PHI, 1f);  // 0~1 분포
+        float s = 0.65f;
+        float v = 0.95f;
+        return Color.HSVToRGB(h, s, v);
+    }
+
+    // ordered(현재 보이는 UID들)에 대해 아직 색이 없는 UID에게 색을 부여
+    private void EnsureUniqueColors(List<KeyValuePair<string, int>> ordered)
+    {
+        // 1) 현재 화면에 있는 UID만 집계
+        var uids = ordered.Select(k => k.Key).ToList();
+
+        // 2) 이미 배정된 색 집합/팔레트 인덱스 집합 구성
+        _usedColors.Clear();
+        var takenIdx = new HashSet<int>();
+        foreach (var kv in _uidColor)
+        {
+            if (!uids.Contains(kv.Key)) continue; // 현재 화면 밖이면 무시(원하면 유지해도 됨)
+            _usedColors.Add(kv.Value);
+
+            // 팔레트 내 정확히 일치하는 색은 인덱스도 점유 처리
+            for (int i = 0; i < playerPalette.Length; i++)
+            {
+                if (playerPalette[i] == kv.Value) { takenIdx.Add(i); break; }
+            }
+        }
+
+        // 3) 새 UID들에 색 배정 (정렬해두면 양 클라에서 결정적)
+        foreach (var uid in uids.OrderBy(x => x))
+        {
+            if (_uidColor.ContainsKey(uid)) continue;
+
+            int n = playerPalette.Length;
+            int hashIdx = n > 0 ? Mathf.Abs(uid.GetHashCode()) % n : -1;
+
+            Color chosen;
+            if (n > 0)
+            {
+                // 팔레트에서 빈 칸 찾기
+                int idx = FindFreePaletteIndex(hashIdx, takenIdx, n);
+                if (idx >= 0)
+                {
+                    chosen = playerPalette[idx];
+                    takenIdx.Add(idx);
+                }
+                else
+                {
+                    // 팔레트가 꽉 찼으면 추가 생성
+                    chosen = MakeExtraColor(_usedColors.Count);
+                }
+            }
+            else
+            {
+                // 팔레트가 비어있다면 전부 생성
+                chosen = MakeExtraColor(_usedColors.Count);
+            }
+
+            _uidColor[uid] = chosen;
+            _usedColors.Add(chosen);
+        }
+    }
+
+    private Color ResolveColor(string uid)
+    {
+        if (_uidColor.TryGetValue(uid, out var c)) return c;
+
+        int n = playerPalette.Length;
+        if (n > 0) return playerPalette[Mathf.Abs(uid.GetHashCode()) % n];
+        return MakeExtraColor(_uidColor.Count);
+    }
+    #endregion
 }

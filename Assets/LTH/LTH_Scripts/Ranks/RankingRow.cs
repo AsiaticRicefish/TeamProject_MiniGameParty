@@ -11,9 +11,17 @@ public class RankingRow : MonoBehaviour
 {
     [Header("Refs")]
     [SerializeField] private TMP_Text rankText;
-    [SerializeField] private TMP_Text nameText;
     [SerializeField] private Image bg;
+    [SerializeField] private Image colorChip;
     [SerializeField] private CanvasGroup cg;
+
+    [Header("First Place Icon")]
+    [SerializeField] private Image trophyIcon;   // 트로피 아이콘
+    [SerializeField] private float trophyFade = 0.15f;
+    [SerializeField] private float trophyPunch = 0.18f;
+    private Tween _trophyTween;
+
+
 
     [Header("Delta Icon (▲/▼)")]
     [SerializeField] private Image deltaIcon;           // 아이콘 이미지(작은 화살표)
@@ -41,7 +49,8 @@ public class RankingRow : MonoBehaviour
 
     private Tween _fadeTween, _punchTween, _flashTween, _iconSeqTween;
 
-    public string CurrentNickname => nameText ? nameText.text : string.Empty;
+    bool UseBgAsChip => colorChip == null || colorChip == bg;
+
     public int CurrentRank
     {
         get
@@ -63,13 +72,22 @@ public class RankingRow : MonoBehaviour
             var col = deltaIcon.color; col.a = 0f;
             deltaIcon.color = col;
         }
+
+        if (trophyIcon)
+        {
+            var c = trophyIcon.color; c.a = 0f;
+            trophyIcon.color = c;
+            trophyIcon.transform.localScale = Vector3.one;
+        }
+
+        if (bg) bg.color = normalColor;
     }
 
-    public void SetContent(int rank, string nickname)
+    public void SetContent(int rank)
     {
         if (rankText) rankText.text = rank.ToString();
-        if (nameText) nameText.text = nickname;
-        if (bg) bg.color = (rank == 1) ? firstColor : normalColor;
+        if (bg && !UseBgAsChip) bg.color = normalColor;
+        SetFirstPlace(rank == 1);
     }
 
     // === 실시간용: 이름은 그대로, 순위 숫자만 '플립' 후 셋 ===
@@ -83,14 +101,47 @@ public class RankingRow : MonoBehaviour
            .AppendCallback(() =>
            {
                rankText.text = newRank.ToString();
-               if (bg) bg.color = (newRank == 1) ? firstColor : normalColor;
+               if (bg && !UseBgAsChip) bg.color = normalColor;
+               SetFirstPlace(newRank == 1);
            })
            .Append(rankText.transform.DOScaleY(1f, 0.12f));
     }
 
-    public void SetName(string nickname)
+    public void SetFirstPlace(bool isFirst)
     {
-        if (nameText) nameText.text = nickname;
+        if (!trophyIcon) return;
+
+        _trophyTween?.Kill();
+        if (isFirst)
+        {
+            _trophyTween = DOTween.Sequence()
+                .Append(trophyIcon.DOFade(1f, trophyFade))
+                .Join(trophyIcon.transform.DOPunchScale(Vector3.one * trophyPunch, 0.25f, 8, 0.9f));
+        }
+        else
+        {
+            _trophyTween = trophyIcon.DOFade(0f, trophyFade);
+        }
+    }
+
+    public void SetColor(Color c)
+    {
+        if (colorChip && !UseBgAsChip)
+        {
+            colorChip.color = new Color(c.r, c.g, c.b, colorChip.color.a);
+        }
+        else if (bg) // bg 자체를 칠함
+        {
+            bg.color = new Color(c.r, c.g, c.b, bg.color.a);
+        }
+    }
+
+    public void HighlightMe(bool on)
+    {
+        if (!bg) return;
+        var c = bg.color;
+        c.a = on ? 1f : 0.85f;
+        bg.color = c;
     }
 
     public void EmphasizeFirstPlace()
@@ -106,7 +157,7 @@ public class RankingRow : MonoBehaviour
     {
         if (!bg) return;
         var flash = delta > 0 ? upColor : downColor;
-        var origin = (newRank == 1) ? firstColor : normalColor;
+        var origin = (!UseBgAsChip) ? normalColor : bg.color;
 
         bg.color = flash;
         _flashTween?.Kill();
@@ -144,6 +195,8 @@ public class RankingRow : MonoBehaviour
     {
         if (cg) cg.alpha = 1f;
         transform.localScale = Vector3.one * _baseScale;
+        if (bg && !UseBgAsChip) bg.color = normalColor;
+        SetFirstPlace(false);
     }
 
     private void OnDisable() => KillAllTweens();
@@ -158,5 +211,6 @@ public class RankingRow : MonoBehaviour
     {
         KillFx(); KillFlash();
         _iconSeqTween?.Kill(); _iconSeqTween = null;
+        _trophyTween?.Kill(); _trophyTween = null;
     }
 }
