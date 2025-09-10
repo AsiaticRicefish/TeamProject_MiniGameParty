@@ -39,6 +39,32 @@ namespace LDH_Util
 
         #endregion
 
+        #region User Info
+
+        public static partial class PlayerProps
+        {
+            public enum PlayerInfoKey
+            {
+                Uid,
+                CharacterId,
+                MountId,
+                ProfileId,
+            }
+
+            public static readonly Dictionary<PlayerInfoKey, string> PlayerInfoKeyDict =
+                new Dictionary<PlayerInfoKey, string>
+                {
+                    { PlayerInfoKey.Uid, "uid" },
+                    { PlayerInfoKey.CharacterId, "characterId" },
+                    { PlayerInfoKey.MountId, "mountId" },
+                    { PlayerInfoKey.ProfileId, "profileId" }
+                };
+
+            public static string GetPlayerInfoKey(PlayerInfoKey k) => PlayerInfoKeyDict[k];
+        }
+
+        #endregion
+        
         #region Match Making
 
         public static partial class RoomProps

@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using DesignPattern;
 using ExitGames.Client.Photon.StructWrapping;
 using LDH_Util;
@@ -239,17 +240,24 @@ namespace Network
         {
             Debug.Log("[NetworkManager] 모든 플레이어 커스텀 프로퍼티를 초기화합니다.");
 
+            // 보존해야 할 키
+            var keepKeys = new HashSet<string>(PlayerProps.PlayerInfoKeyDict.Values);
+            
             var customProperties = PhotonNetwork.LocalPlayer.CustomProperties;
 
             var clearProperties = new ExitGames.Client.Photon.Hashtable();
 
-            foreach (var key in customProperties.Keys)
+            foreach (DictionaryEntry entry in customProperties)
             {
-                if (key.ToString() == "uid") continue;
-                clearProperties[key] = null;
+                var keyStr = entry.Key as string ?? entry.Key?.ToString();
+                if (string.IsNullOrEmpty(keyStr)) continue;
+                
+                if (!keepKeys.Contains(keyStr))
+                    clearProperties[keyStr] = null;
             }
-
-            PhotonNetwork.LocalPlayer.SetCustomProperties(clearProperties);
+            
+            if (clearProperties.Count > 0)
+                PhotonNetwork.LocalPlayer.SetCustomProperties(clearProperties);
         }
 
         #endregion
