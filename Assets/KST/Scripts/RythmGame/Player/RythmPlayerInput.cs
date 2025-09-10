@@ -31,6 +31,7 @@ namespace RhythmGame
 
                 if (_holdTimer >= _requireHoldTime)
                 {
+                    ScoreManager.Instance.VerdictHold(_holdTimer, _requireHoldTime);
                     ScoreManager.Instance.RequestHit(_holdTarget.NoteId, true, NoteType.Continue);
                     _isDone = true;
                     InitHold();
@@ -39,6 +40,7 @@ namespace RhythmGame
             else
             {
                 ScoreManager.Instance.RequestMiss();
+                _isDone = true;
                 InitHold();
             }
         }
@@ -131,13 +133,16 @@ namespace RhythmGame
         }
         void EndHold()
         {
+            if (_isDone)
+            {
+                _isDone = false;
+                return;
+            }
+            //홀드 중일 때
             if (_holdTarget != null)
             {
-                if (_isDone)
-                {
-                    InitHold();
-                    return;
-                }
+
+                ScoreManager.Instance.VerdictHold(_holdTimer, _requireHoldTime);
 
                 bool success = _holdTimer >= _requireHoldTime && IsInVerdictBar(_holdTarget);
                 if (success)
@@ -149,6 +154,7 @@ namespace RhythmGame
 
                 return;
             }
+            //탭 처리
             if (_noteToTap != null)
             {
                 var t = _noteToTap;
@@ -159,13 +165,21 @@ namespace RhythmGame
                 bool isCan = t.Status == NoteStatus.CanInteract;
 
                 if (isCan)
+                {
                     ScoreManager.Instance.RequestHit(t.NoteId, true, t.Type);
+                    ScoreManager.Instance.VerdictTouch(t, verdictNote.transform);
+
+                }
                 else
+                {
                     ScoreManager.Instance.RequestMiss();
+                    ScoreManager.Instance.VerdictMiss();
+                }
             }
             else
             {
                 ScoreManager.Instance.RequestMiss();
+                ScoreManager.Instance.VerdictMiss();
             }
 
         }

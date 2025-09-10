@@ -13,10 +13,27 @@ namespace RhythmGame
         public int Score => _score;
         public int HeatScore => _heatScore;
 
+        //판정 및 콤보
+        private int _combo;
+        private int _bestCombo;
+        private int _verdictScore;
+
+        public int Combo => _combo;
+        public int BestCombo => _bestCombo;
+        public int VerdictScore => _verdictScore;
+        public VerdictConfig verdictConfig = new();
+
+
         //이벤트
         public event Action<int> OnScoreChanged;
         public event Action<int> OnOverHeatScoreChanaged;
         public event Action OnHeatScoreOver;
+        public event Action<Verdict, int, int> OnVerdict;
+
+        void Start()
+        {
+            _combo = 0; _bestCombo = 0; _verdictScore = 0;
+        }
 
         /// <summary>
         /// 점수 추가 로직
@@ -87,18 +104,6 @@ namespace RhythmGame
             OnOverHeatScoreChanaged?.Invoke(_heatScore);
             Debug.Log($"과열 점수 : {_heatScore}");
         }
-
-        // /// <summary>
-        // /// 과열 시 액션
-        // /// </summary>
-        // [PunRPC]
-        // public void RPC_IsOverHeat()
-        // {
-        //     Debug.Log("과열 Warning! 모든 플레이어 기절!");
-
-        //     // OnIsOverHeat?.Invoke(); //과열 점수 초기화, 플레이어 이펙트 등등 설정
-        // }
-
         #endregion
 
 
@@ -167,6 +172,105 @@ namespace RhythmGame
         }
 
         #endregion
+
+        #region Perfect 판정 및 콤보 시스템
+
+        /// <summary>
+        /// 터치 판정시스템
+        /// </summary>
+        /// <param name="note"></param>
+        /// <param name="verdictPos"></param>
+        /// <returns></returns>
+        public Verdict VerdictTouch(Note note, Transform verdictPos)
+        {
+            if (!note || !verdictPos) return ApplyVerdict(Verdict.Miss);
+
+            if (note.Type == NoteType.Fake) return ApplyVerdict(Verdict.Miss);
+
+            Vector3 dist = note.transform.position - verdictPos.position;
+            float z = Mathf.Abs(Vector3.Dot(dist, Vector3.forward));
+
+            if (z <= verdictConfig.touchPerfect) return ApplyVerdict(Verdict.Perfect);
+            else return ApplyVerdict(Verdict.Good);
+        }
+
+        /// <summary>
+        /// 홀드 판정 시스템
+        /// </summary>
+        /// <param name="hold"></param>
+        /// <param name="perfectTime"></param>
+        /// <returns></returns>
+        public Verdict VerdictHold(float hold, float perfectTime)
+        {
+            if (perfectTime <= 0f) return ApplyVerdict(Verdict.Miss);
+            float requieTime = perfectTime * verdictConfig.holdGood;
+
+            if (hold >= perfectTime) return ApplyVerdict(Verdict.Perfect);
+            if (hold >= requieTime) return ApplyVerdict(Verdict.Good);
+            else return ApplyVerdict(Verdict.Miss);
+        }
+
+        /// <summary>
+        /// 미스 처리
+        /// </summary>
+        /// <returns></returns>
+        public Verdict VerdictMiss()
+        {
+            return ApplyVerdict(Verdict.Miss);
+        }
+
+
+        /// <summary>
+        /// 판정 적용 로직
+        /// </summary>
+        /// <param name="verdict"></param>
+        /// <returns></returns>
+        Verdict ApplyVerdict(Verdict verdict)
+        {
+            switch (verdict)
+            {
+                case Verdict.Perfect:
+                case Verdict.Good:
+                    _combo++;
+                    _bestCombo = Mathf.Max(_bestCombo, _combo);
+                    break;
+                case Verdict.Miss:
+                    _combo = 0;
+                    break;
+            }
+
+            if (verdict == Verdict.Perfect)
+            {
+                _verdictScore++;
+                Debug.Log("퍼펙트");
+            }
+            else if (verdict == Verdict.Good)
+            {
+                _verdictScore++;
+                Debug.Log("굿");
+            }
+            else if (verdict == Verdict.Miss)
+            {
+                _verdictScore--;
+                Debug.Log("미스");
+            }
+
+            _verdictScore = Mathf.Clamp
+            (_verdictScore, verdictConfig.verdictScoreMin, verdictConfig.verdictScoreMax);
+
+            Debug.Log($"판정 점수 : {_verdictScore}");
+            Debug.Log($"콤보  : {_combo}");
+
+            //이벤트 발행 -> _verdictScore는 추후 마지막 점수 집계시 합산되어야함.
+            OnVerdict?.Invoke(verdict, _combo, _verdictScore);
+
+            return verdict;
+        }
+
+
+
+        #endregion
+
 
     }
 }
