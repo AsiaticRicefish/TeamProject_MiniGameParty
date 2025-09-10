@@ -129,7 +129,7 @@ public class UnimoEgg : MonoBehaviourPun
         if (!photonView.IsMine) return;
 
         ShootingScene.PlayerInputManager.Instance.DisableInput();
-
+        Test_ShotFollowCamera.Instance.StartFollow(gameObject);
         // 자기 화면에서 AddForce 적용
         isLaunched = true;
         //ApplyForce(dir);
@@ -137,7 +137,6 @@ public class UnimoEgg : MonoBehaviourPun
         // 다른 클라이언트에도 RPC 전송
         photonView.RPC("RPC_Shot", RpcTarget.Others, dir);
         isCameraFollowing = true;
-        Test_ShotFollowCamera.Instance.StartFollow(gameObject);
         // 발사 후 멈출 때까지 감시 시작
         //StartCoroutine(WaitForStop());
         // 발사 후 한 프레임 대기 후 감시 시작

@@ -857,6 +857,11 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 20
       objectReference: {fileID: 0}
+    - target: {fileID: 3074103645958566556, guid: 1ce882f5a8a11254e95e4a9491221266,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3626098518391923181, guid: 1ce882f5a8a11254e95e4a9491221266,
         type: 3}
       propertyPath: m_Layer
@@ -943,6 +948,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1515319741539133133, guid: da55b3c5f82598248bf205162c4a98e3,
         type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1515319741539133133, guid: da55b3c5f82598248bf205162c4a98e3,
+        type: 3}
       propertyPath: m_TagString
       value: UnimoEgg
       objectReference: {fileID: 0}
@@ -964,7 +974,7 @@ PrefabInstance:
     - target: {fileID: 2183313340420586615, guid: da55b3c5f82598248bf205162c4a98e3,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.9
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2183313340420586615, guid: da55b3c5f82598248bf205162c4a98e3,
         type: 3}
