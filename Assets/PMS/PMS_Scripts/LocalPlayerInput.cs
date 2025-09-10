@@ -613,7 +613,7 @@ public class LocalPlayerInput : MonoBehaviourPun
     private void RPC_StopCountDown(bool close)
     {
         Debug.Log("StopCountDown RPC 호출");
-        ShootingUIManager.Instance.StopCountDown(close);
+        ShootingUIManager.Instance?.StopCountDown(close);
     }
     #endregion
 }

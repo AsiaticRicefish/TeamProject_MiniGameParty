@@ -100,6 +100,10 @@ MonoBehaviour:
   - RPC_UpdateRanking
   - RPC_OnEndingReached
   - RPC_UpdateWind
+  - RPC_ShotServer
+  - RPC_UpdateState
+  - RPC_OnShot
+  - RPC_RequestShot
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

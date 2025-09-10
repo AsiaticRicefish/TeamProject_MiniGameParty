@@ -27,7 +27,7 @@ public class ShootingSceneController : BaseGameSceneController
         yield return WaitForSingletonReady<Test_ShotFollowCamera>();
         yield return WaitForSingletonReady<EggManager>();
         yield return WaitForSingletonReady<ShootingUIManager>();
-
+        yield return WaitForSingletonReady<WindSystem>();
         Debug.Log("모든 ShootingGameScene 매니저 Awake완료");
     }
 
@@ -45,6 +45,7 @@ public class ShootingSceneController : BaseGameSceneController
             TurnManager.Instance,
             EggManager.Instance,
             ShootingUIManager.Instance,
+            WindSystem.Instance,
         };
 
         yield return StartCoroutine(InitializeComponentsSafely(sequentialComponents));

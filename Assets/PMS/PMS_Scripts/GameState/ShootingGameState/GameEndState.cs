@@ -10,6 +10,9 @@ public class GameEndState : ShootingGameState
     {
         Debug.Log("[GameEndState] - GameEndState Enter");
 
+        //각자 풀로 생성했던 유니모 제거
+        EggManager.Instance.DestroyAllMyEggs();
+
         //슈팅게임 룸프로퍼티 게임상태 구독 해제 
         ShootingNetworkManager.Instance.ShootingGameSceneChangeRoomPropertiesUnReigster();
 
