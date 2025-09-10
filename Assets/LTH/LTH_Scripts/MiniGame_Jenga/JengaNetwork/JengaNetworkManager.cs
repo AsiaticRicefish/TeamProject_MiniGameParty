@@ -33,6 +33,8 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     private InputLockToken _countdownLock;
     private Coroutine _countdownFailsafeCo;
 
+    private bool _receivedRankOnce;
+
     /// <summary>
     /// 젠가 씬에서만 살아있는 일시적 싱글톤
     /// </summary>
@@ -78,11 +80,11 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     [PunRPC]
     private void ReceivePlayerActionResult(string uid, bool success, int score)
     {
-        // 마스터 클라이언트에서만 실행
         if (!PhotonNetwork.IsMasterClient) return;
-
-        Debug.Log($"[JengaNetwork - ReceivePlayerActionResult] 결과 수신: {uid} | 성공 여부: {success} | 점수: {score}");
         JengaGameManager.Instance.ApplyPlayerActionResult(uid, success, score);
+
+        var ranks = JengaGameManager.Instance?.GetCurrentRanks();
+        if (ranks != null) BroadcastRankSnapshot(ranks);
     }
 
     #endregion
@@ -239,8 +241,6 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     [PunRPC]
     private void RPC_ApplyBlockRemoval(int ownerActorNumber, int blockId, bool withAnimation, int score, bool isSuccess = true)
     {
-        
-        // 실제 제거 반영
         var tower = JengaTowerManager.Instance?.GetPlayerTower(ownerActorNumber);
 
         if (tower == null)  return;
@@ -254,8 +254,11 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
             string uid = TryGetUidFromActor(ownerActorNumber);
             if (!string.IsNullOrEmpty(uid))
             {
-                JengaGameManager.Instance?.ApplyPlayerActionResult(uid, success: true, scoreGained: score);
+                JengaGameManager.Instance?.ApplyBlockRemovalSuccess(uid, score);
             }
+
+            var ranks = JengaGameManager.Instance?.GetCurrentRanks();
+            if (ranks != null) BroadcastRankSnapshot(ranks);
         }
     }
 
@@ -648,6 +651,49 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
 
         JengaTowerManager.Instance?.ApplySnapshot(dict);
         Debug.Log($"[JengaNetwork - ApplySnapshotHashtable] 스냅샷 적용 완료 (actors = {dict.Count})");
+    }
+
+    #endregion
+
+    #region 랭킹 동기화
+    public void BroadcastRankSnapshot(Dictionary<string, int> uidToRank)
+    {
+        if (!PhotonNetwork.IsMasterClient || uidToRank == null) return;
+
+        // 1) RPC로 즉시 반영
+        var uids = uidToRank.Keys.ToArray();
+        var vals = uidToRank.Values.ToArray();
+        thisPhotonView.RPC(nameof(RPC_SyncRanks), RpcTarget.All, uids, vals);
+
+        // 2) Room Properties에도 저장(레이트 조인 대비)
+        var table = new PhotonHashtable {
+        { JengaRoomProps.KEY_RANK_UIDS, uids },
+        { JengaRoomProps.KEY_RANK_VALS, vals }
+    };
+        PhotonNetwork.CurrentRoom?.SetCustomProperties(table);
+    }
+
+    [PunRPC]
+    private void RPC_SyncRanks(string[] uids, int[] vals)
+    {
+        var ranks = new Dictionary<string, int>(uids.Length);
+        for (int i = 0; i < uids.Length && i < vals.Length; i++) ranks[uids[i]] = vals[i];
+        JengaGameManager.Instance?.ApplyRankSnapshot(ranks);
+        _receivedRankOnce = true;
+    }
+
+    public override void OnRoomPropertiesUpdate(PhotonHashtable props)
+    {
+        if (_receivedRankOnce) return;
+        if (PhotonNetwork.IsMasterClient) return;
+
+        if (props.TryGetValue(JengaRoomProps.KEY_RANK_UIDS, out var uObj) &&
+            props.TryGetValue(JengaRoomProps.KEY_RANK_VALS, out var vObj) &&
+            uObj is string[] uids && vObj is int[] vals)
+        {
+            RPC_SyncRanks(uids, vals);
+            _receivedRankOnce = true;
+        }
     }
 
     #endregion

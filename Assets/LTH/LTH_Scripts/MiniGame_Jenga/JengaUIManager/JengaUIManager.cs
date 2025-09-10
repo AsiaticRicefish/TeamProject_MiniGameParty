@@ -43,8 +43,9 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
         if (JengaGameManager.Instance != null)
         {
             JengaGameManager.Instance.OnTimeUpdated += UpdateTimerUI;
-            JengaGameManager.Instance.OnGameStateChanged += OnGameStateChanged; // 게임 상태 변경 이벤트 구독
+            JengaGameManager.Instance.OnGameStateChanged += OnGameStateChanged;         // 게임 상태 변경 이벤트 구독
             JengaGameManager.Instance.OnGameFinished += OnGameFinished_ShowRanking;
+            JengaGameManager.Instance.OnRankingsUpdated += OnRankingsUpdated_Live;      // 실시간 랭킹 구독
 
             // 초기 시간 설정
             UpdateTimerUI(JengaGameManager.Instance.GetRemainingTime());
@@ -57,6 +58,13 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
 
         // UI 요소들 초기 상태 설정
         InitializeUI();
+
+        // 재입장/중도 합류: 이미 Playing 상태면 바로 켜두기
+        if (JengaGameManager.Instance != null &&
+            JengaGameManager.Instance.currentState == JengaGameState.Playing)
+        {
+            if (rankingUI != null) rankingUI.OpenForLive();
+        }
 
         Debug.Log("[JengaUIManager - Initialize] UI 매니저 초기화 완료");
     }
@@ -71,7 +79,7 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
             case JengaGameState.Playing:
                 // 게임 시작 시 카운트다운 UI 숨김 (혹시 남아있을 경우를 대비)
                 HideCountdown();
-                if (rankingUI != null) rankingUI.Hide();
+                if (rankingUI != null) rankingUI.OpenForLive();
 
                 _iAmEliminated = false;
                 if (waitingPanel) waitingPanel.SetActive(false);
@@ -82,7 +90,10 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
 
             case JengaGameState.Finished:
                 // 게임 종료 시 00:00
-                if (timerText != null) timerText.text = "00:00";
+                if (timerText != null) timerText.text = "0:00";
+
+                if (JengaGameManager.Instance != null)
+                    JengaGameManager.Instance.OnRankingsUpdated -= OnRankingsUpdated_Live;
                 break;
         }
     }
@@ -281,6 +292,12 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
         rankingUI.Show(rankings);   // 정렬/애니메이션/1등 강조까지 내부에서 처리
     }
 
+    private void OnRankingsUpdated_Live(Dictionary<string, int> ranks)
+    {
+        if (JengaGameManager.Instance.currentState == JengaGameState.Finished) return;
+        rankingUI?.UpdateLiveRanks(ranks);
+    }
+
     #endregion
 
     #region 대기 UI
@@ -312,6 +329,7 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
             JengaGameManager.Instance.OnTimeUpdated -= UpdateTimerUI;
             JengaGameManager.Instance.OnGameStateChanged -= OnGameStateChanged;
             JengaGameManager.Instance.OnGameFinished -= OnGameFinished_ShowRanking;
+            JengaGameManager.Instance.OnRankingsUpdated -= OnRankingsUpdated_Live;
         }
         _eliminateLock?.Dispose();
         _eliminateLock = null;

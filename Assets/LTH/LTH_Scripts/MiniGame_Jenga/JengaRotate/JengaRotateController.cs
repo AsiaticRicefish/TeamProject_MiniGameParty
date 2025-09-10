@@ -53,5 +53,14 @@ public class JengaRotateController : MonoBehaviour
             yield return null;
         }
         transform.rotation = target;
+
+        yield return null; // 1프레임 대기 (RT / RectTransform 반영 대기)
+
+        var overlay = FindFirstObjectByType<TowerFocusOverlay>(FindObjectsInactive.Include);
+        if (overlay != null)
+        {
+            overlay.Reframe();          // 카메라 위치/RT 재계산
+            overlay.TowerCam?.Render(); // RenderTexture 강제 갱신
+        }
     }
 }

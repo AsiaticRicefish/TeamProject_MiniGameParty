@@ -18,53 +18,37 @@ public class JengaSceneController : BaseGameSceneController
 
     private bool _startNotified;
 
-    [Header("UI")]
-    [SerializeField] private LoadingOverlay loading;
-
     private const string ROOMKEY_SLOTS = "JG_SLOTS";
 
     private void Awake()
     {
         if (_only && _only != this)
         {
-            Debug.LogWarning("[Jenga] Duplicate JengaSceneController destroyed.");
             Destroy(gameObject);
             return;
         }
         _only = this;
-
-        if (!loading) loading = FindObjectOfType<LoadingOverlay>(true);
-        loading?.Show("초기화 준비 중...", 0.05f);
     }
 
     protected override IEnumerator WaitForManagersAwake()
     {
         EnsureInputManagerForScene();
         // 모든 플레이어가 uid 셋팅될 때까지 잠깐 대기
-        loading?.Set("플레이어 동기화 확인 중...", 0.10f);
         yield return WaitForAllPlayerUids(5f);
 
         // 슬롯맵이 준비될 때까지 잠깐 대기
-        loading?.Set("슬롯 맵 동기화 중...", 0.15f);
         yield return WaitForSlotMapReady(5f);
 
         // 각 매니저들이 Awake에서 생성되기를 기다림
-        loading?.Set("매니저 준비 중...", 0.20f);
         yield return WaitForSingletonReady<JengaGameManager>();
-        loading?.Set(progress: 0.30f);
         yield return WaitForSingletonReady<JengaNetworkManager>();
-        loading?.Set(progress: 0.40f);
         yield return WaitForSingletonReady<JengaTowerManager>();
-        loading?.Set(progress: 0.50f);
 
         Debug.Log("젠가 매니저들 Awake 완료");
     }
 
     protected override IEnumerator InitializeSequentialManagers()
     {
-        // 순차 초기화
-        loading?.Set("핵심 시스템 초기화 (1/2)...", 0.55f);
-
         // 순차적으로 초기화해야 할 매니저들
         var sequentialComponents = new IGameComponent[]
         {
@@ -76,16 +60,11 @@ public class JengaSceneController : BaseGameSceneController
         };
 
         yield return StartCoroutine(InitializeComponentsSafely(sequentialComponents));
-
-        loading?.Set(progress: 0.80f);
     }
 
     protected override IEnumerator InitializeParallelManagers()
     {
         Debug.Log("[Scene] InitializeParallelManagers START");
-
-        // 병렬 초기화
-        loading?.Set("보조 시스템 초기화 (2/2)...", 0.85f);
 
         // 병렬로 초기화해도 되는 매니저들
         var parallelComponents = new ICoroutineGameComponent[]
@@ -97,7 +76,6 @@ public class JengaSceneController : BaseGameSceneController
         yield return StartCoroutine(InitializeCoroutineComponentsSafely(parallelComponents));
         Debug.Log("[Scene] InitializeCoroutineComponentsSafely returned - proceeding to step 6");
 
-        loading?.Set(progress: 0.95f);
         Debug.Log($"[Scene] Before failsafe check - _startNotified: {_startNotified}");
 
         // 페일세이프: 여기서 한 번 더 직접 시작 호출
@@ -121,7 +99,6 @@ public class JengaSceneController : BaseGameSceneController
         if (_startNotified)
         {
             Debug.Log("[Scene] NotifyGameStart skipped (already started)");
-            loading?.Hide();
             return;
         }
         _startNotified = true;
@@ -131,8 +108,6 @@ public class JengaSceneController : BaseGameSceneController
 
         try
         {
-            loading?.Set("시작 준비 완료!", 1.0f);
-
             if (!Camera.main)
                 Debug.LogWarning("[Scene] MainCamera가 아직 준비되지 않았습니다.");
 
@@ -150,10 +125,6 @@ public class JengaSceneController : BaseGameSceneController
         catch (Exception ex)
         {
             Debug.LogError($"[NotifyGameStart] Exception: {ex}\n{ex.StackTrace}");
-        }
-        finally
-        {
-            loading?.Hide();
         }
 
         Debug.Log($"=== [Scene] NotifyGameStart END ===");

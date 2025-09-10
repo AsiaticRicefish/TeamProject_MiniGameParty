@@ -21,4 +21,7 @@ public class JengaPlayerData
 
     public float gameStartTime; // 게임 시작 시간 (순위 계산용)
     public float lastSuccessTime; // 마지막 블록 성공 시간 (or 총 소요 시간)
+
+    // 성공으로 제거한 블록 수
+    public int removedCount;
 }
