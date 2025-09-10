@@ -110,6 +110,9 @@ public class MeteorTapMiniGame : MonoBehaviourPun
 
         DoOneTapFXAndLogic();
         tapsThisTurn++;
+        
+        // 탭 카운트 로그 출력
+        Debug.Log($"[MeteorTapMiniGame] 내 턴 탭 횟수: {tapsThisTurn}/{maxTapPerTurn}, 총 누적 탭: {currentTap}/{currentEndingCount}");
     }
 
     private void DoOneTapFXAndLogic()
@@ -120,6 +123,9 @@ public class MeteorTapMiniGame : MonoBehaviourPun
         if (sfxTap) sfxTap.Play();
         if (vfxMeteor) vfxMeteor.Play();
         if (unimoFace) unimoFace.Play("Smile", 0, 0);
+        
+        // 누적 탭 카운트 로그 출력
+        Debug.Log($"[MeteorTapMiniGame] 현재 총 탭 수: {currentTap}/{currentEndingCount}");
 
         // 위험도
         float dangerRatio = (float)currentTap / Mathf.Max(1, currentEndingCount);

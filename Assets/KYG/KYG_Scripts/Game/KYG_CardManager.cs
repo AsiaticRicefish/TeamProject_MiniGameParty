@@ -24,7 +24,7 @@ public class CardManager : PunSingleton<CardManager>
 {
     [Header("Prefabs & Layout")]
     [SerializeField] private Transform cardParent;   // 카드를 놓을 Grid/HorizontalLayout
-    [SerializeField] private ShootingScene.CardUI cardPrefab;
+    [SerializeField] private KYG.CardUI cardPrefab;
 
     [Header("Scene")]
     [SerializeField] private string nextSceneName = "PMS_ShootingTestScene";
@@ -37,7 +37,7 @@ public class CardManager : PunSingleton<CardManager>
     private enum LobbyState : byte { Picking = 0, Revealing = 1, Done = 2 }
 
     // 로컬 캐시
-    private List<ShootingScene.CardUI> _cards = new();
+    private List<KYG.CardUI> _cards = new();
     private int[] _deckValues; // 섞인 숫자들
     private int[] _owners;     // 각 index의 소유자 ActorNumber, 미선택 -1
 
@@ -159,6 +159,11 @@ public class CardManager : PunSingleton<CardManager>
     private void TryPick(int cardIndex)
     {
         if (!PhotonNetwork.InRoom) return;
+        
+        // 즉시 로컬 피드백: 내가 집은 카드처럼 회색/선택 상태로
+        if (cardIndex >= 0 && cardIndex < _cards.Count)
+            _cards[cardIndex].SetSelected(isOwner: false); // 내 카드가 확정되기 전이므로 false
+
 
         // Master에게 선택 요청
         photonView.RPC(nameof(RPC_TryPick), RpcTarget.MasterClient,
