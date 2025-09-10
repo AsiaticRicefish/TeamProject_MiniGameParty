@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Unimo.Characters.2Ds
+  m_EditorClassIdentifier: 
+  m_GroupName: Unimo.Characters.2Ds
+  m_Data:
+    m_SerializedData: []
+  m_GUID: e7d319db5b5eb4ea4a8745469ffe4e02
+  m_SerializeEntries:
+  - m_GUID: 02cd3a0ed43e940498bc0d9577652845
+    m_Address: Image/Character_2D/Primo
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 34eeb5c8c75b1644cab366b97c899c7c
+    m_Address: Image/Character_2D/Cu
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 52822009cdd7ec74a919d5831a06f67c
+    m_Address: Image/Character_2D/Matilda
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 52dcd754192c79b47ae18c36331c08da
+    m_Address: Image/Character_2D/Highfish
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6b72a7423a78a73468e58e1cd7f54e18
+    m_Address: Image/Character_2D/AI
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 906822dda85bcd44182f0742237caa4c
+    m_Address: Image/Character_2D/Augustus
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d0a1c3edbec360143add23da8192a6b4
+    m_Address: Image/Character_2D/Muffin
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d63fbd7e2ab1c9b4c9a716db8f129885
+    m_Address: Image/Character_2D/DoomDoom
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dcec1f1ee26c10c429cd0ba397b47e7b
+    m_Address: Image/Character_2D/sINGLE
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e58d009362b32734d8a4ade12bd84a01
+    m_Address: Image/Character_2D/Sofo
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ef44c939a53ca04458f792fdd2a46891
+    m_Address: Image/Character_2D/Toaster
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f591dc3330b2b414eb6464e776ffacc5
+    m_Address: Image/Character_2D/B-bit
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: efc2531fbc716f7409d27168060779e5, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 45a29f0851dab4213953d6439c9e4534, type: 2}
+    - {fileID: 11400000, guid: a24f5938a94cc450c8e61bd12ebc270a, type: 2}
