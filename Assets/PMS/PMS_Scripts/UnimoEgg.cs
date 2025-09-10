@@ -225,7 +225,7 @@ public class UnimoEgg : MonoBehaviourPun
         if(isCameraFollowing)       //카메라가 연출중이니깐
         {
             Debug.Log("[UnimoEgg] - 유니모를 잃어버려서 카메라가 원위치로 돌아가는중");
-            Test_ShotFollowCamera.Instance.StopFollowTarget();
+            Test_ShotFollowCamera.Instance?.StopFollowTarget();
         }
     }
 }
