@@ -544,7 +544,7 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         int totalSeconds = Mathf.RoundToInt(remainingTime);
         int minutes = totalSeconds / 60;
         int seconds = totalSeconds % 60;
-        return $"{minutes:00}:{seconds:00}";
+        return $"{minutes}:{seconds:00}";
     }
 
     private Vector3 GetPlayerTowerPosition(string playerId)

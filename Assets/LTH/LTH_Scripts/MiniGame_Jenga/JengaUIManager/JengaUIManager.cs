@@ -90,7 +90,7 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
 
             case JengaGameState.Finished:
                 // 게임 종료 시 00:00
-                if (timerText != null) timerText.text = "00:00";
+                if (timerText != null) timerText.text = "0:00";
 
                 if (JengaGameManager.Instance != null)
                     JengaGameManager.Instance.OnRankingsUpdated -= OnRankingsUpdated_Live;
