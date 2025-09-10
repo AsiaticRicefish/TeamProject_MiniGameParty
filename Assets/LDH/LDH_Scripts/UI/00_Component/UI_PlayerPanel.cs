@@ -20,12 +20,14 @@ namespace LDH_UI
         private Button inviteButton; // 프로필 버튼
 
         [SerializeField] private Image profileImage; // 프로필 이미지지
+        [SerializeField] private TextMeshProUGUI nickNameText;
         [SerializeField] private Button readyButton; // 준비 버튼
         [SerializeField] private TextMeshProUGUI readyText;
-        [SerializeField] private GameObject masterIcon;
-
-
+        
         [Header("Styles")] 
+        [SerializeField] private UI_ButtonStateStyle masterTheme;
+        [SerializeField] private UI_ButtonStateStyle occupiedTheme;
+        [SerializeField] private UI_ButtonStateStyle emptyTheme;
         [SerializeField] private UI_ButtonStateStyle readyTheme;
         [SerializeField] private UI_ButtonStateStyle notReadyTheme;
 
@@ -34,7 +36,6 @@ namespace LDH_UI
 
         public event Action<int> InviteButtonClicked;
         public event Action<int> ReadyClicked;
-
         
 
         /// <summary>
@@ -62,12 +63,13 @@ namespace LDH_UI
             SetReadyVisual(false);
             SetInviteActive(canInvite);
             SetMasterIcon(false);
+            ClearPlayerInfo();
         }
 
-        public void ApplyPlayer(bool isReady, bool isLocalPlayer, bool isMasterClient)
+        public void ApplyPlayer(bool isReady, bool isLocalPlayer, bool isMasterClient, string playerNickName)
         {
             SetOccupied(true);
-            SetProfileImage();
+            ApplyPlayerInfo(playerNickName);
             SetReadyButtonInteractable(isLocalPlayer);
             SetReadyVisual(isReady);
             SetInviteActive(false);
@@ -85,17 +87,25 @@ namespace LDH_UI
         {
             IsOccupied = occupied;
             profileImage.enabled = occupied;
-            inviteButton.image.color = occupied ? Color.white : readyTheme.backgroundColor;
+            inviteButton.image.color = occupied ? occupiedTheme.backgroundColor : emptyTheme.backgroundColor;
+            inviteButton.image.sprite = occupied ? occupiedTheme.buttonImage : emptyTheme.buttonImage;
         }
 
-        public void SetProfileImage()
+        public void ApplyPlayerInfo(string playerNickname)
         {
             //todo: 프로필 이미지 설정
+            nickNameText.text = playerNickname;
+        }
+
+        public void ClearPlayerInfo()
+        {
+            nickNameText.text = "";
         }
 
         public void SetMasterIcon(bool isMaster)
         {
-            masterIcon.SetActive(isMaster);
+            if (isMaster)
+                inviteButton.image.sprite = masterTheme.buttonImage;
         }
 
         /// <summary>
@@ -106,7 +116,7 @@ namespace LDH_UI
         {
             readyText.text = isReady ? readyTheme.label : notReadyTheme.label;
             readyText.color = isReady ? readyTheme.labelColor : notReadyTheme.labelColor;
-            readyButton.image.color = isReady ? readyTheme.backgroundColor : notReadyTheme.backgroundColor;
+            readyButton.image.sprite = isReady ? readyTheme.buttonImage:notReadyTheme.buttonImage;
         }
 
 

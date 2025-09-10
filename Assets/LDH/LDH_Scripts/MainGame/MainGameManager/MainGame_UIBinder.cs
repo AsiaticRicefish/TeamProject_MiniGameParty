@@ -62,7 +62,7 @@ namespace LDH_MainGame
             foreach (var pl in players)
             {
                 int slot = (int)pl.CustomProperties[Define_LDH.PlayerProps.SlotIndex];
-                _readyPanel.SetPlayerPanel(slot, false, pl.IsLocal, pl.IsMasterClient);
+                _readyPanel.SetPlayerPanel(slot, false, pl.IsLocal, pl.IsMasterClient, pl.NickName);
                 _readyPanel[slot].SetInviteActive(false);
                 if (pl.IsLocal) ls = slot;
             }

@@ -899,7 +899,6 @@ GameObject:
   m_Component:
   - component: {fileID: 4583118398617305130}
   - component: {fileID: 965877349170615372}
-  - component: {fileID: 3544638966727117788}
   m_Layer: 5
   m_Name: 1_Popup_Bg
   m_TagString: Untagged
@@ -924,8 +923,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -44.67151}
-  m_SizeDelta: {x: -160, y: 638.5125}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: -160, y: 638.51245}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &965877349170615372
 CanvasRenderer:
@@ -935,32 +934,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 366811439632992043}
   m_CullTransparentMesh: 1
---- !u!114 &3544638966727117788
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 366811439632992043}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 59f8146938fff824cb5fd77236b75775, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Padding:
-    m_Left: 30
-    m_Right: 30
-    m_Top: 22
-    m_Bottom: 60
-  m_ChildAlignment: 4
-  m_Spacing: 12.34
-  m_ChildForceExpandWidth: 1
-  m_ChildForceExpandHeight: 0
-  m_ChildControlWidth: 1
-  m_ChildControlHeight: 0
-  m_ChildScaleWidth: 0
-  m_ChildScaleHeight: 1
-  m_ReverseArrangement: 0
 --- !u!1 &386924774999241936
 GameObject:
   m_ObjectHideFlags: 0
@@ -1200,7 +1173,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 380.42883, y: -321.89508}
+  m_AnchoredPosition: {x: 195, y: -321.89508}
   m_SizeDelta: {x: 283.9, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &762366099249375287
@@ -1492,7 +1465,7 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
-  m_PresetInfoIsWorld: 1
+  m_PresetInfoIsWorld: 0
 --- !u!114 &4840604537364590169
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1529,7 +1502,7 @@ MonoBehaviour:
   fadeTime: 0.1
   targetRect: {fileID: 4583118398617305130}
   statusText: {fileID: 141725635527279097}
-  playerCntText: {fileID: 7261803108623511696}
+  playerCntText: {fileID: 2728992062969038738}
   elapsedText: {fileID: 7261803108623511696}
   cancelButton: {fileID: 6981149270313642209}
   playerCntSlider: {fileID: 8704709747705516923}
