@@ -1,0 +1,90 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Unimo.Characters.Packs
+  m_EditorClassIdentifier: 
+  m_GroupName: Unimo.Characters.Packs
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 23f2ad1c622b042e58717d5a259744d9
+  m_SerializeEntries:
+  - m_GUID: 04461538a68f1634c8d625592c202503
+    m_Address: Assets/Imports/123/Prefabs/Character/CH009_Al.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 17555620dc5e951409b642d82e2191c2
+    m_Address: Assets/Imports/123/Prefabs/Character/CH004_Jeomboon.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 43515d1f3d7fb3b468a6eef5317e9b27
+    m_Address: Assets/Imports/123/Prefabs/Character/CH007_DoomDoom_ST000 (1).prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4c6d4ac64e9895d42807b39b53bbfe27
+    m_Address: Assets/Imports/123/Prefabs/Character/CH005_HighFish.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5426ad5c4351d824a9622e65f0078af2
+    m_Address: Assets/Imports/123/Prefabs/Character/CH011_Muffin.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5a216ff4c54f2f346a8727bc247eec57
+    m_Address: Assets/Imports/123/Prefabs/Character/CH002_Sofo.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 905c6e719e5f2d2408fabb65b5e7872f
+    m_Address: Assets/Imports/123/Prefabs/Character/CH010_Primo.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 94ff864ecd774b2449135c547f617120
+    m_Address: Assets/Imports/123/Prefabs/Character/CH007_DoomDoom.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9d3f861f41b4aba40a7a0301c10c614f
+    m_Address: Assets/Imports/123/Prefabs/Character/CH003_Gomgom.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bda0a582fdb51a442ad2a8030ae97bc6
+    m_Address: Assets/Imports/123/Prefabs/Character/CH006_Cu.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c817865cd9b007d4fa2afdfdbf033cdd
+    m_Address: Assets/Imports/123/Prefabs/Character/CH008_Augustus.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c9eef602027026f47ac2d50fb6f3ce74
+    m_Address: Assets/Imports/123/Prefabs/Character/CH012_Matilda.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: da55b3c5f82598248bf205162c4a98e3
+    m_Address: Assets/Imports/123/Prefabs/Character/CH001_RiBee.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: efc2531fbc716f7409d27168060779e5, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 0c0abac87ea774c1c8d9b250055c53e0, type: 2}
+    - {fileID: 11400000, guid: ce02ced41a3ea4efab6e10ef8ca4365b, type: 2}
