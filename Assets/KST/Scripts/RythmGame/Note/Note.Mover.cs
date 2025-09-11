@@ -4,29 +4,31 @@ using UnityEngine;
 namespace RhythmGame
 {
     /// <summary>
-    /// Note°¡ ÇÃ·¹ÀÌ¾î ¹æÇâÀ¸·Î ÀÌµ¿ÇÑ´Ù´Â °¡Á¤À¸·Î ¸¸µç Å¬·¡½º
+    /// Noteê°€ í”Œë ˆì´ì–´ ë°©í–¥ìœ¼ë¡œ ì´ë™í•œë‹¤ëŠ” ê°€ì •ìœ¼ë¡œ ë§Œë“  í´ë˜ìŠ¤
     /// </summary>
 
     [RequireComponent(typeof(PooledObject))]
     partial class Note : MonoBehaviour
     {
         private float _speed;
-        private PooledObject _pooled;
+        private Vector3 _spawnPos;
+        [SerializeField] private float _moveDist = 30f; //ì›€ì§ì´ëŠ” ê±°ë¦¬
+        private Vector3 _moveDir; // ì›”ë“œ ê³ ì • ì´ë™ ë°©í–¥
 
-        void Awake() => _pooled = GetComponent<PooledObject>();
         void Update()
         {
-            transform.Translate(_speed * Time.deltaTime * Vector2.down);
+            transform.Translate(-_moveDir * (_speed * Time.deltaTime), Space.World);
 
-            if (transform.position.y < -6f)
-                _pooled.ReturnPool();
+            if ((transform.position - _spawnPos).sqrMagnitude >= _moveDist * _moveDist)
+                ReturnPool();
+                // _pooled.ReturnPool();
         }
 
         /// <summary>
-        /// Note ¼Óµµ ¼³Á¤ ¸Ş¼­µå
+        /// Note ì†ë„ ì„¤ì • ë©”ì„œë“œ
         /// </summary>
-        /// <param name="speed">NoteÀÇ ¼Óµµ¸¦ °áÁ¤ÇÏ´Â ¸Å°³º¯¼ö</param>
+        /// <param name="speed">Noteì˜ ì†ë„ë¥¼ ê²°ì •í•˜ëŠ” ë§¤ê°œë³€ìˆ˜</param>
         public void SetSpeed(float speed) => _speed = speed;
-        public void ReturnPool() => _pooled.ReturnPool();
+        public void SetMoveDirection(Vector3 dir) => _moveDir = dir.normalized;
     }
 }

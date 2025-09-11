@@ -38,7 +38,7 @@ namespace ShootingScene
                 {
                     { ShootingGamePropertyKeys.State, "InitState" },
                     { ShootingGamePropertyKeys.Turn, 0 },
-                     { ShootingGamePropertyKeys.Round, 1 },
+                    { ShootingGamePropertyKeys.Round, 1 },
                     ///{ ShootingGamePropertyKeyss.PlayerScore_Prefix + Player },
                 };
                 foreach (var player in PlayerManager.Instance.Players)
@@ -174,14 +174,20 @@ namespace ShootingScene
         public void ClearShootingGamePlayerProperties()
         {
             //각자 초기화
+            var props = new ExitGames.Client.Photon.Hashtable();
 
             //초기화할 플레이어 프로퍼티 키들
             string[] keys = { 
                 ShootingGamePlayerPropertyKeys.MyPrefabName, 
-                ShootingGamePlayerPropertyKeys.MyTurnIndex 
+                ShootingGamePlayerPropertyKeys.MyTurnIndex
             };
 
-            var props = new ExitGames.Client.Photon.Hashtable();
+            // TaskKeys 초기화
+            //foreach (var key in ShootingGamePlayerPropertyKeys.TaskKeys.Values)
+            //{
+            //    props[key] = null;
+            //}
+
             foreach (var key in keys)
             {
                 props[key] = null;

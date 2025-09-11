@@ -20,7 +20,8 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
     public event Action OnGameEnded;
 
     //public UnimoEgg currentUnimo;
-    [SerializeField]private GameObject finishLine;
+    [SerializeField] public GameObject startLine;
+    [SerializeField] public GameObject finishLine;
 
     public Dictionary<string, ShootingPlayerData> players = new(); // UID를 key로 가지는 플레이어 데이터
     private Dictionary<string, int> playerScores = new();        // 플레이어별 점수

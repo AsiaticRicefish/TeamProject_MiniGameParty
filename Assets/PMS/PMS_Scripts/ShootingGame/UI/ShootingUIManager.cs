@@ -120,9 +120,16 @@ namespace ShootingScene.ShootingGame
             playerRank.LeftUserSetRank(leftPlayerNickName);
         }
 
-       #endregion
+        #endregion
 
-      
-        
+        #region Wind UI
+        public void ShowWindUI()
+        {
+            if (windUI.gameObject.activeInHierarchy) return;
+
+            Manager.UI.ShowScreenUI(windUI).Forget();
+        }
+        #endregion
+
     }
 }

@@ -17,6 +17,7 @@ public class UnimoEgg : MonoBehaviourPun
     //private Vector3 endTouchPos;
     public bool isLaunched; // 내가 발사한 알인가?
     private bool isCameraFollowing;
+    private bool hasCrossedStartLine;
 
     public string ShooterUid; // 누가 던졌는지 저장
     //[SerializeField][Range(0.1f,15f)] private float forceMultiplier = 3f;
@@ -26,7 +27,6 @@ public class UnimoEgg : MonoBehaviourPun
     {
         rb = GetComponent<Rigidbody>();
         _renderer = GetComponent<Renderer>();
-
     }
 
     #region Test용 Material 임시 추가
@@ -34,12 +34,12 @@ public class UnimoEgg : MonoBehaviourPun
     private Renderer _renderer;
     public Material[] unimoMats;
     
-    public void SetMaterial()
+    /*public void SetMaterial()
     {
         if (ShooterUid == null) return;
         _renderer.material = unimoMats[TurnManager.Instance.currentTurnIndex - 1];
 
-    }
+    }*/
 
     #endregion
     
@@ -116,22 +116,27 @@ public class UnimoEgg : MonoBehaviourPun
         // 상태 초기화
         ShooterUid = null;
         turnEnded = false;
-        // 카메라 팔로우 초기화
+        isLaunched = false;
+        hasCrossedStartLine = false;
+        isCameraFollowing = false;
+        //카메라 팔로우 초기화
         //Test_ShotFollowCamera.Instance.StopFollow(gameObject);
-    }
+}
 
     // 기존 Shot 호출 대신 RPC로 보내기
     public void Shot(Vector3 dir)
     {
         if (!photonView.IsMine) return;
 
+        ShootingScene.PlayerInputManager.Instance.DisableInput();
+        Test_ShotFollowCamera.Instance.StartFollow(gameObject);
         // 자기 화면에서 AddForce 적용
         isLaunched = true;
-        ApplyForce(dir);
+        //ApplyForce(dir);
+        WindHelper.AddForceWithWind(rb, dir);
         // 다른 클라이언트에도 RPC 전송
         photonView.RPC("RPC_Shot", RpcTarget.Others, dir);
         isCameraFollowing = true;
-        Test_ShotFollowCamera.Instance.StartFollow(gameObject);
         // 발사 후 멈출 때까지 감시 시작
         //StartCoroutine(WaitForStop());
         // 발사 후 한 프레임 대기 후 감시 시작
@@ -145,7 +150,10 @@ public class UnimoEgg : MonoBehaviourPun
         yield return new WaitForFixedUpdate();
 
         while (rb.velocity.magnitude > stopSpeed)
+        {
+            rb.velocity *= 0.99f;
             yield return new WaitForFixedUpdate(); //업데이트 프레임
+        }
 
         yield return new WaitForSeconds(1.0f);
         Test_ShotFollowCamera.Instance.StopFollowTarget(); //돌아가는 부분
@@ -157,22 +165,33 @@ public class UnimoEgg : MonoBehaviourPun
             TurnManager.Instance.photonView.RPC(("RequestTurnEnd"), RpcTarget.MasterClient);
             isLaunched = false;
             isCameraFollowing = false;
+
+            //TODO - 내가 선을 넘지 못했을 때 SetActive요청
+            if (CheckCrossedStartLine())
+            {
+                EggManager.Instance.photonView.RPC("RPC_DeactivateEgg", RpcTarget.All, photonView.ViewID);
+            }
         }
     }
     
-
-    // 실제 힘 적용
-    private void ApplyForce(Vector3 dir)
+    private bool CheckCrossedStartLine()
     {
-        rb.velocity = Vector3.zero;
-        rb.AddForce(dir, ForceMode.Impulse);
-        Debug.Log($"발사 방향의 힘의 크기 - {dir.magnitude}");
+        if (hasCrossedStartLine) return true; // 이미 넘었다면 그대로 true 유지
+
+        if (transform.position.z < ShootingGameManager.Instance.startLine.transform.position.z)
+        {
+            hasCrossedStartLine = true;
+            return true;
+        }
+
+        return false;
     }
 
     [PunRPC]
     private void RPC_Shot(Vector3 dir)
     {
-        ApplyForce(dir);
+        //ApplyForce(dir);
+        WindHelper.AddForceWithWind(rb, dir);
     }
 
     //떨어졌을때
@@ -201,17 +220,12 @@ public class UnimoEgg : MonoBehaviourPun
         }
     }
 
-    //OnCollistion
-    //맞은대상이 이미 쏜 친구
-
-    //
-
     private void OnDisable()
     {
         if(isCameraFollowing)       //카메라가 연출중이니깐
         {
             Debug.Log("[UnimoEgg] - 유니모를 잃어버려서 카메라가 원위치로 돌아가는중");
-            Test_ShotFollowCamera.Instance.StopFollowTarget();
+            Test_ShotFollowCamera.Instance?.StopFollowTarget();
         }
     }
 }
