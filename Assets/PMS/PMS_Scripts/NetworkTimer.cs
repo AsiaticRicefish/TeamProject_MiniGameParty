@@ -18,18 +18,18 @@ public class NetworkTimer : PunSingleton<NetworkTimer>
     public event Action<int> OnTick;  // 남은 시간 UI 갱신용
     public event Action OnTimerEnd;   // 타이머 종료 시 이벤트
 
-    /*public void StartTimerNetworked(double durationSec)
+    public void StartTimerNetworked(double durationSec)
     {
-        if (PhotonNetwork.IsMasterClient)
-        {
-            photonView.RPC("RPC_StartTimer", RpcTarget.All, durationSec);
-        }
-    }*/
+        if (!PhotonNetwork.IsMasterClient) return;
 
-    /*private void OnStartTimer(double durationSec)
+        photonView.RPC("RPC_StartTimer", RpcTarget.All, durationSec);
+    }
+
+    [PunRPC]
+    private void RPC_StartTimer(double durationSec)
     {
         StartTimer(durationSec);
-    }*/
+    }
 
     public async UniTaskVoid StartTimer(double durationSec)
     {
