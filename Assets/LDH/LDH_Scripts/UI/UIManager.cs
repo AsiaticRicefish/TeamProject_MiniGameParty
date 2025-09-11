@@ -252,6 +252,7 @@ namespace LDH_UI
 
             // 최상단으로 Push
             _popupStack.Push(popup);
+            Debug.Log($"[UIManager] : {popup.name}을 스택에 추가, 현재 스택 개수 : {_popupStack.Count}");
             
 
             await popup.ShowAsync();

@@ -18,7 +18,7 @@ namespace LDH_Lobby
         public struct MenuEntry
         {
             public string id; 
-            public UI_Popup popup;
+            public UI_Screen ui;
         }
 
         
@@ -35,10 +35,10 @@ namespace LDH_Lobby
         public static LobbyNavigationController Instance => _instance;
 
         private Dictionary<string, VirtualCamera_Lobby> _camDict = new();
-        private Dictionary<string, UI_Popup> _uiDict = new();
+        private Dictionary<string, UI_Screen> _uiDict = new();
         
         private bool _isSwitching;
-        private UI_Popup _currentPopupInstance;
+        private UI_Screen _currentPopupInstance;
         private string _currentFocusId;
 
         private void Awake()
@@ -77,11 +77,11 @@ namespace LDH_Lobby
         {
             foreach (var e in menuEntries)
             {
-                if (string.IsNullOrEmpty(e.id) || e.popup == null) continue;
+                if (string.IsNullOrEmpty(e.id) || e.ui == null) continue;
                 if (_uiDict.ContainsKey(e.id))
                     Debug.LogWarning($"[LobbyNav] duplicate menu id: {e.id}");
                 else
-                    _uiDict.Add(e.id, e.popup);
+                    _uiDict.Add(e.id, e.ui);
             }
         }
 
@@ -189,7 +189,7 @@ namespace LDH_Lobby
         private async UniTask CloseCurrentUI()
         {
             if (_currentPopupInstance == null) return;
-            try { await Manager.UI.ClosePopupUI(_currentPopupInstance, false); }
+            try { await Manager.UI.CloseScreenUI(_currentPopupInstance, false); }
             catch (Exception e) { Debug.LogWarning($"[LobbyNav] Close UI error: {e}"); }
             finally { _currentPopupInstance = null; }
             
@@ -198,12 +198,12 @@ namespace LDH_Lobby
         private async UniTask ShowUI(string id)
         {
            
-            if (_uiDict.TryGetValue(id, out var popup) && popup != null)
+            if (_uiDict.TryGetValue(id, out var screen) && screen != null)
             {
                 try
                 {
-                    _currentPopupInstance = popup;
-                    await Manager.UI.ShowPopupUI(popup);
+                    _currentPopupInstance = screen;
+                    await Manager.UI.ShowScreenUI(screen);
                 }
                 catch (Exception e)
                 {
@@ -215,9 +215,9 @@ namespace LDH_Lobby
 
         private async UniTask CloseAllUI()
         {
-            foreach (UI_Popup popup in _uiDict.Values)
+            foreach (UI_Screen screen in _uiDict.Values)
             {
-                await popup.CloseAsync();
+                await screen.CloseAsync();
             }
         }
     }

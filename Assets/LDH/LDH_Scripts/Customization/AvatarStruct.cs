@@ -1,3 +1,5 @@
+using System;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Customization
@@ -11,6 +13,19 @@ namespace Customization
         public string     CurrentCharacterId { get; private set; }
         public GameObject CurrentEquip { get; private set; }
         public string     CurrentEquipId { get; private set; }
+
+
+        private void Start()
+        {
+            Init();
+        }
+
+        public void Init()
+        {
+            CustomizationManager.Instance.ApplyToAvatarAsync(this, CustomizationManager.Instance.GetEquippedLocal())
+                .Forget();
+        }
+
 
         public void BindCharacter(GameObject go, string id)
         {
@@ -28,7 +43,7 @@ namespace Customization
             
             var t = go.transform; t.localPosition = Vector3.zero; t.localRotation = Quaternion.identity; t.localScale = Vector3.one;
         }
-
+        
 
     }
 }
