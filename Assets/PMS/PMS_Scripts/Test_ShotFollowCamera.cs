@@ -12,6 +12,7 @@ namespace ShootingScene
         [Header("Cinemachine")]
         [SerializeField] private CinemachineVirtualCamera vcamDefault; // 기본 시점
         [SerializeField] private CinemachineVirtualCamera vcamFollow;  // 알 따라가기
+        [SerializeField] private FollowTarget _vc2Foolow;
 
         [SerializeField] Vector3 initCameraPos;
 
@@ -24,6 +25,7 @@ namespace ShootingScene
             if (vcamDefault) vcamDefault.Priority = 10;
             if (vcamFollow) vcamFollow.Priority = 5;
 
+            _vc2Foolow = GetComponent<FollowTarget>();
             initCameraPos = vcamDefault.transform.position;
         }
 

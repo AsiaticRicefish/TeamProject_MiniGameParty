@@ -486,7 +486,7 @@ public class LocalPlayerInput : MonoBehaviourPun
     {
         Debug.Log("StartCountDown RPC 호출");
         // NetworkTimer를 통해 타이머 시작
-        NetworkTimer.Instance.StartTimer(durationSec);
+        NetworkTimer.Instance.OnStartTimer(durationSec);
         //ShootingUIManager.Instance.StartCountDown(startAt, endAt);
     }
     

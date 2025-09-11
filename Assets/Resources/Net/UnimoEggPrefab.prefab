@@ -179,7 +179,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 176bcb7c9a381b14193e123c1b18718b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  chargeMax: 25
+  chargeMax: 100
   chargePeriod: 4
   chargeSlider: {fileID: 498749558518327954}
 --- !u!1 &424205091300992389

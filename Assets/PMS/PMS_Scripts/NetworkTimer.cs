@@ -28,10 +28,20 @@ public class NetworkTimer : PunSingleton<NetworkTimer>
     [PunRPC]
     private void RPC_StartTimer(double durationSec)
     {
-        StartTimer(durationSec);
+        StartTimer(durationSec).Forget();
+        //_ = StartTimer(durationSec); // UniTask로 분리, 예외 안전
     }
 
-    public async UniTaskVoid StartTimer(double durationSec)
+    //외부에서 로컬로 호출
+    public void OnStartTimer(double durationSec)
+    {
+        StartTimer(durationSec).Forget();
+        //_ = StartTimer(durationSec); // UniTask로 분리, 예외 안전
+    }
+
+
+
+    public async UniTask StartTimer(double durationSec)
     {
         // 이전 타이머 정리
         StopTimer();
@@ -63,14 +73,13 @@ public class NetworkTimer : PunSingleton<NetworkTimer>
 
     public void StopTimer()
     {
-        if (!running) return; // 이미 종료된 경우 무시
+        OnTimerEnd?.Invoke(); // 강제 종료 시에도 이벤트 호출
 
         cts?.Cancel();
         cts?.Dispose();
         cts = null;
 
         running = false; // 타이머 상태 즉시 변경
-        OnTimerEnd?.Invoke(); // 강제 종료 시에도 이벤트 호출
     }
 
     private async UniTask RunTimerAsync(CancellationToken token)
@@ -86,7 +95,7 @@ public class NetworkTimer : PunSingleton<NetworkTimer>
             // 종료 시간까지 매 프레임 체크
             while (PhotonNetwork.Time < endAt && !token.IsCancellationRequested)
             {
-                int remaining = Mathf.RoundToInt((float)(endAt - PhotonNetwork.Time));
+                int remaining = Mathf.RoundToInt((float)(endAt - PhotonNetwork.Time)); //내림 처리
                 remaining = Mathf.Max(1, remaining); // 최소 1초 이상
                 if (remaining != lastTick)
                 {
