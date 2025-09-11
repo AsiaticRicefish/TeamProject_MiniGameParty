@@ -240,7 +240,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: -0.0000076293945, y: -178}
+  m_AnchoredPosition: {x: -0, y: -178}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &24572179
@@ -1455,10 +1455,10 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 697110296}
+  - {fileID: 24572178}
   - {fileID: 1083597405}
   - {fileID: 921695776}
   - {fileID: 912252632}
-  - {fileID: 24572178}
   - {fileID: 1620790072}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -4846,7 +4846,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1190691556
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8054,6 +8054,56 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 1920740964}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1939637744
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1939637746}
+  - component: {fileID: 1939637745}
+  m_Layer: 0
+  m_Name: CardManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1939637745
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1939637744}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18d5412fb5c66df449ebcbcdede5297f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isPersistent: 1
+  cardParent: {fileID: 1620790072}
+  cardPrefab: {fileID: 5538478693680383511, guid: 41ca6aa764ccea344b8f6686391c1a4d,
+    type: 3}
+  nextSceneName: MeteorScene
+  allPicked: 0
+--- !u!4 &1939637746
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1939637744}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 7.269543, y: -5.406781, z: -51.03626}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1958594540
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -10451,12 +10501,13 @@ SceneRoots:
   - {fileID: 330585546}
   - {fileID: 410087041}
   - {fileID: 832575519}
-  - {fileID: 1440157623}
-  - {fileID: 350445450}
   - {fileID: 334254587}
-  - {fileID: 1190691557}
   - {fileID: 989733211}
   - {fileID: 1357287956}
   - {fileID: 1671380436}
   - {fileID: 1857771356}
   - {fileID: 1784012967}
+  - {fileID: 1190691557}
+  - {fileID: 350445450}
+  - {fileID: 1440157623}
+  - {fileID: 1939637746}
