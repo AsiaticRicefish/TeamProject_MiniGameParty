@@ -361,7 +361,7 @@ namespace LDH_UI
               
                 _orderPopup = baseOrderPopup;
             
-                Debug.Log(_popupStack.Count +"모든 팝업을 닫았습니다.");
+                Debug.Log("모든 팝업을 닫았습니다.");
             }
             catch (Exception e)
             {

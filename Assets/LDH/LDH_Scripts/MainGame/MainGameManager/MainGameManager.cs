@@ -83,13 +83,11 @@ namespace LDH_MainGame
             Debug.Log("[MainGameManager] PlayerManager에 플레이어를 등록합니다.");
             Manager.Player.ClearAllPlayers();
             Manager.Player.EnsureAllPhotonPlayersRegistered();
-            
-            UI.SetDebugUI();
         }
 
         public void StartGame()
         {
-            Util_LDH.ConsoleLog(this, "게임을 시작합니다. (Enter 'Picking' State)");
+            UI.SetDebugUI();
             
             
             // 필수 서비스 준비 확인
@@ -99,7 +97,7 @@ namespace LDH_MainGame
                 return; // 또는 Initialize() 호출 후 재시도 로직을 넣어도 됨
             }
 
-
+            Util_LDH.ConsoleLog(this, "게임을 시작합니다. (Enter 'Picking' State)");
             OnGameStart?.Invoke();
 
             if (IsMaster)
@@ -110,7 +108,6 @@ namespace LDH_MainGame
                         { RoomProps.State, MainState.Picking.ToString() }
                     }
                 );
-
             OnRoundChanged?.Invoke(1);
         }
 
@@ -284,9 +281,8 @@ namespace LDH_MainGame
             // 병렬 실행
             var unloadTask = Loader.UnloadAdditive().ToUniTask(cancellationToken: ct);
             var closeAllTask = Manager.UI.CloseAllPopupUI(); // 내부는 순차 닫기 유지
-            //var closeAllScreenUITask = UI.CloseAllScreenUI();
-            //await UniTask.WhenAll(unloadTask, closeAllTask, closeAllScreenUITask);
-            await UniTask.WhenAll(unloadTask, closeAllTask);
+            var closeAllScreenUITask = UI.CloseAllScreenUI();
+            await UniTask.WhenAll(unloadTask, closeAllTask, closeAllScreenUITask);
             await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, ct);
 
             Debug.Log("[MainGameManager] After close all popup ui, leave room");

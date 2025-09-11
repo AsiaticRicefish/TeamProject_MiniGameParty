@@ -101,19 +101,17 @@ namespace LDH_MainGame
         }
 
 
-        // public async UniTask CloseAllScreenUI()
-        // {
-        //     // List<UniTask> tasks = new List<UniTask>();
-        //     //
-        //     // foreach (UI_Screen screenUI in _mainGameScreenUIs)
-        //     // {
-        //     //     tasks.Add(Manager.UI.CloseScreenUI(screenUI, true));
-        //     // }
-        //     //
-        //     // await UniTask.WhenAll(tasks);
-        //
-        //     await Manager.UI.CloseAllScreenUI(true);
-        // }
+        public async UniTask CloseAllScreenUI()
+        {
+            List<UniTask> tasks = new List<UniTask>();
+            
+            foreach (UI_Screen screenUI in _mainGameScreenUIs)
+            {
+                tasks.Add(Manager.UI.CloseScreenUI(screenUI, true));
+            }
+            
+            await UniTask.WhenAll(tasks);
+        }
 
 
         #region 게임 강제 종료 팝업
