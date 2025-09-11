@@ -5,7 +5,7 @@ using Cysharp.Threading.Tasks;
 using Photon.Pun;
 using DesignPattern;
 
-public class NetworkTimer : PunSingleton<NetworkTimer>
+public class NetworkTimer
 {
     private double startAt;
     private double endAt;
@@ -13,42 +13,52 @@ public class NetworkTimer : PunSingleton<NetworkTimer>
     private CancellationTokenSource cts;
 
     private bool running;
+    private PhotonView pv;
 
     public event Action OnTimerStart; // 타이머 시작 시 이벤트
     public event Action<int> OnTick;  // 남은 시간 UI 갱신용
     public event Action OnTimerEnd;   // 타이머 종료 시 이벤트
 
+    public NetworkTimer (PhotonView pv) 
+    {
+        this.pv = pv;
+    }
+
     public void StartTimerNetworked(double durationSec)
     {
         if (!PhotonNetwork.IsMasterClient) return;
 
-        photonView.RPC("RPC_StartTimer", RpcTarget.All, durationSec);
+        this.startAt = PhotonNetwork.Time + lead;
+        this.endAt = startAt + durationSec;
+
+        pv.RPC("RPC_StartTimer", RpcTarget.All, (float)startAt,(float)endAt);
     }
 
     [PunRPC]
-    private void RPC_StartTimer(double durationSec)
+    private void RPC_StartTimer(float startAt,float endAt)
     {
-        StartTimer(durationSec).Forget();
+        this.startAt = startAt;
+        this.endAt = endAt;
+        StartTimer().Forget();
         //_ = StartTimer(durationSec); // UniTask로 분리, 예외 안전
     }
 
     //외부에서 로컬로 호출
-    public void OnStartTimer(double durationSec)
+    public void OnStartTimer(float startAt, float endAt)
     {
-        StartTimer(durationSec).Forget();
+        this.startAt = startAt;
+        this.endAt = endAt;
+        StartTimer().Forget();
         //_ = StartTimer(durationSec); // UniTask로 분리, 예외 안전
     }
 
-
-
-    public async UniTask StartTimer(double durationSec)
+    public async UniTask StartTimer()
     {
         // 이전 타이머 정리
         StopTimer();
+        Debug.Log("안녕하세요?");
         while (running) await UniTask.Yield();
-
-        this.startAt = PhotonNetwork.Time + lead;
-        this.endAt = startAt + durationSec;
+        Debug.Log("안녕하세요!");
 
         cts = new CancellationTokenSource();
         running = true;
@@ -79,18 +89,21 @@ public class NetworkTimer : PunSingleton<NetworkTimer>
         cts?.Dispose();
         cts = null;
 
+        startAt = 0;
+        endAt = 0;
         running = false; // 타이머 상태 즉시 변경
     }
 
     private async UniTask RunTimerAsync(CancellationToken token)
     {
+        Debug.Log("[NetworkTimer] - 타이머 실행");
         OnTimerStart?.Invoke(); //게임 타이머 시작을 알림
         int lastTick = -1;
 
         try
         {
             // 시작 시간까지 대기
-            await UniTask.WaitUntil(() => PhotonNetwork.Time >= startAt,cancellationToken: token);
+            await UniTask.WaitUntil(() => PhotonNetwork.Time >= startAt ,cancellationToken: token);
 
             // 종료 시간까지 매 프레임 체크
             while (PhotonNetwork.Time < endAt && !token.IsCancellationRequested)

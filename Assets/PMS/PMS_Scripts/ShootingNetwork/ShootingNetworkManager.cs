@@ -10,10 +10,15 @@ namespace ShootingScene
     [RequireComponent(typeof(PhotonView))]
     public class ShootingNetworkManager : PunSingleton<ShootingNetworkManager>, IGameComponent
     {
+        LDH_MainGame.MainGameManager d;
+
         private string turnObserverId;
         private string SceneChangeObserverId;
 
         private Coroutine _setTurnCoroutine;
+
+        //Controllers
+        public NetworkTimer networkTimer;
 
         public Coroutine SetTurnCoroutine
         {
@@ -31,6 +36,9 @@ namespace ShootingScene
 
         public void Initialize()
         {
+            //networkTimer()
+            networkTimer = new NetworkTimer(photonView);
+
             if (PhotonNetwork.IsMasterClient)
             {
                 //마스터 클라이언트만 사용할 룸 프로퍼티 생성 및 구독 처리
@@ -62,35 +70,6 @@ namespace ShootingScene
         {
             // 게임 상태 구독
             ShootingGameSceneChangeRoomPropertiesReigster();
-            // 게임 턴,라운드(int) 구독
-            //ShootingGameTurnAndRoundRoomPropertiesReigster();
-
-            //// 게임 턴,라운드(int) 구독
-            //RoomPropertyObserver.Instance.RegisterObserver(ShootingGamePropertyKeys.Turn, (value) =>
-            //{
-            //    int newTurnIndex = (int)value;             
-
-            //    TurnManager.Instance.currentTurnIndex = newTurnIndex;
-            //    int newRound = (int)RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.Round); //          현재 최신 Round 읽기
-
-            //    TurnManager.Instance.SetCurrentTurn();                                                  // 내 턴인지 판단
-            //});
-
-            //RoomPropertyObserver.Instance.RegisterObserver(ShootingGamePropertyKeys.Round, (value) =>
-            //{
-            //    //라운드 변경시 필요할 부분 추가
-            //});
-
-
-            //플레이어 점수 구독
-            //foreach (var player in PlayerManager.Instance.Players)
-            //{
-            //    string scoreKey = ShootingGamePropertyKeys.PlayerScore_Prefix + player.Value.PlayerId;
-            //    RoomPropertyObserver.Instance.RegisterObserver(scoreKey, (value) =>
-            //    {
-            //        int newScore = (int)value;
-            //    });
-            //}
         }
 
         public void ShootingGameSceneChangeRoomPropertiesReigster()
@@ -181,12 +160,6 @@ namespace ShootingScene
                 ShootingGamePlayerPropertyKeys.MyPrefabName, 
                 ShootingGamePlayerPropertyKeys.MyTurnIndex
             };
-
-            // TaskKeys 초기화
-            //foreach (var key in ShootingGamePlayerPropertyKeys.TaskKeys.Values)
-            //{
-            //    props[key] = null;
-            //}
 
             foreach (var key in keys)
             {

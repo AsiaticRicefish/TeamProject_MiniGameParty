@@ -13,7 +13,7 @@ public class CardSelectState : ShootingGameState
         if (PhotonNetwork.IsMasterClient)
         {
             CardManager.Instance.BuildAndBroadcastDeck();
-            NetworkTimer.Instance.StartTimerNetworked(10.0f);
+            ShootingNetworkManager.Instance.networkTimer.StartTimerNetworked(10.0f);
         }
         else
         {

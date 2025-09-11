@@ -32,8 +32,8 @@ namespace ShootingScene.ShootingGame
            TurnManager.Instance.OnSetCurrentTurn += otherTurnUI.SetCurrentPlayerName;
 
             // NetworkTimer 이벤트 구독
-            NetworkTimer.Instance.OnTick += OnTimerTick;
-            NetworkTimer.Instance.OnTimerEnd += OnTimerEnd;
+            ShootingNetworkManager.Instance.networkTimer.OnTick += OnTimerTick;
+            ShootingNetworkManager.Instance.networkTimer.OnTimerEnd += OnTimerEnd;
         }
 
 

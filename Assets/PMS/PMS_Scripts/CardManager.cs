@@ -419,4 +419,10 @@ public class CardManager : PunSingleton<CardManager>
 
     #endregion
 
+
+    private void autoCardSelect()
+    {
+        
+
+    }
 }

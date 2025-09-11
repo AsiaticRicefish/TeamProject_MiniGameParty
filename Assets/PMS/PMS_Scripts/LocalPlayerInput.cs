@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Photon.Pun;
-using ShootingScene.ShootingGame;
+using ShootingScene;
 
 public class LocalPlayerInput : MonoBehaviourPun
 {
@@ -467,12 +467,12 @@ public class LocalPlayerInput : MonoBehaviourPun
     
     public void NotifyStartCountdown(float durationSec)
     {
-        //double now = PhotonNetwork.Time;
-        //double lead = 0.3f;
-        //double startAt = now + lead;
-        //double endAt = startAt + durationSec;
+        double now = PhotonNetwork.Time;
+        double lead = 0.3d;
+        double startAt = now + lead;
+        double endAt = startAt + durationSec;
         Debug.Log("NotifyStartCountdown 카운트 다운 호출");
-        photonView.RPC(nameof(RPC_StartCountDown), RpcTarget.All, durationSec);
+        photonView.RPC(nameof(RPC_StartCountDown), RpcTarget.All, startAt,endAt);
     }
     
     public void NotifyStopCountdown(bool close = false)
@@ -482,11 +482,15 @@ public class LocalPlayerInput : MonoBehaviourPun
     }
 
     [PunRPC]
-    private void RPC_StartCountDown(float durationSec)
+    private void RPC_StartCountDown(double startAt,double endAt)
     {
+        //double now = PhotonNetwork.Time;
+        //double lead = 0.3;
+        //double startAt = now + lead;
+        //double endAt = startAt + durationSec;
         Debug.Log("StartCountDown RPC 호출");
         // NetworkTimer를 통해 타이머 시작
-        NetworkTimer.Instance.OnStartTimer(durationSec);
+        ShootingNetworkManager.Instance.networkTimer.OnStartTimer((float)startAt, (float)endAt);
         //ShootingUIManager.Instance.StartCountDown(startAt, endAt);
     }
     
@@ -495,7 +499,7 @@ public class LocalPlayerInput : MonoBehaviourPun
     {
         Debug.Log("StopCountDown RPC 호출");
         // NetworkTimer 정지
-        NetworkTimer.Instance?.StopTimer();
+        ShootingNetworkManager.Instance.networkTimer?.StopTimer();
         //ShootingUIManager.Instance?.StopCountDown(close);
     }
     #endregion

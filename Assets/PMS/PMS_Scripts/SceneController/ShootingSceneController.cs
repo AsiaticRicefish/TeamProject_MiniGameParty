@@ -11,6 +11,8 @@ using ShootingScene.ShootingGame;
 [DisallowMultipleComponent]
 public class ShootingSceneController : BaseGameSceneController
 {
+    [SerializeField] private GameObject[] iGameComponents;
+
     //따로 이벤트는 없는거 같음
     public Action OnGameStarted;
 
@@ -26,7 +28,6 @@ public class ShootingSceneController : BaseGameSceneController
         yield return WaitForSingletonReady<CardManager>();
         yield return WaitForSingletonReady<Test_ShotFollowCamera>();
         yield return WaitForSingletonReady<EggManager>();
-        yield return WaitForSingletonReady<NetworkTimer>();
         yield return WaitForSingletonReady<ShootingUIManager>();
         yield return WaitForSingletonReady<WindSystem>();
         Debug.Log("모든 ShootingGameScene 매니저 Awake완료");
@@ -37,19 +38,49 @@ public class ShootingSceneController : BaseGameSceneController
     {
         Debug.Log("ShootingGameScene 순차 초기화 시작");
 
-        var sequentialComponents = new IGameComponent[]
+        //-- 민성님 아래 오브젝트들을 인스펙터 창에 차례로 넣어주시고 마지막에 camera swipe controller를 넣어주세요
+        // var sequentialComponents = new IGameComponent[]
+        // {
+        //     RoomPropertyObserver.Instance,
+        //     ShootingNetworkManager.Instance,
+        //     ShootingGameManager.Instance,
+        //     PlayerInputManager.Instance,
+        //     TurnManager.Instance,
+        //     EggManager.Instance,
+        //     ShootingUIManager.Instance,
+        //     WindSystem.Instance,
+        // };
+
+        var seqHashSet = new HashSet<object>();
+        List<IGameComponent> sequentialComponents = new();
+
+        foreach (var go in iGameComponents)
         {
-            RoomPropertyObserver.Instance,
-            ShootingNetworkManager.Instance,
-            ShootingGameManager.Instance,
-            PlayerInputManager.Instance,
-            TurnManager.Instance,
-            EggManager.Instance,
-            ShootingUIManager.Instance,
-            WindSystem.Instance,
-        };
+            foreach (var mb in go.GetComponents<MonoBehaviour>())
+            {
+                if (mb is IGameComponent component && seqHashSet.Add(component))
+                {
+                    Debug.Log($"{go.name} is IGameComponent ");
+                    sequentialComponents.Add(component);
+                }
+            }
+
+        }
+
 
         yield return StartCoroutine(InitializeComponentsSafely(sequentialComponents));
+
+        #region DI 주입
+        // CameraSwipeController DI
+        //var swipeController = FindObjectOfType<CameraSwipeController>();
+        //if (swipeController != null)
+        //{
+        //    swipeController.Initialize(PlayerInputManager.Instance);
+        //    Debug.Log("CameraSwipeController Initialize 완료");
+        //}
+
+        //FindObjectOfType <- 효율 씬 
+        #endregion
     }
 
     //벙렬 초기화
@@ -71,6 +102,7 @@ public class ShootingSceneController : BaseGameSceneController
         if (ShootingGameManager.Instance == null)
         {
             Debug.LogError("[NotifyGameStart] ShootingGameManager is NULL");
+
             return;
         }
         try
