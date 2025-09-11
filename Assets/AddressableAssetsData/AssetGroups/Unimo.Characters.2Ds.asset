@@ -57,8 +57,13 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: da3ad8cae583343d4bff61e9016dda7e
+    m_Address: Image/Character_2D/Gomgom
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: dcec1f1ee26c10c429cd0ba397b47e7b
-    m_Address: Image/Character_2D/sINGLE
+    m_Address: ge/Character_2D/RiBee
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

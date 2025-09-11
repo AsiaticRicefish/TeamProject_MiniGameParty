@@ -155,6 +155,9 @@ namespace Network
                 MaxPlayers = MaxPlayers, // 최대 인원 설정
                 IsVisible = true, // 로비 노출 여부 
                 IsOpen = true, // 입장 가능 여부 -> 게임 시작 시 false로 만들어야 함
+                CleanupCacheOnLeave = true, // 떠날 때 캐시 정리
+                EmptyRoomTtl = 0,           // 방이 비는 즉시 삭제
+                PlayerTtl = 0,              // 플레이어를 Inactive로 남겨두지 않음
                 CustomRoomProperties =
                     new Hashtable
                     {
@@ -198,6 +201,9 @@ namespace Network
                 MaxPlayers = MaxPlayers, // 최대 인원 설정
                 IsVisible = false, // 코드로만 입장하도록 비노출 권장
                 IsOpen = true, // 입장 가능 여부 -> 게임 시작 시 false로 만들어야 함
+                CleanupCacheOnLeave = true, // 떠날 때 캐시 정리
+                EmptyRoomTtl = 0,           // 방이 비는 즉시 삭제
+                PlayerTtl = 0,              // 플레이어를 Inactive로 남겨두지 않음
                 CustomRoomProperties = new Hashtable
                 {
                     { RoomProps.MatchType, MatchType.Private.ToString() },

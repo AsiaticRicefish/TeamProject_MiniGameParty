@@ -47,8 +47,7 @@ namespace LDH_Util
             {
                 Uid,
                 CharacterId,
-                MountId,
-                ProfileId,
+                EquipId,
             }
 
             public static readonly Dictionary<PlayerInfoKey, string> PlayerInfoKeyDict =
@@ -56,8 +55,7 @@ namespace LDH_Util
                 {
                     { PlayerInfoKey.Uid, "uid" },
                     { PlayerInfoKey.CharacterId, "characterId" },
-                    { PlayerInfoKey.MountId, "mountId" },
-                    { PlayerInfoKey.ProfileId, "profileId" }
+                    { PlayerInfoKey.EquipId, "equipId" },
                 };
 
             public static string GetPlayerInfoKey(PlayerInfoKey k) => PlayerInfoKeyDict[k];

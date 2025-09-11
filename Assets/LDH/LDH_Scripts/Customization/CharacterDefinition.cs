@@ -20,7 +20,6 @@ namespace Customization
         
         [Header("Visuals")]
         public AssetReferenceSprite iconRef;     // 상점 카드용 아이콘
-        public AssetReferenceSprite profileRef;  // 프로필 2D 이미지
         
 #if UNITY_EDITOR
         private void OnValidate()
