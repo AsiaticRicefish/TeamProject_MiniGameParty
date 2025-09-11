@@ -13,7 +13,7 @@ namespace ShootingScene
         [SerializeField] private CinemachineVirtualCamera vcamDefault; // 기본 시점
         [SerializeField] private CinemachineVirtualCamera vcamFollow;  // 알 따라가기
 
-        [SerializeField] Transform initCameraPos;
+        [SerializeField] Vector3 initCameraPos;
 
         private Coroutine followCo;
         
@@ -23,6 +23,8 @@ namespace ShootingScene
             // 기본 우선순위 세팅
             if (vcamDefault) vcamDefault.Priority = 10;
             if (vcamFollow) vcamFollow.Priority = 5;
+
+            initCameraPos = vcamDefault.transform.position;
         }
 
         // 발사하는 경우 내 발사체의 Rigidbody를 따라감
@@ -92,6 +94,11 @@ namespace ShootingScene
             // 발사체 따라가기 시작
             vcamFollow.Priority = 5;
             vcamFollow.Follow = null;
+        }
+
+        public void SwipePosInit()
+        {
+            vcamDefault.transform.position = initCameraPos;
         }
     }
 }

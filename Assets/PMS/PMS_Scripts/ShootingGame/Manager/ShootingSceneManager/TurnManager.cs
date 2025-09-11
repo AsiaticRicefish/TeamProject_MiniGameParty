@@ -66,6 +66,8 @@ namespace ShootingScene
 
         public GamePlayer GetCurrentTurnPlayer() => _turnOrder.Current;
 
+        public bool IsMyTurn() => GetCurrentTurnPlayer().PlayerId == PhotonNetwork.LocalPlayer.UserId;
+
         #endregion
 
         #region Turn 넘기기 / 결과 알리기 

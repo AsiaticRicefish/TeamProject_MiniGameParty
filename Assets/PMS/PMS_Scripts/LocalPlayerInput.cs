@@ -1,12 +1,8 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Photon.Pun;
-//using Photon.Realtime;
-using ShootingScene;
-using Photon.Realtime;
 using ShootingScene.ShootingGame;
 
 public class LocalPlayerInput : MonoBehaviourPun
@@ -17,87 +13,115 @@ public class LocalPlayerInput : MonoBehaviourPun
     public ChargeController charger;
     public Camera mainCam;
 
+    private float stepStartTime = 0;
+    private float duration = 0.9f;
+
     private float stepLimitTime = 5f;
-    //public float coneAngle = 100f;
-    //public float coneDistance = 5f;
-    //public Color coneColor = new Color(0f, 1f, 0f, 0.3f);
-
-    private bool isInputActive = false;
     private bool inputEnabled = false;
-
-    private int currentStep = 1;
     private bool stepCompleted = false;
 
-    //private UnimoEgg grabbedEgg = null;  // 잡은 Egg
-    //private float grabLimit = 1f;        // 좌우 이동 제한 (X기준)
-    //private Vector3 grabStartPos;        // 잡은 위치 기준
+    private int currentStepIndex = 0;
 
-    private bool autoMoveFlag = false;
+    // 간단한 타임아웃 처리 - 타이머 중복 방지
+    private Coroutine currentTimeoutCoroutine;
+
     private Vector3 autoMoveStartPos;
-    private float autoMoveRangeX = 1.0f;   // 좌우 자동 이동 범위
-    private float autoMoveSpeed = 2.0f;    // 좌우 이동 속도
+    private float autoMoveRangeX = 3.0f;   // 좌우 자동 이동 범위
+    private bool autoMoveFlag = false;
 
-    // 간단한 이벤트들
-    public event Action OnStep1Started;    // 유니모 이동 시작
-    public event Action OnStep1Completed;  // 유니모 이동 완료
-    public event Action OnStep2Started;    // 화살표 시작  
-    public event Action OnStep2Completed;  // 화살표 완료
-    public event Action OnStep3Started;    // 차징 시작
-    public event Action OnStep3Completed;  // 차징 완료
-    public event Action OnAllCompleted;    // 모든 단계 완료
-
-    private void RegisterInput()
-    {
-        ShootingScene.PlayerInputManager.Instance.onTouchPress += HandleTouch;
-    }
-
-    private void UnRegisterInput()
-    {
-        ShootingScene.PlayerInputManager.Instance.onTouchPress -= HandleTouch;
-    }
+    private List<InputStep> steps;
 
     public void EnableInput()
     {
-        Debug.Log("EnableInpute처리 완료 - Input 활성화!");
-        inputEnabled = true;
-        //UI 마이턴 시작 뛰우기
-        StartStep1(); // 첫 번째 단계 시작!
+        // 구독은 내 소유일 때만 하도록 (일관성)
+        if (photonView.IsMine)
+        {
+            Debug.Log("EnableInput 처리 완료 - Input 활성화!");
+
+            if (ShootingScene.PlayerInputManager.Instance != null)
+                ShootingScene.PlayerInputManager.Instance.onTouchPress += HandleTouch;
+
+            stepCompleted = false;
+            inputEnabled = true;
+            StartStep(0); // 첫 번째 단계 (steps[0]) 시작
+        }  
     }
-    public void DisableInput() => inputEnabled = false;
+    public void DisableInput()
+    {
+        // 구독 해제도 소유 확인 후
+        if (photonView.IsMine)
+        {
+            if (ShootingScene.PlayerInputManager.Instance != null)
+                ShootingScene.PlayerInputManager.Instance.onTouchPress -= HandleTouch;
+        }
+
+        inputEnabled = false;
+    }
 
     private void Awake()
     {
-        ShootingGameManager.Instance.OnGameStarted += RegisterInput;
-        ShootingGameManager.Instance.OnGameEnded += UnRegisterInput;
         player = gameObject.transform;
 
-        SetupEvents();
+        SetupSteps();
     }
 
-    private void Start()
+    private void StartStep(int index)
     {
-        if (mainCam == null)
-            mainCam = Camera.main;
-    }
+        StopCurrentTimeout();
+        currentStepIndex = index;
+        stepCompleted = false;
 
-    private void OnDestroy()
-    {
-        if (currentTimeoutCoroutine != null)
+        var step = steps[index];
+        step.OnStart?.Invoke();
+
+        // Step1일 때 자동이동 기준점 저장
+        if (steps[index].StepNumber == 1)
         {
+            stepStartTime = Time.time;
+            autoMoveStartPos = transform.position;
+            autoMoveFlag = true;
+        }
+        else
+        {
+            autoMoveFlag = false;
+        }
+
+        currentTimeoutCoroutine = StartCoroutine(StepTimeout(stepLimitTime));
+    }
+
+
+    private void OnDisable()
+    {
+        if (photonView.IsMine)
+        {
+            Debug.Log("구독 해제");
+            if(ShootingScene.PlayerInputManager.Instance != null)
+            {
+                ShootingScene.PlayerInputManager.Instance.onTouchPress -= HandleTouch;
+            }
+            else
+            {
+                Debug.LogWarning("구독해제가 안됬어요");
+            }
+
             //타이머 정지를 모두에게 알리기
             NotifyStopCountdown(true);
-            StopCoroutine(currentTimeoutCoroutine);
-            currentTimeoutCoroutine = null;
+
+            if (currentTimeoutCoroutine != null)
+            {
+                StopCoroutine(currentTimeoutCoroutine);
+                currentTimeoutCoroutine = null;
+            }
         }
     }
 
     //return pool 데이터 리셋 함수
     public void Initialize()
     {
-        isInputActive = false;
+        stepStartTime = 0;
         inputEnabled = false;
-        currentStep = 1;
         stepCompleted = false;
+        currentStepIndex = 0;
         autoMoveFlag = false;
         autoMoveStartPos = Vector3.zero;
 
@@ -114,110 +138,80 @@ public class LocalPlayerInput : MonoBehaviourPun
         }
     }
 
-    private void SetupEvents()
+    private void SetupSteps()
     {
-        // Step1 유니모 좌우 자동이동
-        OnStep1Started += () => {
-            Debug.Log("Step 1: 유니모 이동 시작");
-            autoMoveStartPos = transform.position;
-            autoMoveFlag = true;
-            inputEnabled = true; 
-        };
-
-        OnStep1Completed += () => {
-            Debug.Log("Step 1: 유니모 이동 완료");
-            autoMoveFlag = false;
-            inputEnabled = false;
-            StartStep2();
-        };
-
-        // Step2 방향 시스템
-        OnStep2Started += () => {
-            Debug.Log("Step 2: 화살표 선택 시작");
-            if (arrow != null && arrowRangeImage!=null && photonView.IsMine)
+        steps = new List<InputStep>
+        {
+            new InputStep
             {
-                arrow.gameObject.SetActive(true);
-                arrowRangeImage.SetActive(true);
-            }
-               
-            inputEnabled = true;
-        };
-
-        OnStep2Completed += () => {
-            Debug.Log("Step 2: 화살표 선택 완료");
-            if (arrowRangeImage!=null && photonView.IsMine)
+                StepNumber = 1,
+                OnStart = () =>
+                {
+                    Debug.Log("Step 1 시작: 유니모 이동");
+                    inputEnabled = true;
+                },
+                OnComplete = () =>
+                {
+                    Debug.Log("Step 1 완료");
+                     autoMoveFlag = false;
+                    inputEnabled = false;
+                }
+            },
+            new InputStep
             {
-                arrowRangeImage.SetActive(false);
-            }
-            inputEnabled = false;
-            StartStep3();
-
-        };
-
-        // Step3 차징 시스템
-        OnStep3Started += () => {
-            Debug.Log("Step 3: 차징 시작");
-            if (charger != null && photonView.IsMine) {
-                charger.chargeSlider.gameObject.SetActive(true);
-                charger.StartCharge();
-            }
-            inputEnabled = true;
-        };
-
-        OnStep3Completed += () => {
-            Debug.Log("Step 3: 차징 완료");
-            inputEnabled = false;
-            var unimo = gameObject.GetComponent<UnimoEgg>();
-
-            if (arrow != null && photonView.IsMine)
+                StepNumber = 2,
+                OnStart = () =>
+                {
+                    Debug.Log("Step 2 시작: 화살표 표시");
+                    if (arrow != null && arrowRangeImage != null && photonView.IsMine)
+                    {
+                        arrow.gameObject.SetActive(true);
+                        arrowRangeImage.SetActive(true);
+                    }
+                    inputEnabled = true;
+                },
+                OnComplete = () =>
+                {
+                    Debug.Log("Step 2 완료");
+                    arrow?.Freeze();  // 방향 고정
+                    if (arrowRangeImage != null && photonView.IsMine)
+                        arrowRangeImage.SetActive(false);
+                    inputEnabled = false;
+                }
+            },
+            new InputStep
             {
-                arrow.gameObject.SetActive(false);
+                StepNumber = 3,
+                OnStart = () =>
+                {
+                    Debug.Log("Step 3 시작: 차징");
+                    if (charger != null && photonView.IsMine)
+                    {
+                        charger.chargeSlider.gameObject.SetActive(true);
+                        charger.StartCharge();
+                    }
+                    inputEnabled = true;
+                },
+                OnComplete = () =>
+                {
+                    Debug.Log("Step 3 완료: 발사");
+                    var unimo = GetComponent<UnimoEgg>();
+                    unimo?.Shot(arrow.CurrentDir * charger.ChargePower);
+
+                    if(arrow != null && photonView.IsMine)
+                    {
+                        arrow.gameObject.SetActive(false);
+                    }
+
+                    if (charger != null && photonView.IsMine)
+                    {
+                        charger.chargeSlider.gameObject.SetActive(false);
+                        charger.StopCharge();
+                    }
+                    inputEnabled = false;
+                }
             }
-
-            unimo.Shot(arrow.CurrentDir * charger.ChargePower);
-
-            if (charger != null && photonView.IsMine)
-            {
-                charger.chargeSlider.gameObject.SetActive(false);
-                charger.StopCharge();
-            }
-
-            FinishAllSteps();
         };
-
-        // 최종 완료
-        OnAllCompleted += () => {
-            Debug.Log("모든 단계 완료!");
-            NotifyStopCountdown(true);
-        };
-    }
-
-    // 단계 시작 함수들 - 기존 타이머 정지 후 새 타이머 시작
-    private void StartStep1()
-    {
-        StopCurrentTimeout(); // 기존 타이머 정지
-        currentStep = 1;
-        stepCompleted = false;
-        OnStep1Started?.Invoke();
-        currentTimeoutCoroutine = StartCoroutine(StepTimeout(stepLimitTime));
-    }
-
-    private void StartStep2()
-    {
-        StopCurrentTimeout(); // 기존 타이머 정지
-        currentStep = 2;
-        stepCompleted = false;
-        OnStep2Started?.Invoke();
-        currentTimeoutCoroutine = StartCoroutine(StepTimeout(stepLimitTime));
-    }
-
-    private void StartStep3()
-    {
-        StopCurrentTimeout(); // 기존 타이머 정지
-        currentStep = 3;
-        stepCompleted = false;
-        OnStep3Started?.Invoke();
-        currentTimeoutCoroutine = StartCoroutine(StepTimeout(stepLimitTime));
     }
 
     private void StopCurrentTimeout()
@@ -231,54 +225,46 @@ public class LocalPlayerInput : MonoBehaviourPun
         }
     }
 
-    private void FinishAllSteps()
-    {
-        OnAllCompleted?.Invoke();
-        DisableInput();
-    }
-
-    // 간단한 타임아웃 처리 - 타이머 중복 방지
-    private Coroutine currentTimeoutCoroutine;
-
     private IEnumerator StepTimeout(float seconds)
     {
-        //타이머 시작을 모두에게 알리기
         NotifyStartCountdown(seconds);
-        
         yield return new WaitForSeconds(seconds);
-        Debug.Log($"Step {currentStep}: 시간 초과, 자동 진행");
-        CompleteCurrentStep();
+
+        Debug.Log($"Step {steps[currentStepIndex].StepNumber} 시간 초과 → 자동 완료");
+        CompleteStep();
     }
 
-    // 현재 단계 완료 처리 - 타이머도 정지
-    public void CompleteCurrentStep()
+    private void CompleteStep()
     {
         if (stepCompleted) return;
 
-        StopCurrentTimeout(); // 타이머 정지
+        StopCurrentTimeout();
         stepCompleted = true;
-        inputEnabled = false;  // 완료 직후 잠깐 입력 막음
+        inputEnabled = false;
 
-        switch (currentStep)
+        var step = steps[currentStepIndex];
+        step.OnComplete?.Invoke();
+
+        // 다음 단계 있으면 진행
+        if (currentStepIndex + 1 < steps.Count)
         {
-            case 1: OnStep1Completed?.Invoke(); break;
-            case 2:
-                arrow?.Freeze(); // 화살표 고정
-                OnStep2Completed?.Invoke();
-                break;
-            case 3:
-                //charger?.StopCharge(); // 차징 정지
-                OnStep3Completed?.Invoke();
-                break;
+            StartStep(currentStepIndex + 1);
+        }
+        else
+        {
+            Debug.Log("모든 단계 완료!");
+            NotifyStopCountdown(true);
+            DisableInput();
         }
     }
 
     private void Update()
     {
         // Step 1: 유니모 좌우 자동 이동
-        if (currentStep == 1 && autoMoveFlag && inputEnabled)
+        if (currentStepIndex == 0 && inputEnabled)
         {
-            float t = Mathf.PingPong(Time.time, 1f); // 0~1 반복
+            float elapsed = Time.time - stepStartTime; // 스텝 시작 시간 기준
+            float t = Mathf.PingPong(elapsed/ duration, 1f); // 0~설정값 반복
             Vector3 newPos = transform.position;
             // grabStartPos.x를 중심으로 좌우 grabLimit 범위 내 이동
             newPos.x = Mathf.Lerp(autoMoveStartPos.x - autoMoveRangeX, autoMoveStartPos.x + autoMoveRangeX, t);
@@ -342,8 +328,8 @@ public class LocalPlayerInput : MonoBehaviourPun
 
         if (ctx.started) // 어느 단계에서든 터치하면 즉시 완료
         {
-            Debug.Log($"Step {currentStep}: 터치로 즉시 완료");
-            CompleteCurrentStep();
+            Debug.Log($"Step {currentStepIndex}: 터치로 즉시 완료");
+            CompleteStep();
         }
 
 
@@ -445,11 +431,10 @@ public class LocalPlayerInput : MonoBehaviourPun
         #endregion
     }
 
-
-    //Screen 좌표를 World 좌표로 변환 - 카메라의 각도와 상관없이
+    #region Screen 좌표를 World 좌표로 변환 - 카메라의 각도와 상관없이
     private Vector3 ScreenToWorld(Vector2 screenPos)
     {
-        Ray ray = mainCam.ScreenPointToRay(screenPos);              //screenPos(마우스나 터치 위치)를 카메라 기준으로 Ray
+        Ray ray = Camera.main.ScreenPointToRay(screenPos);              //screenPos(마우스나 터치 위치)를 카메라 기준으로 Ray
         Plane groundPlane = new Plane(Vector3.up, player.position); // y = player.position.y 평면
         if (groundPlane.Raycast(ray, out float enter))
         {
@@ -457,96 +442,7 @@ public class LocalPlayerInput : MonoBehaviourPun
         }
         return player.position;
     }
-
-    #region Legarcy 플레이어 앞의 각도 체크
-    //private bool IsWithinCone(Vector2 screenPos)
-    //{
-    //    // Screen → World 변환
-    //    Vector3 worldPos = ScreenToWorld(screenPos);
-
-    //    // XZ 평면 벡터 계산
-    //    Vector3 toInput = worldPos - player.position;
-    //    toInput.y = 0f;
-
-    //    if (toInput.magnitude > coneDistance)
-    //    {
-    //        Debug.Log("터치 범위를 벗어났습니다");
-    //        return false;
-    //    }
-
-    //    if(Vector3.Angle(player.forward, toInput) <= coneAngle * 0.5f)
-    //    {
-    //        Debug.Log("각도 안에서 터치 입력했습니다");
-    //        return true;
-    //    }
-    //    else
-    //    {
-    //        Debug.Log("각도 안에서 터치 입력하지 않아서 입력이 취소 됩니다");
-    //        return false;
-    //    }
-
-    //    //return Vector3.Angle(player.forward, toInput) <= coneAngle * 0.5f;
-    //}
-
-    //private void OnDrawGizmos()
-    //{
-    //    if (player == null) return;
-
-    //    Vector3 pos = player.position;
-    //    Vector3 forward = player.forward;
-
-    //    Vector3 leftDir = Quaternion.Euler(0, -coneAngle * 0.5f, 0) * forward;
-    //    Vector3 rightDir = Quaternion.Euler(0, coneAngle * 0.5f, 0) * forward;
-
-    //    Gizmos.color = coneColor;
-
-    //    // 원뿔 경계선
-    //    Gizmos.DrawLine(pos, pos + leftDir.normalized * coneDistance);
-    //    Gizmos.DrawLine(pos, pos + rightDir.normalized * coneDistance);
-
-    //    // 내부 라인
-    //    int steps = 10;
-    //    for (int i = 0; i <= steps; i++)
-    //    {
-    //        float t = i / (float)steps;
-    //        Vector3 dir = Quaternion.Euler(0, -coneAngle * 0.5f + t * coneAngle, 0) * forward;
-    //        Gizmos.DrawLine(pos, pos + dir.normalized * coneDistance);
-    //    }
-    //}
-    #endregion  
-
-    #region 소유권 변경 콜백 함수
-    /*public void OnOwnershipRequest(PhotonView targetView, Player requestingPlayer)
-    {
-
-    }
-
-    public void OnOwnershipTransfered(PhotonView targetView, Player previousOwner)
-    {
-        if (targetView == photonView)
-        {
-            UpdateUIVisibility();
-        }
-    }
-
-    public void OnOwnershipTransferFailed(PhotonView targetView, Player senderOfFailedRequest)
-    {
-        
-    }*/
     #endregion
-
-    /// <summary>
-    /// 내 소유일 때만 UI 보이기
-    /// </summary>
-
-    public void TurnOffUIVisibility()
-    {
-        if (charger != null)
-            charger.chargeSlider.gameObject.SetActive(false);
-
-        if (arrow != null)
-            arrow.gameObject.SetActive(false);
-    }
 
     private bool TryGetScreenPosition(out Vector2 screenPos)
     {
@@ -595,7 +491,7 @@ public class LocalPlayerInput : MonoBehaviourPun
     private void RPC_StopCountDown(bool close)
     {
         Debug.Log("StopCountDown RPC 호출");
-        ShootingUIManager.Instance.StopCountDown(close);
+        ShootingUIManager.Instance?.StopCountDown(close);
     }
     #endregion
 }

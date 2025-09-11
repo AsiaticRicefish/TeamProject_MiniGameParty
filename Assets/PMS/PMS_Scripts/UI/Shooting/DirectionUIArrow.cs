@@ -11,17 +11,27 @@ public class DirectionUIArrow : MonoBehaviourPun
     public float swingAngle = 45f;
     public float swingSpeed = 2f;
     private RectTransform arrowTransform; // UI 화살표
-    [SerializeField]private RectTransform TargetPos;
+    [SerializeField] private RectTransform TargetPos;
 
     private float currentAngle;
     private bool isSwing = true; // 스윙 상태
+
+    public bool IsSwing
+    {
+        get => isSwing;
+        set
+        {
+            Debug.Log($"is swing 변화 : 이전 - {isSwing} 변경 값 - {value}");
+            isSwing = value;
+        }
+    }
     private float freezeAngle;   // 멈췄을 때 각도
 
     [SerializeField] GameObject player;
-    
-        
-    
-    public float CurrentAngle => isSwing ? currentAngle : freezeAngle;
+
+
+
+    public float CurrentAngle => IsSwing ? currentAngle : freezeAngle;
 
     public Vector3 CurrentDir
     {
@@ -32,7 +42,7 @@ public class DirectionUIArrow : MonoBehaviourPun
             Vector3 playerPos = player.transform.position;//RectTransformUtility.WorldToScreenPoint(Camera.main, player.transform.position);
 
             Vector3 dir = TargetPos.transform.position - playerPos;
-            dir.y = 0; 
+            dir.y = 0;
             return dir.normalized;
         }
     }
@@ -45,7 +55,7 @@ public class DirectionUIArrow : MonoBehaviourPun
     //return pool
     public void Initialize()
     {
-        isSwing = true;
+        IsSwing = true;
         currentAngle = 0f;
         freezeAngle = 0f;
 
@@ -57,10 +67,10 @@ public class DirectionUIArrow : MonoBehaviourPun
 
     private void Update()
     {
-        if (isSwing) currentAngle = Mathf.Sin(Time.time * swingSpeed) * swingAngle;
+        if (IsSwing) currentAngle = Mathf.Sin(Time.time * swingSpeed) * swingAngle;
 
         if (arrowTransform != null)
-            arrowTransform.localRotation = Quaternion.Euler(0f, 0f, isSwing ? currentAngle : freezeAngle);
+            arrowTransform.localRotation = Quaternion.Euler(0f, 0f, IsSwing ? currentAngle : freezeAngle);
 
         //테스트 코드
         /*if(Input.anyKeyDown)
@@ -72,9 +82,10 @@ public class DirectionUIArrow : MonoBehaviourPun
     public void Freeze()
     {
         freezeAngle = currentAngle;
-        isSwing = false;
+        IsSwing = false;
         //arrowTransform.gameObject.SetActive(false);
     }
 
-    public void Resume() => isSwing = true;
+    public void Resume() => IsSwing = true;
 }
+

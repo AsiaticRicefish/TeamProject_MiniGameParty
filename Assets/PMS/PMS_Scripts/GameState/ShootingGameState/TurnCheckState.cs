@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Photon.Pun;
 using ShootingScene;
+using ShootingScene.ShootingGame;
 using UnityEngine;
 
 public class TurnCheckState : ShootingGameState
@@ -13,8 +14,7 @@ public class TurnCheckState : ShootingGameState
         {
             TurnManager.Instance.TurnCheck();
         }
-        
-
+        ShootingUIManager.Instance.ShowWindUI();
     }
     public override void Update() { }
     public override void Exit() 
