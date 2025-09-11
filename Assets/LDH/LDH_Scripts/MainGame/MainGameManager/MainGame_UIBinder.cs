@@ -17,14 +17,13 @@ namespace LDH_MainGame
         private readonly Action<int> _onClickReady;
 
 
-        
         private MainGameDebugPanel _debugUI;
         private UI_Popup_PrivateRoom _readyPanel;
         private UI_GameInfo _gameInfo;
 
         private List<UI_Screen> _mainGameScreenUIs;
         private UI_Popup_QuitGame _quitPopup;
-        
+
         // 생성자
         // 생성자
         public MainGame_UIBinder(MiniGameRegistry registry, Action<int> setLocalSlot, Action<int> onClickReady)
@@ -40,19 +39,21 @@ namespace LDH_MainGame
         {
             _debugUI = Manager.UI.CreateScreenUI<MainGameDebugPanel>();
             _mainGameScreenUIs.Add(_debugUI);
-            Manager.UI.ShowScreenUI(_debugUI);
+            SetActiveDebugUI(true);
         }
 
         public void SetActiveDebugUI(bool active)
         {
-            Debug.Log("afasfdsafsafsal;fjks;lafj;klsdfjkl;safj;klsadf;jklsad;fkljsda;jkfsdajkl;fljk");
-            _debugUI.SetActiveDebugPanel(active);
+            if (active)
+                Manager.UI.ShowScreenUI(_debugUI).Forget();
+            else
+                Manager.UI.CloseScreenUI(_debugUI, false).Forget();
         }
-        
+
         public void BuildReadyPanel(MiniGameInfo mini, Player[] players, bool isMaster, out int localSlot)
         {
             _readyPanel = Manager.UI.CreatePopupUI<UI_Popup_PrivateRoom>("UI_Popup_ReadyPanel");
-            _gameInfo   = _readyPanel.GetComponent<UI_GameInfo>();
+            _gameInfo = _readyPanel.GetComponent<UI_GameInfo>();
             _gameInfo?.SetGameName(mini.gameName);
             _gameInfo?.SetPlayerCount(players.Length);
 
@@ -66,18 +67,20 @@ namespace LDH_MainGame
                 _readyPanel[slot].SetInviteActive(false);
                 if (pl.IsLocal) ls = slot;
             }
+
             _setLocalSlot(ls);
             localSlot = ls;
 
             foreach (var panel in _readyPanel.PlayerPanels)
-                if (panel != null) panel.ReadyClicked += _onClickReady;
+                if (panel != null)
+                    panel.ReadyClicked += _onClickReady;
 
             UniTask.Void(async () =>
             {
-                await  Manager.UI.ShowPopupUI(_readyPanel);
+                await Manager.UI.ShowPopupUI(_readyPanel);
             });
         }
-        
+
         public void UpdateReady(int mask) => _readyPanel?.UpdateReadyByMask(mask);
 
         public async UniTask CloseReadyPanel()
@@ -87,28 +90,34 @@ namespace LDH_MainGame
                 Debug.Log("ready panel is null");
                 return;
             }
+
             foreach (var panel in _readyPanel.PlayerPanels)
-                if (panel != null) panel.ReadyClicked -= _onClickReady;
+                if (panel != null)
+                    panel.ReadyClicked -= _onClickReady;
 
             await Manager.UI.ClosePopupUI(_readyPanel); // 패널 닫힐 때까지 기다리기
-            _readyPanel = null; _gameInfo = null;
+            _readyPanel = null;
+            _gameInfo = null;
         }
 
 
+        // public async UniTask CloseAllScreenUI()
+        // {
+        //     // List<UniTask> tasks = new List<UniTask>();
+        //     //
+        //     // foreach (UI_Screen screenUI in _mainGameScreenUIs)
+        //     // {
+        //     //     tasks.Add(Manager.UI.CloseScreenUI(screenUI, true));
+        //     // }
+        //     //
+        //     // await UniTask.WhenAll(tasks);
+        //
+        //     await Manager.UI.CloseAllScreenUI(true);
+        // }
 
-        public async UniTask CloseAllScreenUI()
-        {
-            List<UniTask> tasks = new List<UniTask>();
-
-            foreach (UI_Screen screenUI in _mainGameScreenUIs)
-            {
-                tasks.Add(Manager.UI.CloseScreenUI(screenUI, true));
-            }
-            await UniTask.WhenAll(tasks);
-        }
-        
 
         #region 게임 강제 종료 팝업
+
         public void ShowQuitPopup()
         {
             if (_quitPopup != null) return;
@@ -118,15 +127,11 @@ namespace LDH_MainGame
 
         public void CloseQuitPopup()
         {
-            if(_quitPopup == null) return;
+            if (_quitPopup == null) return;
             Manager.UI.ClosePopupUI(_quitPopup).Forget();
             _quitPopup = null;
         }
-        
 
         #endregion
-
-        
-
     }
 }

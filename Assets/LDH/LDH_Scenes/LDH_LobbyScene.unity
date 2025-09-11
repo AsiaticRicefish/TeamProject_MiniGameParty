@@ -6131,7 +6131,7 @@ PrefabInstance:
     - target: {fileID: 873450919960001178, guid: b4f2cd633f84448609793082bcf66d70,
         type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0.7616279
       objectReference: {fileID: 0}
     - target: {fileID: 873450919960001178, guid: b4f2cd633f84448609793082bcf66d70,
         type: 3}
@@ -14902,10 +14902,25 @@ PrefabInstance:
       propertyPath: m_Name
       value: Main_ Center
       objectReference: {fileID: 0}
+    - target: {fileID: 1618367286910026618, guid: 80169b7ffbed145c5ac7b5409b87cda0,
+        type: 3}
+      propertyPath: m_Name
+      value: Play UI
+      objectReference: {fileID: 0}
+    - target: {fileID: 2052148998379516140, guid: 80169b7ffbed145c5ac7b5409b87cda0,
+        type: 3}
+      propertyPath: m_Name
+      value: Closet UI
+      objectReference: {fileID: 0}
     - target: {fileID: 2052148998379516140, guid: 80169b7ffbed145c5ac7b5409b87cda0,
         type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5618144373881411706, guid: 80169b7ffbed145c5ac7b5409b87cda0,
+        type: 3}
+      propertyPath: m_Name
+      value: Shop UI
       objectReference: {fileID: 0}
     - target: {fileID: 8244191597922803345, guid: 80169b7ffbed145c5ac7b5409b87cda0,
         type: 3}

@@ -6,6 +6,7 @@ using Cysharp.Threading.Tasks;
 using DesignPattern;
 using LDH_Util;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace LDH_UI
 {
@@ -56,8 +57,16 @@ namespace LDH_UI
             InitScreenUIs();
 
             _toast = CreateToast();
+            
+            
+            //씬을 내릴때마다 screen ui를 모두 close
+            SceneManager.sceneUnloaded += ((_) => CloseAllScreenUI().Forget());
+        }
 
-
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            SceneManager.sceneUnloaded -= ((_) => CloseAllScreenUI().Forget());
         }
 
         #region Initialize
@@ -191,26 +200,20 @@ namespace LDH_UI
         {
             return _screenCache.TryGetValue(typeof(T), out var ui) ? ui as T : null;
         }
-
-
-        /// <summary>
-        /// 전역 UI를 활성화합니다.
-        /// 팝업일 경우 Stack에 Push합니다.
-        /// </summary>
+        
         public async UniTask<UI_Screen> ShowScreenUI(UI_Screen screen)
         {
             SetCanvas(screen.gameObject, Define_LDH.UILayer.Screen, sort: true);
             await screen.ShowAsync();
             return screen;
         }
-
-        /// <summary>
-        /// 전역 UI를 비활성화합니다. (팝업이면 Stack에서 Pop)
-        /// </summary>
+        
         public async UniTask CloseScreenUI(UI_Screen screen, bool destroy = false)
         {
-            if (screen == null || !screen.IsVisible) return;
-
+            if (screen == null) return;
+            
+            Debug.Log($"[UIManager] 스크린 UI {screen.name}를 닫습니다.");
+            
             await screen.CloseAsync();
             _orderScreen = Mathf.Max(baseOrderScreen, _orderScreen - 1);
 
@@ -220,6 +223,21 @@ namespace LDH_UI
                 if (screen) Destroy(screen.gameObject);
                 _screenCache.Remove(screen.GetType());
             }
+        }
+
+        public async UniTask CloseAllScreenUI(bool destroy = false)
+        {
+            var screens = _screenCache.Values;
+            Debug.Log($"[UIManager] {screens.Count}개의 스크린 UI를 닫습니다.");
+            foreach (UI_Base uiBase in screens)
+            {
+                if (uiBase is UI_Screen screen)
+                {
+                    await CloseScreenUI(screen, destroy);
+                }
+                   
+            }
+            Debug.Log($"[UIManager] 스크린 UI를 모두 닫았습니다.");
         }
 
         #endregion

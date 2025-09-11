@@ -7,6 +7,7 @@ using LDH_UI;
 using Managers;
 using Photon.Pun;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace ShootingScene.ShootingGame
 {
@@ -31,7 +32,7 @@ namespace ShootingScene.ShootingGame
        {
            TurnManager.Instance.OnSetCurrentTurn += otherTurnUI.SetCurrentPlayerName;
        }
-
+       
 
        #region my turn ui
 
