@@ -1724,6 +1724,54 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 359795976}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &395563770
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 395563772}
+  - component: {fileID: 395563771}
+  m_Layer: 0
+  m_Name: PhotonViewCoordinator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &395563771
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 395563770}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48c2c32953764648bd684ac38a9d4b47, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sceneViews:
+  - {fileID: 1939637747}
+  roots:
+  - {fileID: 1939637744}
+--- !u!4 &395563772
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 395563770}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1424.3263, y: 1062.5236, z: -68.245514}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -7995,14 +8043,13 @@ GameObject:
   - component: {fileID: 1939637746}
   - component: {fileID: 1939637745}
   - component: {fileID: 1939637747}
-  - component: {fileID: 1939637748}
   m_Layer: 0
   m_Name: CardManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1939637745
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8017,10 +8064,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   isPersistent: 1
   cardParent: {fileID: 1620790072}
+  cardUICanvas: {fileID: 334254586}
   cardPrefab: {fileID: 5538478693680383511, guid: 41ca6aa764ccea344b8f6686391c1a4d,
     type: 3}
   nextSceneName: MeteorScene
-  allPicked: 1
 --- !u!4 &1939637746
 Transform:
   m_ObjectHideFlags: 0
@@ -8058,22 +8105,6 @@ MonoBehaviour:
   sceneViewId: 1
   InstantiationId: 0
   isRuntimeInstantiated: 0
---- !u!114 &1939637748
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1939637744}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 48c2c32953764648bd684ac38a9d4b47, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  sceneViews:
-  - {fileID: 1939637747}
-  roots:
-  - {fileID: 1620790071}
 --- !u!1001 &1958594540
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -10480,3 +10511,4 @@ SceneRoots:
   - {fileID: 1190691557}
   - {fileID: 350445450}
   - {fileID: 1939637746}
+  - {fileID: 395563772}

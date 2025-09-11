@@ -153,7 +153,7 @@ public class JengaTower : MonoBehaviour
         }
         else
         {
-            byLayer = GroupByY(blocks);
+            byLayer = GroupByY(blocks, yQuantizeEpsilon);
         }
 
         AssignIdsAndSlots(byLayer);
@@ -218,16 +218,15 @@ public class JengaTower : MonoBehaviour
     }
 
 
-    private static Dictionary<int, List<JengaBlock>> GroupByY(IEnumerable<JengaBlock> blocks)
+    private static Dictionary<int, List<JengaBlock>> GroupByY(IEnumerable<JengaBlock> blocks, float eps)
     {
         // 블록들을 Y 좌표로 그룹핑
         var ys = new SortedDictionary<int, List<JengaBlock>>();
-        float eps = 0.01f; // 오차 허용치
 
         foreach (var b in blocks)
         {
             float y = b.transform.localPosition.y;
-            int key = Mathf.RoundToInt(y / eps);
+            int key = Mathf.RoundToInt(y / Mathf.Max(1e-6f, eps));
 
             if (!ys.TryGetValue(key, out var list))
             {
@@ -275,17 +274,24 @@ public class JengaTower : MonoBehaviour
             int layer = kv.Key;
             var list = kv.Value;
 
-            bool isHorizontal = (layer % 2 == 0);
+            // 회전값 대신, 블록들의 위치 분포로 축을 결정
+            float minX = float.PositiveInfinity, maxX = float.NegativeInfinity;
+            float minZ = float.PositiveInfinity, maxZ = float.NegativeInfinity;
 
-            Transform commonParent = list[0].transform.parent;
-            if (commonParent != null)
+            foreach (var b in list)
             {
-                float y = Mathf.Abs(Mathf.DeltaAngle(commonParent.eulerAngles.y, 0f));
-                if (Mathf.Abs(y) > 45f) isHorizontal = false;
-                else isHorizontal = true;
+                var p = b.transform.localPosition;
+                if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x;
+                if (p.z < minZ) minZ = p.z; if (p.z > maxZ) maxZ = p.z;
             }
 
-            list = isHorizontal
+            float rangeX = maxX - minX;
+            float rangeZ = maxZ - minZ;
+
+            // 퍼짐이 더 큰 축으로 정렬 (X가 더 벌어져 있으면 X축 정렬)
+            bool sortByX = rangeX >= rangeZ;
+
+            list = sortByX
                 ? list.OrderBy(b => b.transform.localPosition.x).ToList()
                 : list.OrderBy(b => b.transform.localPosition.z).ToList();
 
@@ -407,43 +413,166 @@ public class JengaTower : MonoBehaviour
 
     private IEnumerator CollapseAnimation()
     {
-        // 타워 루트를 기울이기
-        float tiltAngle = UnityEngine.Random.Range(15f, 25f);
-        Vector3 tiltAxis = new Vector3(
-            UnityEngine.Random.Range(-1f, 1f),
-            0f,
-            UnityEngine.Random.Range(-1f, 1f)
-        ).normalized;
+        // 붕괴 방향을 랜덤하게 결정 (8방향 중 하나)
+        Vector3[] collapseDirections = {
+        Vector3.forward,
+        Vector3.back,
+        Vector3.left,
+        Vector3.right,
+        (Vector3.forward + Vector3.left).normalized,
+        (Vector3.forward + Vector3.right).normalized,
+        (Vector3.back + Vector3.left).normalized,
+        (Vector3.back + Vector3.right).normalized
+    };
 
-        // 타워 전체를 천천히 기울이기
-        float duration = 1f;
-        Quaternion startRot = transform.rotation;
-        Quaternion targetRot = Quaternion.AngleAxis(tiltAngle, tiltAxis) * startRot;
+        Vector3 pushDirection = collapseDirections[UnityEngine.Random.Range(0, collapseDirections.Length)];
 
-        float elapsed = 0f;
-        while (elapsed < duration)
+        // 1단계: 타워 전체를 살짝 흔들기 (붕괴 전조)
+        Vector3 originalPosition = transform.position;
+        float shakeIntensity = 0.05f;
+        float shakeDuration = 0.3f;
+        float shakeElapsed = 0f;
+
+        while (shakeElapsed < shakeDuration)
         {
-            transform.rotation = Quaternion.Lerp(startRot, targetRot, elapsed / duration);
-            elapsed += Time.deltaTime;
+            Vector3 shakeOffset = new Vector3(
+                UnityEngine.Random.Range(-shakeIntensity, shakeIntensity),
+                0f,
+                UnityEngine.Random.Range(-shakeIntensity, shakeIntensity)
+            );
+            transform.position = originalPosition + shakeOffset;
+
+            shakeElapsed += Time.deltaTime;
             yield return null;
         }
 
-        // 이제 모든 블록을 물리 적용 (중력만으로)
-        foreach (var block in allBlocks.Where(b => !b.IsRemoved))
+        // 원래 위치로 복원
+        transform.position = originalPosition;
+
+        // 2단계: 타워를 붕괴 방향으로 밀기 시작
+        float pushForce = 8f; // 밀어내는 힘의 세기
+
+        // 상단부터 순차적으로 물리 활성화하면서 힘 적용
+        var blocksByHeight = new List<List<JengaBlock>>();
+
+        // 높이별로 블록들을 그룹화
+        for (int layer = towerHeight - 1; layer >= 0; layer--)
         {
-            if (block.TryGetComponent<Rigidbody>(out var rb))
+            if (_blocksByLayer.TryGetValue(layer, out var layerBlocks))
             {
-                rb.isKinematic = false;
+                var aliveBlocks = layerBlocks.Where(b => !b.IsRemoved).ToList();
+                if (aliveBlocks.Count > 0)
+                {
+                    blocksByHeight.Add(aliveBlocks);
+                }
             }
-            yield return new WaitForSeconds(0.02f);
         }
 
-        yield return new WaitForSeconds(5f);
+        // 상단부터 순차적으로 붕괴시키기
+        for (int heightGroup = 0; heightGroup < blocksByHeight.Count; heightGroup++)
+        {
+            var blocksAtHeight = blocksByHeight[heightGroup];
 
+            foreach (var block in blocksAtHeight)
+            {
+                if (block.TryGetComponent<Rigidbody>(out var rb))
+                {
+                    rb.isKinematic = false;
+
+                    // 높이에 따라 다른 힘 적용 (상단일수록 더 큰 힘)
+                    float heightMultiplier = 1f + (heightGroup * 0.3f);
+                    Vector3 finalPushForce = pushDirection * (pushForce * heightMultiplier);
+
+                    // 약간의 랜덤 요소 추가로 자연스럽게
+                    Vector3 randomVariation = new Vector3(
+                        UnityEngine.Random.Range(-1f, 1f),
+                        UnityEngine.Random.Range(0f, 0.5f),
+                        UnityEngine.Random.Range(-1f, 1f)
+                    ) * 2f;
+
+                    rb.AddForce(finalPushForce + randomVariation, ForceMode.Impulse);
+
+                    // 회전 토크도 추가 (더 역동적인 붕괴)
+                    Vector3 torque = new Vector3(
+                        UnityEngine.Random.Range(-3f, 3f),
+                        UnityEngine.Random.Range(-2f, 2f),
+                        UnityEngine.Random.Range(-3f, 3f)
+                    );
+                    rb.AddTorque(torque, ForceMode.Impulse);
+                }
+            }
+
+            // 각 층 사이에 짧은 간격을 두어 연쇄적으로 무너지는 효과
+            yield return new WaitForSeconds(0.08f);
+        }
+
+        // 3단계: 타워 루트 자체도 기울이기
+        if (blocksByHeight.Count > 0)
+        {
+            float tiltAngle = UnityEngine.Random.Range(10f, 20f);
+            Vector3 tiltAxis = Vector3.Cross(Vector3.up, pushDirection).normalized;
+
+            float tiltDuration = 1f;
+            Quaternion startRot = transform.rotation;
+            Quaternion targetRot = Quaternion.AngleAxis(tiltAngle, tiltAxis) * startRot;
+
+            float tiltElapsed = 0f;
+            while (tiltElapsed < tiltDuration)
+            {
+                transform.rotation = Quaternion.Lerp(startRot, targetRot, tiltElapsed / tiltDuration);
+                tiltElapsed += Time.deltaTime;
+                yield return null;
+            }
+        }
+
+        // 4단계: 충분한 시간 대기 후 정리
+        yield return new WaitForSeconds(4f);
+
+        // 모든 블록 비활성화
         foreach (var block in allBlocks)
         {
             if (block) block.gameObject.SetActive(false);
         }
+
+        #region 기존 방식
+        //// 타워 루트를 기울이기
+        //float tiltAngle = UnityEngine.Random.Range(15f, 25f);
+        //Vector3 tiltAxis = new Vector3(
+        //    UnityEngine.Random.Range(-1f, 1f),
+        //    0f,
+        //    UnityEngine.Random.Range(-1f, 1f)
+        //).normalized;
+
+        //// 타워 전체를 천천히 기울이기
+        //float duration = 1f;
+        //Quaternion startRot = transform.rotation;
+        //Quaternion targetRot = Quaternion.AngleAxis(tiltAngle, tiltAxis) * startRot;
+
+        //float elapsed = 0f;
+        //while (elapsed < duration)
+        //{
+        //    transform.rotation = Quaternion.Lerp(startRot, targetRot, elapsed / duration);
+        //    elapsed += Time.deltaTime;
+        //    yield return null;
+        //}
+
+        //// 이제 모든 블록을 물리 적용 (중력만으로)
+        //foreach (var block in allBlocks.Where(b => !b.IsRemoved))
+        //{
+        //    if (block.TryGetComponent<Rigidbody>(out var rb))
+        //    {
+        //        rb.isKinematic = false;
+        //    }
+        //    yield return new WaitForSeconds(0.02f);
+        //}
+
+        //yield return new WaitForSeconds(5f);
+
+        //foreach (var block in allBlocks)
+        //{
+        //    if (block) block.gameObject.SetActive(false);
+        //}
+        #endregion
 
         // 연출 완전히 끝난 시점 이벤트
         CollapseFinished?.Invoke();

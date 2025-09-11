@@ -64,16 +64,9 @@ namespace KYG
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            if (!_interactable) return;       // 클릭 차단
+            if (!_interactable) return;
             if (isFlipping || isFace) return;
-            _onClick?.Invoke(_index);
-        }
-
-        /// <summary>버튼/트리거 연결용</summary>
-        public void OnTap()
-        {
-            if (!_interactable) return;       // 클릭 차단
-            if (isFlipping || isFace) return;
+            Debug.Log($"[CardUI] clicked index={_index}"); // ← 임시
             _onClick?.Invoke(_index);
         }
 
