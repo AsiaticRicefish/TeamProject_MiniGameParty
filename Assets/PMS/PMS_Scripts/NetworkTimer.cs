@@ -9,7 +9,7 @@ public class NetworkTimer
 {
     private double startAt;
     private double endAt;
-    private double lead = 0.3f;
+
     private CancellationTokenSource cts;
 
     private bool running;
@@ -24,41 +24,18 @@ public class NetworkTimer
         this.pv = pv;
     }
 
-    public void StartTimerNetworked(double durationSec)
+    public void OnStartTimer(double startAt, double endAt)
     {
-        if (!PhotonNetwork.IsMasterClient) return;
-
-        this.startAt = PhotonNetwork.Time + lead;
-        this.endAt = startAt + durationSec;
-
-        pv.RPC("RPC_StartTimer", RpcTarget.All, (float)startAt,(float)endAt);
-    }
-
-    [PunRPC]
-    private void RPC_StartTimer(float startAt,float endAt)
-    {
-        this.startAt = startAt;
+        this.startAt = startAt; 
         this.endAt = endAt;
         StartTimer().Forget();
-        //_ = StartTimer(durationSec); // UniTask로 분리, 예외 안전
-    }
-
-    //외부에서 로컬로 호출
-    public void OnStartTimer(float startAt, float endAt)
-    {
-        this.startAt = startAt;
-        this.endAt = endAt;
-        StartTimer().Forget();
-        //_ = StartTimer(durationSec); // UniTask로 분리, 예외 안전
     }
 
     public async UniTask StartTimer()
     {
         // 이전 타이머 정리
         StopTimer();
-        Debug.Log("안녕하세요?");
         while (running) await UniTask.Yield();
-        Debug.Log("안녕하세요!");
 
         cts = new CancellationTokenSource();
         running = true;
@@ -88,10 +65,13 @@ public class NetworkTimer
         cts?.Cancel();
         cts?.Dispose();
         cts = null;
+        running = false; // 타이머 상태 즉시 변경
+    }
 
+    private void ResetTimer()
+    {
         startAt = 0;
         endAt = 0;
-        running = false; // 타이머 상태 즉시 변경
     }
 
     private async UniTask RunTimerAsync(CancellationToken token)
@@ -102,6 +82,15 @@ public class NetworkTimer
 
         try
         {
+            // 시작 시간이 이미 지났다면 즉시 시작
+            if (PhotonNetwork.Time >= startAt)
+            {
+                Debug.Log($"시작 시간이 이미 지났습니다. 즉시 타이머 시작 현재시간 {PhotonNetwork.Time}시작 시간:{startAt}");
+            }
+            else
+            {
+                Debug.Log("대기중");
+            }
             // 시작 시간까지 대기
             await UniTask.WaitUntil(() => PhotonNetwork.Time >= startAt ,cancellationToken: token);
 

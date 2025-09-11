@@ -168,5 +168,11 @@ namespace ShootingScene
 
             PhotonNetwork.LocalPlayer.SetCustomProperties(props);
         }
+
+        [PunRPC]
+        public void RPC_StartTimer(double startAt, double endAt)
+        {
+            networkTimer.OnStartTimer(startAt,endAt);
+        }
     }
 }

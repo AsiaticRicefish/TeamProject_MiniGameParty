@@ -12,8 +12,12 @@ public class CardSelectState : ShootingGameState
         Debug.Log("[ShootingGameState] - CardSelectState Enter");
         if (PhotonNetwork.IsMasterClient)
         {
+            double lead = 0.3;
+            double duration = 9.0; // 10초
+            double startAt = PhotonNetwork.Time + lead;
+            double endAt = startAt + duration;
             CardManager.Instance.BuildAndBroadcastDeck();
-            ShootingNetworkManager.Instance.networkTimer.StartTimerNetworked(10.0f);
+            ShootingNetworkManager.Instance.photonView.RPC("RPC_StartTimer", RpcTarget.All, startAt,endAt);
         }
         else
         {

@@ -422,7 +422,6 @@ public class CardManager : PunSingleton<CardManager>
 
     private void autoCardSelect()
     {
-        
 
     }
 }
