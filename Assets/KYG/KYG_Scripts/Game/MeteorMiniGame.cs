@@ -29,6 +29,15 @@ public class MeteorTapMiniGame : MonoBehaviourPun
     [SerializeField] private TMP_Text  turnBannerMine; // "마이 턴!" (나만 보임)
     [SerializeField] private TMP_Text  turnBannerOther;// "상대 턴" (모두 보임)
     [SerializeField] private Slider    turnTimerUI;    // 공통 UI(점차 줄어드는 숫자/슬라이더)
+    
+    [Header("Count UI")] // 카운트 숫자 UI
+    [SerializeField] private TMP_Text countNumberText;   // 씬의 숫자 텍스트에 바인딩 (3,2,1...)
+    [SerializeField] private float    countDuration = 3f; // 카운트 총 시간(초) 예: 3초
+    [SerializeField] private float    afterDelay    = 1.0f; // 카운트 종료 후 다음 턴으로 넘기기 전 딜레이
+    
+    [Header("Tap Limits per Turn")] // 탭 제한
+    [SerializeField] private int minTapPerTurn = 1;
+    [SerializeField] private int maxTapPerTurn = 3;
 
     [Header("Ending Count Ranges (by round)")]
     [SerializeField] private Vector2Int round1 = new Vector2Int(20, 30);
@@ -40,6 +49,11 @@ public class MeteorTapMiniGame : MonoBehaviourPun
     private bool myTurn;              // 내 턴 여부
     private float turnTimeLeft;       // 턴 제한시간(선택)
     private float turnTimeMax = 10f;  // 기본 10s (필요 시 조정)
+    
+    
+    // 카운트/탭 상태
+    private bool countActive = false;
+    private int  tapsThisTurn = 0;
 
     void OnEnable()
     {
@@ -53,24 +67,28 @@ public class MeteorTapMiniGame : MonoBehaviourPun
         myTurn = isMine;
         currentTap = 0;
 
-        // 라운드별 엔딩카운트 설정
         currentEndingCount = GetEndingCountForRound(roundIndex);
-        // 인원 감소 시 더 줄이길 원한다면 가중치 적용
         currentEndingCount -= Mathf.Max(0, 4 - alivePlayerCount) * 2;
         currentEndingCount = Mathf.Max(3, currentEndingCount);
 
-        // 위험도 초기화
         if (starRenderer) starRenderer.material = starNormalMat;
         if (turnBannerMine)  turnBannerMine.gameObject.SetActive(isMine);
         if (turnBannerOther) turnBannerOther.gameObject.SetActive(!isMine);
 
-        // 표정/사운드 초기화
         if (unimoFace) unimoFace.Play("Idle", 0, 0);
 
-        // 타이머 초기화(공통 UI)
-        turnTimeMax = 10f;  // 필요시 라운드별 시간 조정
+        // (기존 공용 슬라이더는 그대로 유지 – 필요시 숨겨도 됩니다)
+        turnTimeMax = 10f;
         turnTimeLeft = turnTimeMax;
         if (turnTimerUI) turnTimerUI.value = 1f;
+
+        // NEW: 내 턴이면 카운트 숫자 UI 시작, 상대 턴이면 숫자 숨김
+        if (countNumberText) countNumberText.gameObject.SetActive(isMine);
+        tapsThisTurn = 0;
+        if (isMine)
+            StartCoroutine(CoCountWindow());
+        else
+            countActive = false;
     }
 
     void Update()
@@ -87,20 +105,33 @@ public class MeteorTapMiniGame : MonoBehaviourPun
     public void OnTap()
     {
         if (!myTurn) return;
+        if (!countActive) return;          // NEW: 카운트 중에만 허용
+        if (tapsThisTurn >= maxTapPerTurn) return; // NEW: 최대 3회 제한
 
+        DoOneTapFXAndLogic();
+        tapsThisTurn++;
+        
+        // 탭 카운트 로그 출력
+        Debug.Log($"[MeteorTapMiniGame] 내 턴 탭 횟수: {tapsThisTurn}/{maxTapPerTurn}, 총 누적 탭: {currentTap}/{currentEndingCount}");
+    }
+
+    private void DoOneTapFXAndLogic()
+    {
         currentTap++;
 
-        
         if (starRenderer && starNormalMat) starRenderer.material = starNormalMat;
         if (sfxTap) sfxTap.Play();
         if (vfxMeteor) vfxMeteor.Play();
         if (unimoFace) unimoFace.Play("Smile", 0, 0);
+        
+        // 누적 탭 카운트 로그 출력
+        Debug.Log($"[MeteorTapMiniGame] 현재 총 탭 수: {currentTap}/{currentEndingCount}");
 
         // 위험도
         float dangerRatio = (float)currentTap / Mathf.Max(1, currentEndingCount);
         ApplyDanger(dangerRatio);
 
-        // 엔딩 카운트 도달 → 탈락 연출 & 다음 턴
+        // 엔딩 카운트
         if (currentTap >= currentEndingCount)
         {
             photonView.RPC(nameof(RPC_OnEndingReached), RpcTarget.All);
@@ -119,6 +150,54 @@ public class MeteorTapMiniGame : MonoBehaviourPun
         else if (r > 0.33f)
         {
             if (unimoFace) unimoFace.Play("Worried", 0, 0);
+        }
+    }
+    
+    private System.Collections.IEnumerator CoCountWindow()
+    {
+        countActive = true;
+
+        float t = countDuration;
+        while (t > 0f)
+        {
+            // 소숫점 반올림해 “3,2,1” 형태로 보여주기
+            if (countNumberText)
+            {
+                int display = Mathf.CeilToInt(t);
+                countNumberText.text = display.ToString();
+            }
+            t -= Time.deltaTime;
+            yield return null;
+        }
+
+        // 마지막 “0” 표기 후 숨김
+        if (countNumberText)
+        {
+            countNumberText.text = "0";
+            // 0을 아주 잠깐 보여주고 꺼도 좋음
+            yield return null;
+            countNumberText.gameObject.SetActive(false);
+        }
+
+        countActive = false;
+
+        // NEW: 최소 탭 1회 보장 – 안 눌렀으면 1회 처리
+        if (tapsThisTurn < minTapPerTurn)
+        {
+            DoOneTapFXAndLogic();
+            tapsThisTurn = Mathf.Max(tapsThisTurn, 1);
+        }
+
+        // NEW: 마스터만 일정 시간 후 다음 턴
+        if (PhotonNetwork.IsMasterClient)
+        {
+            yield return new WaitForSeconds(afterDelay);
+            // 엔딩에 걸려 RPC_OnEndingReached가 이미 NextTurn을 호출했다면
+            // 중복 호출을 피하고 싶다면 여기서 간단한 가드(예: currentTap < currentEndingCount)로 체크
+            if (currentTap < currentEndingCount)
+            {
+                KYG.TurnManager.Instance.NextTurn();
+            }
         }
     }
 

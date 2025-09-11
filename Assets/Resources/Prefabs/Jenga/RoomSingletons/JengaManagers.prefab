@@ -85,7 +85,6 @@ MonoBehaviour:
   initTimeout: 30
   showDebugLogs: 1
   syncCheckInterval: 0.1
-  loading: {fileID: 0}
 --- !u!114 &-6226777500727515095
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -32,14 +32,11 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
 
     private Dictionary<string, List<UnimoEgg>> playerEggPools = new();
 
-
-
     private Dictionary<int, UnimoEgg> viewIdToEgg = new();
 
     private bool isPoolReady = false;
 
-    // 
-    public Action OnRemoveEggPool;
+
 
 
     private HashSet<string> registerdPools = new();
@@ -158,7 +155,7 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
     {
         if (!isPoolReady) return null;
 
-        if (currentUnimoEgg != null) return null;
+        //if (currentUnimoEgg != null) return null;
 
         // 풀에서 비활성 알 찾기
         Debug.Log($"플레이어 egg pools {playerEggPools.Count}개 - {playerEggPools.Values?.ToList()[0].Count} egg 있음");
@@ -196,7 +193,7 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
 
         egg.ShooterUid ??= shooterUid;
 
-        egg.SetMaterial();
+        //egg.SetMaterial();
         egg.gameObject.SetActive(true);
 
         Rigidbody rb = egg.GetComponent<Rigidbody>();
@@ -206,7 +203,7 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
             rb.angularVelocity = Vector3.zero;
         }
 
-        currentUnimoEgg = egg;     
+        //currentUnimoEgg = egg;     
     }
 
     // 턴 종료 시 호출
@@ -220,27 +217,32 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
     private void RPC_DeactivateEgg(int viewID)
     {
         if (!viewIdToEgg.TryGetValue(viewID, out var egg)) return;
+
+        if (egg.photonView.IsMine)
+        {
+            Debug.Log("Egg의 주인만 초기화 진행");
+            egg.Initialize();
+            egg.GetComponent<LocalPlayerInput>().Initialize();
+        }
+
         egg.gameObject.SetActive(false);
 
-        egg.Initialize();
-        egg.GetComponent<LocalPlayerInput>().Initialize();
-
-        if (currentUnimoEgg == egg)
-            currentUnimoEgg = null;
+        //if (currentUnimoEgg == egg)
+        //    currentUnimoEgg = null;
     }
 
-    public void DestroyAllEggs()
+    public void DestroyAllMyEggs()
     {
         if (!PhotonNetwork.IsMasterClient) return;
 
-        Debug.Log("마스터 모든 오브젝트 풀 삭제");
+        Debug.Log("각자 생성한 유니모 파괴시키기");
 
         // 현재 풀 전체 순회
-        foreach (var unimoEgg in playerEggPools)
+        foreach (var unimoEggList in playerEggPools)
         {
-            foreach (var egg in unimoEgg.Value)
+            foreach (var egg in unimoEggList.Value)
             {
-                if (egg != null && egg.gameObject != null)
+                if (egg.photonView.IsMine && egg != null && egg.gameObject != null )
                 {
                     PhotonNetwork.Destroy(egg.gameObject);
                 }

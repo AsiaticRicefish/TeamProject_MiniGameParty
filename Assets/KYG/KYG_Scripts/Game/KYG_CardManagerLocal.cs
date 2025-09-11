@@ -18,7 +18,7 @@ namespace KYG
     public class CardManagerLocal : MonoBehaviour
     {
         [Header("Scene")]
-        [SerializeField] private string nextSceneName = "MiniGameScene";
+        [SerializeField] private string nextSceneName = "MeteorScene";
         
         [Header("Prefabs & Layout")]
         [SerializeField] private Transform cardParent;     // 카드를 배치할 Grid/Vertical/Horizontal

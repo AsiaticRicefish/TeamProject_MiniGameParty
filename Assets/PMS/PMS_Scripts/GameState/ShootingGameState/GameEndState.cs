@@ -10,18 +10,22 @@ public class GameEndState : ShootingGameState
     {
         Debug.Log("[GameEndState] - GameEndState Enter");
 
+        //각자 풀로 생성했던 유니모 제거
+        EggManager.Instance.DestroyAllMyEggs();
+
         //슈팅게임 룸프로퍼티 게임상태 구독 해제 
         ShootingNetworkManager.Instance.ShootingGameSceneChangeRoomPropertiesUnReigster();
 
         //룸 프로퍼티(마스터만) 및 플레이어 프로퍼티 초기화(로컬)        
         ShootingNetworkManager.Instance.ClearShootingGamePlayerProperties();
-        PlayerInputManager.Instance.DisableInput();
 
         if (PhotonNetwork.IsMasterClient)
         {          
             ShootingNetworkManager.Instance.ClearShootingGameRoomProperties();
             ShootingGameManager.Instance.EndGame();
         }
+
+        ShootingScene.PlayerInputManager.Instance.Cleanup();
     }
     public override void Update()
     {

@@ -24,6 +24,6 @@ public class InitState : ShootingGameState
 
     public override void Exit()
     {
-        Debug.Log("[ShootingGameState] - InitState 상태에서 벗어남");
+        Debug.Log("[ShootingGameState] - InitState 상태에서 벗어남");       
     }
 }

@@ -22,14 +22,12 @@ public class ShootingSceneController : BaseGameSceneController
         yield return WaitForSingletonReady<ShootingGameManager>();
         yield return WaitForSingletonReady<RoomPropertyObserver>();
         yield return WaitForSingletonReady<PlayerInputManager>();
-        //턴매니저 추가
         yield return WaitForSingletonReady<TurnManager>();
-        //카드 매니저 추가 
         yield return WaitForSingletonReady<CardManager>();
         yield return WaitForSingletonReady<Test_ShotFollowCamera>();
         yield return WaitForSingletonReady<EggManager>();
         yield return WaitForSingletonReady<ShootingUIManager>();
-
+        yield return WaitForSingletonReady<WindSystem>();
         Debug.Log("모든 ShootingGameScene 매니저 Awake완료");
     }
 
@@ -47,6 +45,7 @@ public class ShootingSceneController : BaseGameSceneController
             TurnManager.Instance,
             EggManager.Instance,
             ShootingUIManager.Instance,
+            WindSystem.Instance,
         };
 
         yield return StartCoroutine(InitializeComponentsSafely(sequentialComponents));
@@ -74,21 +73,25 @@ public class ShootingSceneController : BaseGameSceneController
             return;
         }
         try
-        {
+        {           
+            //모든 Scene Controller의 작업 처리 완료를 알림
+            //TaskSyncManager.Instance.SetTaskDone(ShootingGamePlayerPropertyKeys.TaskType.Initialized);
+
             if (PhotonNetwork.IsMasterClient)
             {
                 MainGameManager.Instance?.NotifyMiniGameStart();
                 RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "CardSelectState");   
             }
-            // else if(RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.State).ToString() == "CardSelectState")
-            // {
+
+            //else if(RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.State).ToString() == "CardSelectState")
+            //{
             //     Debug.Log("호출?");
             //     //이미 변경되어 룸프로퍼티가 callback을 못받았을 때
             //     //지연보상
             //     //늦게 들어와서 따로 RoomCallBack 못받은 상황에서는 자신의 State 변경 요청해야한다. 클라이언트 -> 마스터 클라이언트
             //     string state = (string)PhotonNetwork.CurrentRoom.CustomProperties[ShootingGamePropertyKeys.State];
             //     ShootingGameManager.Instance.ChangeStateByName("CardSelectState");//(state);
-            // }
+            //}
             //나머지 클라이어트도 룸프로퍼티 변경으로 인한 콜백함수로 ChangeState 실행되겠지?
         }
         catch (Exception ex)
