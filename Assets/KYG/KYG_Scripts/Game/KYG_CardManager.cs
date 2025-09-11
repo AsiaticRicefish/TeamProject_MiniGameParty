@@ -59,18 +59,26 @@ namespace KYG
         
         private IEnumerator InitRoutine()
         {
-            // 룸 연결 대기
             yield return new WaitUntil(() => PhotonNetwork.InRoom);
 
-            // 카드 루트가 켜질 때까지 대기(씬 오브젝트 준비)
             if (cardParent != null)
                 yield return new WaitUntil(() => cardParent.gameObject.activeInHierarchy);
 
-            // 마스터=덱 생성/방 커스텀프로퍼티 세팅, 비마스터=그걸 읽어서 UI 구성
-            if (PhotonNetwork.IsMasterClient) BuildAndBroadcastDeck();
-            else TryInitFromRoomProps();
+            if (PhotonNetwork.IsMasterClient) 
+            {
+                BuildAndBroadcastDeck();
+            }
+            else 
+            {
+                // 비마스터: 프로퍼티가 생길 때까지 대기 후 초기화
+                yield return new WaitUntil(() =>
+                    PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey(KEY_DECK_VALUES) &&
+                    PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey(KEY_CARD_OWNERS)
+                );
+                TryInitFromRoomProps();
+            }
 
-            Debug.Log($"[CardManager] Ready. InRoom={PhotonNetwork.InRoom}, Cards={_cards?.Count}, Deck={_deckValues?.Length}");
+            Debug.Log($"[CardManager] Ready. Cards={_cards?.Count}, Deck={_deckValues?.Length}");
         }
 
         private IEnumerator WaitAndInit()
@@ -418,14 +426,21 @@ namespace KYG
         #region Photon Callbacks
         public override void OnRoomPropertiesUpdate(Hashtable changed)
         {
+            
+            
             if (changed == null) return;
 
             var room = PhotonNetwork.CurrentRoom;
             if (room == null) return;
-
-            // 기존 덱/오너 동기화 로직은 유지…
-            // (중략)
-
+            
+            if (changed.ContainsKey(KEY_DECK_VALUES) || changed.ContainsKey(KEY_CARD_OWNERS))
+            {
+                if ((_cards == null || _cards.Count == 0) && PhotonNetwork.CurrentRoom.CustomProperties != null)
+                {
+                    TryInitFromRoomProps();
+                    Debug.Log("[CardManager] UI rebuilt from room props (late init).");
+                }
+            }
             // ✅ 공개 상태 감지: state == Revealing 이고, 덱/오너/시각 정보가 있으면 공개 시작
             if (room.CustomProperties.TryGetValue(KEY_STATE, out var stObj) &&
                 (byte)stObj == (byte)LobbyState.Revealing)
