@@ -464,34 +464,39 @@ public class LocalPlayerInput : MonoBehaviourPun
 
 
     #region CountDown 싱크 로직
-
+    
     public void NotifyStartCountdown(float durationSec)
     {
-        double now = PhotonNetwork.Time;
-        double lead = 0.3f;
-        double startAt = now + lead;
-        double endAt = startAt + durationSec;
-        
-        photonView.RPC(nameof(RPC_StartCountDown), RpcTarget.All, startAt, endAt);
+        //double now = PhotonNetwork.Time;
+        //double lead = 0.3f;
+        //double startAt = now + lead;
+        //double endAt = startAt + durationSec;
+        Debug.Log("NotifyStartCountdown 카운트 다운 호출");
+        photonView.RPC(nameof(RPC_StartCountDown), RpcTarget.All, durationSec);
     }
     
     public void NotifyStopCountdown(bool close = false)
     {
+        Debug.Log("NotifyStopCountdown 카운트 다운 호출");
         photonView.RPC(nameof(RPC_StopCountDown), RpcTarget.All, close);
     }
 
     [PunRPC]
-    private void RPC_StartCountDown(double startAt, double endAt)
+    private void RPC_StartCountDown(float durationSec)
     {
         Debug.Log("StartCountDown RPC 호출");
-        ShootingUIManager.Instance.StartCountDown(startAt, endAt);
+        // NetworkTimer를 통해 타이머 시작
+        NetworkTimer.Instance.StartTimer(durationSec);
+        //ShootingUIManager.Instance.StartCountDown(startAt, endAt);
     }
     
     [PunRPC]
     private void RPC_StopCountDown(bool close)
     {
         Debug.Log("StopCountDown RPC 호출");
-        ShootingUIManager.Instance?.StopCountDown(close);
+        // NetworkTimer 정지
+        NetworkTimer.Instance?.StopTimer();
+        //ShootingUIManager.Instance?.StopCountDown(close);
     }
     #endregion
 }

@@ -418,4 +418,5 @@ public class CardManager : PunSingleton<CardManager>
     }
 
     #endregion
+
 }

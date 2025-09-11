@@ -9,6 +9,7 @@ public class CardSelectState : ShootingGameState
     private bool flag = true;
     public override void Enter()
     {
+
         Debug.Log("[ShootingGameState] - CardSelectState Enter");
         if (PhotonNetwork.IsMasterClient)
         {
