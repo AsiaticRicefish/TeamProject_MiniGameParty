@@ -416,12 +416,85 @@ public class CardManager : PunSingleton<CardManager>
         
         
     }
-
     #endregion
 
-
-    private void autoCardSelect()
+    //외부에서 호출
+    public void StartAutoCardSelect()
     {
+        if (!PhotonNetwork.IsMasterClient) return;
 
+        StartCoroutine(OnPickTimeExpired());
+    }
+
+    //마스터만 호출하게
+    private IEnumerator OnPickTimeExpired()
+    {
+        yield return new WaitForSeconds(10f);
+
+        Debug.Log("[CardManager] 시간 초과 → 자동 배정 실행");
+
+        //photonView.RPC(nameof(UnEnableInteraction), RpcTarget.All);
+        //yield return new WaitForSeconds(0.1f);       //rpc 지연 0.1초 대기
+
+        // 아직 선택 안 한 플레이어 자동 할당
+        ForceAssignRemaining();
+
+        StartCoroutine(WaitForAutoCardSelectDelay(2.0f));
+        // 강제로 AllPicked 체크 → Reveal 단계로 이동    
+    }
+
+    private IEnumerator WaitForAutoCardSelectDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        CheckAllPicked();
+    }
+
+    /*[PunRPC]
+    private void UnEnableInteraction()
+    {
+        if (!_alreadyPicked)
+            _alreadyPicked = true;
+    }*/
+
+    //마스터가 판단하여 안뽑은 카드 강제 배정
+    private void ForceAssignRemaining()
+    {
+        //아직 선택하지 않은 인덱스 카드 및 플레이어들
+        List<int> freeIndices = new List<int>();
+        List<int> freePlayers = new List<int>();
+
+        // 아직 카드 없는 자리
+        for (int i = 0; i < _owners.Length; i++)
+            if (_owners[i] == -1)
+                freeIndices.Add(i);
+
+        // 아직 카드 못 받은 플레이어
+        foreach (var p in PhotonNetwork.CurrentRoom.Players.Values)
+        {
+            bool alreadyHasCard = _owners.Contains(p.ActorNumber);
+            if (!alreadyHasCard)
+            {
+                freePlayers.Add(p.ActorNumber);
+                Debug.Log($"카드를 뽑지 않은 사람{p.NickName}");
+            }
+        }
+    
+
+        // 무작위 매칭 (중복 방지)
+        System.Random rng = new System.Random();
+        foreach (int player in freePlayers)
+        {
+            if (freeIndices.Count == 0) break;
+
+            int idx = freeIndices[rng.Next(freeIndices.Count)];
+            freeIndices.Remove(idx);
+            _owners[idx] = player;
+        }
+
+        PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable {
+        { ShootingGamePropertyKeys.KEY_CARD_OWNERS, _owners }
+        });
+
+        photonView.RPC(nameof(RPC_OnPickUpdated), RpcTarget.AllBuffered, _owners);
     }
 }
