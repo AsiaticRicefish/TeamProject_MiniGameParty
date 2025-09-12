@@ -104,6 +104,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   localPlayerInput: {fileID: 7507564535323960775}
   chargeController: {fileID: 816720513667826849}
+  playerUiController: {fileID: 7461243334416690372}
   rb: {fileID: 8990860213725507007}
   turnEnded: 0
   isLaunched: 0
@@ -199,6 +200,7 @@ MonoBehaviour:
   arrow: {fileID: 7188015131967684144}
   arrowRangeImage: {fileID: 1698855235677192148}
   charger: {fileID: 816720513667826849}
+  PlayerMarker: {fileID: 1098164584026161378}
 --- !u!1 &424205091300992389
 GameObject:
   m_ObjectHideFlags: 0

@@ -11,6 +11,7 @@ public class UnimoEgg : MonoBehaviourPun
     [Header("유니모 스크립트")]
     public LocalPlayerInput localPlayerInput;
     public ChargeController chargeController;
+    public PlayerInputUIController playerUiController;
 
     public Rigidbody rb;
     private float stopSpeed = 0.01f; // 속도 기준
@@ -37,12 +38,14 @@ public class UnimoEgg : MonoBehaviourPun
     private Renderer _renderer;
     public Material[] unimoMats;
     
-    /*public void SetMaterial()
+    public void SetMaterial()
     {
         if (ShooterUid == null) return;
-        _renderer.material = unimoMats[TurnManager.Instance.currentTurnIndex - 1];
 
-    }*/
+        playerUiController.PlayerMarker.GetComponent<SpriteRenderer>().material = unimoMats[TurnManager.Instance.currentTurnIndex - 1];
+        //_renderer.material = unimoMats[TurnManager.Instance.currentTurnIndex - 1];
+
+    }
 
     #endregion
 

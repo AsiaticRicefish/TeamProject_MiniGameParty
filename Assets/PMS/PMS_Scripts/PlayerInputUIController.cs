@@ -8,6 +8,8 @@ public class PlayerInputUIController : MonoBehaviour
     [SerializeField] private GameObject arrowRangeImage;
     [SerializeField] private ChargeController charger;
 
+    [SerializeField] public GameObject PlayerMarker;
+
     #region 차징 UI 관련
     // 화살표 표시/숨기기
     public void ShowArrow(bool show)
