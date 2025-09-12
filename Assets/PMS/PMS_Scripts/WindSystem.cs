@@ -33,6 +33,7 @@ public class WindSystem : PunSingleton<WindSystem>,IGameComponent
 
         // 속도 뽑기
         int speed = UnityEngine.Random.Range(minWindSpeed, maxWindSpeed);
+        Debug.Log($"[WindSystem] - 현재 풍향 : {dir.ToString()} {speed}");
 
         // 구조체 갱신
         //currentWind = new WindData(DirectionEnumToVector(dir), speed);
@@ -46,6 +47,7 @@ public class WindSystem : PunSingleton<WindSystem>,IGameComponent
     [PunRPC]
     private void RPC_UpdateWind(WindDirection dir, int speed)
     {
+        Debug.Log($"[WindSystem] - 동기화 받은 현재 풍향 : {dir.ToString()} {speed}");
         currentWind = new WindData(DirectionEnumToVector(dir), speed);
         windChanged?.Invoke(dir,speed);
     }

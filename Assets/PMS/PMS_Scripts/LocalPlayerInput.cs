@@ -499,7 +499,7 @@ public class LocalPlayerInput : MonoBehaviourPun
     {
         Debug.Log("StopCountDown RPC 호출");
         // NetworkTimer 정지
-        ShootingNetworkManager.Instance?.networkTimer?.StopTimer();
+        ShootingNetworkManager.Instance?.networkTimer?.CancelTimer();
         //ShootingUIManager.Instance?.StopCountDown(close);
     }
     #endregion
