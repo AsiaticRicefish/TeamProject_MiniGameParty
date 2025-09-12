@@ -184,7 +184,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buttonRoot: {fileID: 1051153008}
   guestLoginButton: {fileID: 1051153010}
-  gpgsLoginButton: {fileID: 0}
+  gpgsLoginButton: {fileID: 1550354078}
   inputRoot: {fileID: 918197095}
   loadingRoot: {fileID: 0}
   nicknameInput: {fileID: 918197097}
