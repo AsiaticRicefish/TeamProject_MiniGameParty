@@ -70,7 +70,7 @@ namespace RhythmGame
         /// <param name="verdictScore"></param>
         void OnVerdict(Verdict verdict, int combo, int verdictScore)
         {
-
+            /*
             switch (verdict)
             {
                 case Verdict.Perfect:
@@ -82,8 +82,12 @@ namespace RhythmGame
                 case Verdict.Miss:
                     _verdictText.text = $"Miss!";
                     break;
-
+                case Verdict.Bad:
+                    _verdictText.text = $"Bad!";
+                    break;
             }
+            */
+            _verdictText.text = $"{verdict} !";
             _comboText.text = $"COMBO {combo} !!";
             _verdictScoreText.text = $"Extra Score {verdictScore}";
 

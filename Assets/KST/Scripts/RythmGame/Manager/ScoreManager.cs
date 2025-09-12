@@ -249,7 +249,7 @@ namespace RhythmGame
         {
             if (!note || !verdictPos) return ApplyVerdict(Verdict.Miss);
 
-            if (note.Type == NoteType.Fake) return ApplyVerdict(Verdict.Miss);
+            if (note.Type == NoteType.Fake) return ApplyVerdict(Verdict.Bad);
 
             Vector3 dist = note.transform.position - verdictPos.position;
             float z = Mathf.Abs(Vector3.Dot(dist, Vector3.forward));
@@ -298,6 +298,7 @@ namespace RhythmGame
                     _combo++;
                     _bestCombo = Mathf.Max(_bestCombo, _combo);
                     break;
+                case Verdict.Bad:
                 case Verdict.Miss:
                     _combo = 0;
                     break;
@@ -317,6 +318,11 @@ namespace RhythmGame
             {
                 _verdictScore--;
                 Debug.Log("미스");
+            }
+            else //Bad
+            {
+                _verdictScore--;
+                Debug.Log("베드");
             }
 
             _verdictScore = Mathf.Clamp
