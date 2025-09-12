@@ -111,15 +111,14 @@ namespace LDH_Util
         }
         
         #endregion
-        
-        #region Shooting Game
 
-        public enum WindDirection
+
+        #region Customizing
+
+        public enum ClosetCategory
         {
-            North,
-            South,
-            West,
-            East,
+            Character,
+            Equip,
         }
 
         #endregion

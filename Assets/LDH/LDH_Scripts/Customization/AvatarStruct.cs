@@ -13,37 +13,43 @@ namespace Customization
         public string     CurrentCharacterId { get; private set; }
         public GameObject CurrentEquip { get; private set; }
         public string     CurrentEquipId { get; private set; }
+        
 
-
-        private void Start()
+        public void BindCharacter(GameObject go, string id, bool inheritLayer = true)
         {
-            Init();
-        }
-
-        public void Init()
-        {
-            CustomizationManager.Instance.ApplyToAvatarAsync(this, CustomizationManager.Instance.GetEquippedLocal())
-                .Forget();
-        }
-
-
-        public void BindCharacter(GameObject go, string id)
-        {
+            if (inheritLayer)
+                SetLayerRecursively(go, characterRoot.gameObject.layer);
+            
             CurrentCharacter = go;
             CurrentCharacterId = id;
-            var t = go.transform; t.localPosition = Vector3.zero; t.localRotation = Quaternion.identity; t.localScale = Vector3.one;
-            
-            
+            // var t = go.transform; 
+            // t.localPosition = Vector3.zero; 
+            // t.localRotation = Quaternion.identity; t.localScale = Vector3.one;
         }
         
-        public void BindEquip(GameObject go, string id)
+        public void BindEquip(GameObject go, string id, bool inheritLayer = true)
         {
-            CurrentEquip = go; CurrentEquipId = id;
-            // 캐릭터 루트를 시트에 장착(탈것 있을 때)
+            if (inheritLayer)
+                SetLayerRecursively(go, characterRoot.gameObject.layer);
             
-            var t = go.transform; t.localPosition = Vector3.zero; t.localRotation = Quaternion.identity; t.localScale = Vector3.one;
+            CurrentEquip = go; CurrentEquipId = id;
+            
+            // var t = go.transform; t.localPosition = Vector3.zero; t.localRotation = Quaternion.identity; t.localScale = Vector3.one;
         }
         
+        
+        private static void SetLayerRecursively(GameObject go, int layer)
+        {
+            if (!go) return;
+            go.layer = layer;
+
+            // Renderer/SkinnedMeshRenderer 등 자식 포함 전부 동일 레이어로
+            var trs = go.GetComponentsInChildren<Transform>(true);
+            for (int i = 0; i < trs.Length; i++)
+            {
+                if (trs[i]) trs[i].gameObject.layer = layer;
+            }
+        }
 
     }
 }

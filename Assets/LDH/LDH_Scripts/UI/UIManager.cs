@@ -380,7 +380,7 @@ namespace LDH_UI
 
         #region Toast (큐)
 
-        public UI_Toast CreateToast(string name = "UI_Toast")
+        private UI_Toast CreateToast(string name = "UI_Toast")
         {
             var toastPrefab = Resources.Load<UI_Toast>(Path.Combine(toastFolder, name));
             UI_Toast toast = Util_LDH.Instantiate<UI_Toast>(toastPrefab, getUIAreaTransform(toastPrefab.Area));

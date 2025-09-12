@@ -27,7 +27,7 @@ public class PrefabPool
         _alive++;
         var t = go.transform;
         t.SetParent(parent, false);
-        t.localPosition = Vector3.zero; t.localRotation = Quaternion.identity; t.localScale = Vector3.one;
+        t.localRotation = Quaternion.identity; t.localScale = Vector3.one;
         go.SetActive(true);
         return go;
     }

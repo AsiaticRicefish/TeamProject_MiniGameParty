@@ -67,11 +67,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 491469f14755c704d8c0ee4dc1396339
-    m_Address: Assets/Imports/123/Prefabs/Equip/EQ013_Toaster.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6ef79cc7cfaa61041ab38a348298e5de
     m_Address: Assets/Imports/123/Prefabs/Equip/EQC009_MagicHat.prefab
     m_ReadOnly: 0

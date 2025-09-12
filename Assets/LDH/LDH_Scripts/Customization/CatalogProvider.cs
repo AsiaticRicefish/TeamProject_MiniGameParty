@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
@@ -20,6 +21,10 @@ namespace Customization
         
         public static IReadOnlyDictionary<string, CharacterDefinition> Characters { get; private set; }
         public static IReadOnlyDictionary<string, EquipmentDefinition> Equips { get; private set; }
+        
+        // 정렬된 열람용
+        public static IReadOnlyList<CharacterDefinition> CharactersSorted { get; private set; }
+        public static IReadOnlyList<EquipmentDefinition>  EquipsSorted    { get; private set; }
         
         // 나중에 Release 하기 위한 용도
         private static AsyncOperationHandle<IList<CharacterDefinition>> _charHandle;
@@ -56,6 +61,21 @@ namespace Customization
                 .Where(x => x != null && !string.IsNullOrEmpty(x.id))
                 .GroupBy(x => x.id)
                 .ToDictionary(g => g.Key, g => g.First());
+            
+            
+            // 정렬 리스트
+            CharactersSorted = Characters?.Values
+                .OrderBy(def => def.number).ThenBy(def => def.id, StringComparer.Ordinal)
+                .ToArray();
+            
+            EquipsSorted = Equips?.Values
+                .OrderBy(def => def.number)
+                .ThenBy(def => def.id, StringComparer.Ordinal)
+                .ToArray();
+            
+            
+            Debug.Log($"[CatalogProvider] Init 완료 : Characters {Characters.Values.Count()} 개, Equips : {Equips.Values.Count()} 개 등록 완료");
+
         }
 
         

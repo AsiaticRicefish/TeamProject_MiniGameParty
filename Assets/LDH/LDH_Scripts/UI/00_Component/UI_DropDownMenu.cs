@@ -8,6 +8,11 @@ namespace LDH_UI
 {
     public class UI_DropDownMenu : MonoBehaviour
     {
+        [Header("drop down toggle")] 
+        [SerializeField] private Toggle dropDownToggle;
+
+        
+        [Header("drop down menus")]
         [SerializeField] private CanvasGroup cg;
         [SerializeField] private Transform menuParent;
         [SerializeField] private Image menuParentImage;
@@ -96,6 +101,9 @@ namespace LDH_UI
         
         public void ShowPopupUI(UI_Popup uiPopup)
         {
+            //드롭다운 토글 닫기
+            dropDownToggle.isOn = !dropDownToggle.isOn;
+            
             var popup = Manager.UI.CreatePopupUI<UI_Popup>(uiPopup.name);
             Manager.UI.ShowPopupUI(popup).Forget();
         }

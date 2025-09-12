@@ -198,8 +198,10 @@ GameObject:
   - component: {fileID: 1378186737754007938}
   - component: {fileID: 8225156194023656618}
   - component: {fileID: 6863236220381223398}
+  - component: {fileID: 8803898027889908787}
+  - component: {fileID: 1163735191867176864}
   m_Layer: 5
-  m_Name: DropDown Button (1)
+  m_Name: DropDown Button (Toggle)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -348,6 +350,47 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   toggle: {fileID: 8225156194023656618}
   menu: {fileID: 1683882420658475418}
+  toggleCloseArea: {fileID: 0}
+--- !u!223 &8803898027889908787
+Canvas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2153387932944901493}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_RenderMode: 2
+  m_Camera: {fileID: 0}
+  m_PlaneDistance: 100
+  m_PixelPerfect: 0
+  m_ReceivesEvents: 1
+  m_OverrideSorting: 1
+  m_OverridePixelPerfect: 0
+  m_SortingBucketNormalizedSize: 0
+  m_VertexColorAlwaysGammaSpace: 0
+  m_AdditionalShaderChannelsFlag: 0
+  m_UpdateRectTransformForStandalone: 0
+  m_SortingLayerID: 0
+  m_SortingOrder: 10
+  m_TargetDisplay: 0
+--- !u!114 &1163735191867176864
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2153387932944901493}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc42784cf147c0c48a680349fa168899, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_IgnoreReversedGraphics: 1
+  m_BlockingObjects: 0
+  m_BlockingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
 --- !u!1 &3173441101832082876
 GameObject:
   m_ObjectHideFlags: 0
@@ -982,11 +1025,11 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3601703423288266635, guid: 51ac2a819c55f477f959230b59400fd2,
         type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1683882420658475418}
+      addedObject: {fileID: 7012329606568022043}
     - targetCorrespondingSourceObject: {fileID: 3601703423288266635, guid: 51ac2a819c55f477f959230b59400fd2,
         type: 3}
       insertIndex: -1
-      addedObject: {fileID: 7012329606568022043}
+      addedObject: {fileID: 1683882420658475418}
     - targetCorrespondingSourceObject: {fileID: 3305496928842240793, guid: 51ac2a819c55f477f959230b59400fd2,
         type: 3}
       insertIndex: -1
@@ -1139,22 +1182,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 2974172575801569781}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1683882420658475418
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1782774667757207166}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0da2cdc68d3840bf8a4f8044afeec65f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  cg: {fileID: 7012329606568022043}
-  menuParent: {fileID: 9006863176535652193}
-  menuParentImage: {fileID: 4309419753066350987}
-  duration: 0.2
 --- !u!225 &7012329606568022043
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -1167,6 +1194,23 @@ CanvasGroup:
   m_Interactable: 0
   m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
+--- !u!114 &1683882420658475418
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1782774667757207166}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0da2cdc68d3840bf8a4f8044afeec65f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dropDownToggle: {fileID: 8225156194023656618}
+  cg: {fileID: 7012329606568022043}
+  menuParent: {fileID: 9006863176535652193}
+  menuParentImage: {fileID: 4309419753066350987}
+  duration: 0.2
 --- !u!114 &2845050471424502046 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1026192238181144811, guid: 51ac2a819c55f477f959230b59400fd2,

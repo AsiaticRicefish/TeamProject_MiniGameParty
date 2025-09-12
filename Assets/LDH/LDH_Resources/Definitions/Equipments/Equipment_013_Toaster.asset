@@ -16,10 +16,10 @@ MonoBehaviour:
   id: unimo_equip_013
   setKey: unimo_013
   prefabRef:
-    m_AssetGUID: 491469f14755c704d8c0ee4dc1396339
+    m_AssetGUID: 6a14d461b505f4b1cad4d9381860b2b2
     m_SubObjectName: 
     m_SubObjectType: 
-    m_EditorAssetChanged: 0
+    m_EditorAssetChanged: 1
   iconRef:
     m_AssetGUID: c211f8ea5b051f243afadcb33a6759f0
     m_SubObjectName: 13_Toaster

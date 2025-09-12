@@ -7,6 +7,9 @@ namespace LDH_UI
     {
         [SerializeField] private Toggle toggle;
         [SerializeField] private UI_DropDownMenu menu; // ShowMenu/HideMenu 제공
+        [SerializeField] private Button toggleCloseArea;
+        
+        
         private bool _busy;
 
         private void Awake()
@@ -26,6 +29,7 @@ namespace LDH_UI
             }
             finally
             {
+                toggleCloseArea.gameObject.SetActive(isOn);
                 toggle.interactable = true;
                 _busy = false;
             }

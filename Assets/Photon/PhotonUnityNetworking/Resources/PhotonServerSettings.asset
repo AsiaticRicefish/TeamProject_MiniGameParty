@@ -104,6 +104,20 @@ MonoBehaviour:
   - RPC_UpdateState
   - RPC_OnShot
   - RPC_RequestShot
+  - AddScore
+  - AfterOverHeat
+  - DuringOverHeat
+  - GameStartSettings
+  - MinusScore
+  - RPC_DestroyNote
+  - RPC_NoteSpawn
+  - RPC_RequestHit
+  - RPC_RequestMiss
+  - RPC_SetLane
+  - RPC_StartSpawn
+  - RPC_Stun
+  - RPC_SyncRanks
+  - SetOverheat
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

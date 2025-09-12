@@ -15,13 +15,16 @@ namespace LDH_Lobby
     public class LobbyNavigationController : MonoBehaviour
     {
         [Serializable]
-        public struct MenuEntry
+        public class MenuEntry
         {
             public string id; 
-            public UI_Screen ui;
+            public GameObject uiObject;
+            public UnityEngine.Events.UnityEvent onShown;
+            public UnityEngine.Events.UnityEvent onHidden;
         }
 
-        
+        #region 변수
+
         [Header("Input Lock")] [SerializeField]
         private InputLockController inputLock; // EventSystem / UI 모듈 끄는 컴포넌트
 
@@ -35,19 +38,23 @@ namespace LDH_Lobby
         public static LobbyNavigationController Instance => _instance;
 
         private Dictionary<string, VirtualCamera_Lobby> _camDict = new();
-        private Dictionary<string, UI_Screen> _uiDict = new();
+        private Dictionary<string, MenuEntry> _menuEntryDict = new();
         
         private bool _isSwitching;
-        private UI_Screen _currentPopupInstance;
+        private MenuEntry _currentEntryUI;
         private string _currentFocusId;
 
+
+        #endregion
+        
+      
         private void Awake()
         {
             _instance = this;
             RegisterCams();
             RegisterMenus();
-            
-            CloseAllUI().Forget();
+
+            //CloseAllUI();
         }
 
         private void Start()
@@ -77,11 +84,15 @@ namespace LDH_Lobby
         {
             foreach (var e in menuEntries)
             {
-                if (string.IsNullOrEmpty(e.id) || e.ui == null) continue;
-                if (_uiDict.ContainsKey(e.id))
+                if (string.IsNullOrEmpty(e.id) || e.uiObject == null) continue;
+                if (_menuEntryDict.ContainsKey(e.id))
                     Debug.LogWarning($"[LobbyNav] duplicate menu id: {e.id}");
                 else
-                    _uiDict.Add(e.id, e.ui);
+                {
+                    _menuEntryDict.Add(e.id, e);
+                    e.uiObject.SetActive(false);
+                }
+                    
             }
         }
 
@@ -108,11 +119,12 @@ namespace LDH_Lobby
                     return;
                 }
                 
-                // 현재 focus 업데이트
+                // 1) 현재 UI 먼저 닫기 & 닫기 이벤트
+                CloseCurrentUI();
+                
+                // 2) 현재 focus 업데이트
                 _currentFocusId = id;
-
-                // 2) 현재 UI 먼저 닫기(예외 안전)
-                await CloseCurrentUI();
+                
 
                 // 3) 카메라 전환
                 SetVCamPriority(id);
@@ -123,7 +135,7 @@ namespace LDH_Lobby
                 await WaitBlendCompleteAsync(cam.VCam, this.GetCancellationTokenOnDestroy(), 2f);
 
                 // 5) 대상 UI가 있으면 열기(없으면 스킵)
-                await ShowUI(id);
+                ShowUI(id);
             }
             catch (Exception e)
             {
@@ -186,38 +198,47 @@ namespace LDH_Lobby
 
         }
 
-        private async UniTask CloseCurrentUI()
+        private void CloseCurrentUI()
         {
-            if (_currentPopupInstance == null) return;
-            try { await Manager.UI.CloseScreenUI(_currentPopupInstance, false); }
+            if (_currentEntryUI == null) return;
+            try
+            {
+                _currentEntryUI.onHidden?.Invoke();
+
+                _currentEntryUI.uiObject.SetActive(false);
+            }
             catch (Exception e) { Debug.LogWarning($"[LobbyNav] Close UI error: {e}"); }
-            finally { _currentPopupInstance = null; }
+            finally { _currentEntryUI = null; }
             
         }
         
-        private async UniTask ShowUI(string id)
+        private void ShowUI(string id)
         {
            
-            if (_uiDict.TryGetValue(id, out var screen) && screen != null)
+            if (_menuEntryDict.TryGetValue(id, out var entry) && entry!=null && entry.uiObject != null)
             {
                 try
                 {
-                    _currentPopupInstance = screen;
-                    await Manager.UI.ShowScreenUI(screen);
+                    _currentEntryUI = entry;
+                    entry.uiObject.SetActive(true);
+                    entry.onShown?.Invoke();
                 }
                 catch (Exception e)
                 {
                     Debug.LogWarning($"[LobbyNav] Show UI error: {e}");
-                    _currentPopupInstance = null;
+                    _currentEntryUI = null;
                 }
             }
         }
 
-        private async UniTask CloseAllUI()
+        
+        // 처음 로비 진입시 네비게이션 관련 ui들을 비활성 상태로 만들때 사용
+        private void CloseAllUI()
         {
-            foreach (UI_Screen screen in _uiDict.Values)
+            foreach (var menuEntry in _menuEntryDict.Values)
             {
-                await screen.CloseAsync();
+                
+                menuEntry.uiObject.SetActive(false);
             }
         }
     }

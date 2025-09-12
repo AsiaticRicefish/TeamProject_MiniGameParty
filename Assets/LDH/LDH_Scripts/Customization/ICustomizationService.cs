@@ -14,6 +14,10 @@ namespace Customization
             this.characterId = characterId;
             this.equipId = equipId;
         }
+        
+        public bool Equals(UnimoCombo other) =>
+            string.Equals(characterId, other.characterId, StringComparison.Ordinal) &&
+            string.Equals(equipId, other.equipId, StringComparison.Ordinal);
     }
 
     public interface ICustomizationService

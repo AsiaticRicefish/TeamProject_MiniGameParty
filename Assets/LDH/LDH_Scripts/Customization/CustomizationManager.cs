@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Cysharp.Threading.Tasks;
 using DesignPattern;
 using LDH_Util;
@@ -13,9 +14,12 @@ namespace Customization
         [SerializeField] private Transform charPoolRegistry_Transform;
         [SerializeField] private Transform equipPoolRegistry_Transform;
         
+        // 풀
+        PrefabPoolRegistry  _charPools;
+        PrefabPoolRegistry _equipPools;
+        
+        
         public bool IsReady { get; private set; }
-    
-
         public event Action<UnimoCombo> OnEquippedChanged; // 장착이 변경되었을 때
 
 
@@ -23,10 +27,9 @@ namespace Customization
         readonly HashSet<string> _ownedCharacters = new();
         readonly HashSet<string> _ownedEquips     = new();
         private UnimoCombo _equipped;
+        public IReadOnlyList<string> OwnedCharacters => _ownedCharacters.ToList();
+        public IReadOnlyList<string> OwnedEquips => _ownedEquips.ToList();
 
-        // 풀
-        PrefabPoolRegistry  _charPools;
-        PrefabPoolRegistry _equipPools;
 
      
         protected override void OnAwake()
@@ -48,20 +51,21 @@ namespace Customization
             // TODO: Firestore로 치환 예정
             IsReady = true;
             await UniTask.Yield();
+            
+            Debug.Log("[CustomizationManager] Init 완료");
         }
 
         async UniTask LoadLocalCache()
         {
+            // 현재 장착한 custom 저장 정보 가져오기
             if (!PlayerPrefs.HasKey(
                     Define_LDH.PlayerProps.GetPlayerInfoKey(Define_LDH.PlayerProps.PlayerInfoKey.CharacterId))
                 && !PlayerPrefs.HasKey(
                     Define_LDH.PlayerProps.GetPlayerInfoKey(Define_LDH.PlayerProps.PlayerInfoKey.EquipId)))
             {
-                // 데모: 기본 보유/장착
+                // 데모: 기본 보유
                 Debug.Log("저장된 커스텀 데이터 없음");
                 _equipped = new UnimoCombo() { characterId = "unimo_ch_001", equipId = "unimo_equip_001" };
-                _ownedCharacters.Add(_equipped.characterId);
-                _ownedEquips.Add(_equipped.equipId);
                 
             }
 
@@ -73,10 +77,20 @@ namespace Customization
                    PlayerPrefs.GetString(
                        Define_LDH.PlayerProps.GetPlayerInfoKey(Define_LDH.PlayerProps.PlayerInfoKey.EquipId));
                _equipped = new UnimoCombo() { characterId = charId, equipId = equipId };
-               _ownedCharacters.Add(_equipped.characterId);
-               _ownedEquips.Add(_equipped.equipId);
 
             }
+            
+            // 소유 정보 (데모버전은 모두 소유 상태로 표시)
+            //todo: 수정 필요
+            foreach (var charDef in CatalogProvider.CharactersSorted)
+            {
+                _ownedCharacters.Add(charDef.id);
+            }
+            foreach (var equipDef in CatalogProvider.EquipsSorted)
+            {
+                _ownedEquips.Add(equipDef.id);
+            }
+            
             
             SaveEquippedCombo(_equipped.characterId, _equipped.equipId);
             UpdatePhotonPlayerProps();
@@ -124,6 +138,11 @@ namespace Customization
             OnEquippedChanged?.Invoke(_equipped);
             await UniTask.Yield();
             return true;
+        }
+
+        public async UniTask<bool> UpdateComboAsync(UnimoCombo newCombo)
+        {
+            return await UpdateComboAsync(newCombo.characterId, newCombo.equipId);
         }
 
         public UniTask<bool> UpdateCharacterAsync(string characterId) => UpdateComboAsync(characterId, _equipped.equipId);
@@ -226,5 +245,29 @@ namespace Customization
             
             Debug.Log($"[CustomizationManager] 커스텀 저장 완료 : {charId}, {equipId}");
         }
+
+
+        #region 현재 데이터랑 비교하는 함수
+
+        public bool IsModified(UnimoCombo stagedUnimoCombo)
+        {
+            return !_equipped.Equals(stagedUnimoCombo);
+        } 
+        public bool IsModified(string stagedCharId, string stagedEquipId)
+        {
+            var staged = new UnimoCombo(stagedCharId.Trim(), stagedEquipId.Trim());
+            return !_equipped.Equals(staged);
+        }
+        
+        // 바뀐 항목만 알고 싶으면 flags/diff도 제공
+        public (bool charChanged, bool equipChanged) Diff(string stagedCharId, string stagedEquipId)
+        {
+            var ch = !string.Equals(_equipped.characterId, stagedCharId.Trim(), StringComparison.Ordinal);
+            var eq = !string.Equals(_equipped.equipId,   stagedEquipId.Trim(), StringComparison.Ordinal);
+            
+            return (ch, eq);
+        }
+
+        #endregion
     }
 }
