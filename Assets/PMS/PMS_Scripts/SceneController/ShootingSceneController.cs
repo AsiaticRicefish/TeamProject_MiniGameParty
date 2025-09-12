@@ -26,7 +26,7 @@ public class ShootingSceneController : BaseGameSceneController
         yield return WaitForSingletonReady<PlayerInputManager>();
         yield return WaitForSingletonReady<TurnManager>();
         yield return WaitForSingletonReady<CardManager>();
-        yield return WaitForSingletonReady<Test_ShotFollowCamera>();
+        yield return WaitForSingletonReady<ShootingCameraManager>();
         yield return WaitForSingletonReady<EggManager>();
         yield return WaitForSingletonReady<ShootingUIManager>();
         yield return WaitForSingletonReady<WindSystem>();

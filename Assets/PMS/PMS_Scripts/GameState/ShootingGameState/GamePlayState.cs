@@ -17,7 +17,7 @@ public class GamePlayState : ShootingGameState
 
         if (!TurnManager.Instance.IsMyTurn())       //턴 정보 업데이트 전에 호출
         {
-            Test_ShotFollowCamera.Instance.SwipePosInit();
+            ShootingCameraManager.Instance.SwipePosInit();
             ShootingScene.PlayerInputManager.Instance.EnableInput();
             ShootingScene.PlayerInputManager.Instance.DisableCameraControl();
             ShootingScene.PlayerInputManager.Instance.DisableCameraPosition();
