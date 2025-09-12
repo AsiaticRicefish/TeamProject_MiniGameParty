@@ -22,19 +22,13 @@ namespace Customization
             
             CurrentCharacter = go;
             CurrentCharacterId = id;
-            // var t = go.transform; 
-            // t.localPosition = Vector3.zero; 
-            // t.localRotation = Quaternion.identity; t.localScale = Vector3.one;
         }
         
         public void BindEquip(GameObject go, string id, bool inheritLayer = true)
         {
             if (inheritLayer)
                 SetLayerRecursively(go, characterRoot.gameObject.layer);
-            
             CurrentEquip = go; CurrentEquipId = id;
-            
-            // var t = go.transform; t.localPosition = Vector3.zero; t.localRotation = Quaternion.identity; t.localScale = Vector3.one;
         }
         
         

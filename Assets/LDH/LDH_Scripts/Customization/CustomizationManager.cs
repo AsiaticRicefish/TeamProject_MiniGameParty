@@ -116,23 +116,29 @@ namespace Customization
       /// <returns></returns>
         public async UniTask<bool> UpdateComboAsync(string characterId, string equipId)
         {
-            Debug.Log("update combo async");
+                       
+            Debug.Log("[CustomizationManager] Start Updating Combo Date");
             var newChar = characterId ?? _equipped.characterId;
             var newEquip = equipId ?? _equipped.equipId;
-            Debug.Log($"Update Combo Async - new char : {newChar}, new equip : {newEquip}");
+            Debug.Log($"[CustomizationManager] Update Combo Async - new char : {newChar}, new equip : {newEquip}");
             //같은 데이터면 업데이트 하지 않음
             if (newChar.Equals(_equipped.characterId) && newEquip.Equals(_equipped.equipId))
             {
-                Debug.Log($"Update Combo Async - 이미 동일함. 변경하지 않음");
+                Debug.Log($"[CustomizationManager] Update Combo Async - 이미 동일함. 변경하지 않음");
                 return false;
             }
             
             // todo: 소유/호환 검증(cbt에서 임시 주석 처리)
-            //if (!HasCharacter(newChar) || !HasEquip(newEquip)) return false;
+            if (!HasCharacter(newChar) || !HasEquip(newEquip))
+            {
+                Debug.LogWarning($"[CustomizationManager] Do not have the character or equipment");
+                return false;
+            }
 
             _equipped = new UnimoCombo (newChar, newEquip);
             
             // TODO: Firestore 저장 or PlayerPrefs 캐시
+            Debug.Log($"[CustomizationManager] Save and Update Data");
             SaveEquippedCombo(_equipped.characterId, _equipped.equipId);
             UpdatePhotonPlayerProps();
             OnEquippedChanged?.Invoke(_equipped);
@@ -158,6 +164,7 @@ namespace Customization
         /// <param name="combo"></param>
         public async UniTask ApplyToAvatarAsync(AvatarStruct avatarStruct, UnimoCombo combo)
         {
+            Debug.Log("[CustomizationManager] ApplyToAvatarAsync를 시작합니다.");
             await ApplyToAvatarAsync(avatarStruct, combo.characterId, combo.equipId);
         }
      
@@ -168,37 +175,52 @@ namespace Customization
            
            // 캐릭터만 바뀐 경우에만 스왑
            //기존 캐릭터를 풀에 반납
+           Debug.Log("[CustomizationManager] 유니모가 변경되었는지를 확인합니다.");
            if (!string.IsNullOrEmpty(characterId) && avatarStruct.CurrentCharacterId != targetChar && CatalogProvider.TryGetCharacter(characterId, out var cDef))
            {
+               Debug.Log("[CustomizationManager] 유니모가 변경됨");
                if (avatarStruct.CurrentCharacter && !string.IsNullOrEmpty(avatarStruct.CurrentCharacterId))
                {
+                   
+                   Debug.Log("[CustomizationManager] 기존에 적용된 유니모를 Release 합니다.");
                    _charPools.ReleaseInstance(avatarStruct.CurrentCharacterId, avatarStruct.CurrentCharacter);
                }
 
-               if (avatarStruct.characterRoot.childCount > 0)
-                   Destroy(avatarStruct.characterRoot.GetChild(0).gameObject);
+               
+               //남아있는 잔여 오브젝트 제거
+               Debug.Log($"[CustomizationManager] 남아있는 잔여 오브젝트 {avatarStruct.characterRoot.childCount}개를 제거합니다.");
+               Util_LDH.RemoveAllChildren(avatarStruct.characterRoot);
                 
+               
                //새로운 캐릭터를 꺼내와서 적용한다.
+               Debug.Log($"[CustomizationManager] 새로운 유니모를 꺼내와서 적용합니다.");
                var charObj = await _charPools.GetInstanceAsync(cDef.id, cDef.prefabRef, avatarStruct.characterRoot);
                 
                avatarStruct.BindCharacter(charObj, cDef.id);
            }
 
+           Debug.Log("[CustomizationManager] 엔진이 변경되었는지를 확인합니다.");
            if (!string.IsNullOrEmpty(equipId) && avatarStruct.CurrentEquipId != equipId &&  CatalogProvider.TryGetEquip(equipId, out var eDef))
            {
+               
                if (avatarStruct.CurrentEquip && !string.IsNullOrEmpty(avatarStruct.CurrentEquipId))
                {
+                   Debug.Log("[CustomizationManager] 기존에 적용된 엔진을 Release 합니다.");
                    _equipPools.ReleaseInstance(avatarStruct.CurrentEquipId, avatarStruct.CurrentEquip);
                }
                 
-               if (avatarStruct.equipRoot.childCount > 0)
-                   Destroy(avatarStruct.equipRoot.GetChild(0).gameObject);
+               //남아있는 잔여 오브젝트 제거
+               Debug.Log($"[CustomizationManager] 남아있는 잔여 오브젝트 {avatarStruct.characterRoot.childCount}개를 제거합니다.");
+               Util_LDH.RemoveAllChildren(avatarStruct.equipRoot);
                
                //새로운 탈 것 적용
+               Debug.Log($"[CustomizationManager] 새로운 엔진을 꺼내와서 적용합니다.");
                var charObj = await _charPools.GetInstanceAsync(eDef.id, eDef.prefabRef, avatarStruct.equipRoot);
-                
+               
                avatarStruct.BindEquip(charObj, eDef.id);
            }
+           
+           Debug.Log("[CustomizationManager] 유니모 조합 적용이 완료되었습니다.");
        }
 
        public UniTask ApplyCharacterToAvatarAsync(AvatarStruct avatarStruct, string characterId) =>
@@ -225,7 +247,9 @@ namespace Customization
         
         #endregion
 
-        
+
+        #region 데이터 저장 / Photon Properties 변경
+
         private void UpdatePhotonPlayerProps()
         {
             if (!Photon.Pun.PhotonNetwork.IsConnected) return;
@@ -236,8 +260,6 @@ namespace Customization
 
             PhotonNetwork.LocalPlayer.SetCustomProperties(table);
         }
-
-
         private void SaveEquippedCombo(string charId, string equipId)
         {
             PlayerPrefs.SetString(Define_LDH.PlayerProps.GetPlayerInfoKey(Define_LDH.PlayerProps.PlayerInfoKey.CharacterId), charId);
@@ -246,7 +268,8 @@ namespace Customization
             Debug.Log($"[CustomizationManager] 커스텀 저장 완료 : {charId}, {equipId}");
         }
 
-
+        #endregion
+        
         #region 현재 데이터랑 비교하는 함수
 
         public bool IsModified(UnimoCombo stagedUnimoCombo)

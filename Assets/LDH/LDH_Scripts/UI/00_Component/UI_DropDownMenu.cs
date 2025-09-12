@@ -79,7 +79,7 @@ namespace LDH_UI
             float step = (n > 1) ? (duration / (n - 1)) : 0f;
 
             var seq = DOTween.Sequence();
-            for (int i = 0; i < n; i++)
+            for (int i = n-1; i >=0; i--)
             {
                 int idx = i;
                 seq.InsertCallback(i * step, () =>
