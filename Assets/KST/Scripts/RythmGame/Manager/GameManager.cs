@@ -49,14 +49,14 @@ namespace RhythmGame
             if (!PhotonNetwork.IsMasterClient) return;
 
             // 초기화
-/*
-            // 모든 클라의 과열 스코어를 0으로 세팅 
-            overHeatValue = 0;
+            /*
+                        // 모든 클라의 과열 스코어를 0으로 세팅 
+                        overHeatValue = 0;
 
-            //과열 값 초기값 설정
-            ScoreManager.Instance.photonView.
-            RPC(nameof(ScoreManager.SetOverheat), RpcTarget.All, overHeatValue);
-*/
+                        //과열 값 초기값 설정
+                        ScoreManager.Instance.photonView.
+                        RPC(nameof(ScoreManager.SetOverheat), RpcTarget.All, overHeatValue);
+            */
             // 플레이어 자리 배정
             LaneManager.Instance.SetLane();
 
@@ -111,7 +111,7 @@ namespace RhythmGame
         // [PunRPC]
         // public void GameEndSettings()
         // {
-            
+
         // }
         #endregion
 
@@ -144,17 +144,17 @@ namespace RhythmGame
             switch (type)
             {
                 case NoteType.Fake:
-                    score = -1;
+                    score = 4;
                     // OverHeatCheck();
                     break;
 
                 case NoteType.Touch:
-                    score = 2;
+                    score = 1;
                     // FrozenHeat();
                     break;
 
                 case NoteType.Continue:
-                    score = 10;
+                    score = 2;
                     // FrozenHeat();
                     break;
             }
