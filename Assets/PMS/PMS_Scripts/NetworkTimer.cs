@@ -17,18 +17,18 @@ public class NetworkTimer
     public event Action OnTimerStart; // 타이머 시작 시 이벤트
     public event Action<int> OnTick;  // 남은 시간 UI 갱신용
     public event Action OnTimerEnd;   // 타이머 종료 시 이벤트
+    public event Action OnTimerCancel; // 타이머 강제 종료시 이벤트
 
     public void OnStartTimer(double startAt, double endAt)
     {
-        this.startAt = startAt; 
+        this.startAt = startAt;
         this.endAt = endAt;
         StartTimer().Forget();
     }
 
     public async UniTask StartTimer()
     {
-        // 이전 타이머 정리
-        StopTimer();
+        CancelTimer();
         while (running) await UniTask.Yield();
 
         cts = new CancellationTokenSource();
@@ -52,9 +52,9 @@ public class NetworkTimer
         }
     }
 
-    public void StopTimer()
+    public void CancelTimer()
     {
-        OnTimerEnd?.Invoke(); // 강제 종료 시에도 이벤트 호출
+        OnTimerCancel?.Invoke(); // 강제 종료 시에도 이벤트 호출
 
         cts?.Cancel();
         cts?.Dispose();
@@ -108,12 +108,7 @@ public class NetworkTimer
         }
         catch (OperationCanceledException)
         {
-            // 취소된 경우 무시
+            OnTimerCancel?.Invoke();
         }
-    }
-
-    private void OnDestroy()
-    {
-        StopTimer();
     }
 }

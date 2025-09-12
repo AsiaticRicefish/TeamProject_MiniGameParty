@@ -30,10 +30,6 @@ namespace ShootingScene.ShootingGame
        public void Initialize()
        {
            TurnManager.Instance.OnSetCurrentTurn += otherTurnUI.SetCurrentPlayerName;
-
-            // NetworkTimer 이벤트 구독
-            ShootingNetworkManager.Instance.networkTimer.OnTick += OnTimerTick;
-            ShootingNetworkManager.Instance.networkTimer.OnTimerEnd += OnTimerEnd;
         }
 
 
@@ -54,6 +50,19 @@ namespace ShootingScene.ShootingGame
         #endregion
 
         #region timer ui
+        public void RegisterTimer()
+        {
+            ShootingNetworkManager.Instance.networkTimer.OnTick += OnTimerTick;
+            ShootingNetworkManager.Instance.networkTimer.OnTimerCancel += OnTimerEnd;
+            ShootingNetworkManager.Instance.networkTimer.OnTimerEnd += OnTimerEnd;
+        }
+
+        public void UnRegisterTimer()
+        {
+            ShootingNetworkManager.Instance.networkTimer.OnTick -= OnTimerTick;
+            ShootingNetworkManager.Instance.networkTimer.OnTimerCancel -= OnTimerEnd;
+            ShootingNetworkManager.Instance.networkTimer.OnTimerEnd -= OnTimerEnd;
+        }
 
         private async void OnTimerTick(int remaining)
         {
