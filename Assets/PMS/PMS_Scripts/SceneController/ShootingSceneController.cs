@@ -12,7 +12,7 @@ using ShootingScene.ShootingGame;
 public class ShootingSceneController : BaseGameSceneController
 {
     [SerializeField] private GameObject[] iGameComponents;
-    
+
     //따로 이벤트는 없는거 같음
     public Action OnGameStarted;
 
@@ -26,7 +26,7 @@ public class ShootingSceneController : BaseGameSceneController
         yield return WaitForSingletonReady<PlayerInputManager>();
         yield return WaitForSingletonReady<TurnManager>();
         yield return WaitForSingletonReady<CardManager>();
-        yield return WaitForSingletonReady<Test_ShotFollowCamera>();
+        yield return WaitForSingletonReady<ShootingCameraManager>();
         yield return WaitForSingletonReady<EggManager>();
         yield return WaitForSingletonReady<ShootingUIManager>();
         yield return WaitForSingletonReady<WindSystem>();
@@ -37,7 +37,7 @@ public class ShootingSceneController : BaseGameSceneController
     protected override IEnumerator InitializeSequentialManagers()
     {
         Debug.Log("ShootingGameScene 순차 초기화 시작");
-        
+
         //-- 민성님 아래 오브젝트들을 인스펙터 창에 차례로 넣어주시고 마지막에 camera swipe controller를 넣어주세요
         // var sequentialComponents = new IGameComponent[]
         // {
@@ -53,20 +53,34 @@ public class ShootingSceneController : BaseGameSceneController
 
         var seqHashSet = new HashSet<object>();
         List<IGameComponent> sequentialComponents = new();
-        
+
         foreach (var go in iGameComponents)
         {
             foreach (var mb in go.GetComponents<MonoBehaviour>())
             {
                 if (mb is IGameComponent component && seqHashSet.Add(component))
                 {
+                    Debug.Log($"{go.name} is IGameComponent ");
                     sequentialComponents.Add(component);
                 }
             }
-            
+
         }
-        
+
+
         yield return StartCoroutine(InitializeComponentsSafely(sequentialComponents));
+
+        #region DI 주입
+        // CameraSwipeController DI
+        //var swipeController = FindObjectOfType<CameraSwipeController>();
+        //if (swipeController != null)
+        //{
+        //    swipeController.Initialize(PlayerInputManager.Instance);
+        //    Debug.Log("CameraSwipeController Initialize 완료");
+        //}
+
+        //FindObjectOfType <- 효율 씬 
+        #endregion
     }
 
     //벙렬 초기화
@@ -88,6 +102,7 @@ public class ShootingSceneController : BaseGameSceneController
         if (ShootingGameManager.Instance == null)
         {
             Debug.LogError("[NotifyGameStart] ShootingGameManager is NULL");
+
             return;
         }
         try

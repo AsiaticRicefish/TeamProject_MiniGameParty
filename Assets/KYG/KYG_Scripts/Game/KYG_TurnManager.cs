@@ -122,58 +122,38 @@ namespace KYG
         [PunRPC]
         private void RPC_SetCurrentTurn(int turnIndex, int roundIndex)
         {
-            string myUid = PMS_Util.PMS_Util.GetMyUid();
-            if (string.IsNullOrEmpty(myUid))
+            // 내 CustomProperties에서 turnIndex 읽기
+            int myTurnIdx = -1;
+            if (PhotonNetwork.LocalPlayer.CustomProperties != null &&
+                PhotonNetwork.LocalPlayer.CustomProperties.TryGetValue("turnIndex", out var v))
             {
-                Debug.LogWarning("[TurnManager] - UID를 가져올 수 없습니다.");
-                return;
+                myTurnIdx = v is int i ? i : -1;
             }
 
-            GamePlayer myPlayer = PlayerManager.Instance.GetPlayer(myUid);
-            if (myPlayer == null)
-            {
-                Debug.LogWarning("[TurnManager] - Player 객체를 찾을 수 없습니다.");
-                return;
-            }
-
-            bool isMyTurn = (turnIndex == myPlayer.ShootingData.myTurnIndex);
-
-            Debug.Log($"[TurnManager] 현재 라운드 = {roundIndex}, 현재 턴 = {turnIndex}, 내턴인가? ={isMyTurn}");
+            bool isMyTurn = (turnIndex == myTurnIdx);
+            Debug.Log($"[TurnManager] 현재 라운드={roundIndex}, 턴={turnIndex}, 내턴?={isMyTurn}");
 
             if (isMyTurn)
             {
-                Debug.Log("내 턴 입니다!");
-                //PlayerInputManager.Instance.EnableInput();
-                UnimoEgg newEgg = EggManager.Instance.SpawnEgg(myUid);
-                newEgg.ShooterUid = PMS_Util.PMS_Util.GetMyUid();
+                var egg = EggManager.Instance.SpawnEgg(PMS_Util.PMS_Util.GetMyUid());
+                egg.ShooterUid = PMS_Util.PMS_Util.GetMyUid();
 
-                var localInput = newEgg.GetComponent<LocalPlayerInput>();
-                if (localInput != null)
-                {
-                    localInput.EnableInput(); // 활성화 시킴                   
-                }
+                var localInput = egg.GetComponent<LocalPlayerInput>();
+                if (localInput != null) localInput.EnableInput();
             }
             else
             {
                 Debug.Log("상대방 턴 입니다");
-                //PlayerInputManager.Instance.DisableInput();
-                Debug.Log($"[TurnManager] - {myPlayer.ShootingData.myTurnIndex}");
             }
 
-            //턴 타이머 동기화
-            if (PhotonNetwork.IsMasterClient)
-            {
-                if (!nextTurnDrivenByMiniGame) // 미니게임이 주도하지 않을 때만 자동 타이머 사용
-                {
-                    StartTurnCorutine(10.0f);
-                }
-            }
-            
+            // 타이머/미니게임 호출 부분은 그대로 유지
+            if (PhotonNetwork.IsMasterClient && !nextTurnDrivenByMiniGame)
+                StartTurnCorutine(10.0f);
+
             var mini = FindObjectOfType<MeteorTapMiniGame>();
             if (mini != null)
             {
-                // alivePlayerCount는 게임 매니저에서 관리하는 생존자 수로 대체
-                int aliveCount = PhotonNetwork.CurrentRoom.PlayerCount; 
+                int aliveCount = PhotonNetwork.CurrentRoom.PlayerCount;
                 mini.InitTurn(isMyTurn, roundIndex, aliveCount);
             }
         }

@@ -178,13 +178,8 @@ namespace LDH_MainGame
             var room = PhotonNetwork.CurrentRoom;
             if (room == null) return; // 방이 없다면 패스
 
-            // 1) 혼자 남았다면 강제 게임 종료 처리
-            if (room.PlayerCount == 1)
-            {
-                UI.ShowQuitPopup();
-                return;
-            }
-
+            //누구든 나갔을 때 
+            UI.ShowQuitPopup();
 
             // 2) 마스터 클라이언트이고, 메인 게임 상태가 ready(모든 플레이어의 ready를 기다리고 있는 상태)라면 재조정
             if (!IsMaster) return;

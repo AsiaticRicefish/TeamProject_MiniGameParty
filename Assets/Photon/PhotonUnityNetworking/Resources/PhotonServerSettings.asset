@@ -115,9 +115,12 @@ MonoBehaviour:
   - RPC_RequestMiss
   - RPC_SetLane
   - RPC_StartSpawn
+  - RPC_StartTimer
   - RPC_Stun
   - RPC_SyncRanks
   - SetOverheat
+  - UnEnableInteraction
+  - RPC_PickRejected
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1
