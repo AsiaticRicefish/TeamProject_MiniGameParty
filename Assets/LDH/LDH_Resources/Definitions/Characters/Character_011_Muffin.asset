@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f288f588ec540da846fe23601de6669, type: 3}
+  m_Name: Character_011_Muffin
+  m_EditorClassIdentifier: 
+  number: 11
+  id: unimo_ch_011
+  setKey: unimo_011
+  prefabRef:
+    m_AssetGUID: 5426ad5c4351d824a9622e65f0078af2
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_EditorAssetChanged: 0
+  iconRef:
+    m_AssetGUID: d0a1c3edbec360143add23da8192a6b4
+    m_SubObjectName: Muffin
+    m_SubObjectType: UnityEngine.Sprite, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+    m_EditorAssetChanged: 1

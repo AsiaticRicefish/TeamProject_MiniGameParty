@@ -9,5 +9,6 @@ namespace LDH_UI
         public string label = "Ready";
         public Color labelColor = Color.white;
         public Color backgroundColor = Color.gray;
+        public Sprite buttonImage;
     }
 }

@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db81134e7a5542b18ebee092fc189c00, type: 3}
+  m_Name: Equipment_007_HatchedEgg
+  m_EditorClassIdentifier: 
+  number: 7
+  id: unimo_equip_007
+  setKey: unimo_007
+  prefabRef:
+    m_AssetGUID: 30ca226792d19fe47a7e852026c16dc3
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_EditorAssetChanged: 0
+  iconRef:
+    m_AssetGUID: 0b9186369dcd4e448ba1ae22ea294339
+    m_SubObjectName: 7_HatchedEgg
+    m_SubObjectType: UnityEngine.Sprite, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+    m_EditorAssetChanged: 1

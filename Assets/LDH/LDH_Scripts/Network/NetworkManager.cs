@@ -1,8 +1,12 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using DesignPattern;
 using ExitGames.Client.Photon.StructWrapping;
+using LDH_UI;
 using LDH_Util;
+using Managers;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
@@ -15,11 +19,9 @@ namespace Network
 {
     public partial class NetworkManager : PunSingleton<NetworkManager>
     {
-        [Header("Scene Setting")] [SerializeField]
-        private string gameSceneName;
-
+        [Header("Scene Setting")] 
+        [SerializeField] private string gameSceneName;
         [SerializeField] private string lobbySceneName;
-
         [SerializeField] private bool autoSyncScene = true;
 
         // ---- 인증 여부, 로비 진입과 관련 플래그
@@ -31,6 +33,8 @@ namespace Network
         private int _privateRetryCount;
         private bool _isNavigating = false;
 
+        //---- 로비 진입 시 등장하는 로딩 ui ----
+        private UI_Popup _loadingUI;
 
         #region Events
 
@@ -58,14 +62,17 @@ namespace Network
         protected override void OnAwake()
         {
             PhotonNetwork.AutomaticallySyncScene = autoSyncScene;
-
-            //임시로 awake 시점에 호출
-            //if (autoConnectOnAwake)
+            SceneManager.sceneLoaded += CloseLoadingUI;
 
 #if TEST_WITHOUT_LOGIN
             if(SceneManager.GetActiveScene().name.Equals(lobbySceneName))
                 ConnectServer();
 #endif
+        }
+
+        protected override void OnDestroy()
+        {
+            SceneManager.sceneLoaded -= CloseLoadingUI;
         }
 
 
@@ -120,7 +127,25 @@ namespace Network
             }
 
             Debug.Log("[NetworkManager] TryJoinLobby -> JoinLobby()");
+
+
+            if (SceneManager.GetActiveScene().name != lobbySceneName)
+            {
+                //로딩 창
+                _loadingUI = Manager.UI.CreatePopupUI<UI_Loading>();
+                Manager.UI.ShowPopupUI(_loadingUI).Forget();
+            }
             PhotonNetwork.JoinLobby();
+        }
+
+
+        private void CloseLoadingUI(Scene scene, LoadSceneMode mode)
+        {
+            if (scene.name == lobbySceneName && _loadingUI != null)
+            {
+                _loadingUI.AutoCloseAfter(1f, this.destroyCancellationToken).Forget();
+                _loadingUI = null;
+            }
         }
 
         #endregion
@@ -154,6 +179,9 @@ namespace Network
                 MaxPlayers = MaxPlayers, // 최대 인원 설정
                 IsVisible = true, // 로비 노출 여부 
                 IsOpen = true, // 입장 가능 여부 -> 게임 시작 시 false로 만들어야 함
+                CleanupCacheOnLeave = true, // 떠날 때 캐시 정리
+                EmptyRoomTtl = 0,           // 방이 비는 즉시 삭제
+                PlayerTtl = 0,              // 플레이어를 Inactive로 남겨두지 않음
                 CustomRoomProperties =
                     new Hashtable
                     {
@@ -197,6 +225,9 @@ namespace Network
                 MaxPlayers = MaxPlayers, // 최대 인원 설정
                 IsVisible = false, // 코드로만 입장하도록 비노출 권장
                 IsOpen = true, // 입장 가능 여부 -> 게임 시작 시 false로 만들어야 함
+                CleanupCacheOnLeave = true, // 떠날 때 캐시 정리
+                EmptyRoomTtl = 0,           // 방이 비는 즉시 삭제
+                PlayerTtl = 0,              // 플레이어를 Inactive로 남겨두지 않음
                 CustomRoomProperties = new Hashtable
                 {
                     { RoomProps.MatchType, MatchType.Private.ToString() },
@@ -239,17 +270,24 @@ namespace Network
         {
             Debug.Log("[NetworkManager] 모든 플레이어 커스텀 프로퍼티를 초기화합니다.");
 
+            // 보존해야 할 키
+            var keepKeys = new HashSet<string>(PlayerProps.PlayerInfoKeyDict.Values);
+            
             var customProperties = PhotonNetwork.LocalPlayer.CustomProperties;
 
             var clearProperties = new ExitGames.Client.Photon.Hashtable();
 
-            foreach (var key in customProperties.Keys)
+            foreach (DictionaryEntry entry in customProperties)
             {
-                if (key.ToString() == "uid") continue;
-                clearProperties[key] = null;
+                var keyStr = entry.Key as string ?? entry.Key?.ToString();
+                if (string.IsNullOrEmpty(keyStr)) continue;
+                
+                if (!keepKeys.Contains(keyStr))
+                    clearProperties[keyStr] = null;
             }
-
-            PhotonNetwork.LocalPlayer.SetCustomProperties(clearProperties);
+            
+            if (clearProperties.Count > 0)
+                PhotonNetwork.LocalPlayer.SetCustomProperties(clearProperties);
         }
 
         #endregion
@@ -300,8 +338,6 @@ namespace Network
             {
                 Debug.Log("[NetworkManager] 현재 로비 씬입니다.");
             }
-
-
             JoinedLobby?.Invoke();
         }
 
