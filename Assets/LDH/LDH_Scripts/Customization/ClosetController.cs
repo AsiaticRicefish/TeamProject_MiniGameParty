@@ -4,6 +4,7 @@ using System.Linq;
 using Customization;
 using Cysharp.Threading.Tasks;
 using LDH_UI;
+using LDH_Util;
 using Managers;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -49,7 +50,7 @@ namespace Customization
         private bool _applying;
 
         // staged 임시 선택
-        private UnimoCombo stagedCombo;
+        private UnimoCombo _stagedCombo;
 
         private void Awake()
         {
@@ -74,8 +75,8 @@ namespace Customization
             await PrebuildAllAsync();
             
             Debug.Log("[ClosetPrebuilder] Apply Initial Selection");
-            stagedCombo = Manager.Custom.GetEquippedLocal();
-            ApplyInitialSelection(stagedCombo);
+            _stagedCombo = Manager.Custom.GetEquippedLocal();
+            ApplyInitialSelection(_stagedCombo);
 
         }
         
@@ -139,14 +140,12 @@ namespace Customization
                     icon: icon,
                     onToggle: (id, isOn) =>
                     {
-                        if(!isOn) return;
-                        stagedCombo.characterId = id;
+                        if (!isOn) return;
+                        _stagedCombo.characterId = id;
                         ChangeCharacter(id).Forget();
                         UpdateApplyButton();    
-
                     }
                 );
-                Debug.Log($"toggle id : {toggle.Id}");
             }
             
             for (int i = 0; i < _equipToggles.Count; i++)
@@ -162,13 +161,11 @@ namespace Customization
                     onToggle: (id, isOn) =>
                     {
                         if(!isOn) return;
-                        stagedCombo.equipId = id;
+                        _stagedCombo.equipId = id;
                         ChangeEquip(id).Forget();
                         UpdateApplyButton();    
                     }
                 );
-                Debug.Log($"toggle id : {toggle.Id}");
-
             }
             
             // 6) 레이아웃 리빌드 후 가시화
@@ -245,17 +242,40 @@ namespace Customization
 
         private async UniTask ChangeCharacter(string id)
         {
+            Debug.Log($"======= ChangeCharacter 시작 =======");
+
             Debug.Log($"[Closet] Change Character → {id}");
-    
-            await Manager.Custom.ApplyToAvatarAsync(avatarStruct, characterId: id);
             
+            //입력 막기
+            Debug.Log("입력을 차단합니다.");
+            InputLockController.Instance?.Lock();
+            await Manager.Custom.ApplyToAvatarAsync(avatarStruct, characterId: id);
+            Debug.Log("Apply가 완료되었습니다.");
+            Debug.Log("입력 차단을 해제합니다.");
+            InputLockController.Instance?.Unlock();
+            
+            Debug.Log($"======= ChangeCharacter 끝 =======");
+
+
         }
 
         private async UniTask ChangeEquip(string id)
         {
+            
+            Debug.Log($"======= ChangeEquip 시작 =======");
+
             Debug.Log($"[Closet] Change Equip → {id}");
          
+            Debug.Log("입력을 차단합니다.");
+            InputLockController.Instance?.Lock();
             await Manager.Custom.ApplyToAvatarAsync(avatarStruct, equipId: id);
+            Debug.Log("Apply가 완료되었습니다.");
+            Debug.Log("입력 차단을 해제합니다.");
+            InputLockController.Instance?.Unlock();
+            
+            Debug.Log($"======= ChangeEquip 끝 =======");
+
+            
         }
 
         private void ApplyInitialSelection(UnimoCombo combo)
@@ -289,10 +309,10 @@ namespace Customization
         
         private void UpdateApplyButton()
         {
-            if(stagedCombo.characterId ==null || stagedCombo.equipId == null) return;
+            if(_stagedCombo.characterId ==null || _stagedCombo.equipId == null) return;
             
-            bool modified = Manager.Custom.IsModified(stagedCombo);
-            bool valid = !string.IsNullOrEmpty(stagedCombo.characterId) && !string.IsNullOrEmpty(stagedCombo.equipId);
+            bool modified = Manager.Custom.IsModified(_stagedCombo);
+            bool valid = !string.IsNullOrEmpty(_stagedCombo.characterId) && !string.IsNullOrEmpty(_stagedCombo.equipId);
 
             applyButton.interactable = !_applying && modified && valid;
 
@@ -300,18 +320,23 @@ namespace Customization
 
         private async UniTaskVoid ApplyClicked()
         {
-            if (!stagedCombo.characterId?.Any() ?? true) return;
-            if (!stagedCombo.equipId?.Any() ?? true) return;
-
+            if (!_stagedCombo.characterId?.Any() ?? true) return;
+            if (!_stagedCombo.equipId?.Any() ?? true) return;
+            if(_applying) return;
+            
+            Debug.Log("ApplyClicked && 현재 장착 상태 적용가능");
+            Debug.Log("입력을 차단합니다.");
+            InputLockController.Instance?.Lock();
+            
             _applying = true;
             UpdateApplyButton();
-
+            
             // 실제 저장 API 호출
-            bool ok = await Manager.Custom.UpdateComboAsync(stagedCombo);
+            bool ok = await Manager.Custom.UpdateComboAsync(_stagedCombo);
 
             if (ok)
             {
-                Debug.Log($"[Closet] Apply staged combo");
+                Debug.Log($"[Closet] Success saving staged combo");
                 Manager.UI.EnqueueToast("적용되었습니다.");
             }
             else
@@ -319,15 +344,18 @@ namespace Customization
                 Debug.LogWarning("[Closet] Save failed. Keeping staged preview but not updating saved.");
                 Manager.UI.EnqueueToast("적용에 실패했습니다.");
             }
-
+            
+            Debug.Log("입력 차단을 해제합니다.");
+            InputLockController.Instance?.Unlock();
+            
             _applying = false;
             UpdateApplyButton();
         }
 
         public void ResetClicked()
         {
-            stagedCombo = Manager.Custom.GetEquippedLocal();
-            ApplyInitialSelection(stagedCombo);
+            _stagedCombo = Manager.Custom.GetEquippedLocal();
+            ApplyInitialSelection(_stagedCombo);
             UpdateApplyButton();
         }
 
