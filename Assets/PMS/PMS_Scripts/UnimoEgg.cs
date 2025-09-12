@@ -151,7 +151,7 @@ public class UnimoEgg : MonoBehaviourPun
 
         while (rb.velocity.magnitude > stopSpeed)
         {
-            rb.velocity *= 0.99f;
+            //rb.velocity *= 0.99f;
             yield return new WaitForFixedUpdate(); //업데이트 프레임
         }
 
@@ -213,8 +213,6 @@ public class UnimoEgg : MonoBehaviourPun
         {
             EggManager.Instance.photonView.RPC("RPC_DeactivateEgg", RpcTarget.All, photonView.ViewID);
         }
-
-  
 
         if (other.CompareTag("FallDownZone"))
         {

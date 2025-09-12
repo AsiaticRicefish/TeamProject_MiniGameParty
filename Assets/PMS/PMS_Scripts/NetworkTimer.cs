@@ -13,16 +13,10 @@ public class NetworkTimer
     private CancellationTokenSource cts;
 
     private bool running;
-    private PhotonView pv;
 
     public event Action OnTimerStart; // 타이머 시작 시 이벤트
     public event Action<int> OnTick;  // 남은 시간 UI 갱신용
     public event Action OnTimerEnd;   // 타이머 종료 시 이벤트
-
-    public NetworkTimer (PhotonView pv) 
-    {
-        this.pv = pv;
-    }
 
     public void OnStartTimer(double startAt, double endAt)
     {

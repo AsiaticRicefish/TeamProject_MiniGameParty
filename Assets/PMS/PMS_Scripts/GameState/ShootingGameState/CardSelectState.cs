@@ -17,7 +17,7 @@ public class CardSelectState : ShootingGameState
             double startAt = PhotonNetwork.Time + lead;
             double endAt = startAt + duration;
             CardManager.Instance.BuildAndBroadcastDeck();
-            //ShootingNetworkManager.Instance.photonView.RPC("RPC_StartTimer", RpcTarget.All, startAt,endAt);
+            ShootingNetworkManager.Instance.photonView.RPC("RPC_StartTimer", RpcTarget.All, startAt,endAt);
             //CardManager.Instance.StartAutoCardSelect();
         }
         else

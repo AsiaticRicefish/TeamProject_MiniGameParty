@@ -61,6 +61,13 @@ public class CardManager : PunSingleton<CardManager>
 
     public void BuildAndBroadcastDeck()
     {
+        //타이머
+        double lead = 0.3;
+        double duration = 9.0; // 10초
+        double startAt = PhotonNetwork.Time + lead;
+        double endAt = startAt + duration;
+        ShootingNetworkManager.Instance.photonView.RPC("RPC_StartTimer", RpcTarget.All, startAt, endAt);
+
         int playerCount = Mathf.Clamp(PhotonNetwork.CurrentRoom.PlayerCount, 2, 4);
         _deckValues = Enumerable.Range(1, playerCount).ToArray();
 
