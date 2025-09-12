@@ -19,6 +19,7 @@ namespace RhythmGame
         [PunRPC]
         void RPC_SetLane(int actorNumber, int lane)
         {
+            _laneByActor[actorNumber] = lane;
             GameManager.Instance.PlaceActorToLane(actorNumber, lane);
         }
 

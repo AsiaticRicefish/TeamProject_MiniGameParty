@@ -129,8 +129,9 @@ namespace RhythmGame
             if (noteLane != actorLane)
             {
                 //TODO 김승태 : 내 레인과 상대 레인에 노트가 동시에 도착하는 경우 과열처리가 날 수도 있음. 이걸 방지하는 코드가 필요함.
-                //과열 점수가 오르도록
-                GameManager.Instance.MissBlock(info.Sender);
+                //-> 과열 시스템이 현재 기획 상에서는 없어졌기에, 미스처리를 주석 처리하면 사실 상 문제 발생 x
+                // //과열 점수가 오르도록
+                // GameManager.Instance.MissBlock(info.Sender);
                 return;
             }
 

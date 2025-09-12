@@ -19,7 +19,7 @@ namespace RhythmGame
         bool _isPress;
         bool _isDone; //필요시간 도달로 성공 처리 시 cancel에서 중복처리 방지
 
-        Note _noteToTap; // performed 시점 노트(지속 아니면 cancel에서 판정)
+        List<Note> _noteToTap = new(); // performed 시점 노트(지속 아니면 cancel에서 판정)
 
         void Update()
         {
@@ -44,43 +44,6 @@ namespace RhythmGame
                 InitHold();
             }
         }
-        /*
-                /// <summary>
-                /// 탭/ 터치 : Fake, Touch 노트 전용
-                /// </summary>
-                public void OnTap()
-                {
-                    if (!CanInput()) return;
-
-                    //초기화
-                    Note t = PickNote();
-
-                    //노트가 없는데도 클릭 시도
-
-                    if (t == null)
-                    {
-                        ScoreManager.Instance.RequestMiss();
-                        Debug.Log("1");
-                        return;
-                    }
-
-                    //노트가  continue일 경우 tap 시도 시 미스처리
-                    if (t.Type == NoteType.Continue)
-                    {
-                        ScoreManager.Instance.RequestMiss();
-                        Debug.Log("2");
-
-                        return;
-                    }
-
-                    //클릭 시 동작 (정확하게 note 누르면 마스터한테 요청),아니면 미스했다는 로직 호출
-                    ScoreManager.Instance.RequestHit(t.NoteId, t.Status == NoteStatus.CanInteract, t.Type);
-                    Debug.Log("5");
-
-                }
-
-        */
-
 
         /// <summary>
         /// 홀드 : Continue 노트 전용
@@ -105,11 +68,13 @@ namespace RhythmGame
             if (!CanInput()) return;
             if (_holdTarget != null) return;
 
+            _noteToTap.Clear();
+
             var t = PickNote();
             //미스처리
             if (t == null)
             {
-                _noteToTap = null;
+                // _noteToTap = null;
                 // ScoreManager.Instance.RequestMiss();
                 return;
             }
@@ -123,11 +88,12 @@ namespace RhythmGame
                 _requireHoldTime = _holdTarget.GetHoldTime();
                 _isPress = true;
                 _isDone = false;
-                _noteToTap = null;
+                // _noteToTap = null;
             }
             else
             {
-                _noteToTap = t;
+                // _noteToTap = t;
+                _noteToTap.Add(t);
             }
 
         }
@@ -151,30 +117,44 @@ namespace RhythmGame
                     ScoreManager.Instance.RequestMiss();
 
                 InitHold();
-
+                _noteToTap.Clear();
                 return;
             }
             //탭 처리
-            if (_noteToTap != null)
+            // if (_noteToTap != null)
+            if (_noteToTap.Count > 0)
             {
-                var t = _noteToTap;
-                _noteToTap = null;
-
-                if (t.Type == NoteType.Continue) return;
-
-                bool isCan = t.Status == NoteStatus.CanInteract;
-
-                if (isCan)
+                bool anyHit = false;
+                foreach (var t in _noteToTap)
                 {
-                    ScoreManager.Instance.RequestHit(t.NoteId, true, t.Type);
-                    ScoreManager.Instance.VerdictTouch(t, verdictNote.transform);
 
+                    // t = _noteToTap;
+                    // _noteToTap = null;
+                    if (t == null) continue;
+
+                    if (t.Type == NoteType.Continue) continue;
+
+                    bool isCan = t.Status == NoteStatus.CanInteract && IsInVerdictBar(t);
+
+                    if (isCan)
+                    {
+                        ScoreManager.Instance.RequestHit(t.NoteId, true, t.Type);
+                        ScoreManager.Instance.VerdictTouch(t, verdictNote.transform);
+                        anyHit = true;
+
+                    }
+                    // else
+                    // {
+                    //     ScoreManager.Instance.RequestMiss();
+                    //     ScoreManager.Instance.VerdictMiss();
+                    // }
                 }
-                else
+                if (!anyHit)
                 {
                     ScoreManager.Instance.RequestMiss();
                     ScoreManager.Instance.VerdictMiss();
                 }
+                _noteToTap.Clear();
             }
             else
             {
@@ -195,7 +175,15 @@ namespace RhythmGame
 
         bool IsInVerdictBar(Note note)
         {
-            return verdictNote.Notes.Contains(note);
+            var list = verdictNote.Notes;
+            return list!=null && list.Contains(note);
+        }
+
+        bool TryGetMyLane(out int lane)
+        {
+            lane = -1;
+            if (!LaneManager.Instance || !PhotonNetwork.IsConnected) return false;
+            return LaneManager.Instance.GetLane(PhotonNetwork.LocalPlayer.ActorNumber, out lane);
         }
 
         /// <summary>
@@ -205,12 +193,16 @@ namespace RhythmGame
         Note PickNote()
         {
             //판정 영역 안의 노트 중 내 레인만
+            if (!TryGetMyLane(out int myLane)) return null;
+
             var list = verdictNote.Notes;
+            if (list == null || list.Count == 0) return null;
 
             for (int i = list.Count - 1; i >= 0; i--)
             {
                 var note = list[i];
                 if (note == null) continue;
+                if (note.Lane != myLane) continue;
 
                 return note;
             }

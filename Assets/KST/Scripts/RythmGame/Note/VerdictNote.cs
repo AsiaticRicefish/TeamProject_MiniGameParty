@@ -10,11 +10,6 @@ namespace RhythmGame
     [RequireComponent(typeof(Collider))]
     public class VerdictNote : MonoBehaviour
     {
-        //정확도 판정을 해당 판정바의 한 축을 기준으로 
-        //얼마나 중앙에 있는지 여부에 따라 accuracy가 달라지도록 할 필요가 잇음.
-        //note의 충돌 위치에 따라 status 변화를 줘도 될지도?
-
-
         private List<Note> _notes = new();//판정 바에 들어온 노트들
         public List<Note> Notes => _notes;
 

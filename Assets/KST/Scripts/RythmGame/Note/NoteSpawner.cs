@@ -77,17 +77,21 @@ namespace RhythmGame
                 //노트 랜덤 선택
                 string noteName = _notePrefabs[Random.Range(0, _notePrefabs.Length)].name;
                 // 레인 중 1개 랜덤 선택
-                int lane = Random.Range(1, activeLaneCount + 1);
+                // int lane = Random.Range(1, activeLaneCount + 1);
                 //속도 랜덤 선택
                 // float speed = Random.Range(1.5f, 4.0f);
                 float speed = 1.5f;
 
-                // 마스터가 각 noteId 생성 & 등록
-                int noteId = ++_seqId;
-                LaneManager.Instance.RegisterNote(noteId, lane);
+                for (int lane = 1; lane <= activeLaneCount; lane++)
+                {
 
-                // 모든 클라에 로컬 스폰 명령
-                photonView.RPC(nameof(RPC_NoteSpawn), RpcTarget.All, noteName, lane, speed, noteId);
+                    // 마스터가 각 noteId 생성 & 등록
+                    int noteId = ++_seqId;
+                    LaneManager.Instance.RegisterNote(noteId, lane);
+
+                    // 모든 클라에 로컬 스폰 명령
+                    photonView.RPC(nameof(RPC_NoteSpawn), RpcTarget.All, noteName, lane, speed, noteId);
+                }
             }
         }
 
