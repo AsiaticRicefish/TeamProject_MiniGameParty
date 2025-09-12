@@ -386,7 +386,7 @@ namespace LDH_UI
             UI_Toast toast = Util_LDH.Instantiate<UI_Toast>(toastPrefab, getUIAreaTransform(toastPrefab.Area));
             
             //배치
-            Util_LDH.SetCenterBottom(toast.TargetRect, toast.TargetRect.sizeDelta, new Vector2(0f, 60f));
+            Util_LDH.SetCenterBottom(toast.TargetRect, toast.TargetRect.sizeDelta, new Vector2(0f, 360f));
 
             return toast;
         }
