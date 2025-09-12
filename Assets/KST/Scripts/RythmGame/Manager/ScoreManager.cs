@@ -156,7 +156,7 @@ namespace RhythmGame
 
             // 파괴
             LaneManager.Instance.LaneByNoteId.Remove(noteId);
-            NoteSpawner.Instance.DestoryNote(noteId, isHit);
+            NoteSpawner.Instance.DestroyNote(noteId, isHit);
         }
 
         public void RequestMiss()
@@ -170,6 +170,69 @@ namespace RhythmGame
             if (!PhotonNetwork.IsMasterClient) return;
             // GameManager.Instance.OverHeatCheck();
             GameManager.Instance.MissBlock(info.Sender);
+        }
+
+        /// <summary>
+        /// 맞춰야하는 노트 못 맞췄을 때
+        /// </summary>
+        /// <param name="noteId">해당 noteID</param>
+        /// <param name="actorNum">플레이어 액터넘버</param>
+        [PunRPC]
+        void RPC_RequesetLaneMiss(int noteId, int actorNum)
+        {
+            if (!LaneManager.Instance.LaneByNoteId.TryGetValue(noteId, out int noteLane)) return;
+            //액터 확인
+            if (!LaneManager.Instance.GetLane(actorNum, out int actorLane)) return;
+            //해당 액터의 레인과 노트 레인 일치 확인
+            if (noteLane != actorLane) return;
+
+            MissToAll(actorNum);
+
+            //노트 파괴()
+            NoteSpawner.Instance.DestroyNote(noteId, false);
+        }
+
+        public void RequestLaneMiss(int noteId)
+        {
+            photonView.RPC(nameof(RPC_RequesetLaneMiss), RpcTarget.MasterClient, noteId, PhotonNetwork.LocalPlayer.ActorNumber);
+        }
+
+        /// <summary>
+        /// 모두에게 해당 노트가 miss 됐다는 것을 전파
+        /// </summary>
+        [PunRPC]
+        void RPC_MissToAll(int actorNum)
+        {
+            if (PhotonNetwork.LocalPlayer.ActorNumber == actorNum)
+            {
+                VerdictMiss();
+            }
+        }
+
+        void MissToAll(int actorNum)
+        {
+            photonView.RPC(nameof(RPC_MissToAll), RpcTarget.All, actorNum);
+        }
+
+        /// <summary>
+        /// Fake 노트일 때는 노트 파괴 요청
+        /// </summary>
+        /// <param name="noteId"></param>
+        [PunRPC]
+        void RPC_RequestMissFake(int noteId)
+        {
+            if (!NoteSpawner.Instance.TryGetNote(noteId, out var note)) return;
+
+            //해당 노트가 fake가 아닐경우 미스처리로 넘기기
+            if (note.Type != NoteType.Fake)
+                RequestLaneMiss(note.NoteId);
+
+            NoteSpawner.Instance.DestroyNote(noteId, false);
+        }
+
+        public void RequestMissFake(int noteId)
+        {
+            photonView.RPC(nameof(RPC_RequestMissFake), RpcTarget.MasterClient, noteId);
         }
 
         #endregion

@@ -155,10 +155,22 @@ namespace RhythmGame
         }
 
         // 마스터가 검증 후 파괴 브로드캐스트할 때 씀
-        public void DestoryNote(int noteId, bool isHit)
+        public void DestroyNote(int noteId, bool isHit)
         {
             if (!PhotonNetwork.IsMasterClient) return;
             photonView.RPC(nameof(RPC_DestroyNote), RpcTarget.All, noteId, isHit);
+        }
+
+        public bool TryGetNote(int noteId, out Note note)
+        {
+            note = null;
+            if (_activeById.TryGetValue(noteId, out var pooled) && pooled.TryGetComponent(out Note _note))
+            {
+                note = _note;
+                return true;
+            }
+            return false;
+
         }
     }
 }
