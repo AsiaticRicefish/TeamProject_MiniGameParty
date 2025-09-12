@@ -37,7 +37,6 @@ namespace ShootingScene
         public void Initialize()
         {
             //networkTimer()
-            networkTimer = new NetworkTimer(photonView);
 
             if (PhotonNetwork.IsMasterClient)
             {
