@@ -221,8 +221,8 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
         if (egg.photonView.IsMine)
         {
             Debug.Log("Egg의 주인만 초기화 진행");
-            egg.Initialize();
-            egg.GetComponent<LocalPlayerInput>().Initialize();
+            egg.Initialize();                       //UnimoEgg 초기화
+            egg.localPlayerInput.Initialize();      //LocalPlayerInput 초기화
         }
 
         egg.gameObject.SetActive(false);
