@@ -11,12 +11,12 @@ public class UnimoEgg : MonoBehaviourPun
     [Header("유니모 스크립트")]
     public LocalPlayerInput localPlayerInput;
     public ChargeController chargeController;
-    [Space]
 
     public Rigidbody rb;
     private float stopSpeed = 0.01f; // 속도 기준
 
     //상태 체크용 bool변수
+    [Header("상태 체크용 bool변수")]
     [SerializeField] private bool turnEnded;
     [SerializeField] private bool isLaunched; // 내가 발사한 알인가?
     [SerializeField] private bool isCameraFollowing;
