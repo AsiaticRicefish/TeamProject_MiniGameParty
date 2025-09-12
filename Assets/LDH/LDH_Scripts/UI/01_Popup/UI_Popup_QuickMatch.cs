@@ -16,10 +16,13 @@ namespace LDH_UI
         [SerializeField] private RectTransform targetRect;
         [SerializeField] private TextMeshProUGUI statusText;
         [SerializeField] private TextMeshProUGUI playerCntText;
-        [SerializeField] private TextMeshProUGUI elpasedText;
+        [SerializeField] private TextMeshProUGUI elapsedText;
         [SerializeField] private Button cancelButton;
+        [SerializeField] private Slider playerCntSlider;
+        
         
         [Header("UI Setting")] 
+        [SerializeField] private bool positionControlOnAwake;
         [SerializeField] private Vector2 targetRectOffset;
         [SerializeField] private string matchingInProgressMessage = "Finding...";
         [SerializeField] private string matchingCompleteMessage = "Complete!";
@@ -37,15 +40,17 @@ namespace LDH_UI
             _startTime = Time.unscaledTime;
             
             SetStatus(false);
+            InitSlider();
             SetPlayerCount(0,0);
             SetElapsed();
             
             // 위치
-            Util_LDH.SetCenterTop(targetRect, targetRect.sizeDelta, targetRectOffset);
-            
+            if(positionControlOnAwake)
+                Util_LDH.SetCenterTop(targetRect, targetRect.sizeDelta, targetRectOffset);
         }
 
         #region UI Data Update
+        
         public void SetStatus(bool isComplete)
         {
             statusText.text = isComplete ? matchingCompleteMessage : matchingInProgressMessage;
@@ -54,12 +59,15 @@ namespace LDH_UI
         public void SetPlayerCount(int currentPlayerCount, int maxPlayerCount)
         {
             playerCntText.text = $"{currentPlayerCount}/{maxPlayerCount}";
+            playerCntSlider.value = currentPlayerCount;
+            playerCntSlider.maxValue = maxPlayerCount;
+      
         }
 
         public void SetElapsed()
         {
             float value = Time.unscaledTime - _startTime;
-            elpasedText.text = Util_LDH.FormatTimeMS(value);
+            elapsedText.text = Util_LDH.FormatTimeMS(value);
         }
 
         public void SetCancelable(bool cancelable)
@@ -67,6 +75,10 @@ namespace LDH_UI
             cancelButton.interactable = cancelable;
         }
         
+        private void InitSlider()
+        {
+            playerCntSlider.minValue = 0;
+        }
 
         #endregion
         
