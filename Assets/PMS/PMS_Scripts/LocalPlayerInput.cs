@@ -7,10 +7,12 @@ using ShootingScene;
 
 public class LocalPlayerInput : MonoBehaviourPun
 {
+    [SerializeField] private PlayerInputUIController uiController;
+
     public Transform player;
-    public DirectionUIArrow arrow;
-    public GameObject arrowRangeImage;
-    public ChargeController charger;
+    //public DirectionUIArrow arrow;
+    //public GameObject arrowRangeImage;
+    //public ChargeController charger;
     public Camera mainCam;
 
     private float stepStartTime = 0;
@@ -125,11 +127,7 @@ public class LocalPlayerInput : MonoBehaviourPun
         autoMoveFlag = false;
         autoMoveStartPos = Vector3.zero;
 
-        arrow.Initialize();
-        charger.Initialize();
-
-        if (arrow != null) arrow.gameObject.SetActive(false);
-        if (charger != null) charger.gameObject.SetActive(false);
+        uiController.InitializeUI();
 
         if (currentTimeoutCoroutine != null)
         {
@@ -163,19 +161,19 @@ public class LocalPlayerInput : MonoBehaviourPun
                 OnStart = () =>
                 {
                     Debug.Log("Step 2 시작: 화살표 표시");
-                    if (arrow != null && arrowRangeImage != null && photonView.IsMine)
+                    if (photonView.IsMine)
                     {
-                        arrow.gameObject.SetActive(true);
-                        arrowRangeImage.SetActive(true);
+                        uiController.ShowArrow(true);
+                        uiController.ShowArrowRange(true);
                     }
                     inputEnabled = true;
                 },
                 OnComplete = () =>
                 {
                     Debug.Log("Step 2 완료");
-                    arrow?.Freeze();  // 방향 고정
-                    if (arrowRangeImage != null && photonView.IsMine)
-                        arrowRangeImage.SetActive(false);
+                    uiController.FreezeArrow();
+                    if (photonView.IsMine)
+                        uiController.ShowArrowRange(false);
                     inputEnabled = false;
                 }
             },
@@ -185,10 +183,10 @@ public class LocalPlayerInput : MonoBehaviourPun
                 OnStart = () =>
                 {
                     Debug.Log("Step 3 시작: 차징");
-                    if (charger != null && photonView.IsMine)
+                    if (photonView.IsMine)
                     {
-                        charger.chargeSlider.gameObject.SetActive(true);
-                        charger.StartCharge();
+                        uiController.ShowCharger(true);
+                        uiController.StartCharge();
                     }
                     inputEnabled = true;
                 },
@@ -196,17 +194,13 @@ public class LocalPlayerInput : MonoBehaviourPun
                 {
                     Debug.Log("Step 3 완료: 발사");
                     var unimo = GetComponent<UnimoEgg>();
-                    unimo?.Shot(arrow.CurrentDir * charger.ChargePower);
+                    unimo?.Shot(uiController.GetArrowDir() * uiController.GetChargePower());
 
-                    if(arrow != null && photonView.IsMine)
+                    if (photonView.IsMine)
                     {
-                        arrow.gameObject.SetActive(false);
-                    }
-
-                    if (charger != null && photonView.IsMine)
-                    {
-                        charger.chargeSlider.gameObject.SetActive(false);
-                        charger.StopCharge();
+                        uiController.ShowArrow(false);
+                        uiController.ShowCharger(false);
+                        uiController.StopCharge();
                     }
                     inputEnabled = false;
                 }

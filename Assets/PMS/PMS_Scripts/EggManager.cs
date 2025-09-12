@@ -16,14 +16,6 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
 
     private const string unimoEggPrefabPath = "Net/UnimoEggPrefab";
 
-    public Color[] colors = new Color[]         //빨주노초
-    {
-        Color.red,
-        new Color(1f, 0.5f, 0f), // 오렌지색
-        Color.yellow,
-        Color.green
-    };
-
     [Header("Current State")]
     public UnimoEgg currentUnimoEgg;
 
@@ -35,9 +27,6 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
     private Dictionary<int, UnimoEgg> viewIdToEgg = new();
 
     private bool isPoolReady = false;
-
-
-
 
     private HashSet<string> registerdPools = new();
 
