@@ -382,7 +382,7 @@ Transform:
   m_GameObject: {fileID: 165673993}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 10, z: 0}
+  m_LocalPosition: {x: 100.3, y: 9.18, z: 599}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -404,6 +404,80 @@ MonoBehaviour:
   swipeSensitivity: 0.01
   minZ: -10
   maxZ: 10
+  finishLine: {fileID: 0}
+--- !u!1001 &492041381
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 11735339577678118, guid: 46b3f46726bab514b8c006196f0c4019,
+        type: 3}
+      propertyPath: m_Name
+      value: UnimoEggPrefab
+      objectReference: {fileID: 0}
+    - target: {fileID: 5773829714023628006, guid: 46b3f46726bab514b8c006196f0c4019,
+        type: 3}
+      propertyPath: sceneViewId
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6368235921381127464, guid: 46b3f46726bab514b8c006196f0c4019,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6368235921381127464, guid: 46b3f46726bab514b8c006196f0c4019,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6368235921381127464, guid: 46b3f46726bab514b8c006196f0c4019,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 13.812092
+      objectReference: {fileID: 0}
+    - target: {fileID: 6368235921381127464, guid: 46b3f46726bab514b8c006196f0c4019,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6368235921381127464, guid: 46b3f46726bab514b8c006196f0c4019,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6368235921381127464, guid: 46b3f46726bab514b8c006196f0c4019,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 6368235921381127464, guid: 46b3f46726bab514b8c006196f0c4019,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 6368235921381127464, guid: 46b3f46726bab514b8c006196f0c4019,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: -90
+      objectReference: {fileID: 0}
+    - target: {fileID: 6368235921381127464, guid: 46b3f46726bab514b8c006196f0c4019,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: -180
+      objectReference: {fileID: 0}
+    - target: {fileID: 6368235921381127464, guid: 46b3f46726bab514b8c006196f0c4019,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 46b3f46726bab514b8c006196f0c4019, type: 3}
 --- !u!1 &665011561
 GameObject:
   m_ObjectHideFlags: 0
@@ -904,7 +978,7 @@ Transform:
   m_GameObject: {fileID: 1432729674}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071067}
-  m_LocalPosition: {x: 0, y: 10, z: 0}
+  m_LocalPosition: {x: 100.3, y: 9.18, z: 599}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1019,6 +1093,34 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isPersistent: 1
+  cameraSwipeController: {fileID: 0}
+  touchAction:
+    m_Name: 
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: db643e4e-68fd-4aa5-8e72-681681f799bc
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings: []
+    m_Flags: 0
+  cameraControlAction:
+    m_Name: 
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: d6058ce7-e21e-4294-9b2f-621321919f3f
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings: []
+    m_Flags: 0
+  cameraPositionAction:
+    m_Name: 
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 374ca01b-0c83-466f-ad0e-799473f4585a
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings: []
+    m_Flags: 0
 --- !u!114 &1833259307
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1226,3 +1328,4 @@ SceneRoots:
   - {fileID: 1300387853}
   - {fileID: 165673995}
   - {fileID: 1833259308}
+  - {fileID: 492041381}

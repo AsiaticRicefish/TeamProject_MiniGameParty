@@ -11,7 +11,7 @@ namespace ShootingScene
     [RequireComponent(typeof(PlayerInput))]
     public class PlayerInputManager : CombinedSingleton<PlayerInputManager>, IGameComponent
     {
-        public CameraSwipeController cameraSwipeController;
+        public CameraSwipeController cameraSwipeController; 
 
         private PlayerInput playerInput; // PlayerInput 컴포넌트 참조 변수
 
@@ -49,6 +49,7 @@ namespace ShootingScene
 
         public void OnCameraGesture(InputAction.CallbackContext ctx)
         {
+            Debug.Log("[PlayerInputManger] - OnCameraGesture 가 이벤트 Invoke");
             onCameraGesture?.Invoke(ctx); // 구독자에게 전달
         }
 
@@ -68,6 +69,11 @@ namespace ShootingScene
             InitializeInputActions();
 
             RegisterActions();          // 액션 구독 등록하고
+
+            Debug.Log("[PlayerInputManager] - cameraSwipeController 의존성 주입");
+            //의존성 주입 CameraSwipeController
+            //cameraSwipeController.Initialize(this);
+
             DisableAllInput2();
             //DisableAllInput();          // 액션을 비활성화
         }
