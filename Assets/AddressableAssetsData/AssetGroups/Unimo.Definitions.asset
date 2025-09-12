@@ -1,0 +1,241 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Unimo.Definitions
+  m_EditorClassIdentifier: 
+  m_GroupName: Unimo.Definitions
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 8ea344cd5779743b5834e76d3b2811c2
+  m_SerializeEntries:
+  - m_GUID: 020c4b7adad19476b8fb21531f90dca3
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Characters/Character_012_Matilda.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:character
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 021aed613b60f46968c108804d1fb5f0
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Equipments/Equipment_008_Scootus.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:equip
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 09f3bf4aee7bf4f2c9580734d5b968e5
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Characters/Character_002_Sofo.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:character
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0d259b3eb0653414eb7457ab41fe1278
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Equipments/Equipment_023_Cloud.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:equip
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 13a184fea49ba4a5cac006407a6bd558
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Equipments/Equipment_018_TrashCan.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:equip
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 15aa9933bf11a420da9846c78f07071e
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Equipments/Equipment_009_Vase.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:equip
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1fcc72c98b35149df9d2d46502bfd7f1
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Equipments/Equipment_001_BeeTail.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:equip
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2ad6f0450e58f4dfca6c81b755756ddd
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Characters/Character_011_Muffin.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:character
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2cb51942505d74c60bc34a62d42d6948
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Equipments/Equipment_017_DogBowl.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:equip
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 33f998e63dc9b445381fd983510e33ec
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Equipments/Equipment_019_SandCastle.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:equip
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3a0bda32a044d4dfeab2b8c7c4a39459
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Characters/Character_009_AI.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:character
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3b1ec12ae6e28453196b84e6a597e91b
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Equipments/Equipment_005_CleanBucket.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:equip
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 442cb4234b2844183b06ff3712628044
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Equipments/Equipment_015_Icecream.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:equip
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4c858e66cceaa4ad8ac5f5c573865cfb
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Characters/Character_013_Toaster.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:character
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6837acbd9673049b8953aea2557726d1
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Equipments/Equipment_020_Bathtub.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:equip
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7549e4b2ff9344fef803121fd02dafa9
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Equipments/Equipment_022_MagicHat.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:equip
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7954664bbf44b4df4ba97069eaec3db0
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Equipments/Equipment_004_StoneMortar.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:equip
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8464f2d8ce048447cb093c3ec3e6fa19
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Equipments/Equipment_007_HatchedEgg.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:equip
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 871ec4e0836a047bb89501062d450337
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Characters/Character_001_RiBee.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:character
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8832f648fce1044c4b6e972f95b2aa61
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Characters/Character_006_Cu.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:character
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8aa13978e44224de2b5103069136eefb
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Equipments/Equipment_021_ElfCup.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:equip
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9ecd2dfb47fdd4ec58c63774e346f596
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Equipments/Equipment_013_Toaster.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:equip
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9fb1b28ad82044f6ca140bbdfcf04523
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Equipments/Equipment_010_EmperorPenguin.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:equip
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a4d7675cce674495ab26f8106612a28c
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Equipments/Equipment_016_WitchSot.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:equip
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aac682364b1f643fd859c9fe040910e8
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Characters/Character_008_Augustus.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:character
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b5e41553b50d5434dbe6aecf3fa2c2e8
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Characters/Character_004_Jeomboon.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:character
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bca71358a557c499db3152e4a8ed882c
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Equipments/Equipment_003_HoneyJar.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:equip
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bf293ad0aba5b4668a711082a3d611dd
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Equipments/Equipment_002_Box.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:equip
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c6edbedc2acd04938958b7833a39de09
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Characters/Character_007_DoomDoom.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:character
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cfb9b89893e7340b181fa34f3b404170
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Characters/Character_005_HightFish.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:character
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d7e0922b293f94b398f614e35121db20
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Equipments/Equipment_006_MonoPlane.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:equip
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: db036ffcb276042e7889dbc58e257f62
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Equipments/Equipment_011_DogHouse.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:equip
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e0bc01aed1d764531a3d2cfc3f7e1f46
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Equipments/Equipment_014_OakTong.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:equip
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e85133eca6cfa486f8563f72fa4a909c
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Characters/Character_003_Gomgom.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:character
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f5d0a601cc8564135b2f33ffd78c5f50
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Equipments/Equipment_012_Sack.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:equip
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fb64d74dfb90a4de4be01bc630681b49
+    m_Address: Assets/LDH/LDH_Resources/Definitions/Characters/Character_010_Primo.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - catalog:character
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: efc2531fbc716f7409d27168060779e5, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 181289c2b28564ba1bef84b5e71122f7, type: 2}
+    - {fileID: 11400000, guid: 2b55c22fb83f74f3ea7e5b0449735033, type: 2}

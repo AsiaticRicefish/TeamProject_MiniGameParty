@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f288f588ec540da846fe23601de6669, type: 3}
+  m_Name: Character_013_Toaster
+  m_EditorClassIdentifier: 
+  number: 13
+  id: unimo_ch_013
+  setKey: unimo_013
+  prefabRef:
+    m_AssetGUID: 319efe519960d8f46947e9186ead52bb
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_EditorAssetChanged: 0
+  iconRef:
+    m_AssetGUID: ef44c939a53ca04458f792fdd2a46891
+    m_SubObjectName: Toaster
+    m_SubObjectType: UnityEngine.Sprite, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+    m_EditorAssetChanged: 1

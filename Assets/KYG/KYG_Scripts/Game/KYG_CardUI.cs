@@ -37,13 +37,15 @@ namespace KYG
         private int _index;  // 0..N-1
         private int _value;  // 1..N
         private System.Action<int> _onClick;
+        
+        private bool _interactable = true;
 
         private void Awake()
         {
             rt = GetComponent<RectTransform>();
             SetFace(false);
-            // 초기 색을 확실히 적용
             ApplyTint(normalColor);
+            SetRaycast(true);                 // 초기엔 클릭 가능
         }
 
         /// <summary>카드 초기화</summary>
@@ -56,18 +58,15 @@ namespace KYG
             SetFace(false);
             UpdateNumberText(_value, false);
             ApplyTint(normalColor);
+            _interactable = true;             // 초기화
+            SetRaycast(true);
         }
 
         public void OnPointerClick(PointerEventData eventData)
         {
+            if (!_interactable) return;
             if (isFlipping || isFace) return;
-            _onClick?.Invoke(_index);
-        }
-
-        /// <summary>버튼/트리거 연결용</summary>
-        public void OnTap()
-        {
-            if (isFlipping || isFace) return;
+            Debug.Log($"[CardUI] clicked index={_index}"); // ← 임시
             _onClick?.Invoke(_index);
         }
 
@@ -76,24 +75,31 @@ namespace KYG
         /// interactable: true  -> 아직 아무도 안 집은 카드
         /// interactable: false -> 누군가가 집은 카드
         /// </summary>
+        // 선택 가능/불가 + 내 카드 강조
         public void SetInteractable(bool interactable, bool isOwner = false)
         {
+            _interactable = interactable;     // 상태 보관
+            SetRaycast(interactable);         // 레이캐스트 꺼서 실제로 못 누르게
+
             if (interactable)
-            {
-                // 아직 선택되지 않음
                 ApplyTint(isOwner ? ownerColor : normalColor);
-            }
             else
-            {
-                // 이미 선택됨(남이거나 나거나)
                 ApplyTint(isOwner ? ownerColor : disabledColor);
-            }
         }
 
         /// <summary>선택됨을 즉시 표시(뒤집히기 전 단계)</summary>
+        // 선택 즉시 표시
         public void SetSelected(bool isOwner)
         {
+            _interactable = false;            // 선택된 순간부터 클릭 금지
+            SetRaycast(false);
             ApplyTint(isOwner ? ownerColor : selectedColor);
+        }
+        
+        private void SetRaycast(bool on)      // 이미지에 레이캐스트 토글
+        {
+            if (cardBackGround) cardBackGround.raycastTarget = on;
+            if (faceImage)      faceImage.raycastTarget      = on;
         }
 
         /// <summary>카드 공개 애니메이션</summary>
