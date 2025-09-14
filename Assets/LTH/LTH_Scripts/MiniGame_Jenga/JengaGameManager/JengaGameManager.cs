@@ -64,6 +64,14 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
     private Dictionary<string, bool> playerFinished = new();     // 플레이어별 게임 완료 여부
     public Dictionary<string, int> GetCurrentRanks() => CalculateRankings();
 
+    private readonly Dictionary<string, int> _gridOrder = new(); // uid -> 0,1,2,...
+    private int GridOrderOf(string uid) => _gridOrder.TryGetValue(uid, out var v) ? v : int.MaxValue;
+
+    private static bool IsActive(JengaPlayerData d)
+    => d.removedCount > 0 || d.score > 0 || d.lastSuccessTime > 0f || !d.isAlive;
+
+    private Dictionary<string, int> _lastRankSnapshot;
+
     private double? _roomStartTime;
     private double? _roomDuration;
     private Coroutine _timerCo;
@@ -114,9 +122,6 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
                 continue;
             }
 
-            //// UID를 기반으로 PlayerManager에서 해당 플레이어의 GamePlayer 객체를 가져옴
-            //var gamePlayer = PlayerManager.Instance.GetPlayer(uid);
-
             // CreateOrGetPlayer를 사용하여 플레이어가 없으면 자동 생성
             var gamePlayer = PlayerManager.Instance.CreateOrGetPlayer(uid, photonPlayer.NickName);
 
@@ -143,6 +148,20 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
             }
         }
         Debug.Log($"[JengaGameManager - InitializePlayers] Initialized {players.Count} players");
+
+        if (PhotonNetwork.IsMasterClient)
+        {
+            var uidList = PhotonNetwork.PlayerList
+                .OrderBy(p => p.ActorNumber)
+                .Select(p => p.CustomProperties["uid"] as string)
+                .Where(uid => !string.IsNullOrEmpty(uid))
+                .ToList();
+
+            SetGridOrder(uidList);
+
+            // 시작 직후 보이는 초기 순위
+            SeedInitialRanksFromGrid();
+        }
     }
 
     #endregion
@@ -432,8 +451,10 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         SendResultToMainGame(rankings);
     }
 
+    // 어디서든 랭킹이 확정/수신될 때 캐싱
     public void ApplyRankSnapshot(Dictionary<string, int> ranks)
     {
+        _lastRankSnapshot = new Dictionary<string, int>(ranks);
         OnRankingsUpdated?.Invoke(ranks);
     }
 
@@ -441,10 +462,12 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
     {
         // 점수순으로 정렬, 동점일 경우 생존 여부로 판단
         var sortedPlayers = players
-            .OrderByDescending(p => p.Value.removedCount)   // 1순위: 더 많이 뺀 사람
-            .ThenBy(p => p.Value.lastSuccessTime)           // 2순위: 더 빨리 성공한 사람
-            .ThenByDescending(p => p.Value.score)           // 3순위: (같은 개수/시간일 때) 점수 큰 사람
-            .ToList();
+        .OrderByDescending(p => IsActive(p.Value))      // 활동 여부: 활동한 사람(true) 먼저 (혹시나 전부 잠수타서 움직이지 않는 경우 대비)
+        .ThenByDescending(p => p.Value.removedCount)    // 1순위 : 젠가 블록을 더 많이 뺀 사람
+        .ThenBy(p => p.Value.lastSuccessTime)           // 2순위 : 동점일 때 제거를 더 빨리 성공(작을수록 유리)
+        .ThenByDescending(p => p.Value.score)           // 3순위 : 점수 큰 사람
+        .ThenBy(p => GridOrderOf(p.Key))                // 4순위 : 초기 그리드
+        .ToList();
 
         // 딕셔너리 형태로 UID별 순위를 저장
         // { "playerA": 1, "playerB": 2, "playerC": 3, "playerD": 4 }
@@ -459,6 +482,8 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
 
         return rankings;
     }
+
+
 
     /// <summary>
     /// 점수 순위를 메인 게임 시스템에 전달하고,
@@ -664,8 +689,65 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         return players.Count(kv => kv.Value.isAlive);
     }
 
+    #region 게임 시작 시 랭킹 그리드 순서 설정
 
-    #region 강제 정리 (플레이어 1명이라도 이탈 시 호출)
+    /// <summary>
+    /// 마스터가 게임 시작 시 그리드 순서 확정
+    /// </summary>
+    /// <param name="uidList"></param>
+    public void SetGridOrder(IList<string> uidList)
+    {
+        _gridOrder.Clear();
+        for (int i = 0; i < uidList.Count; i++) _gridOrder[uidList[i]] = i;
+    }
+
+    /// <summary>
+    /// 그리드 순서에 따라 초기 랭킹 설정
+    /// </summary>
+    public void SeedInitialRanksFromGrid()
+    {
+        if (_gridOrder.Count == 0) return;
+
+        var rankMap = _gridOrder
+            .OrderBy(kv => kv.Value)
+            .Select((kv, idx) => new { kv.Key, Rank = idx + 1 })
+            .ToDictionary(x => x.Key, x => x.Rank);
+
+        _lastRankSnapshot = new Dictionary<string, int>(rankMap);
+        // UI/네트워크에 즉시 반영
+        OnRankingsUpdated?.Invoke(rankMap);
+        JengaNetworkManager.Instance?.BroadcastRankSnapshot(rankMap);
+
+        // 룸 프로퍼티에도 기록해서 늦게 들어온 클라 동기화
+        if (PhotonNetwork.IsMasterClient && PhotonNetwork.InRoom)
+        {
+            var uids = rankMap.Keys.ToArray();
+            var ranks = rankMap.Values.ToArray();
+            var props = new Hashtable
+            {
+                { JengaRoomProps.KEY_RANK_UIDS, uids },
+                { JengaRoomProps.KEY_RANK_VALS, ranks },
+            };
+            PhotonNetwork.CurrentRoom.SetCustomProperties(props);
+        }
+    }
+
+    // 필요 시 UI가 꺼내갈 수 있게 getter 제공
+    public bool TryGetLastRankSnapshot(out Dictionary<string, int> ranks)
+    {
+        if (_lastRankSnapshot != null)
+        {
+            ranks = new Dictionary<string, int>(_lastRankSnapshot);
+            return true;
+        }
+        ranks = null;
+        return false;
+    }
+
+    #endregion 
+
+
+    #region 강제 정리
 
     protected override void OnDestroy()
     {
@@ -699,8 +781,6 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
                 { JengaRoomProps.KEY_STATE, null },
                 { JengaRoomProps.KEY_START_TIME, null },
                 { JengaRoomProps.KEY_DURATION, null },
-                { JengaRoomProps.KEY_RANK_UIDS, null },
-                { JengaRoomProps.KEY_RANK_VALS, null }
             };
             PhotonNetwork.CurrentRoom.SetCustomProperties(clearProps);
         }
