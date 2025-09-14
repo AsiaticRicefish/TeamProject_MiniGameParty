@@ -101,9 +101,9 @@ namespace LDH_UI
 
             _spawnedUnimo = Instantiate(prefab, unimoAnchor);
             var t = _spawnedUnimo.transform;
-            t.localPosition = Vector3.zero;
+            t.localPosition = new Vector3(0, 0, 0);
             t.localRotation = Quaternion.identity;
-            t.localScale = Vector3.one;
+            t.localScale = Vector3.one * 4;
         }
 
         /// <summary>

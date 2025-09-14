@@ -17,6 +17,8 @@ public class UnimoRTBBinder : MonoBehaviour
             return;
         }
 
+        unimoCam.fieldOfView = 15f;
+
         var size = PickRTSizeFromRawImage(rawImage);
         _rt = new RenderTexture(size, size, 16, RenderTextureFormat.ARGB32)
         {
