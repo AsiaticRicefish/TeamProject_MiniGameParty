@@ -43,7 +43,6 @@ namespace Customization
 
         // 생성된 버튼
         private readonly List<UI_ClosetItemButton> _charToggles = new();
-
         private readonly List<UI_ClosetItemButton> _equipToggles = new();
 
         //  로드 핸들 추적

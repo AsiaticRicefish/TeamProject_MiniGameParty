@@ -7,18 +7,20 @@ namespace Customization
 {
     public class AvatarStruct : MonoBehaviour
     {
+        [Header("Parent Transforms for Character & Engine Prefabs")]
         public Transform characterRoot;
         public Transform equipRoot;
-
-        // anim
-        public  readonly int Equip_BaseLayer_IdleState = Animator.StringToHash("Base Layer.anim_EQ000_Idle");
-        public  readonly int Equip_Altitude_IdleState = Animator.StringToHash("Altitude.anim_EQ000_Idle_Altitude");
         
+        // 현재 장착한 캐릭터/엔진 정보
         public GameObject CurrentCharacter { get; private set; }
         public string     CurrentCharacterId { get; private set; }
         public GameObject CurrentEquip { get; private set; }
         public string     CurrentEquipId { get; private set; }
         
+        
+        [Header ("엔진 animation hash")]
+        private  readonly int Equip_BaseLayer_IdleState = Animator.StringToHash("Base Layer.anim_EQ000_Idle");
+        private  readonly int Equip_Altitude_IdleState = Animator.StringToHash("Altitude.anim_EQ000_Idle_Altitude");
 
         public async UniTask BindCharacter(GameObject go, string id, bool inheritLayer = true)
         {
