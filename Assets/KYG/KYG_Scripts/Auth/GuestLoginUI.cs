@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections;
 using KYG.Auth;
+using LDH.LDH_Scripts.Test;
 using Managers;
 using Photon.Pun; // GuestLoginManager 참조
 
@@ -310,7 +311,7 @@ public class GuestLoginUI : MonoBehaviour
             Managers.Manager.Network.SetTestNicknameAndID(nick);
             PhotonNetwork.ConnectUsingSettings();
 #else
-             mgr.LoginAsGuestWithNickname(nick);
+            mgr.LoginAsGuestWithNickname(nick);
 #endif
         }
         catch (System.Exception e)
@@ -321,6 +322,10 @@ public class GuestLoginUI : MonoBehaviour
             if (confirmButton) confirmButton.interactable = nick.Length >= minLength && IsReady();
             ShowSubmittingUI(false);
             ActivateInput();
+        }
+        finally
+        {
+            // RTDBTest.StartTest();
         }
     }
 

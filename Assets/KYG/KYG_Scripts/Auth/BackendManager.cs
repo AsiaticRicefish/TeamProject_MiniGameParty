@@ -1,6 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
+using Customization;
+using Cysharp.Threading.Tasks;
+using Data;
 using Firebase.Auth;
+using Firebase.Database;
 using UnityEngine;
 
 /// <summary>
@@ -13,13 +17,20 @@ public class BackendManager : MonoBehaviour
     public static BackendManager Instance { get; private set; }
 
     public static FirebaseAuth Auth { get; private set; }
+    private static UserDataRepository _userData;   // data manager에서만 사용할 수 있도록 Private로 처리
+    
+    static UniTaskCompletionSource _dbReadyTcs;  // DB가 바인딩되면 완료
+    public static UniTask WhenDatabaseReady() => _dbReadyTcs?.Task ?? UniTask.CompletedTask;
 
+    
     private void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            _dbReadyTcs ??= new UniTaskCompletionSource();
+
         }
         else
         {
@@ -59,4 +70,18 @@ public class BackendManager : MonoBehaviour
             Debug.Log("[BackendManager] FirebaseAuth instance linked (late).");
         }
     }
+
+    public static void BindDataBase(string databaseUrl, FirebaseDatabase dbInstance)
+    {
+        if (_userData != null) return; // 이미 바인딩 되어 있으면 무시(1회만)
+        _userData = new UserDataRepository(dbInstance, dbInstance.RootReference, databaseUrl);
+        
+        DataManager.Instance.BindRepository(_userData, Auth.CurrentUser.UserId);
+        
+        Debug.Log("[BackendManager] RTDB bound to DbRoot.");
+
+        _dbReadyTcs?.TrySetResult();
+    }
+   
+  
 }

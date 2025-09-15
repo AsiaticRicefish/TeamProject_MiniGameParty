@@ -39,29 +39,30 @@ namespace Customization
         /// Addressables.InitializeAsync() 이후 호출해야 함.
         /// SO를 모두 로드하여 id→정의 인덱스를 만든다.
         /// </summary>
-        public static async UniTask InitAsync(string characterLabel = CharacterLabel, string equipLabel = EquipLabel)
+        public static async UniTask InitAsync(Action<float> progressReport = null)
         {
-            
+            progressReport?.Invoke(0f);
             // 여러 자산: LoadAssetsAsync(label, callback)
-            _charHandle = Addressables.LoadAssetsAsync<CharacterDefinition>(characterLabel, null);
-            _equipHandle = Addressables.LoadAssetsAsync<EquipmentDefinition>(equipLabel, null);
+            _charHandle = Addressables.LoadAssetsAsync<CharacterDefinition>(CharacterLabel, null);
+            _equipHandle = Addressables.LoadAssetsAsync<EquipmentDefinition>(EquipLabel, null);
             
             
             // 모든 so 가져오기
             IList<CharacterDefinition> charList  = await _charHandle.Task;
             IList<EquipmentDefinition> equipList = await _equipHandle.Task;
-            
+            progressReport?.Invoke(0.3f);
             
             Characters = charList?
                 .Where(x => x != null && !string.IsNullOrWhiteSpace(x.id)) //id가 null인지 검증
                 .GroupBy(x => x.id) // id로 그룹화하여 중복 so 정리
                 .ToDictionary(g => g.Key, g => g.First()); // 각 그룹(id로 묶은 그룹)을 딕셔너리의 요소로 전환(key = 그룹의 key = id, value = 그룹의 첫번째 항목 = 첫 번째 character definition
 
+            progressReport?.Invoke(0.5f);
             Equips = equipList?
                 .Where(x => x != null && !string.IsNullOrEmpty(x.id))
                 .GroupBy(x => x.id)
                 .ToDictionary(g => g.Key, g => g.First());
-            
+            progressReport?.Invoke(0.7f);
             
             // 정렬 리스트
             CharactersSorted = Characters?.Values
@@ -73,7 +74,7 @@ namespace Customization
                 .ThenBy(def => def.id, StringComparer.Ordinal)
                 .ToArray();
             
-            
+            progressReport?.Invoke(1f);
             Debug.Log($"[CatalogProvider] Init 완료 : Characters {Characters.Values.Count()} 개, Equips : {Equips.Values.Count()} 개 등록 완료");
 
         }
@@ -100,7 +101,7 @@ namespace Customization
                 Characters = null;
                 Equips     = null;
                 
-                await InitAsync(characterLabel, equipLabel);
+                await InitAsync();
             }
             finally { _busy = false; }
             

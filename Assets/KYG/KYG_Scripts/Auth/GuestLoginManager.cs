@@ -281,14 +281,16 @@ namespace KYG.Auth
             Debug.Log($"[GuestLogin] Firebase UID={uid}, Nickname={PhotonNetwork.NickName}");
             Debug.Log($"[GuestLogin] Photon.AuthValues.UserId={PhotonNetwork.AuthValues?.UserId}");
 
+            
+            
             if (!PhotonNetwork.IsConnected)
             {
-                PhotonNetwork.ConnectUsingSettings();
+               // PhotonNetwork.ConnectUsingSettings();
                 Debug.Log("[GuestLogin] Connecting to Photon...");
             }
             else if (!PhotonNetwork.InLobby)
             {
-                PhotonNetwork.JoinLobby();
+                //PhotonNetwork.JoinLobby();
             }
 
             var nm = NetworkManager.Instance;
@@ -297,7 +299,7 @@ namespace KYG.Auth
                 nm.ConnectedToMaster += () =>
                 {
                     Debug.Log("[GuestLogin] Handing off to NetworkManager");
-                    nm.ConnectServer();
+                    //nm.ConnectServer();
                 };
             }
         }
@@ -318,8 +320,8 @@ namespace KYG.Auth
             
             
             // Photon 기본 로비 들어가기
-            if (PhotonNetwork.InLobby || PhotonNetwork.NetworkClientState == ClientState.JoiningLobby) return;  // 방어로직 추가
-                PhotonNetwork.JoinLobby();
+            // if (PhotonNetwork.InLobby || PhotonNetwork.NetworkClientState == ClientState.JoiningLobby) return;  // 방어로직 추가
+            //     PhotonNetwork.JoinLobby();
         }
         
         // ----- NetworkManager로 기능 통합 ----- 0829(이도현)

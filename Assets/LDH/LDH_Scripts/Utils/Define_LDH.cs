@@ -39,7 +39,7 @@ namespace LDH_Util
 
         #endregion
 
-        #region User Info
+        #region User Info - Player Properties
 
         public static partial class PlayerProps
         {
@@ -121,8 +121,25 @@ namespace LDH_Util
             Equip,
         }
 
+        public static partial class DefaultData
+        {
+            public const string DefaultCharacter = "unimo_ch_001";
+            public const string DefaultEquip = "unimo_equip_001";
+        }
+
         #endregion
 
+        #region Currency
+
+        public static partial class DefaultData
+        {
+            public const int DefaultCurrency1 = 10000;
+            public const int DefaultCurrency2 = 10000;
+            public const int DefaultCurrency3 = 10000;
+        }
+
+        #endregion
+        
         #region Setting
 
         /// <summary>
@@ -136,6 +153,7 @@ namespace LDH_Util
         }
 
         #endregion
+        
     }
 
 }
