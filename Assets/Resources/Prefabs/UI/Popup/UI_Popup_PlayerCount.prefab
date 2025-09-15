@@ -68,8 +68,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 0
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: dc2cc93475f76427c86a8262bee36b88, type: 2}
-  m_sharedMaterial: {fileID: 2269793554123077917, guid: dc2cc93475f76427c86a8262bee36b88,
+  m_fontAsset: {fileID: 11400000, guid: 263a5f6c8c323c84e9bd6ede05411f99, type: 2}
+  m_sharedMaterial: {fileID: -363288562218260364, guid: 263a5f6c8c323c84e9bd6ede05411f99,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -224,8 +224,8 @@ MonoBehaviour:
   m_text: "\uD568\uAED8 \uD50C\uB808\uC774\uD560 \uC778\uC6D0\uC744 \uC120\uD0DD\uD574
     \uC8FC\uC138\uC694. (2\u20134\uBA85)"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: e0962d31f1f084fa3ba7147d76f5b6e8, type: 2}
-  m_sharedMaterial: {fileID: 1653631458307283989, guid: e0962d31f1f084fa3ba7147d76f5b6e8,
+  m_fontAsset: {fileID: 11400000, guid: 263a5f6c8c323c84e9bd6ede05411f99, type: 2}
+  m_sharedMaterial: {fileID: -363288562218260364, guid: 263a5f6c8c323c84e9bd6ede05411f99,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -554,8 +554,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uB9E4\uCE6D \uC778\uC6D0 \uC124\uC815"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: e0962d31f1f084fa3ba7147d76f5b6e8, type: 2}
-  m_sharedMaterial: {fileID: 1653631458307283989, guid: e0962d31f1f084fa3ba7147d76f5b6e8,
+  m_fontAsset: {fileID: 11400000, guid: 263a5f6c8c323c84e9bd6ede05411f99, type: 2}
+  m_sharedMaterial: {fileID: -363288562218260364, guid: 263a5f6c8c323c84e9bd6ede05411f99,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -662,7 +662,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 410.48428, y: -69}
+  m_AnchoredPosition: {x: 225, y: -69}
   m_SizeDelta: {x: 300, y: 138}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8141869696817816615
@@ -1165,8 +1165,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uD655\uC778"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: dc2cc93475f76427c86a8262bee36b88, type: 2}
-  m_sharedMaterial: {fileID: 2269793554123077917, guid: dc2cc93475f76427c86a8262bee36b88,
+  m_fontAsset: {fileID: 11400000, guid: 263a5f6c8c323c84e9bd6ede05411f99, type: 2}
+  m_sharedMaterial: {fileID: -363288562218260364, guid: 263a5f6c8c323c84e9bd6ede05411f99,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -1584,7 +1584,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_fontAsset
       value: 
-      objectReference: {fileID: 11400000, guid: dc2cc93475f76427c86a8262bee36b88,
+      objectReference: {fileID: 11400000, guid: 263a5f6c8c323c84e9bd6ede05411f99,
         type: 2}
     - target: {fileID: 3364167739469575018, guid: 781e76cf87ee34622a365677a99e99ea,
         type: 3}
@@ -1595,7 +1595,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_sharedMaterial
       value: 
-      objectReference: {fileID: 2269793554123077917, guid: dc2cc93475f76427c86a8262bee36b88,
+      objectReference: {fileID: -363288562218260364, guid: 263a5f6c8c323c84e9bd6ede05411f99,
         type: 2}
     - target: {fileID: 3364167739469575018, guid: 781e76cf87ee34622a365677a99e99ea,
         type: 3}
@@ -1802,7 +1802,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_fontAsset
       value: 
-      objectReference: {fileID: 11400000, guid: dc2cc93475f76427c86a8262bee36b88,
+      objectReference: {fileID: 11400000, guid: 263a5f6c8c323c84e9bd6ede05411f99,
         type: 2}
     - target: {fileID: 3364167739469575018, guid: 781e76cf87ee34622a365677a99e99ea,
         type: 3}
@@ -1813,7 +1813,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_sharedMaterial
       value: 
-      objectReference: {fileID: 2269793554123077917, guid: dc2cc93475f76427c86a8262bee36b88,
+      objectReference: {fileID: -363288562218260364, guid: 263a5f6c8c323c84e9bd6ede05411f99,
         type: 2}
     - target: {fileID: 3364167739469575018, guid: 781e76cf87ee34622a365677a99e99ea,
         type: 3}

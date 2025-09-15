@@ -16,14 +16,6 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
 
     private const string unimoEggPrefabPath = "Net/UnimoEggPrefab";
 
-    public Color[] colors = new Color[]         //빨주노초
-    {
-        Color.red,
-        new Color(1f, 0.5f, 0f), // 오렌지색
-        Color.yellow,
-        Color.green
-    };
-
     [Header("Current State")]
     public UnimoEgg currentUnimoEgg;
 
@@ -35,9 +27,6 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
     private Dictionary<int, UnimoEgg> viewIdToEgg = new();
 
     private bool isPoolReady = false;
-
-
-
 
     private HashSet<string> registerdPools = new();
 
@@ -192,8 +181,8 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
         egg.transform.rotation = Quaternion.identity;
 
         egg.ShooterUid ??= shooterUid;
+        egg.SetMaterial();
 
-        //egg.SetMaterial();
         egg.gameObject.SetActive(true);
 
         Rigidbody rb = egg.GetComponent<Rigidbody>();
@@ -221,8 +210,8 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
         if (egg.photonView.IsMine)
         {
             Debug.Log("Egg의 주인만 초기화 진행");
-            egg.Initialize();
-            egg.GetComponent<LocalPlayerInput>().Initialize();
+            egg.Initialize();                       //UnimoEgg 초기화
+            egg.localPlayerInput.Initialize();      //LocalPlayerInput 초기화
         }
 
         egg.gameObject.SetActive(false);

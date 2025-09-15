@@ -2,6 +2,7 @@ using InputBlocker;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using System;
 
 /// <summary>
 /// RawImage 위 입력을 TowerCam의 Ray로 변환:
@@ -24,6 +25,7 @@ public class RawImageClickForwarder : MonoBehaviour, IPointerClickHandler, IPoin
         raw = GetComponent<RawImage>();
         rt = (RectTransform)transform;
         if (!overlay) overlay = GetComponentInParent<TowerFocusOverlay>();
+        jengaMask = LayerMask.GetMask("JengaFace");
     }
 
     public void SetMask(LayerMask mask)
@@ -47,20 +49,23 @@ public class RawImageClickForwarder : MonoBehaviour, IPointerClickHandler, IPoin
         }
 
         var hits = Physics.RaycastAll(ray, rayDistance, jengaMask);
-        System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+        Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
 
-        if (hits.Length == 0) return;
-
-        var block = hits[0].collider.GetComponentInParent<JengaBlock>();
-
-        if (block != null &&
-           JengaTowerManager.Instance != null &&
-           JengaTowerManager.Instance.IsArenaMuted(block.OwnerActorNumber))
+        foreach (var h in hits)
         {
+            var proxy = h.collider.GetComponent<FaceHitProxy>();
+            if (proxy == null) continue;
+
+            var block = proxy.owner;
+
+            if (block != null &&
+                JengaTowerManager.Instance != null &&
+                JengaTowerManager.Instance.IsArenaMuted(block.OwnerActorNumber))
+                return;
+
+            overlay.NotifyBlockTapped(block);
             return;
         }
-
-        if (block != null) overlay.NotifyBlockTapped(block);
     }
 
     public void OnPointerMove(PointerEventData eventData)
@@ -100,11 +105,11 @@ public class RawImageClickForwarder : MonoBehaviour, IPointerClickHandler, IPoin
         var cam = overlay.TowerCam;
         if (cam == null) return false;
 
-        if (jengaMask == 0)
-        {
-            jengaMask = cam.cullingMask;
-            if (jengaMask == 0) return false; // 그래도 0이면 클릭 불가
-        }
+        //if (jengaMask == 0)
+        //{
+        //    jengaMask = cam.cullingMask;
+        //    if (jengaMask == 0) return false; // 그래도 0이면 클릭 불가
+        //}
 
         if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
             rt, eventData.position, eventData.pressEventCamera, out var local))

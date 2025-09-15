@@ -66,6 +66,8 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
             if (rankingUI != null) rankingUI.OpenForLive();
         }
 
+        PrimeRankingUIIfPossible();
+
         Debug.Log("[JengaUIManager - Initialize] UI 매니저 초기화 완료");
     }
 
@@ -80,6 +82,7 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
                 // 게임 시작 시 카운트다운 UI 숨김 (혹시 남아있을 경우를 대비)
                 HideCountdown();
                 if (rankingUI != null) rankingUI.OpenForLive();
+                PrimeRankingUIIfPossible();
 
                 _iAmEliminated = false;
                 if (waitingPanel) waitingPanel.SetActive(false);
@@ -314,6 +317,33 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
         HideRotateButton(); // 조작 불가
     }
 
+    private void PrimeRankingUIIfPossible()
+    {
+        if (rankingUI == null || JengaGameManager.Instance == null) return;
+
+        // 룸 프로퍼티에서 읽기
+        Dictionary<string, int> ranks = null;
+        var room = PhotonNetwork.CurrentRoom;
+        if (room != null &&
+            room.CustomProperties.TryGetValue(JengaRoomProps.KEY_RANK_UIDS, out var uObj) &&
+            room.CustomProperties.TryGetValue(JengaRoomProps.KEY_RANK_VALS, out var vObj) &&
+            uObj is string[] uids && vObj is int[] vals && uids.Length > 0)
+        {
+            ranks = new Dictionary<string, int>();
+            for (int i = 0; i < uids.Length && i < vals.Length; i++)
+                ranks[uids[i]] = vals[i];
+        }
+
+        // 없으면 GameManager 캐시 사용
+        if (ranks == null && JengaGameManager.Instance.TryGetLastRankSnapshot(out var snap))
+            ranks = snap;
+
+        if (ranks != null && ranks.Count > 0)
+        {
+            rankingUI.OpenForLive();
+            rankingUI.UpdateLiveRanks(ranks);
+        }
+    }
 
     #endregion
 

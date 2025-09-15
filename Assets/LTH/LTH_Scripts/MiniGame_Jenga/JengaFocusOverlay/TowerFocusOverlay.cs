@@ -110,6 +110,7 @@ public class TowerFocusOverlay : MonoBehaviour
         Reframe(); // 클릭한 면(_faceLocalDir) 기준으로 리프레임
     }
 
+
     private void DetachAndSanitizeCamera()
     {
         var t = towerCam.transform;
@@ -167,7 +168,8 @@ public class TowerFocusOverlay : MonoBehaviour
     {
         arenaMask = mask;
         if (towerCam) towerCam.cullingMask = mask;
-        if (forwarder) forwarder.SetMask(mask);
+        if (forwarder) forwarder.SetMask(LayerMask.GetMask("JengaFace"));
+        //if (forwarder) forwarder.SetMask(mask);
     }
 
     /// <summary>
@@ -325,6 +327,7 @@ public class TowerFocusOverlay : MonoBehaviour
     public void NotifyHover(JengaBlock block)
     {
         if (!active) return;
+
         if (hovered == block) return;
 
         // 이전 호버 끄기(선택된 블록과 다를 때만)

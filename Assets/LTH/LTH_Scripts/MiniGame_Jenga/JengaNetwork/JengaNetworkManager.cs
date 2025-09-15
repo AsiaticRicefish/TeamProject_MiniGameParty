@@ -84,7 +84,11 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
         JengaGameManager.Instance.ApplyPlayerActionResult(uid, success, score);
 
         var ranks = JengaGameManager.Instance?.GetCurrentRanks();
-        if (ranks != null) BroadcastRankSnapshot(ranks);
+        if (ranks != null)
+        {
+            BroadcastRankSnapshot(ranks);
+            RPC_SyncRanks(ranks.Keys.ToArray(), ranks.Values.ToArray());
+        }
     }
 
     #endregion
@@ -685,7 +689,6 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     public override void OnRoomPropertiesUpdate(PhotonHashtable props)
     {
         if (_receivedRankOnce) return;
-        if (PhotonNetwork.IsMasterClient) return;
 
         if (props.TryGetValue(JengaRoomProps.KEY_RANK_UIDS, out var uObj) &&
             props.TryGetValue(JengaRoomProps.KEY_RANK_VALS, out var vObj) &&
