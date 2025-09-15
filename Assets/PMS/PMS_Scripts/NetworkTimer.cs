@@ -17,18 +17,18 @@ public class NetworkTimer
     public event Action OnTimerStart; // 타이머 시작 시 이벤트
     public event Action<int> OnTick;  // 남은 시간 UI 갱신용
     public event Action OnTimerEnd;   // 타이머 종료 시 이벤트
+    public event Action OnTimerCancel; // 타이머 강제 종료시 이벤트
 
     public void OnStartTimer(double startAt, double endAt)
     {
-        this.startAt = startAt; 
+        this.startAt = startAt;
         this.endAt = endAt;
         StartTimer().Forget();
     }
 
     public async UniTask StartTimer()
     {
-        // 이전 타이머 정리
-        StopTimer();
+        CancelTimer();
         while (running) await UniTask.Yield();
 
         cts = new CancellationTokenSource();
@@ -48,24 +48,27 @@ public class NetworkTimer
         }
         finally
         {
-            running = false;
+            //취소든 정상 종료든 무조건 여기로 옴
+            cts?.Dispose();
+            cts = null;
+            running = false;         
         }
     }
+    
 
-    public void StopTimer()
+    public void CancelTimer()
     {
-        OnTimerEnd?.Invoke(); // 강제 종료 시에도 이벤트 호출
-
+        if (!running) return; // 이미 중단된 상태라면 무시
         cts?.Cancel();
-        cts?.Dispose();
-        cts = null;
-        running = false; // 타이머 상태 즉시 변경
+        // 이벤트 알림은 RunTimerAsync → catch 에서 처리
     }
 
-    private void ResetTimer()
+    private void ResetEvents()
     {
-        startAt = 0;
-        endAt = 0;
+        OnTimerStart = null;
+        OnTick = null;
+        OnTimerEnd = null;
+        OnTimerCancel = null;
     }
 
     private async UniTask RunTimerAsync(CancellationToken token)
@@ -108,12 +111,7 @@ public class NetworkTimer
         }
         catch (OperationCanceledException)
         {
-            // 취소된 경우 무시
+            OnTimerCancel?.Invoke();
         }
-    }
-
-    private void OnDestroy()
-    {
-        StopTimer();
     }
 }

@@ -61,7 +61,7 @@ namespace LDH_UI
                 WindDirection.Right => 0,
                 _ => 0,
             };
-            arrowImage.transform.Rotate(0, 0, angle);
+            arrowImage.transform.eulerAngles = new Vector3(0f, 0f, angle);
         }
         
     }

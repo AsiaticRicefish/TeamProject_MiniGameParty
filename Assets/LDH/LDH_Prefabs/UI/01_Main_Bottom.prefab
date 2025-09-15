@@ -550,7 +550,7 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
-  m_PresetInfoIsWorld: 0
+  m_PresetInfoIsWorld: 1
 --- !u!114 &3497372966318837282
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1827,18 +1827,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 3341907079400445504}
     m_Modifications:
-    - target: {fileID: 312539444015793636, guid: 535d9b517ae8a42ddaad41e8e7911b86,
-        type: 3}
-      propertyPath: m_fontAsset
-      value: 
-      objectReference: {fileID: 11400000, guid: 65a5fa6103cf1c04c8143ad71b851b50,
-        type: 2}
-    - target: {fileID: 312539444015793636, guid: 535d9b517ae8a42ddaad41e8e7911b86,
-        type: 3}
-      propertyPath: m_sharedMaterial
-      value: 
-      objectReference: {fileID: -637672605668102529, guid: 65a5fa6103cf1c04c8143ad71b851b50,
-        type: 2}
     - target: {fileID: 312539444015793636, guid: 535d9b517ae8a42ddaad41e8e7911b86,
         type: 3}
       propertyPath: m_hasFontAssetChanged
