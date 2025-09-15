@@ -12,7 +12,13 @@ public class CardSelectState : ShootingGameState
         Debug.Log("[ShootingGameState] - CardSelectState Enter");
         if (PhotonNetwork.IsMasterClient)
         {
-            CardManager.Instance.BuildAndBroadcastDeck();  
+            double lead = 0.3;
+            double duration = 9.0; // 10초
+            double startAt = PhotonNetwork.Time + lead;
+            double endAt = startAt + duration;
+            CardManager.Instance.BuildAndBroadcastDeck();
+            ShootingNetworkManager.Instance.photonView.RPC("RPC_StartTimer", RpcTarget.All, startAt,endAt);
+            //CardManager.Instance.StartAutoCardSelect();
         }
         else
         {
@@ -29,7 +35,6 @@ public class CardSelectState : ShootingGameState
     public override void Exit() 
     {
         Debug.Log("[ShootingGameState] - CardSelectState Exit");
-
         //카드 선택이 다된 시점
         ShootingNetworkManager.Instance.ShootingGameTurnAndRoundRoomPropertiesReigster();
         if (PhotonNetwork.IsMasterClient)

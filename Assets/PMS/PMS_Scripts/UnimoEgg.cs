@@ -129,7 +129,7 @@ public class UnimoEgg : MonoBehaviourPun
         if (!photonView.IsMine) return;
 
         ShootingScene.PlayerInputManager.Instance.DisableInput();
-        Test_ShotFollowCamera.Instance.StartFollow(gameObject);
+        ShootingCameraManager.Instance.StartFollowTarget(gameObject);
         // 자기 화면에서 AddForce 적용
         isLaunched = true;
         //ApplyForce(dir);
@@ -151,12 +151,12 @@ public class UnimoEgg : MonoBehaviourPun
 
         while (rb.velocity.magnitude > stopSpeed)
         {
-            rb.velocity *= 0.99f;
+            //rb.velocity *= 0.99f;
             yield return new WaitForFixedUpdate(); //업데이트 프레임
         }
 
         yield return new WaitForSeconds(1.0f);
-        Test_ShotFollowCamera.Instance.StopFollowTarget(); //돌아가는 부분
+        ShootingCameraManager.Instance.StopFollowTarget(); //돌아가는 부분
 
         // 내가 던진 알일 때만 마스터에게 턴 종료 요청
         if (photonView.IsMine && !turnEnded)
@@ -200,18 +200,18 @@ public class UnimoEgg : MonoBehaviourPun
         if (!photonView.IsMine) return;
         //if (!photonView.IsMine || turnEnded) return; // 내 알이 아니면 아무것도 안 함
 
-            //모두가 비활성처리를 해줘야한다.
-        
+        //모두가 비활성처리를 해줘야한다.
+        if (other.CompareTag("PlayGround") && isLaunched)
+        {
+            isLaunched = false; // 바깥으로 나가며 턴 종료 → 발사 상태 해제
+            ShootingCameraManager.Instance.StopFollowTarget();
+            TurnManager.Instance.photonView.RPC(("RequestTurnEnd"), RpcTarget.MasterClient);
+
+        }
 
         if (other.CompareTag("PlayGround"))
         {
             EggManager.Instance.photonView.RPC("RPC_DeactivateEgg", RpcTarget.All, photonView.ViewID);
-        }
-
-        if (other.CompareTag("FallDownZone") && isLaunched)
-        {
-            isLaunched = false; // 바깥으로 나가며 턴 종료 → 발사 상태 해제
-            TurnManager.Instance.photonView.RPC(("RequestTurnEnd"), RpcTarget.MasterClient);    
         }
 
         if (other.CompareTag("FallDownZone"))
@@ -225,7 +225,7 @@ public class UnimoEgg : MonoBehaviourPun
         if(isCameraFollowing)       //카메라가 연출중이니깐
         {
             Debug.Log("[UnimoEgg] - 유니모를 잃어버려서 카메라가 원위치로 돌아가는중");
-            Test_ShotFollowCamera.Instance?.StopFollowTarget();
+            ShootingCameraManager.Instance?.StopFollowTarget();
         }
     }
 }

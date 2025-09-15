@@ -39,7 +39,30 @@ namespace LDH_Util
 
         #endregion
 
+        #region User Info
 
+        public static partial class PlayerProps
+        {
+            public enum PlayerInfoKey
+            {
+                Uid,
+                CharacterId,
+                EquipId,
+            }
+
+            public static readonly Dictionary<PlayerInfoKey, string> PlayerInfoKeyDict =
+                new Dictionary<PlayerInfoKey, string>
+                {
+                    { PlayerInfoKey.Uid, "uid" },
+                    { PlayerInfoKey.CharacterId, "characterId" },
+                    { PlayerInfoKey.EquipId, "equipId" },
+                };
+
+            public static string GetPlayerInfoKey(PlayerInfoKey k) => PlayerInfoKeyDict[k];
+        }
+
+        #endregion
+        
         #region Match Making
 
         public static partial class RoomProps
@@ -66,8 +89,7 @@ namespace LDH_Util
         }
 
         #endregion
-
-
+        
         #region Main Game
         
         public enum MainState {Init, Picking, Ready, LoadingMiniGame, PlayingMiniGame, ApplyingResult, End }
@@ -91,14 +113,26 @@ namespace LDH_Util
         #endregion
 
 
-        #region Shooting Game
+        #region Customizing
 
-        public enum WindDirection
+        public enum ClosetCategory
         {
-            North,
-            South,
-            West,
-            East,
+            Character,
+            Equip,
+        }
+
+        #endregion
+
+        #region Setting
+
+        /// <summary>
+        /// UrlConfig(ScriptableObject)에 없는 경우 폴백으로 전달되는 url 주소
+        /// </summary>
+        public static class Urls
+        {
+            public const string Terms   = "https://hwiggames38434.imweb.me/termofuse";
+            public const string Privacy = "https://hwig.games/?mode=privacy";
+            public const string Support = "https://www.notion.so/2697de437a0c8007b7eeceb6a707547a?source=copy_link";
         }
 
         #endregion

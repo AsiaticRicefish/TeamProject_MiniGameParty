@@ -417,7 +417,7 @@ namespace Network
             //UI 갱신
             Debug.Log($"[PrivateMatchController] BuildPanel(slot:{slotIdx}, player:{pl.NickName}), ready:{GetReady(pl)}, isLocal:{pl.IsLocal})");
 
-           _popupRoom.SetPlayerPanel(slotIdx, GetReady(pl), pl.IsLocal, pl.IsMasterClient);
+           _popupRoom.SetPlayerPanel(slotIdx, GetReady(pl), pl.IsLocal, pl.IsMasterClient, pl.NickName);
         }
         
         

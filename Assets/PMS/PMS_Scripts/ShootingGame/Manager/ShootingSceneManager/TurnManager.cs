@@ -23,7 +23,7 @@ namespace ShootingScene
         
         public int currentTurnIndex = 0;
         private int _round = 0;
-
+    
         public int currentRoundIndex
         {
             get => _round;

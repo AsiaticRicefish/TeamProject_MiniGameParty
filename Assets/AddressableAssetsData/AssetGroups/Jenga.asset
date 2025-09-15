@@ -22,11 +22,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 57c81c24a11382741a1a9317437a1cbb
-    m_Address: Assets/Imports/Shrimple3D LowPoly Pack
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 637fa8e41abec614c98e530ec2fcc2fb
     m_Address: RowPrefab
     m_ReadOnly: 0

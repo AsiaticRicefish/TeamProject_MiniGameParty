@@ -62,13 +62,5 @@ namespace LDH.LDH_Scripts.Test
             this.logText.gameObject.SetActive(true);
             this.logText.text = logText;
         }
-
-        public void SetActiveDebugPanel(bool active)
-        {
-           gameObject.SetActive(active);
-
-        }
-        
-
     }
 }
