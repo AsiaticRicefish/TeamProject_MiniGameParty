@@ -17,7 +17,7 @@ public class SessionEnforcer : MonoBehaviour
     public static SessionEnforcer Instance { get; private set; }
 
     [Header("Realtime DB URL (콘솔에서 복사한 URL)")]
-    [SerializeField] private string databaseUrl = "https://<your-project-id>.firebaseio.com";
+    [SerializeField] private string databaseUrl = "https://unimo-56ebc-default-rtdb.asia-southeast1.firebasedatabase.app";
 
     [Header("Keepalive(ms) / 초기 지연(ms)")]
     [SerializeField] private int heartbeatMs = 15_000;
