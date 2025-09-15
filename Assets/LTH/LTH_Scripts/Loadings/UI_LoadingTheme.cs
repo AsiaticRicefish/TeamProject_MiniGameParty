@@ -3,14 +3,16 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "UI/Loading Theme", fileName = "NewLoadingTheme")]
 public class UI_LoadingTheme : ScriptableObject
 {
-    [Header("기본 정보")]
-    public string gameTitle;                    // 미니게임 이름
-    [TextArea] public string gameDescription;   // 미니게임 설명
+    [Header("텍스트")]
+    public string gameTitle;                     // 큰 제목
+    public string bigDescription;                // 메인 설명 (큰 글씨)
+    [TextArea] public string smallDescription;   // 서브 설명 (작은 글씨)
 
-    [Header("비주얼")]
-    public Sprite background;                   // 배경 이미지
-    public Color progressColor = Color.white;   // 로딩 원 색상
+    [Header("배경 색")]
+    public Color titlePanelColor = Color.black;         // 제목 색 (기본값: 검정색)
+    public Color backgroundPanelColor = Color.white;    // 배경 색 (기본값: 흰색)
+    public Color descriptionPanelColor = Color.white;   // 설명창 색 (기본값: 흰색)
 
     [Header("유니모 연출")]
-    public GameObject[] unimoPrefabs;   // 랜덤으로 뽑힐 유니모 프리팹 리스트
+    public GameObject[] unimoPrefabs;            // 랜덤 뽑기용 유니모 프리팹 리스트
 }

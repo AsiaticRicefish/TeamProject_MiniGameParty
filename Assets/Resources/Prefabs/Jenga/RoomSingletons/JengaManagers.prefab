@@ -85,6 +85,7 @@ MonoBehaviour:
   initTimeout: 30
   showDebugLogs: 1
   syncCheckInterval: 0.1
+  jengaLoadingTheme: {fileID: 11400000, guid: 7d2ecb7b39709de4f9cd799ed185fbd3, type: 2}
 --- !u!114 &-6226777500727515095
 MonoBehaviour:
   m_ObjectHideFlags: 0

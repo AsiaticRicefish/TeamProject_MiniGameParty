@@ -16,24 +16,19 @@ namespace KYG
     /// - 인원 수 만큼 카드(1..N) 생성/셔플
     /// - 중복 선택 불가(로컬 디바운스 + 서버 보장)
     /// - 전원 선택 시 네트워크 시간 동기 공개 → 오름차순으로 turnOrder 계산
-    /// - 공개 연출 종료 후 UI 닫고 턴 순서 통지 → TurnManager 시작
+    /// - 공개 연출 종료 후 UI 닫고 턴 순서 통지 → TurnManager 시작(코디/미니게임 활성 대기)
     /// </summary>
     public class CardManager : PunSingleton<CardManager>
     {
         [Header("Prefabs & Layout")]
-        [SerializeField] private Transform cardParent;        // 카드를 놓을 Grid/HorizontalLayout
-        [SerializeField] private GameObject cardUICanvas;     // 전체 카드 선택 UI 루트(있으면 공개 후 비활성)
+        [SerializeField] private Transform  cardParent;   // 카드를 놓을 Grid/HorizontalLayout
+        [SerializeField] private GameObject cardUICanvas; // 전체 카드 선택 UI 루트
         [SerializeField] private KYG.CardUI cardPrefab;
-
-        [Header("Scene")]
-        [SerializeField] private string nextSceneName = "PMS_ShootingTestScene";
 
         private const string KEY_DECK_VALUES = "deckValues";
         private const string KEY_CARD_OWNERS = "cardOwners";
         private const string KEY_STATE       = "state";
         private const string KEY_TURN_ORDER  = "turnOrder";
-        
-        // 공개 시점/길이(방 속성으로도 보관)
         private const string KEY_REVEAL_T0   = "revealT0";
         private const string KEY_REVEAL_SEC  = "revealSec";
 
@@ -49,14 +44,17 @@ namespace KYG
         private bool _alreadyPicked = false;  // 이미 하나 선택 완료
 
         // 공개 타이밍(네트워크 시간 기준)
-        private float _revealSec = -1f;
+        private float  _revealSec = -1f;
         private double _t0 = -1;
+
+        // 공개 코루틴 핸들(중복 방지용)
+        private Coroutine _revealCo;
 
         private void Start()
         {
             StartCoroutine(InitRoutine());
         }
-        
+
         private IEnumerator InitRoutine()
         {
             yield return new WaitUntil(() => PhotonNetwork.InRoom);
@@ -64,11 +62,11 @@ namespace KYG
             if (cardParent != null)
                 yield return new WaitUntil(() => cardParent.gameObject.activeInHierarchy);
 
-            if (PhotonNetwork.IsMasterClient) 
+            if (PhotonNetwork.IsMasterClient)
             {
                 BuildAndBroadcastDeck();
             }
-            else 
+            else
             {
                 // 비마스터: 프로퍼티가 생길 때까지 대기 후 초기화
                 yield return new WaitUntil(() =>
@@ -81,22 +79,6 @@ namespace KYG
             Debug.Log($"[CardManager] Ready. Cards={_cards?.Count}, Deck={_deckValues?.Length}");
         }
 
-        private IEnumerator WaitAndInit()
-        {
-            // 1) 룸 진입 보장
-            yield return new WaitUntil(() => PhotonNetwork.InRoom);
-
-            // 2) 카드 부모 오브젝트가 켜질 때까지 (씬 오브젝트 준비)
-            if (cardParent != null)
-                yield return new WaitUntil(() => cardParent.gameObject.activeInHierarchy);
-
-            // 3) 카드 생성/동기화
-            if (PhotonNetwork.IsMasterClient) BuildAndBroadcastDeck();
-            else TryInitFromRoomProps();
-            
-            Debug.Log($"[CardManager] Ready. InRoom={PhotonNetwork.InRoom}, Cards={_cards?.Count}, Deck={_deckValues?.Length}");
-        }
-
         #region Deck Build & Sync
         private void BuildAndBroadcastDeck()
         {
@@ -105,7 +87,7 @@ namespace KYG
             int n = Mathf.Clamp(PhotonNetwork.CurrentRoom.PlayerCount, 2, 4);
             _deckValues = Enumerable.Range(1, n).ToArray();
 
-            // 안정적 재현을 위해 랜덤 시드 구성(서버 타임 포함)
+            // 안정적 재현을 위한 랜덤 시드(서버 타임 포함)
             int seed = Guid.NewGuid().GetHashCode() ^ PhotonNetwork.ServerTimestamp;
             ShuffleInPlace(_deckValues, new Random(seed));
             _owners = Enumerable.Repeat(-1, n).ToArray();
@@ -283,7 +265,6 @@ namespace KYG
             int selectedCount = _owners.Count(o => o != -1);
             int needCount     = PhotonNetwork.CurrentRoom.PlayerCount;
 
-
             if (selectedCount >= needCount)
             {
                 // 1) 상태 전환(한 번만)
@@ -333,6 +314,8 @@ namespace KYG
             _owners = ownersFromMaster;
             _alreadyPicked = Array.IndexOf(_owners, PhotonNetwork.LocalPlayer.ActorNumber) != -1;
             _requestPick = false; // 요청 해제
+
+            // ✔️ 선택 가능 카드들 다시 활성화
             RefreshInteractables();
 
             int selected = _owners.Count(o => o != -1);
@@ -352,7 +335,8 @@ namespace KYG
             _revealSec  = revealSec;
             _alreadyPicked = true;
 
-            StartCoroutine(CoSyncedReveal()); // 네트워크 시간 기준 공개
+            if (_revealCo != null) StopCoroutine(_revealCo);
+            _revealCo = StartCoroutine(CoSyncedReveal());
         }
 
         private IEnumerator CoSyncedReveal()
@@ -363,6 +347,7 @@ namespace KYG
                 _cards[i]?.RevealFace();
 
             RefreshInteractables();
+            _revealCo = null;
         }
 
         private IEnumerator CoNotifyTurnOrderAfterReveal(double t0, float sec, int[] order)
@@ -386,13 +371,15 @@ namespace KYG
             {
                 foreach (var c in _cards) if (c) c.gameObject.SetActive(false);
             }
-            if (cardParent) cardParent.gameObject.SetActive(false);
+            if (cardParent)  cardParent.gameObject.SetActive(false);
             if (cardUICanvas) cardUICanvas.SetActive(false);
         }
 
         [PunRPC]
         private void RPC_OnTurnOrderReady(int[] actorOrder)
         {
+            if (actorOrder == null || actorOrder.Length == 0) return;
+
             // 1) 내 턴 인덱스 계산(1-based로 저장)
             int myActor = PhotonNetwork.LocalPlayer.ActorNumber;
             int myTurnIndex0 = Array.IndexOf(actorOrder, myActor);
@@ -401,23 +388,44 @@ namespace KYG
             PhotonNetwork.LocalPlayer.SetCustomProperties(
                 new Hashtable { { "turnIndex", myTurnIndex1 } });
 
+            Debug.Log($"[CardManager] 내 turnIndex={myTurnIndex1}");
+
             // 2) 카드 UI 닫기(중복호출 안전)
             if (_cards != null)
             {
                 foreach (var c in _cards) if (c) c.gameObject.SetActive(false);
             }
-            if (cardParent) cardParent.gameObject.SetActive(false);
+            if (cardParent)   cardParent.gameObject.SetActive(false);
             if (cardUICanvas) cardUICanvas.SetActive(false);
 
-            // 3) 마스터만 첫 턴 시작
+            // 3) 마스터만 첫 턴 시작 (코디 완료 & 미니게임 활성까지 대기)
             if (PhotonNetwork.IsMasterClient)
                 StartCoroutine(CoStartFirstTurn());
         }
 
         private IEnumerator CoStartFirstTurn()
         {
-            // TurnManager가 활성화될 때까지 대기
+            // TurnManager 인스턴스 대기
             yield return new WaitUntil(() => KYG.TurnManager.Instance != null);
+
+            // (중요) 포톤 뷰 코디네이션 완료까지 대기 (roots 활성 보장)
+            while (LDH_MainGame.PhotonViewSync.Instance != null &&
+                   !LDH_MainGame.PhotonViewSync.Instance.SyncCompleted)
+            {
+                yield return null;
+            }
+
+            // (중요) 미니게임 오브젝트가 "활성" 상태일 때까지 대기
+            KYG.MeteorTapMiniGame mini = null;
+            while ((mini = UnityEngine.Object.FindObjectOfType<KYG.MeteorTapMiniGame>(true)) == null ||
+                   !mini.gameObject.activeInHierarchy)
+            {
+                yield return null;
+            }
+
+            Debug.Log("[CardManager] >>> StartFirstTurn preflight ok (SyncCompleted & MiniGame active)");
+
+            // 이제 안전: 턴 세팅 후 시작
             KYG.TurnManager.Instance.SetupTurn();
             KYG.TurnManager.Instance.StartFirstTurn();
         }
@@ -426,13 +434,11 @@ namespace KYG
         #region Photon Callbacks
         public override void OnRoomPropertiesUpdate(Hashtable changed)
         {
-            
-            
             if (changed == null) return;
 
             var room = PhotonNetwork.CurrentRoom;
             if (room == null) return;
-            
+
             if (changed.ContainsKey(KEY_DECK_VALUES) || changed.ContainsKey(KEY_CARD_OWNERS))
             {
                 if ((_cards == null || _cards.Count == 0) && PhotonNetwork.CurrentRoom.CustomProperties != null)
@@ -441,7 +447,8 @@ namespace KYG
                     Debug.Log("[CardManager] UI rebuilt from room props (late init).");
                 }
             }
-            // ✅ 공개 상태 감지: state == Revealing 이고, 덱/오너/시각 정보가 있으면 공개 시작
+
+            // 공개 상태 감지: state == Revealing 이고, 덱/오너/시각 정보가 있으면 공개 시작
             if (room.CustomProperties.TryGetValue(KEY_STATE, out var stObj) &&
                 (byte)stObj == (byte)LobbyState.Revealing)
             {
@@ -462,20 +469,16 @@ namespace KYG
                     RefreshInteractables();
                 }
 
-                // 이미 공개 코루틴이 돌고 있지 않다면 시작
-                if (_cards != null && _cards.Count > 0)
-                {
-                    _t0 = t0; _revealSec = rs;
-                    StopCoroutine(nameof(CoSyncedReveal)); // 중복 방지
-                    StartCoroutine(CoSyncedReveal());
-                }
+                // 이미 공개 코루틴이 돌고 있지 않다면 시작/갱신
+                _t0 = t0; _revealSec = rs;
+                if (_revealCo != null) StopCoroutine(_revealCo);
+                _revealCo = StartCoroutine(CoSyncedReveal());
             }
         }
 
         public override void OnPlayerLeftRoom(Player otherPlayer)
         {
             // 선택 중 누군가 이탈하면 Master가 남은 카드/인원을 재구성하는 로직을 여기에 추가 가능
-            // (필요 시: 상태가 Picking일 때만 재빌드)
             if (!PhotonNetwork.IsMasterClient) return;
             if (!PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(KEY_STATE, out var stObj)) return;
             if ((byte)stObj != (byte)LobbyState.Picking) return;
@@ -483,9 +486,9 @@ namespace KYG
             // 현재 로직에서는 단순히 진행 상황만 다시 판정(모두 선택 여부 등)
             int selectedCount = _owners?.Count(o => o != -1) ?? 0;
             int needCount     = PhotonNetwork.CurrentRoom.PlayerCount;
+
             if (selectedCount >= needCount)
             {
-                // 마스터 측 로직에서 자연스럽게 공개 단계로 넘어감
                 _t0 = PhotonNetwork.Time + 0.3f;
                 _revealSec = 1f * PhotonNetwork.CurrentRoom.PlayerCount;
                 photonView.RPC(nameof(RPC_RevealAll), RpcTarget.AllBuffered, _deckValues, _owners, _t0, _revealSec);
