@@ -25,6 +25,7 @@ namespace KYG.Auth
 
         private FirebaseAuth _auth;
         private FirebaseUser _user;
+        
 
         private void Awake()
         {
@@ -146,11 +147,13 @@ namespace KYG.Auth
 
                 _user = fbUser;
 
+                _ = SessionEnforcer.Instance?.StartForUidAsync(_user.UserId);
+
                 if (!string.IsNullOrEmpty(displayName))
                 {
                     var profile = new UserProfile { DisplayName = displayName };
                     _user.UpdateUserProfileAsync(profile)
-                         .ContinueWithOnMainThread(_ => ApplyPhotonAndConnect(_user.UserId, displayName));
+                        .ContinueWithOnMainThread(_ => ApplyPhotonAndConnect(_user.UserId, displayName));
                 }
                 else
                 {
