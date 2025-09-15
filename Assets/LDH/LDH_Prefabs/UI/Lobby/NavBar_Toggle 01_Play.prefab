@@ -303,8 +303,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uD50C\uB808\uC774"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 65a5fa6103cf1c04c8143ad71b851b50, type: 2}
-  m_sharedMaterial: {fileID: -637672605668102529, guid: 65a5fa6103cf1c04c8143ad71b851b50,
+  m_fontAsset: {fileID: 11400000, guid: 263a5f6c8c323c84e9bd6ede05411f99, type: 2}
+  m_sharedMaterial: {fileID: -363288562218260364, guid: 263a5f6c8c323c84e9bd6ede05411f99,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
