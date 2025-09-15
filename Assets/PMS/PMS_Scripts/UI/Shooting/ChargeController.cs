@@ -6,7 +6,8 @@ using Photon.Pun;
 
 public class ChargeController : MonoBehaviourPun
 {
-    public float chargeMax = 25f;
+    public float chargeMax;
+    public float chargeMin;
     public float chargePeriod = 4f;
     public Slider chargeSlider;
 

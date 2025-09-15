@@ -30,7 +30,8 @@ namespace ShootingScene.ShootingGame
        public void Initialize()
        {
            TurnManager.Instance.OnSetCurrentTurn += otherTurnUI.SetCurrentPlayerName;
-        }
+           RegisterTimer();
+       }
 
 
        #region my turn ui

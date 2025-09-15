@@ -15,4 +15,12 @@ public class EggMovingState : UnimoEggStateBase
     {
 
     }
+
+    public override void FixedTick(UnimoStateController egg)
+    {
+        if (egg.rb.velocity.magnitude < egg.stopSpeed)
+        {
+            egg.RequestStateChange(UnimoEggStateType.Stopped);
+        }
+    }
 }

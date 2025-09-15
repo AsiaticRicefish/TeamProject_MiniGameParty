@@ -181,8 +181,8 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
         egg.transform.rotation = Quaternion.identity;
 
         egg.ShooterUid ??= shooterUid;
+        egg.SetMaterial();
 
-        //egg.SetMaterial();
         egg.gameObject.SetActive(true);
 
         Rigidbody rb = egg.GetComponent<Rigidbody>();

@@ -13,7 +13,7 @@ namespace ShootingScene
         [SerializeField] private CinemachineVirtualCamera vcamDefault; // 기본 시점
         [SerializeField] private CinemachineVirtualCamera vcamFollow;  // 알 따라가기
 
-        //[SerializeField] private FollowCam vc2Follow;
+        [SerializeField] private FollowCam vc2Follow;
         [SerializeField] Vector3 initCameraPos;
         
         protected override void OnAwake()
@@ -32,7 +32,7 @@ namespace ShootingScene
             // 발사체 따라가기 시작
             vcamFollow.Priority = 20;
             vcamFollow.Follow = currentUnimoEgg.transform;
-            //vc2Follow.target = currentUnimoEgg.transform;
+            vc2Follow.target = currentUnimoEgg.transform;
         }
 
         public void StopFollowTarget()
@@ -41,7 +41,7 @@ namespace ShootingScene
             // 발사체 따라가기 시작
             vcamFollow.Priority = 5;
             vcamFollow.Follow = null;
-            //vc2Follow.target = null;
+            vc2Follow.target = null;
         }
 
         public void SwipePosInit()

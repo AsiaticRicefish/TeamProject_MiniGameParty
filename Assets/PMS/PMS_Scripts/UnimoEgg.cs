@@ -27,27 +27,29 @@ public class UnimoEgg : MonoBehaviourPun
     
     private void Awake()
     {
-        _renderer = GetComponent<Renderer>();
-
         if (rb == null) rb = GetComponent<Rigidbody>();
         if (localPlayerInput == null) localPlayerInput = GetComponent<LocalPlayerInput>();
     }
 
     #region Test용 Material 임시 추가
 
-    private Renderer _renderer;
-    public Material[] unimoMats;
+    public Color[] unimoMats;
     
     public void SetMaterial()
     {
         if (ShooterUid == null) return;
 
-        playerUiController.PlayerMarker.GetComponent<SpriteRenderer>().material = unimoMats[TurnManager.Instance.currentTurnIndex - 1];
+        playerUiController.PlayerMarker.GetComponent<SpriteRenderer>().color = unimoMats[TurnManager.Instance.currentTurnIndex - 1];
         //_renderer.material = unimoMats[TurnManager.Instance.currentTurnIndex - 1];
 
     }
 
     #endregion
+
+    /*private void Update()
+    {
+        playerUiController.PlayerMarker.transform.LookAt(Camera.main.transform);
+    }*/
 
     public void Initialize()
     {

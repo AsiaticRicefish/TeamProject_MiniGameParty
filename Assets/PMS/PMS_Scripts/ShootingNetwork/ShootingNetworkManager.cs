@@ -168,10 +168,57 @@ namespace ShootingScene
             PhotonNetwork.LocalPlayer.SetCustomProperties(props);
         }
 
+        #region 타이머 관련 호출 함수
+        public void StartTimer(double duration, bool isLocal, double lead = 0.3)
+        {
+            double startAt,endAt;
+
+            if (isLocal)
+            {
+                //로컬에서는 지연시간을 생각안해도됨
+                startAt = PhotonNetwork.Time;
+                endAt = startAt + duration;
+            }
+            else
+            {
+                //RPC 동기화에서는 지연이 발생하기 때문에 지연 시간을 고려해서 Start할 수 있도록
+                startAt = PhotonNetwork.Time + lead;
+                endAt = startAt + duration;
+            }
+
+            if (isLocal == true)
+                networkTimer.OnStartTimer(startAt, endAt);
+            else
+            {
+                if (!PhotonNetwork.IsMasterClient) return;
+                photonView.RPC("RPC_StartTimer", RpcTarget.All, startAt, endAt);
+            }
+        }
+
+        public void CancelTimer(bool isLocal)
+        {
+            if (isLocal)
+                networkTimer.CancelTimer();
+            else
+            {
+                if (!PhotonNetwork.IsMasterClient) return;
+                photonView.RPC("RPC_CancelTimer", RpcTarget.All);
+            }
+        }
+
         [PunRPC]
         public void RPC_StartTimer(double startAt, double endAt)
         {
+            Debug.Log("RPC를 통하여 모두에게 타이머 작동 시작!");
             networkTimer.OnStartTimer(startAt,endAt);
         }
+
+        [PunRPC]
+        public void RPC_CancelTimer()
+        {
+            Debug.Log("RPC를 통하여 모두에게 타이머 작동 캔슬요청!");
+            networkTimer.CancelTimer();
+        }
+        #endregion
     }
 }

@@ -62,14 +62,10 @@ public class CardManager : PunSingleton<CardManager>
 
     public void BuildAndBroadcastDeck()
     {
-        //타이머
-        /*double lead = 0.3;
+        //타이머 시작
         double duration = 9.0; // 10초
-        double startAt = PhotonNetwork.Time + lead;
-        double endAt = startAt + duration;
-        ShootingNetworkManager.Instance.photonView.RPC("RPC_StartTimer", RpcTarget.All, startAt, endAt);
+        ShootingNetworkManager.Instance.StartTimer(duration, false);
         ShootingNetworkManager.Instance.networkTimer.OnTimerEnd += OnPickTimeExpired;
-        ShootingUIManager.Instance.RegisterTimer();*/
 
         int playerCount = Mathf.Clamp(PhotonNetwork.CurrentRoom.PlayerCount, 2, 4);
         _deckValues = Enumerable.Range(1, playerCount).ToArray();
@@ -308,9 +304,8 @@ public class CardManager : PunSingleton<CardManager>
 
     private void CheckAllPicked()
     {    
-
         if (!PhotonNetwork.IsMasterClient) return;
-        
+
         int pickedPlayerCount = 0;
         int currentPlayerCount = PhotonNetwork.CurrentRoom.PlayerCount;
         foreach (int ownerActorNum in _owners)
@@ -324,6 +319,7 @@ public class CardManager : PunSingleton<CardManager>
         bool isAllPicked = pickedPlayerCount == currentPlayerCount;
         if (isAllPicked)
         {
+            ShootingNetworkManager.Instance.CancelTimer(false);
             // 상태 전환
             PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable { { ShootingGamePropertyKeys.KEY_STATE, (byte)LobbyState.Revealing } });
 
@@ -481,11 +477,6 @@ public class CardManager : PunSingleton<CardManager>
 
         photonView.RPC(nameof(RPC_OnPickUpdated), RpcTarget.AllBuffered, _owners);
         
-        //텀 
-
         CheckAllPicked();
-        //StartCoroutine()
-
-        //ShootingUIManager.Instance.UnRegisterTimer();//이걸 또 rpc로 쏴?
     }
 }
