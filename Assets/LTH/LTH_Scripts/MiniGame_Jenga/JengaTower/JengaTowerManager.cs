@@ -53,6 +53,19 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
     private Coroutine _collapseReleaseCo;
     private int _collapseNesting = 0;
 
+    #region JengaFace Layer 캐싱
+    private static int _jengaFaceLayer = int.MinValue;
+    private static int JengaFaceLayer
+    {
+        get
+        {
+            if (_jengaFaceLayer == int.MinValue)
+                _jengaFaceLayer = LayerMask.NameToLayer("JengaFace");
+            return _jengaFaceLayer;
+        }
+    }
+    #endregion
+
     // 개별 타워별로 구독한 델리게이트를 보관(해제용)
     private readonly HashSet<int> _mutedActors = new();
     private readonly Dictionary<int, (Action on, Action off)> _towerMuteHandlers = new();
@@ -639,6 +652,15 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
 
     private static void SetLayerRecursively(GameObject go, int layer)
     {
+        // 1) 클릭 면은 보존
+        if (go.layer == JengaFaceLayer || go.GetComponent<FaceHitProxy>() != null)
+        {
+            foreach (Transform c in go.transform)
+                SetLayerRecursively(c.gameObject, JengaFaceLayer);
+            return;
+        }
+
+        // 2) 일반 오브젝트만 아레나 레이어 적용
         go.layer = layer;
 
         foreach (Transform c in go.transform)
