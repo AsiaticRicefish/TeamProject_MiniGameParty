@@ -68,6 +68,9 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
     private double? _roomDuration;
     private Coroutine _timerCo;
 
+    // 게임 종료 후 입력 차단
+    private InputLockToken _endGameLock;
+
     protected override void OnAwake()
     {
         base.isPersistent = false;
@@ -292,14 +295,27 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
             PhotonNetwork.CurrentRoom.SetCustomProperties(props);
         }
 
-        if (newState == JengaGameState.Playing)
+        // 상태에 따른 입력 잠금 제어
+        switch (newState)
         {
-            TryStartRoomPropTimer();
-        }
-        else if (newState == JengaGameState.Finished)
-        {
-            StopRoomPropTimer();
-            JengaUIManager.Instance.HideRotateButton();
+            case JengaGameState.Playing:
+                // 새 라운드 시작 시 혹시 남아있을 수 있는 잠금 해제
+                _endGameLock?.Dispose();
+                _endGameLock = null;
+                TryStartRoomPropTimer();
+                break;
+
+            case JengaGameState.Finished:
+                // 게임 종료: 젠가 상호작용 차단
+                if (_endGameLock == null && InputManager.Instance != null)
+                    _endGameLock = InputManager.Instance.Acquire(
+                        InputType.Interaction,
+                        "Jenga finished"
+                    );
+
+                StopRoomPropTimer();
+                JengaUIManager.Instance.HideRotateButton();
+                break;
         }
     }
 
