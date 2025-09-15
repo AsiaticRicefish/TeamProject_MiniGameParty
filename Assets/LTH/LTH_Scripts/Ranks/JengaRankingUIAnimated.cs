@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.UI;
+using System;
 
 /// <summary>
 /// 젠가 랭킹 패널 컨트롤러 (DOTween 전용)
@@ -41,6 +42,14 @@ public class JengaRankingUIAnimated : MonoBehaviour
     [Header("Live Update")]
     [Tooltip("실시간 순위 반영 최소 간격(초)")]
     [SerializeField] private float minUpdateInterval = 0.08f;
+
+    #region 플레이어 마다 색이 변경되는 부분 공유 API
+    public event Action OnPaletteChanged;
+    public bool TryGetColor(string uid, out Color c) => _uidColor.TryGetValue(uid, out c);
+    public IReadOnlyDictionary<string, Color> GetColorMap() => _uidColor;
+    private void NotifyPaletteChanged() => OnPaletteChanged?.Invoke();
+
+    #endregion
 
     private readonly Dictionary<string, RankingRow> _rows = new();
     private readonly Dictionary<string, AsyncOperationHandle<GameObject>> _rowHandles = new();
@@ -135,6 +144,7 @@ public class JengaRankingUIAnimated : MonoBehaviour
             firstRow.EmphasizeFirstPlace();
 
         SnapshotRanks(uidToRank);
+        NotifyPaletteChanged();
     }
 
     public void Hide() => ClosePanel();
@@ -148,6 +158,8 @@ public class JengaRankingUIAnimated : MonoBehaviour
         _lastRanks.Clear();
         _moveTweens.Clear();
         _creating.Clear();
+        _uidColor.Clear();
+        NotifyPaletteChanged();
     }
 
     // ======================= 실시간 갱신 =======================
@@ -215,14 +227,16 @@ public class JengaRankingUIAnimated : MonoBehaviour
             int delta = oldRank - rank;
 
             row.SetColor(ResolveColor(uid));
-            if (delta != 0) row.SetRankAnimated(rank);
-            else row.SetContent(rank);
-            row.SetFirstPlace(rank == 1);
-
+            
             if (delta != 0)
             {
+                row.SetRankAnimated(rank);
                 row.ShowDeltaIcon(delta);
                 row.PlayDeltaFx(delta, rank);
+            }
+            else
+            {
+                row.SetContent(rank);
             }
         }
 
@@ -230,6 +244,7 @@ public class JengaRankingUIAnimated : MonoBehaviour
         SmoothReorderByLayout(CollectRowsInOrder(ordered), moveDuration);
 
         SnapshotRanks(newRanks);
+        NotifyPaletteChanged();
     }
 
 
@@ -505,6 +520,7 @@ public class JengaRankingUIAnimated : MonoBehaviour
             _uidColor[uid] = chosen;
             _usedColors.Add(chosen);
         }
+        NotifyPaletteChanged();
     }
 
     private Color ResolveColor(string uid)

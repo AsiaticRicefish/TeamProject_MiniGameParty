@@ -7,7 +7,6 @@ using LDH_UI;
 using LDH_Util;
 using Managers;
 using Photon.Pun;
-using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 
@@ -31,7 +30,7 @@ namespace LDH_MainGame
 
 
         private UI_Loading _uiLoading;
-       [SerializeField] private int[] _spawnedViewIds;   // 마스터가 뿌린 ViewID 목록을 받는 버퍼
+       [SerializeField] private int[] spawnedViewIds;   // 마스터가 뿌린 ViewID 목록을 받는 버퍼
 
 
         #region 초기화 구현(BasSceneController Implement)
@@ -200,17 +199,17 @@ namespace LDH_MainGame
             
             Debug.Log("마스터가 viewid 뿌릴때까지 대기");
             // 1) 마스터가 뿌린 ViewID 목록을 받을 때까지 대기
-            yield return new WaitUntil(() => _spawnedViewIds != null && _spawnedViewIds.Length == roomObjectPaths.Length);
+            yield return new WaitUntil(() => spawnedViewIds != null && spawnedViewIds.Length == roomObjectPaths.Length);
             Debug.Log("내 로컬에 뷰 아이디 생길때까지 대기");
             // 2) 내 로컬에 해당 ViewID 들이 실제로 생길 때까지 대기
             yield return new WaitUntil(() =>
             {
-                for (int i = 0; i < _spawnedViewIds.Length; i++)
+                for (int i = 0; i < spawnedViewIds.Length; i++)
                 {
-                    Debug.Log(_spawnedViewIds[i]);
-                    if (PhotonView.Find(_spawnedViewIds[i]) == null)
+                    Debug.Log(spawnedViewIds[i]);
+                    if (PhotonView.Find(spawnedViewIds[i]) == null)
                     {
-                        Debug.Log($"Find? {PhotonView.Find(_spawnedViewIds[i]) == null}");
+                        Debug.Log($"Find? {PhotonView.Find(spawnedViewIds[i]) == null}");
                         return false;
                     }
                 }
@@ -218,7 +217,7 @@ namespace LDH_MainGame
             });
             Debug.Log("완료 1프레임 대기 하고 메서드 종료");
             // 3) 컴포넌트 Awake/Start 보장 위해 한 프레임 더 쉼
-            _spawnedViewIds = null;
+            spawnedViewIds = null;
             yield return null;
             
         }
@@ -227,7 +226,7 @@ namespace LDH_MainGame
         [PunRPC]
         private void RPC_AnnounceRoomObjects(int[] viewIds)
         {
-            _spawnedViewIds = viewIds;
+            spawnedViewIds = viewIds;
         }
 
         public void Register(GameObject go)

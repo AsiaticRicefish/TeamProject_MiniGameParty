@@ -7,6 +7,12 @@ TagManager:
   - UnimoEgg
   - PlayGround
   - FallDownZone
+  - Map
+  - Flower
+  - Item
+  - Monster
+  - Bullet
+  - Door
   layers:
   - Default
   - TransparentFX
@@ -14,7 +20,7 @@ TagManager:
   - 
   - Water
   - UI
-  - 
+  - Unimo
   - 
   - 
   - 
@@ -24,7 +30,7 @@ TagManager:
   - Arena_2
   - Arena_3
   - JengaBlock
-  - SwipePlane
+  - JengaFace
   - 
   - 
   - 
