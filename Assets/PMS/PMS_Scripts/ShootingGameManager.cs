@@ -25,7 +25,10 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
 
     public Dictionary<string, ShootingPlayerData> players = new(); // UID를 key로 가지는 플레이어 데이터
     private Dictionary<string, int> playerScores = new();        // 플레이어별 점수
-    
+
+    public Action<Dictionary<string, int>> OnGameStartedRanking;  // 랭킹 순위
+    public Action<Dictionary<string, int>> OnGameFinished;  // 최종 순위
+
     //Unimo Ranking System
     private List<string> unimoRankingList = new List<string>();
 
@@ -41,8 +44,7 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
     {      
         CardManager = GameObject.FindObjectOfType<CardManager>();
         Debug.Log("[ShootingGameManager] - 슈팅 게임 초기화");
-        InitializePlayers();                // 플레이어 정보 세팅 - 따로 instantiate에서 만들 필요는 없음.
-        //ChangeState(new InitState());       //전부 InitState 씬 상태
+        InitializePlayers();                // 플레이어 정보 세팅 - 따로 instantiate에서 만들 필요는 없음.       
     }
 
     private void InitializePlayers()
@@ -147,46 +149,59 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
         // 0. 리스트 초기화
         unimoRankingList.Clear();
 
-        // 1. 현재 맵에 있는 활성화 알 다 찾기
-        UnimoEgg[] activeEggs = GameObject.FindObjectsOfType<UnimoEgg>();
+        // 1. 현재 맵에 있는 모든 알 다 찾기
+        //UnimoEgg[] activeEggs = GameObject.FindObjectsOfType<UnimoEgg>();
+        UnimoEgg[] allEggs = EggManager.Instance.viewIdToEgg.Values.ToArray();
 
-        Debug.Log($"[GameManager] - 활성화 된 알 개수 : {activeEggs.Length}");
+        Debug.Log($"[GameManager] - 활성화 된 알 개수 : {allEggs.Length}");
 
-        // 2. 거리 기준 오름차순 정렬
-        var sortedEggs = activeEggs
+        // 2. 활성화된 알만 거리 기준 오름차순 정렬
+        var sortedEggs = allEggs
+            .Where(e => e.gameObject.activeInHierarchy) // 비활성화된 알 제외
             .OrderBy(e => Mathf.Abs(e.transform.position.z - finishLine.transform.position.z))
             .ToList();
 
-        // 3. shooterID 중복 제거 (첫 번째만 남기기) -> 각 유저의 1등 UnimoEgg만 남도록 
-        var uniqueEggs = sortedEggs
+        // 3. shooterUid로 그룹바이를 하고 그중에서 제일 첫번째꺼를 ShooterUID
+        var rankedUids = sortedEggs
             .GroupBy(e => e.ShooterUid)
-            .Select(g => g.First())   // 가장 가까운 알만 남김
-            .ToList();
+            .Select(g => g.First().ShooterUid)
+            .ToList();       
 
-        //해당 턴에서 쏜 알이 비활성화 됬다는걸 보장 할 수 있는가? 값을 받아오면 안된다. - 보장이된다.
+        // 5. 랭킹 리스트 구성: 먼저 쏜 유저들 → 나머지 유저들
+        foreach (var uid in rankedUids)
+            unimoRankingList.Add(uid);
 
-        //현재 방안의 플레이어 인원수만 받아오면 됨
-        for(int i = 0; i < uniqueEggs.Count; i++)
+        foreach (var uid in PlayerManager.Instance.Players.Keys)
         {
-            unimoRankingList.Add(uniqueEggs[i].photonView.Owner.NickName);
+            if (!unimoRankingList.Contains(uid))
+                unimoRankingList.Add(uid); // 알이 없거나 비활성화된 유저도 포함
         }
-
-        //만약 나간 유저가 있다면 추가적으로 처리를 해줘야함
-        
 
         // 배열을 문자열로 조합
         string rankingString = string.Join(",", unimoRankingList);
-
         photonView.RPC("RPC_UpdateRanking", RpcTarget.All, rankingString);
     }
 
     [PunRPC]
     void RPC_UpdateRanking(string rankingString)
     {
+        Dictionary<string, int> ranks = new Dictionary<string, int>();
         // 문자열을 배열로 분해
         string[] rankingList = rankingString.Split(',');
 
-        ShootingUIManager.Instance.UpdateRanking(rankingList);
+        int rankIndex = 1;
+        foreach (var str in rankingList)
+        {
+            ranks.Add(str, rankIndex);
+            rankIndex++;
+        }
+
+        if(ranks == null)
+        {
+            Debug.Log("ranks null");
+        }
+        ShootingUIManager.Instance.UpdateRanking(ranks);
+
         // 클라이언트에서 랭킹 업데이트
         for (int i = 0; i < rankingList.Length; i++)
         {
@@ -262,7 +277,7 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
     {
         /*if(RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.State) == "TurnCheckState" ||
             "GamePlayState""CheckGameWinnderState")*/
-        ShootingUIManager.Instance.LeftUserUpdateRanking(otherPlayer.NickName);
+        //ShootingUIManager.Instance.LeftUserUpdateRanking(otherPlayer.NickName);
     }
 
 }

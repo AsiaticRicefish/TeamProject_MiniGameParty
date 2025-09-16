@@ -24,7 +24,7 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
 
     private Dictionary<string, List<UnimoEgg>> playerEggPools = new();
 
-    private Dictionary<int, UnimoEgg> viewIdToEgg = new();
+    public Dictionary<int, UnimoEgg> viewIdToEgg = new();
 
     private bool isPoolReady = false;
 

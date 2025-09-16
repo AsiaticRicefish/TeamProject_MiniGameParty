@@ -17,8 +17,8 @@ namespace ShootingScene.ShootingGame
        [SerializeField] private UI_Screen_OtherTurn otherTurnUI;
        [SerializeField] private UI_Screen_Timer timerUI;
        [SerializeField] private UI_Screen_PlayerRank playerRank;
-       
-       private Coroutine _timerCoroutine;
+
+        private Coroutine _timerCoroutine;
        
        
        protected override void OnAwake()
@@ -141,19 +141,25 @@ namespace ShootingScene.ShootingGame
             _timerCoroutine = null;
         }
 
-       #endregion
+        #endregion
 
-       #region ranking
+        #region ranking
 
-       public void UpdateRanking(string[] uids)
-       {
-           playerRank.UpdateRanks(uids);
-       }
+        /*public void UpdateRanking(string[] uids)
+        {
+            playerRank.UpdateRanks(uids);
+        }
 
         public void LeftUserUpdateRanking(string leftPlayerNickName)
         {
             playerRank.LeftUserSetRank(leftPlayerNickName);
+        }*/
+
+        public void UpdateRanking(Dictionary<string,int> ranks)
+        {
+            playerRank.UpdateLiveRanks(ranks);
         }
+
 
         #endregion
 
