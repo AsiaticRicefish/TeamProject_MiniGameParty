@@ -58,9 +58,15 @@ namespace Network
 
         private void Subscribe()
         {
+            // 안전하게 취소 처리
+            Unsubscribe();
+            
             // 방 입장 -> 팝업 생성 및 관리 바인딩
             Manager.Network.JoinedRoom += OnJoinedRoom;
 
+            // 방 입장 실패(join room) -> 방 입장 재시도
+            Manager.Network.JoinFailed += OnJoinRoomFailed;
+            
             // 정원 변화 감지 → 마스터만 시작 판단
             Manager.Network.RoomPlayerCountChanged += TryStartGame;     // 마스터 클라이언트가 중간에 변경될 수도 있으므로 모두 구독처리하고 내부에서 마스터만 실행하도록 처리
             
@@ -77,6 +83,7 @@ namespace Network
             if (Manager.Network != null)
             {
                 Manager.Network.JoinedRoom -= OnJoinedRoom;
+                Manager.Network.JoinFailed -= OnJoinRoomFailed;
                 Manager.Network.RoomPlayerCountChanged -=  TryStartGame;  
                 Manager.Network.MasterClientSwiched -= OnMasterClientSwitched;
                 Manager.Network.MatchStateChanged -= OnMatchStateChanged;
@@ -215,6 +222,24 @@ namespace Network
             
             // 다 됐으면 팝업 활성화
             Manager.UI.ShowPopupUI(_popupQuickMatch).Forget();
+        }
+
+        private void OnJoinRoomFailed(short returnCode, string message)
+        {
+            Debug.Log($"<color=blue>[QuickMatchController] ({returnCode}) : {message} / Try to join random room again.</blue>");
+            //요청 취소 처리
+            _requesting = false;
+            _ = TryQuickMatchAgain();
+        }
+        
+        // 방이 없어져서 진입에 실패한경우. 로비에 들어갈 때가지 대기 후 재매칭 처리
+        private async UniTask TryQuickMatchAgain()
+        {
+            Debug.Log("[QuickMatchController] Try Quick Match Again. Wait until enter lobby");
+            await UniTask.WaitUntil(() => PhotonNetwork.IsConnectedAndReady && PhotonNetwork.InLobby);
+            await UniTask.Yield();
+            Debug.Log("[QuickMatchController] Restart MatchMaking");
+            OnClickMatchingStart();
         }
 
         
