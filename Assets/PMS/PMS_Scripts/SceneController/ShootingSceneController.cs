@@ -2,15 +2,23 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using Cysharp.Threading.Tasks;
 using LDH_MainGame;
 using Photon.Pun;
 using ShootingScene;
 using ShootingScene.ShootingGame;
+using LDH_UI;
+using Managers;
 
 [RequireComponent(typeof(PhotonView))]
 [DisallowMultipleComponent]
 public class ShootingSceneController : BaseGameSceneController
 {
+    [Header("Loading Theme")]
+    [SerializeField] private UI_LoadingTheme ShootingLoadingTheme; // 테마
+
+    private UI_Loading _uiLoading; // 꼭 추가!
+
     [SerializeField] private GameObject[] iGameComponents;
 
     //따로 이벤트는 없는거 같음
@@ -18,12 +26,29 @@ public class ShootingSceneController : BaseGameSceneController
 
     protected override string GameType => "Shooting";
 
+    protected override void Awake()
+    {
+        // 1. 로딩창 생성
+        _uiLoading = Manager.UI.CreatePopupUI<UI_Loading>();
+
+        // 2. 테마 적용 (있는 경우)
+        if (ShootingLoadingTheme)
+        {
+            _uiLoading.ApplyTheme(ShootingLoadingTheme);
+        }
+        // 3. 테마 없을 때 -> 적용안함.
+
+        // 4. 로딩창 표시
+        Manager.UI.ShowPopupUI(_uiLoading).Forget();
+    }
     protected override IEnumerator WaitForManagersAwake()
     {
+        _uiLoading?.SetProgress(0.1f);  // 초기 설정 완료
         yield return WaitForSingletonReady<ShootingNetworkManager>();
         yield return WaitForSingletonReady<ShootingGameManager>();
         yield return WaitForSingletonReady<RoomPropertyObserver>();
         yield return WaitForSingletonReady<PlayerInputManager>();
+        _uiLoading?.SetProgress(0.3f);  // 매니저 중간 초기화 완료
         yield return WaitForSingletonReady<TurnManager>();
         yield return WaitForSingletonReady<CardManager>();
         yield return WaitForSingletonReady<ShootingCameraManager>();
@@ -50,7 +75,7 @@ public class ShootingSceneController : BaseGameSceneController
         //     ShootingUIManager.Instance,
         //     WindSystem.Instance,
         // };
-
+        _uiLoading?.SetProgress(0.5f);  // 매니저 생성 완료 및 순차 초기화 시작
         var seqHashSet = new HashSet<object>();
         List<IGameComponent> sequentialComponents = new();
 
@@ -66,7 +91,7 @@ public class ShootingSceneController : BaseGameSceneController
             }
 
         }
-
+        _uiLoading?.SetProgress(0.85f); // 순차 초기화 완료
 
         yield return StartCoroutine(InitializeComponentsSafely(sequentialComponents));
 
@@ -91,6 +116,7 @@ public class ShootingSceneController : BaseGameSceneController
         var parallelComponents = new List<ICoroutineGameComponent>();
 
         //parallelComponents.Add()
+        _uiLoading?.SetProgress(0.95f); // 병렬 초기화 완료
 
         yield return StartCoroutine(InitializeCoroutineComponentsSafely(parallelComponents));
     }
@@ -106,7 +132,19 @@ public class ShootingSceneController : BaseGameSceneController
             return;
         }
         try
-        {           
+        {
+            // 완료 표시
+            if (_uiLoading)
+            {
+                _uiLoading.SetProgress(1.0f);
+            }
+
+            // 로딩창 닫기
+            if (_uiLoading)
+            {
+                Manager.UI.ClosePopupUI(_uiLoading).Forget();
+                _uiLoading = null;
+            }
             //모든 Scene Controller의 작업 처리 완료를 알림
             //TaskSyncManager.Instance.SetTaskDone(ShootingGamePlayerPropertyKeys.TaskType.Initialized);
 
