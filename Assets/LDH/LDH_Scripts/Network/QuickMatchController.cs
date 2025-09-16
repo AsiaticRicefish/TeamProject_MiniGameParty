@@ -83,6 +83,7 @@ namespace Network
             if (Manager.Network != null)
             {
                 Manager.Network.JoinedRoom -= OnJoinedRoom;
+                Manager.Network.JoinFailed -= OnJoinRoomFailed;
                 Manager.Network.RoomPlayerCountChanged -=  TryStartGame;  
                 Manager.Network.MasterClientSwiched -= OnMasterClientSwitched;
                 Manager.Network.MatchStateChanged -= OnMatchStateChanged;
@@ -225,8 +226,8 @@ namespace Network
 
         private void OnJoinRoomFailed(short returnCode, string message)
         {
-            Debug.Log($"<color:blue>[QuickMatchController] ({returnCode}) : {message} / Try to join random room again.</blue>");
-            OnClickMatchCancel();
+            Debug.Log($"<color=blue>[QuickMatchController] ({returnCode}) : {message} / Try to join random room again.</blue>");
+            OnClickMatchingStart();
         }
 
         
