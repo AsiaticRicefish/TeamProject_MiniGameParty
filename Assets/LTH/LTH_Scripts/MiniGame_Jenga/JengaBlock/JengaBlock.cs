@@ -70,13 +70,6 @@ public class JengaBlock : MonoBehaviour, IPointerClickHandler
         EnsureCaches();
         _rb.isKinematic = true;
         Highlight(false);
-
-        // 로컬 BoxCollider 기준으로 클릭면 생성
-        ClickFaceBuilder.AddFacesFromBox(this,
-            marginXRatio: 0.02f,
-            marginYRatio: 0.12f,
-            thickness: 0.0015f,
-            surfaceEps: 0.0005f);
     }
 
     // 턴 전환/게임 상태에 따라 외부에서 호출

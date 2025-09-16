@@ -1570,9 +1570,6 @@ MonoBehaviour:
   afterDelay: 1
   minTapPerTurn: 1
   maxTapPerTurn: 3
-  round1: {x: 20, y: 30}
-  round2: {x: 15, y: 25}
-  round3: {x: 10, y: 20}
 --- !u!4 &350445450
 Transform:
   m_ObjectHideFlags: 0
@@ -4706,7 +4703,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1190691556
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5888,8 +5885,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isPersistent: 1
-  nextTurnDrivenByMiniGame: 1
-  IsTurnEnd: 0
+  totalRounds: 1
 --- !u!114 &1440157622
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7950,7 +7946,6 @@ MonoBehaviour:
   cardUICanvas: {fileID: 334254586}
   cardPrefab: {fileID: 5538478693680383511, guid: 41ca6aa764ccea344b8f6686391c1a4d,
     type: 3}
-  nextSceneName: MeteorScene
 --- !u!1001 &1958594540
 PrefabInstance:
   m_ObjectHideFlags: 0
