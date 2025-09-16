@@ -42,9 +42,7 @@ namespace LDH_UI
         private void OnValueChanged(bool isOn)
         {
             if (!isOn) return; // 꺼질 때 콜백 무시
-
-            Debug.Log("toggle is on");
-
+            
             LobbyNavigationController.Instance?.RequestFocus(myVcam.cameraID);
         }
     }

@@ -20,8 +20,7 @@ public class RankingRow : MonoBehaviour
     [SerializeField] private float trophyFade = 0.15f;
     [SerializeField] private float trophyPunch = 0.18f;
     private Tween _trophyTween;
-
-
+    private bool _isFirstShown; // 현재 트로피 표시 상태 캐시 (계속 확대가 되는 현상 방지)
 
     [Header("Delta Icon (▲/▼)")]
     [SerializeField] private Image deltaIcon;           // 아이콘 이미지(작은 화살표)
@@ -43,6 +42,10 @@ public class RankingRow : MonoBehaviour
     [SerializeField] private Color upColor = new Color(0.30f, 0.85f, 0.40f, 1f);
     [SerializeField] private Color downColor = new Color(0.95f, 0.30f, 0.30f, 1f);
     [SerializeField] private float deltaFlash = 0.25f;
+
+    [Header("FX Root (펀치/연출 전용)")]
+    [SerializeField] private Transform fxRoot;
+    private float _fxBaseScale = 1f;
 
     private RectTransform _rt;
     private float _baseScale = 1f;
@@ -67,6 +70,15 @@ public class RankingRow : MonoBehaviour
         _baseScale = transform.localScale.x;
         ResetView();
 
+        _isFirstShown = false;
+
+        if (!fxRoot)
+        {
+            fxRoot = transform; // 없으면 자기 자신 사용(점진 전환)
+        }
+
+        _fxBaseScale = fxRoot.localScale.x;
+
         if (deltaIcon)
         {
             var col = deltaIcon.color; col.a = 0f;
@@ -87,7 +99,6 @@ public class RankingRow : MonoBehaviour
     {
         if (rankText) rankText.text = rank.ToString();
         if (bg && !UseBgAsChip) bg.color = normalColor;
-        SetFirstPlace(rank == 1);
     }
 
     // === 실시간용: 이름은 그대로, 순위 숫자만 '플립' 후 셋 ===
@@ -95,7 +106,6 @@ public class RankingRow : MonoBehaviour
     {
         if (!rankText) return;
 
-        // 숫자 플립: ScaleY 1→0 (변경) → 0→1
         Sequence seq = DOTween.Sequence();
         seq.Append(rankText.transform.DOScaleY(0f, 0.12f))
            .AppendCallback(() =>
@@ -111,7 +121,14 @@ public class RankingRow : MonoBehaviour
     {
         if (!trophyIcon) return;
 
-        _trophyTween?.Kill();
+        // 상태 변화 없으면 무시
+        if (_isFirstShown == isFirst) return;
+        _isFirstShown = isFirst;
+
+        _trophyTween?.Kill(false);
+        // 다음 트윈을 항상 동일 기준에서 시작 (계속 확대가 되면 안됨)
+        trophyIcon.transform.localScale = Vector3.one;
+
         if (isFirst)
         {
             _trophyTween = DOTween.Sequence()
@@ -147,10 +164,10 @@ public class RankingRow : MonoBehaviour
     public void EmphasizeFirstPlace()
     {
         KillFx();
-        cg.alpha = 0f;
-        _fadeTween = cg.DOFade(1f, Mathf.Max(0.01f, fadeInDuration));
-        transform.localScale = Vector3.one * _baseScale;
-        _punchTween = transform.DOPunchScale(Vector3.one * punchScale, punchDuration, vibrato: 10, elasticity: 0.9f);
+        if (cg) cg.alpha = 0f;
+
+        fxRoot.localScale = Vector3.one * _fxBaseScale;
+        _punchTween = fxRoot.DOPunchScale(Vector3.one * punchScale, punchDuration, 10, 0.9f);
     }
 
     public void PlayDeltaFx(int delta, int newRank)
@@ -165,8 +182,9 @@ public class RankingRow : MonoBehaviour
 
         if (punchScale > 0f)
         {
-            _punchTween?.Kill();
-            _punchTween = transform.DOPunchScale(Vector3.one * punchScale, punchDuration, vibrato: 8, elasticity: 0.8f);
+            _punchTween?.Kill(false);
+            fxRoot.localScale = Vector3.one * _fxBaseScale;
+            _punchTween = fxRoot.DOPunchScale(Vector3.one * punchScale, punchDuration, 8, 0.8f);
         }
     }
 
@@ -203,8 +221,10 @@ public class RankingRow : MonoBehaviour
 
     private void KillFx()
     {
-        _fadeTween?.Kill(); _punchTween?.Kill();
+        _fadeTween?.Kill(); 
+        _punchTween?.Kill();
         _fadeTween = _punchTween = null;
+        if (fxRoot) fxRoot.localScale = Vector3.one * _fxBaseScale;
     }
     private void KillFlash() { _flashTween?.Kill(); _flashTween = null; }
     private void KillAllTweens()

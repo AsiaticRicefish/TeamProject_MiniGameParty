@@ -9,16 +9,9 @@ using ExitGames.Client.Photon;
 using Managers;
 using UnityEngine;
 using Network;
+using System.Threading.Tasks;
 
-/// <summary>
-/// 게스트 로그인 + 닉네임 전역 예약 + Photon 접속 총괄
-/// - Firebase 의존성 확인 → Auth 준비
-/// - (중요) Realtime DB URL 강제 설정 (Editor/Standalone에서 필수)
-/// - 닉네임 전역 중복 체크: Realtime DB 트랜잭션(닉네임 예약)
-/// - OnDisconnect 예약/수동 해제 처리
-/// - Photon에 NickName/AuthValues 설정 후 접속
-/// - 로비 입장 후 uid CustomProperty는 NetworkManager에서 보정
-/// </summary>
+
 
 namespace KYG.Auth
 {
@@ -83,6 +76,62 @@ namespace KYG.Auth
             PhotonNetwork.AutomaticallySyncScene = true; // 모든 씬 전환은 마스터가 동기화
             if (!string.IsNullOrEmpty(defaultRegion))
                 PhotonNetwork.PhotonServerSettings.AppSettings.FixedRegion = defaultRegion;
+        }
+        
+        /// <summary>
+        /// 게스트 로그인 + 닉네임 전역 예약 + Photon 접속 총괄
+        /// - Firebase 의존성 확인 → Auth 준비
+        /// - (중요) Realtime DB URL 강제 설정 (Editor/Standalone에서 필수)
+        /// - 닉네임 전역 중복 체크: Realtime DB 트랜잭션(닉네임 예약)
+        /// - OnDisconnect 예약/수동 해제 처리
+        /// - Photon에 NickName/AuthValues 설정 후 접속
+        /// - 로비 입장 후 uid CustomProperty는 NetworkManager에서 보정
+        /// </summary>
+        
+        public async void CancelPendingLogin()
+        {
+            // 로딩 플래그 해제
+            isConnecting = false;
+
+            // 1) 닉네임 예약 해제(소유자일 때만)
+            try
+            {
+                if (!string.IsNullOrEmpty(pendingNickname) && user != null)
+                {
+                    bool released = await NicknameRegistry.ReleaseIfOwnerAsync(user.UserId, pendingNickname);
+                    Debug.Log($"[GuestLoginManager] Cancel: release '{pendingNickname}' owner={released}");
+                }
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[GuestLoginManager] Cancel release exception: {e.Message}");
+            }
+
+            // 2) Photon 연결 중이면 끊기
+            try
+            {
+                // 단순히 연결되어 있거나 연결 준비 중이면 Disconnect 호출
+                if (PhotonNetwork.IsConnected || PhotonNetwork.IsConnectedAndReady)
+                {
+                    Debug.Log("[GuestLoginManager] Cancel: PhotonNetwork.Disconnect()");
+                    PhotonNetwork.Disconnect();
+                }
+            }
+            catch { /* ignore */ }
+
+            // 3) UI 복구
+            SetUILock(false);
+            var ui = FindObjectOfType<GuestLoginUI>();
+            if (ui != null)
+            {
+                ui.EnableNicknameRetry(); // 인풋 비우고 포커스
+                ui.SafeSetHint("취소했습니다. 닉네임을 다시 입력하거나 뒤로 가세요.");
+                ui.ShowSubmittingUI(false); // 로딩 off, 입력 on
+                ui.ReturnToFirstIfWanted(); // (옵션) 처음 화면으로 돌아가기
+            }
+
+            // 4) 내부 상태 초기화
+            pendingNickname = null;
         }
 
         
@@ -168,6 +217,8 @@ namespace KYG.Auth
 
                 user = t.Result.User;
                 Debug.Log($"[GuestLoginManager] Firebase sign-in ok. uid={user.UserId}");
+                
+                _ = SessionEnforcer.Instance?.StartForUidAsync(user.UserId);
 
                 // 2) 닉네임 전역 예약 (트랜잭션 + 재시도 + 타임아웃 내장됨)
                 Debug.Log($"[GuestLoginManager] Reserve START nick={pendingNickname}, uid={user.UserId}");
@@ -204,21 +255,13 @@ namespace KYG.Auth
                     return;
                 }
 
-                // 3) 연결 끊기면 자동 정리 예약
+                // 3) 연결 끊기면 자동 정리 예약 + 닉네임 프로필 반영 → Photon 접속
                 await NicknameRegistry.BindOnDisconnectCleanupAsync(pendingNickname);
                 var profile = new UserProfile { DisplayName = pendingNickname };
                 user.UpdateUserProfileAsync(profile).ContinueWithOnMainThread(_ =>
                 {
                     ApplyPhotonIdentityAndConnect(user.UserId, pendingNickname);
-                    // 성공: UI는 그대로 잠금 유지(씬 전환/로비 진입)
                 });
-
-                /* 4) Firebase DisplayName 갱신 후 Photon 접속
-                var profile = new UserProfile { DisplayName = pendingNickname };
-                user.UpdateUserProfileAsync(profile).ContinueWithOnMainThread(_ =>
-                {
-                    ApplyPhotonIdentityAndConnect(user.UserId, pendingNickname);
-                });*/
             });
         }
 

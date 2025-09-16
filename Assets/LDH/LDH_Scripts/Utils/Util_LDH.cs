@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using Photon.Pun;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
@@ -134,6 +135,25 @@ namespace LDH_Util
             
             return Mathf.Round(f * 100f) * 0.01f;
 
+        }
+        
+        //모든 자식 파괴
+        public static void RemoveAllChildren(Transform parent)
+        {
+            int childCount = parent.childCount;
+            if (childCount== 0)
+            {
+                Debug.Log("[Util] 파괴할 자식이 없습니다.");
+                return;
+            }
+            
+            foreach (Transform child in parent)
+            {
+                Debug.Log($"[Util] {child.gameObject.name}를 파괴합니다.");
+                Object.Destroy(child.gameObject);
+            }
+            
+            Debug.Log($"[Util] {childCount}개의 자식을 파괴했습니다.");
         }
         
         

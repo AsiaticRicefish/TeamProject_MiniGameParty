@@ -5,9 +5,12 @@ using System.Linq;
 using DesignPattern;
 using InputBlocker;
 using LDH_MainGame;
+using LDH_UI;
+using Managers;
 using MiniGameJenga;
 using Photon.Pun;
 using UnityEngine;
+using Cysharp.Threading.Tasks;
 
 [RequireComponent(typeof(PhotonView))]
 [DisallowMultipleComponent]
@@ -20,6 +23,11 @@ public class JengaSceneController : BaseGameSceneController
 
     private const string ROOMKEY_SLOTS = "JG_SLOTS";
 
+    [Header("Loading Theme")]
+    [SerializeField] private UI_LoadingTheme jengaLoadingTheme; // 젠가 테마
+
+    private UI_Loading _uiLoading;
+
     private void Awake()
     {
         if (_only && _only != this)
@@ -28,22 +36,45 @@ public class JengaSceneController : BaseGameSceneController
             return;
         }
         _only = this;
+
+        // 로딩창 생성 및 테마 적용
+        _uiLoading = Manager.UI.CreatePopupUI<UI_Loading>();
+        if (jengaLoadingTheme)
+        {
+            _uiLoading.ApplyTheme(jengaLoadingTheme);
+        }
+        else
+        {
+            // 기본 텍스트라도 설정
+            _uiLoading.SetTitle("JENGA GAME");
+            _uiLoading.SetBigDescription("준비 중...");
+            _uiLoading.SetAllPanelColors(Color.black, Color.gray, Color.white);
+        }
+
+        Manager.UI.ShowPopupUI(_uiLoading).Forget();
     }
 
     protected override IEnumerator WaitForManagersAwake()
     {
         EnsureInputManagerForScene();
+
+        // 초기 진행률 설정
+        if (_uiLoading) _uiLoading.SetProgress(0.1f);
+
         // 모든 플레이어가 uid 셋팅될 때까지 잠깐 대기
         yield return WaitForAllPlayerUids(5f);
+        if (_uiLoading) _uiLoading.SetProgress(0.3f);
 
         // 슬롯맵이 준비될 때까지 잠깐 대기
         yield return WaitForSlotMapReady(5f);
+        if (_uiLoading) _uiLoading.SetProgress(0.5f);
 
         // 각 매니저들이 Awake에서 생성되기를 기다림
         yield return WaitForSingletonReady<JengaGameManager>();
         yield return WaitForSingletonReady<JengaNetworkManager>();
         yield return WaitForSingletonReady<JengaTowerManager>();
 
+        if (_uiLoading) _uiLoading.SetProgress(0.7f);
         Debug.Log("젠가 매니저들 Awake 완료");
     }
 
@@ -60,6 +91,7 @@ public class JengaSceneController : BaseGameSceneController
         };
 
         yield return StartCoroutine(InitializeComponentsSafely(sequentialComponents));
+        if (_uiLoading) _uiLoading.SetProgress(0.85f);
     }
 
     protected override IEnumerator InitializeParallelManagers()
@@ -72,11 +104,8 @@ public class JengaSceneController : BaseGameSceneController
            JengaTimingManager.Instance      // 타이밍 시스템 준비
         };
 
-        Debug.Log("[Scene] About to call InitializeCoroutineComponentsSafely");
         yield return StartCoroutine(InitializeCoroutineComponentsSafely(parallelComponents));
-        Debug.Log("[Scene] InitializeCoroutineComponentsSafely returned - proceeding to step 6");
-
-        Debug.Log($"[Scene] Before failsafe check - _startNotified: {_startNotified}");
+        if (_uiLoading) _uiLoading.SetProgress(0.95f);
 
         // 페일세이프: 여기서 한 번 더 직접 시작 호출
         if (!_startNotified)
@@ -84,11 +113,6 @@ public class JengaSceneController : BaseGameSceneController
             Debug.Log("[Scene] Failsafe start after parallel init - calling NotifyGameStart()");
             NotifyGameStart();
         }
-        else
-        {
-            Debug.Log("[Scene] Failsafe skipped - already started");
-        }
-
         Debug.Log("[Scene] InitializeParallelManagers END");
     }
 
@@ -103,17 +127,27 @@ public class JengaSceneController : BaseGameSceneController
         }
         _startNotified = true;
 
-        Debug.Log($"[Scene] PhotonNetwork.IsMasterClient = {PhotonNetwork.IsMasterClient}");
-        Debug.Log($"[Scene] JengaGameManager.Instance = {JengaGameManager.Instance != null}");
-
         try
         {
+            // 완료 진행률 설정
+            if (_uiLoading)
+            {
+                _uiLoading.SetProgress(1.0f);
+                _uiLoading.SetBigDescription("READY!");
+            }
+
+            // 로딩창 닫기
+            if (_uiLoading)
+            {
+                Manager.UI.ClosePopupUI(_uiLoading).Forget();
+                _uiLoading = null;
+            }
+
             if (!Camera.main)
                 Debug.LogWarning("[Scene] MainCamera가 아직 준비되지 않았습니다.");
 
             if (PhotonNetwork.IsMasterClient)
             {
-                Debug.Log($"[Scene] About to call JengaGameManager.Instance.StartGame()");
                 JengaGameManager.Instance.StartGame();
                 MainGameManager.Instance?.NotifyMiniGameStart();
             }

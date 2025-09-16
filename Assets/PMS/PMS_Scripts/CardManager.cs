@@ -7,6 +7,7 @@ using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
 using ShootingScene;
+using ShootingScene.ShootingGame;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
 using Random = System.Random;
 
@@ -61,12 +62,10 @@ public class CardManager : PunSingleton<CardManager>
 
     public void BuildAndBroadcastDeck()
     {
-        //타이머
-        double lead = 0.3;
+        //타이머 시작
         double duration = 9.0; // 10초
-        double startAt = PhotonNetwork.Time + lead;
-        double endAt = startAt + duration;
-        ShootingNetworkManager.Instance.photonView.RPC("RPC_StartTimer", RpcTarget.All, startAt, endAt);
+        ShootingNetworkManager.Instance.StartTimer(duration, false);
+        ShootingNetworkManager.Instance.networkTimer.OnTimerEnd += OnPickTimeExpired;
 
         int playerCount = Mathf.Clamp(PhotonNetwork.CurrentRoom.PlayerCount, 2, 4);
         _deckValues = Enumerable.Range(1, playerCount).ToArray();
@@ -304,9 +303,9 @@ public class CardManager : PunSingleton<CardManager>
     #region Check All Picked
 
     private void CheckAllPicked()
-    {
-        if(!PhotonNetwork.IsMasterClient) return;
-        
+    {    
+        if (!PhotonNetwork.IsMasterClient) return;
+
         int pickedPlayerCount = 0;
         int currentPlayerCount = PhotonNetwork.CurrentRoom.PlayerCount;
         foreach (int ownerActorNum in _owners)
@@ -320,6 +319,7 @@ public class CardManager : PunSingleton<CardManager>
         bool isAllPicked = pickedPlayerCount == currentPlayerCount;
         if (isAllPicked)
         {
+            ShootingNetworkManager.Instance.CancelTimer(false);
             // 상태 전환
             PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable { { ShootingGamePropertyKeys.KEY_STATE, (byte)LobbyState.Revealing } });
 
@@ -425,43 +425,16 @@ public class CardManager : PunSingleton<CardManager>
     }
     #endregion
 
-    //외부에서 호출
-    public void StartAutoCardSelect()
-    {
-        if (!PhotonNetwork.IsMasterClient) return;
 
-        StartCoroutine(OnPickTimeExpired());
-    }
 
     //마스터만 호출하게
-    private IEnumerator OnPickTimeExpired()
+    private void OnPickTimeExpired()
     {
-        yield return new WaitForSeconds(10f);
-
+        ShootingNetworkManager.Instance.networkTimer.OnTimerEnd -= OnPickTimeExpired;
         Debug.Log("[CardManager] 시간 초과 → 자동 배정 실행");
-
-        //photonView.RPC(nameof(UnEnableInteraction), RpcTarget.All);
-        //yield return new WaitForSeconds(0.1f);       //rpc 지연 0.1초 대기
-
         // 아직 선택 안 한 플레이어 자동 할당
         ForceAssignRemaining();
-
-        StartCoroutine(WaitForAutoCardSelectDelay(2.0f));
-        // 강제로 AllPicked 체크 → Reveal 단계로 이동    
     }
-
-    private IEnumerator WaitForAutoCardSelectDelay(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        CheckAllPicked();
-    }
-
-    /*[PunRPC]
-    private void UnEnableInteraction()
-    {
-        if (!_alreadyPicked)
-            _alreadyPicked = true;
-    }*/
 
     //마스터가 판단하여 안뽑은 카드 강제 배정
     private void ForceAssignRemaining()
@@ -503,5 +476,7 @@ public class CardManager : PunSingleton<CardManager>
         });
 
         photonView.RPC(nameof(RPC_OnPickUpdated), RpcTarget.AllBuffered, _owners);
+        
+        CheckAllPicked();
     }
 }

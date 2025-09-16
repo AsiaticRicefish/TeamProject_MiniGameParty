@@ -26,6 +26,10 @@ namespace Managers
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         public static void Initialize()
         {
+            // 멀티 터치 막기
+            Input.multiTouchEnabled = false;
+            
+            
             var manager = Object.Instantiate(Resources.Load<GameObject>("Prefabs/@Manager"));
             Object.DontDestroyOnLoad(manager);
 
@@ -36,33 +40,11 @@ namespace Managers
             SceneManager.sceneLoaded += OnSceneLoaded;
             
             
-            // BootstrapAsync().Forget();
         }
         private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             
         }
-
-
-        // private static async UniTaskVoid GameBootstrap()
-        // {
-        //     await Addressables.InitializeAsync().Task;
-        //     
-        //     // 초기화 작업들
-        //     try
-        //     {
-        //         await CatalogProvider.InitAsync();
-        //         await Manager.Custom.InitAsync();
-        //     }
-        //     catch (Exception e)
-        //     {
-        //         Console.WriteLine(e);
-        //         throw;
-        //     }
-        //     finally
-        //     {
-        //         Debug.Log("boot strap 완료");
-        //     }
-        // }
+        
     }
 }

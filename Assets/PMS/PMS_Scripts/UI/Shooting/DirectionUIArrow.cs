@@ -85,7 +85,5 @@ public class DirectionUIArrow : MonoBehaviourPun
         IsSwing = false;
         //arrowTransform.gameObject.SetActive(false);
     }
-
-    public void Resume() => IsSwing = true;
 }
 

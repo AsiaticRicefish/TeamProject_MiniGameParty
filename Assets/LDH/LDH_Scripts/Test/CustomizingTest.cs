@@ -85,7 +85,7 @@ namespace LDH.LDH_Scripts.Test
         {
             Debug.Log("버튼 클릭으로 Change Character 호출됨");
             if (await Manager.Custom.UpdateCharacterAsync(id))
-                await Manager.Custom.ApplyToAvatarAsync(avatarStruct, characterId: id);
+                await Manager.Custom.ApplyCharacterToAvatarAsync(avatarStruct, characterId: id);
 
         }
         
@@ -94,7 +94,7 @@ namespace LDH.LDH_Scripts.Test
         {
             Debug.Log("버튼 클릭으로 Change Equip 호출됨");
             if (await Manager.Custom.UpdateEquipAsync(id))
-                await Manager.Custom.ApplyToAvatarAsync(avatarStruct, equipId: id);
+                await Manager.Custom.ApplyEquipToAvatarAsync(avatarStruct, equipId: id);
 
         }
         
