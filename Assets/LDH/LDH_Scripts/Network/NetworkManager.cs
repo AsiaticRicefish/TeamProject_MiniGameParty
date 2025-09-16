@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using DesignPattern;
 using ExitGames.Client.Photon.StructWrapping;
+using LDH_Game;
 using LDH_UI;
 using LDH_Util;
 using Managers;
@@ -62,18 +63,13 @@ namespace Network
         protected override void OnAwake()
         {
             PhotonNetwork.AutomaticallySyncScene = autoSyncScene;
-            SceneManager.sceneLoaded += CloseLoadingUI;
 
 #if TEST_WITHOUT_LOGIN
             if(SceneManager.GetActiveScene().name.Equals(lobbySceneName))
-                ConnectServer();
+                GameObject gameBootstrap = new GameObject("Game Bootstrap", typeof(GameBootstrap));
 #endif
         }
-
-        protected override void OnDestroy()
-        {
-            SceneManager.sceneLoaded -= CloseLoadingUI;
-        }
+        
 
 
         #region Connect Server(로그인 없이 게임 테스트 시 사용할 메서드)
@@ -127,27 +123,10 @@ namespace Network
             }
 
             Debug.Log("[NetworkManager] TryJoinLobby -> JoinLobby()");
-
-
-            if (SceneManager.GetActiveScene().name != lobbySceneName)
-            {
-                //로딩 창
-                _loadingUI = Manager.UI.CreatePopupUI<UI_Loading>();
-                Manager.UI.ShowPopupUI(_loadingUI).Forget();
-            }
+            
             PhotonNetwork.JoinLobby();
         }
-
-
-        private void CloseLoadingUI(Scene scene, LoadSceneMode mode)
-        {
-            if (scene.name == lobbySceneName && _loadingUI != null)
-            {
-                _loadingUI.AutoCloseAfter(1f, this.destroyCancellationToken).Forget();
-                _loadingUI = null;
-            }
-        }
-
+        
         #endregion
 
 

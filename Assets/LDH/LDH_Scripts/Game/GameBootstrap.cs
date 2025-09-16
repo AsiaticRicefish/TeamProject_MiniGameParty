@@ -2,6 +2,7 @@ using System;
 using Customization;
 using Cysharp.Threading.Tasks;
 using Data;
+using LDH_UI;
 using LDH_Util;
 using Managers;
 using Photon.Pun;
@@ -15,7 +16,8 @@ namespace LDH_Game
         [SerializeField] private float dataProgress;
         [SerializeField] private float catalogProgress;
         [SerializeField] private float totalProgress;
-        
+
+        private UI_Loading _loadingUI;
         
         /// <summary>
         /// - 어드레서블 다운로드
@@ -25,9 +27,14 @@ namespace LDH_Game
         private async void Start()
         {
             // [0단계]
+            // 0) 로딩 창 띄우기
+            _loadingUI = Manager.UI.CreatePopupUI<UI_Loading>();
+            _loadingUI.OnCloseRequested += DestroyGameBootstrap;
+            Manager.UI.ShowPopupUI(_loadingUI).Forget();
+            
+            
             // 1) 작업이 완료되지 않았는데 씬이 전환되는 경우 파괴되지 않도록 하기 위해 dont destroy 처리
             DontDestroyOnLoad(gameObject);
-            
             
            Util_LDH.ConsoleLog(this, "BackendManager의 RTDB 준비를 대기.");
             // 2) BackendManager RTDB 준비를 대기
@@ -82,10 +89,25 @@ namespace LDH_Game
             // 6) 씬 이동 및 파괴를 위해 photon network로 연결
             PhotonNetwork.ConnectUsingSettings();
             
-            if(this!=null)
-                Destroy(gameObject);
+            // 7) 로딩 창 닫기
+            Debug.Log("로딩창 닫기");
+            _loadingUI.AutoCloseAfter(2.5f, this.destroyCancellationToken).Forget();
             
         }
-        
+
+        private void DestroyGameBootstrap(UI_Base uiBase)
+        {
+            if (this != null && _loadingUI == uiBase)
+            {
+                _loadingUI = null;
+                Destroy(gameObject);
+            }
+            else
+            {
+                Debug.LogWarning("Fail to destroy GameBootstrap object");
+            }
+               
+        }
+
     }
 }

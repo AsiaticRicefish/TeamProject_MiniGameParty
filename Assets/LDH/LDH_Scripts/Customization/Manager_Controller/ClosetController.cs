@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Customization;
 using Cysharp.Threading.Tasks;
+using Data;
 using LDH_UI;
 using LDH_Util;
 using Managers;
@@ -37,13 +38,15 @@ namespace Customization
 
         [SerializeField] private Button resetButton;
 
-
         [Header("Avatar")] [SerializeField] private AvatarStruct avatarStruct;
 
 
         // 생성된 버튼
         private readonly List<UI_ClosetItemButton> _charToggles = new();
         private readonly List<UI_ClosetItemButton> _equipToggles = new();
+        private readonly Dictionary<string, UI_ClosetItemButton> _charBtnById = new();
+        private readonly Dictionary<string, UI_ClosetItemButton> _equipBtnById = new();
+
 
         //  로드 핸들 추적
         private readonly List<AsyncOperationHandle<Sprite>> _loadedSpriteHandles = new();
@@ -137,6 +140,9 @@ namespace Customization
                 var def = characters[i];
                 var icon = charIcons[i];
 
+                toggle.SetOwned(DataManager.Instance.HasCharacter(def.id));
+                Debug.Log(DataManager.Instance.HasCharacter(def.id));
+
                 toggle.Bind(
                     id: def.id,
                     displayName: def.id,
@@ -147,8 +153,12 @@ namespace Customization
                         _stagedCombo.characterId = id;
                         ChangeCharacter(id).Forget();
                         UpdateApplyButton();
-                    }
-                );
+                    },
+                    onClicked: (id, isOn) =>
+                    {
+                        if (!isOn) return;
+                        ShowPurchasePopup(id);
+                    });
             }
 
             for (int i = 0; i < _equipToggles.Count; i++)
@@ -156,6 +166,8 @@ namespace Customization
                 var toggle = _equipToggles[i];
                 var def = equips[i];
                 var icon = equipIcons[i];
+
+                toggle.SetOwned(DataManager.Instance.HasEquip(def.id));
 
                 toggle.Bind(
                     id: def.id,
@@ -167,8 +179,12 @@ namespace Customization
                         _stagedCombo.equipId = id;
                         ChangeEquip(id).Forget();
                         UpdateApplyButton();
-                    }
-                );
+                    },
+                    onClicked: (id, isOn) =>
+                    {
+                        if (!isOn) return;
+                        ShowPurchasePopup(id);
+                    });
             }
 
             // 6) 레이아웃 리빌드 후 가시화
@@ -249,7 +265,7 @@ namespace Customization
             Debug.Log($"[Closet] Change Character → {id}");
 
             //입력 막기
- 
+
             await Manager.Custom.ApplyToAvatarAsync(avatarStruct, characterId: id);
             Debug.Log("Apply가 완료되었습니다.");
 
@@ -291,6 +307,19 @@ namespace Customization
             if (equipToggle) equipToggle.isOn = true;
 
             _initializing = false;
+        }
+
+
+        // ===== 구매 팝업 호출 =====
+        private void ShowPurchasePopup(string charId)
+        {
+            var popup = Manager.UI.CreatePopupUI<UI_Popup_ItemPurchase>();
+
+            //가격, 이미지 정보 가져오기
+
+            //popup.SetData();
+
+            Manager.UI.ShowPopupUI(popup).Forget();
         }
 
         #endregion
