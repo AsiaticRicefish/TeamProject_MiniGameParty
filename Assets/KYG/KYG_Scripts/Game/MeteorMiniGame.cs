@@ -210,10 +210,47 @@ namespace KYG
             if (PhotonNetwork.IsMasterClient)
             {
                 yield return new WaitForSeconds(afterDelay);
-                if (!endedThisTurn && currentTap < currentEndingCount)
-                    KYG.TurnManager.Instance.NextTurn();
+                if (!endedThisTurn && currentTap < currentEndingCount && IsAuthoritative())
+                {
+                    TryNextTurnOrLocalFallback();
+                }
             }
         }
+        
+        private bool IsAuthoritative()
+        {
+            // 온라인이면 마스터만, 오프라인/미연결이면 로컬 테스트 편의를 위해 권위자로 간주
+            return (Photon.Pun.PhotonNetwork.IsConnectedAndReady)
+                ? Photon.Pun.PhotonNetwork.IsMasterClient
+                : true;
+        }
+
+// TurnManager가 없거나 비온라인이면 로컬로 다음 턴을 강제 진행
+        private void TryNextTurnOrLocalFallback()
+        {
+            // 1) 온라인 & TurnManager 존재 → 정식 진행
+            if (KYG.TurnManager.Instance != null && Photon.Pun.PhotonNetwork.IsConnectedAndReady)
+            {
+                KYG.TurnManager.Instance.NextTurn();
+                return;
+            }
+
+            // 2) 로컬 폴백: LocalMiniGameBoot가 장착되어 있으면 그쪽으로 다음 턴을 회전
+            var boot = UnityEngine.Object.FindObjectOfType<KYG.LocalMiniGameBoot>();
+            if (boot != null)
+            {
+                boot.NextLocalTurn();
+                return;
+            }
+
+            // 3) 폴백도 없으면 최소한 내/남 턴을 토글해서 재시작(2인 가정)
+            //    필요 시 alivePlayers를 직렬화 필드로 받아 확장 가능
+            bool nextIsMine = !myTurn;
+            InitTurn(nextIsMine, 1, 2);
+            UnityEngine.Debug.LogWarning("[MeteorTapMiniGame] No TurnManager/Boot found. Fallback toggled turn locally.");
+        }
+        
+        public bool IsMyTurn => myTurn;
 
         [PunRPC]
         private void RPC_OnEndingReached()
@@ -232,8 +269,10 @@ namespace KYG
             // 3) 별 오브젝트 위로 상승
             StartCoroutine(CoEndingSequence());
 
-            if (PhotonNetwork.IsMasterClient)
-                KYG.TurnManager.Instance.NextTurn();
+            if (IsAuthoritative())
+            {
+                TryNextTurnOrLocalFallback();
+            }
         }
         
         private IEnumerator CoEndingSequence()
@@ -261,15 +300,25 @@ namespace KYG
             if (sfxMeteor) sfxMeteor.Play(); // 메테오/충돌 계열 사운드
 
             // 5) 탈락자 처리(마스터 권한)
-            if (PhotonNetwork.IsMasterClient)
+            if (IsAuthoritative())
             {
-                // 현재 턴의 배우(ActorNumber) 찾기
-                int actor = KYG.TurnManager.Instance.GetCurrentTurnActor();
-                KYG.ShootingGameManager.Instance.Eliminate(actor);
-                // 게임이 계속이면 다음 턴
-                if (!KYG.ShootingGameManager.Instance.IsGameOver())
-                    KYG.TurnManager.Instance.NextTurn();
-                // 게임오버면 승리 연출/종료는 ShootingGameManager 내부에서 처리
+                int actor = KYG.TurnManager.Instance != null
+                    ? KYG.TurnManager.Instance.GetCurrentTurnActor()
+                    : -1;
+
+                // 승패/탈락 로직은 온라인 기준 설계이므로, 오프라인 테스트에선 단순 턴 회전만.
+                if (KYG.ShootingGameManager.Instance != null && Photon.Pun.PhotonNetwork.IsConnectedAndReady)
+                {
+                    KYG.ShootingGameManager.Instance.Eliminate(actor);
+                    if (!KYG.ShootingGameManager.Instance.IsGameOver())
+                        TryNextTurnOrLocalFallback();
+                    // 게임오버면 ShootingGameManager가 처리
+                }
+                else
+                {
+                    // 로컬이면 걍 다음 턴
+                    TryNextTurnOrLocalFallback();
+                }
             }
         }
 
