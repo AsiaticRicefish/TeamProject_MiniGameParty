@@ -112,7 +112,7 @@ namespace Network
         #region Lobby 진입 관련 로직
         
 
-        private void TryJoinLobby()
+        public void TryJoinLobby()
         {
             if (!PhotonNetwork.IsConnectedAndReady)
             {
@@ -306,6 +306,14 @@ namespace Network
         public override void OnDisconnected(DisconnectCause cause)
         {
             Debug.Log("[NetworkManager] 서버 연결 끊어짐. 재접속 시도");
+            
+            // 다른 기기 로그인으로 강제 종료된 경우 자동 재접속 금지
+            if (SessionEnforcer.KickedByRemote)
+            {
+                Debug.Log("[NetworkManager] 다른 기기 로그인으로 종료됨 → 자동 재접속하지 않음");
+                return;
+            }
+            
             base.OnDisconnected(cause);
             PhotonNetwork.ConnectUsingSettings(); // 재접속
         }
@@ -368,10 +376,10 @@ namespace Network
         // 랜덤 룸 입장 실패 (빠른 매칭)
         public override void OnJoinRoomFailed(short returnCode, string message)
         {
-            Debug.Log($"[NetworkManager] 비공개 방 입장에 실패했습니다. ({returnCode}) {message}");
+            Debug.Log($"[NetworkManager] 방 입장에 실패했습니다. ({returnCode}) {message}");
             JoinFailed?.Invoke(returnCode, message);
-            
-            TryJoinLobby();
+            if (PhotonNetwork.IsConnectedAndReady)
+                TryJoinLobby();
         }
 
         #endregion

@@ -217,6 +217,8 @@ namespace KYG.Auth
 
                 user = t.Result.User;
                 Debug.Log($"[GuestLoginManager] Firebase sign-in ok. uid={user.UserId}");
+                
+                _ = SessionEnforcer.Instance?.StartForUidAsync(user.UserId);
 
                 // 2) 닉네임 전역 예약 (트랜잭션 + 재시도 + 타임아웃 내장됨)
                 Debug.Log($"[GuestLoginManager] Reserve START nick={pendingNickname}, uid={user.UserId}");
@@ -253,21 +255,13 @@ namespace KYG.Auth
                     return;
                 }
 
-                // 3) 연결 끊기면 자동 정리 예약
+                // 3) 연결 끊기면 자동 정리 예약 + 닉네임 프로필 반영 → Photon 접속
                 await NicknameRegistry.BindOnDisconnectCleanupAsync(pendingNickname);
                 var profile = new UserProfile { DisplayName = pendingNickname };
                 user.UpdateUserProfileAsync(profile).ContinueWithOnMainThread(_ =>
                 {
                     ApplyPhotonIdentityAndConnect(user.UserId, pendingNickname);
-                    // 성공: UI는 그대로 잠금 유지(씬 전환/로비 진입)
                 });
-
-                /* 4) Firebase DisplayName 갱신 후 Photon 접속
-                var profile = new UserProfile { DisplayName = pendingNickname };
-                user.UpdateUserProfileAsync(profile).ContinueWithOnMainThread(_ =>
-                {
-                    ApplyPhotonIdentityAndConnect(user.UserId, pendingNickname);
-                });*/
             });
         }
 

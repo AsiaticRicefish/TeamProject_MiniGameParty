@@ -16,12 +16,7 @@ MonoBehaviour:
   m_Data:
     m_SerializedData: []
   m_GUID: 8dc196d36c902c4439b304ad961ef94d
-  m_SerializeEntries:
-  - m_GUID: 6a14d461b505f4b1cad4d9381860b2b2
-    m_Address: Assets/Imports/UnimoAsset/123/Prefabs/Equip/EQ013_Toaster.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
+  m_SerializeEntries: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: efc2531fbc716f7409d27168060779e5, type: 2}
   m_SchemaSet:

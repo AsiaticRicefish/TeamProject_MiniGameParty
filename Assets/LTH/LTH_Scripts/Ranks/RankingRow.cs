@@ -164,7 +164,7 @@ public class RankingRow : MonoBehaviour
     public void EmphasizeFirstPlace()
     {
         KillFx();
-        if (cg) cg.alpha = 0f;
+        if (cg) cg.alpha = 1f;
 
         fxRoot.localScale = Vector3.one * _fxBaseScale;
         _punchTween = fxRoot.DOPunchScale(Vector3.one * punchScale, punchDuration, 10, 0.9f);
