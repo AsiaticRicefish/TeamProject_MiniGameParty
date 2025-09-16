@@ -2,6 +2,8 @@ using UnityEngine;
 using Photon.Pun;
 using TMPro;
 using UnityEngine.UI;
+using System.Collections;
+using DesignPattern;
 
 namespace KYG
 {
@@ -27,6 +29,17 @@ namespace KYG
         [SerializeField] private TMP_Text  turnBannerMine;
         [SerializeField] private TMP_Text  turnBannerOther;
         [SerializeField] private Slider    turnTimerUI;
+        
+        [SerializeField] private Transform starRoot;          // 별 오브젝트 루트(상승용)
+        [SerializeField] private float     starRiseHeight = 2f;
+        [SerializeField] private float     starRiseDuration = 1.2f;
+        
+        [SerializeField] private TMP_Text  exclamationText;  // 느낌표 텍스트
+        [SerializeField] private AudioSource sfxExclamation; // 느낌표 사운드
+        [SerializeField] private ParticleSystem vfxExplosion;// 폭발 이펙트
+        [SerializeField] private string animFaceAnxious = "Anxious"; // 애니메이션 클립명 통일
+        [SerializeField] private string animFaceWorried = "Worried";
+        [SerializeField] private string animFacePanic   = "Fear";    // "불안" 계열 최종 표정
 
         [Header("Count UI")]
         [SerializeField] private TMP_Text countNumberText;
@@ -208,12 +221,56 @@ namespace KYG
             if (endedThisTurn) return; // 중복 방지
             endedThisTurn = true;
 
-            if (sfxMeteor) sfxMeteor.Play();
-            if (unimoFace) unimoFace.Play("Anxious", 0, 0);
-            // TODO: 폭발/종료 연출 추가
+            // 0) 별 색상 붉게 (경고 머티리얼)
+            if (starRenderer && starWarningMat) starRenderer.material = starWarningMat;
+
+            // 1) 유니모 표정: 초조 → 2) 느낌표 텍스트/사운드
+            if (unimoFace) unimoFace.Play(animFaceAnxious, 0, 0);
+            if (exclamationText) exclamationText.gameObject.SetActive(true);
+            if (sfxExclamation)  sfxExclamation.Play();
+
+            // 3) 별 오브젝트 위로 상승
+            StartCoroutine(CoEndingSequence());
 
             if (PhotonNetwork.IsMasterClient)
                 KYG.TurnManager.Instance.NextTurn();
+        }
+        
+        private IEnumerator CoEndingSequence()
+        {
+            // 살짝 지연을 줘서 느낌표 노출
+            yield return new WaitForSeconds(0.25f);
+
+            // 별 상승
+            if (starRoot != null)
+            {
+                Vector3 start = starRoot.position;
+                Vector3 end   = start + Vector3.up * starRiseHeight;
+                float t = 0f;
+                while (t < starRiseDuration)
+                {
+                    t += Time.deltaTime;
+                    starRoot.position = Vector3.Lerp(start, end, t / starRiseDuration);
+                    yield return null;
+                }
+            }
+
+            // 4) 폭발 이펙트 + 표정 "불안"
+            if (unimoFace) unimoFace.Play(animFacePanic, 0, 0);
+            if (vfxExplosion) vfxExplosion.Play();
+            if (sfxMeteor) sfxMeteor.Play(); // 메테오/충돌 계열 사운드
+
+            // 5) 탈락자 처리(마스터 권한)
+            if (PhotonNetwork.IsMasterClient)
+            {
+                // 현재 턴의 배우(ActorNumber) 찾기
+                int actor = KYG.TurnManager.Instance.GetCurrentTurnActor();
+                KYG.ShootingGameManager.Instance.Eliminate(actor);
+                // 게임이 계속이면 다음 턴
+                if (!KYG.ShootingGameManager.Instance.IsGameOver())
+                    KYG.TurnManager.Instance.NextTurn();
+                // 게임오버면 승리 연출/종료는 ShootingGameManager 내부에서 처리
+            }
         }
 
         // ────────────────────── UI 보강 유틸 ──────────────────────
