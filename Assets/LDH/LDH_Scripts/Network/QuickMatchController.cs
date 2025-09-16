@@ -227,6 +227,18 @@ namespace Network
         private void OnJoinRoomFailed(short returnCode, string message)
         {
             Debug.Log($"<color=blue>[QuickMatchController] ({returnCode}) : {message} / Try to join random room again.</blue>");
+            //요청 취소 처리
+            _requesting = false;
+            _ = TryQuickMatchAgain();
+        }
+        
+        // 방이 없어져서 진입에 실패한경우. 로비에 들어갈 때가지 대기 후 재매칭 처리
+        private async UniTask TryQuickMatchAgain()
+        {
+            Debug.Log("[QuickMatchController] Try Quick Match Again. Wait until enter lobby");
+            await UniTask.WaitUntil(() => PhotonNetwork.IsConnectedAndReady && PhotonNetwork.InLobby);
+            await UniTask.Yield();
+            Debug.Log("[QuickMatchController] Restart MatchMaking");
             OnClickMatchingStart();
         }
 

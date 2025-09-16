@@ -378,6 +378,8 @@ namespace Network
         {
             Debug.Log($"[NetworkManager] 방 입장에 실패했습니다. ({returnCode}) {message}");
             JoinFailed?.Invoke(returnCode, message);
+            if (PhotonNetwork.IsConnectedAndReady)
+                TryJoinLobby();
         }
 
         #endregion

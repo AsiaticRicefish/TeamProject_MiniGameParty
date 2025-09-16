@@ -235,9 +235,6 @@ namespace Network
             
             MatchController.Instance.SetMatching(MatchType.Private, false);
             
-            //로비로 복귀 시도
-            Manager.Network.TryJoinLobby();
-            
             _requesting = false;
  
         }
