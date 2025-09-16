@@ -65,7 +65,8 @@ public class RoomPropertyObserver : PunSingleton<RoomPropertyObserver>, IGameCom
             string key = prop.Key.ToString();
             if (_observersByKey.TryGetValue(key, out var list))
             {
-                foreach (var obs in list)
+                var copy = list.ToList(); // 또는 list.ToArray()
+                foreach (var obs in copy)
                     obs.Callback.Invoke(prop.Value);
             }
         }
