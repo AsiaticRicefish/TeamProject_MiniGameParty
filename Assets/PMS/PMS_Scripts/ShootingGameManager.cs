@@ -142,6 +142,7 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
         }
     }
 
+    // TODO - 먼저 들어온 순으로 했는데 추후 시간나면 턴인덱스가 먼저인 순서대로 정렬 해주도록
     public void CheckRanking()
     {
         if (!PhotonNetwork.IsMasterClient) return;

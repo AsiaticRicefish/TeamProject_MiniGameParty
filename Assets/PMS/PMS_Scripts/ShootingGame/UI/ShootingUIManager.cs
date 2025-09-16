@@ -34,7 +34,7 @@ namespace ShootingScene.ShootingGame
        }
 
 
-       #region my turn ui
+        #region my turn ui
 
        public IEnumerator PlayMyTurnUI()
        {
@@ -140,26 +140,40 @@ namespace ShootingScene.ShootingGame
        
             _timerCoroutine = null;
         }
-
         #endregion
 
         #region ranking
-
-        /*public void UpdateRanking(string[] uids)
+        //맨 처음 랭킹 UI를 넣어주기 UID - Color 매핑시켜줄 목적으로
+        //턴 인덱스로 순위 정함
+        public void StartRanking()
         {
-            playerRank.UpdateRanks(uids);
+            Dictionary<string, int> ranks = new Dictionary<string, int>();
+
+            if (!playerRank.gameObject.activeSelf)
+            {
+                playerRank.gameObject.SetActive(true);
+            }
+
+            foreach(var player in PlayerManager.Instance.Players.Values)
+            {
+                ranks.Add(player.PlayerId, player.ShootingData.myTurnIndex);
+            }
+
+            playerRank.UpdateLiveRanks(ranks);
         }
 
-        public void LeftUserUpdateRanking(string leftPlayerNickName)
-        {
-            playerRank.LeftUserSetRank(leftPlayerNickName);
-        }*/
 
         public void UpdateRanking(Dictionary<string,int> ranks)
         {
             playerRank.UpdateLiveRanks(ranks);
         }
 
+        //마커에 입힐 랭킹 Color 가져오기
+        public Color GetPlayerColor(string playerUID)
+        {
+            playerRank.GetColor(playerUID, out Color color);
+            return color;
+        }
 
         #endregion
 
