@@ -119,7 +119,7 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
         }
         Debug.Log($"[JengaNetwork] Sending RPC to change state to: {state}");
 
-        thisPhotonView.RPC(nameof(RPC_ApplyGameState), RpcTarget.All, (int)state);
+        thisPhotonView.RPC(nameof(RPC_ApplyGameState), RpcTarget.Others, (int)state);
     }
 
     [PunRPC]
@@ -688,6 +688,23 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
 
     public override void OnRoomPropertiesUpdate(PhotonHashtable props)
     {
+        // START/DUR 적용
+        if (props.TryGetValue(JengaRoomProps.KEY_START_TIME, out var startObj) &&
+            props.TryGetValue(JengaRoomProps.KEY_DURATION, out var durObj) &&
+            startObj is double st && durObj is double du)
+        {
+            JengaGameManager.Instance?.ApplySyncedTimerFromRoomProps(st, du);
+        }
+
+        // STATE 적용
+        if (props.TryGetValue(JengaRoomProps.KEY_STATE, out var stateObj) && stateObj is int si)
+        {
+            if (JengaGameManager.Instance?.currentState != (JengaGameState)si)
+            {
+                JengaGameManager.Instance?.ApplyGameStateChange((JengaGameState)si);
+            }
+        }
+
         if (_receivedRankOnce) return;
 
         if (props.TryGetValue(JengaRoomProps.KEY_RANK_UIDS, out var uObj) &&
