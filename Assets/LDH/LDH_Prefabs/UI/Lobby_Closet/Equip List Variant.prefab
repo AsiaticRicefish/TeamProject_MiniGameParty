@@ -149,6 +149,31 @@ PrefabInstance:
       propertyPath: iconImage
       value: 
       objectReference: {fileID: 6539406336641057811}
+    - target: {fileID: 5642806635651280743, guid: 315033c9d019440a9912d27f40c56f1f,
+        type: 3}
+      propertyPath: lockImage
+      value: 
+      objectReference: {fileID: 7468871392868222551}
+    - target: {fileID: 5642806635651280743, guid: 315033c9d019440a9912d27f40c56f1f,
+        type: 3}
+      propertyPath: lockColor.a
+      value: 0.5019608
+      objectReference: {fileID: 0}
+    - target: {fileID: 5642806635651280743, guid: 315033c9d019440a9912d27f40c56f1f,
+        type: 3}
+      propertyPath: lockColor.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5642806635651280743, guid: 315033c9d019440a9912d27f40c56f1f,
+        type: 3}
+      propertyPath: lockColor.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5642806635651280743, guid: 315033c9d019440a9912d27f40c56f1f,
+        type: 3}
+      propertyPath: lockColor.r
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5923315007654994935, guid: 315033c9d019440a9912d27f40c56f1f,
         type: 3}
       propertyPath: m_Name
@@ -276,3 +301,15 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 6653867385330615044}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &7468871392868222551 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4319387276813305171, guid: 315033c9d019440a9912d27f40c56f1f,
+    type: 3}
+  m_PrefabInstance: {fileID: 6653867385330615044}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

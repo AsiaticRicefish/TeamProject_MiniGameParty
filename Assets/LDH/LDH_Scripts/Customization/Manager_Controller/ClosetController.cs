@@ -33,13 +33,13 @@ namespace Customization
 
         [SerializeField] private ToggleGroup equipToggleGroup;
 
-        [Header("Control Buttons")] [SerializeField]
-        private Button applyButton;
-
+        [Header("Control Buttons")] 
+        [SerializeField] private Button applyButton;
         [SerializeField] private Button resetButton;
-
-        [Header("Avatar")] [SerializeField] private AvatarStruct avatarStruct;
-
+        [SerializeField] private Button purchaseButton;
+        
+        [Header("Avatar")] 
+        [SerializeField] private AvatarStruct avatarStruct;
 
         // 생성된 버튼
         private readonly List<UI_ClosetItemButton> _charToggles = new();
@@ -69,18 +69,21 @@ namespace Customization
 
             resetButton.onClick.RemoveAllListeners();
             resetButton.onClick.AddListener(ResetClicked);
+            
+            purchaseButton.onClick.RemoveAllListeners();
+            purchaseButton.onClick.AddListener(PurchaseClicked);
         }
 
         private async void Start()
         {
-            Debug.Log("[ClosetPrebuilder] Wait until managers are initialized");
+            Debug.Log("[ClosetController] Wait until managers are initialized");
             var token = this.GetCancellationTokenOnDestroy();
             await UniTask.WaitUntil(() => CatalogProvider.IsReady, cancellationToken: token);
             await UniTask.WaitUntil(() => Manager.Custom != null && Manager.Custom.IsReady, cancellationToken: token);
 
             await PrebuildAllAsync();
 
-            Debug.Log("[ClosetPrebuilder] Apply Initial Selection");
+            Debug.Log("[ClosetController] Apply Initial Selection");
             _stagedCombo = Manager.Custom.GetEquippedLocal();
             ApplyInitialSelection(_stagedCombo);
         }
@@ -102,14 +105,14 @@ namespace Customization
             if (_built) return;
             _built = true;
 
-            Debug.Log("[ClosetPrebuilder] start prebuild");
+            Debug.Log("[ClosetController] start prebuild");
 
             // 1) 데이터 가져오기 (CatalogProvider에서 정의 제공)
             var characters = CatalogProvider.CharactersSorted;
             var equips = CatalogProvider.EquipsSorted;
             if (characters == null || equips == null)
             {
-                Debug.LogError("[ClosetPrebuilder] CatalogProvider.Characters or CatalogProvider.Equips is null");
+                Debug.LogError("[ClosetController] CatalogProvider.Characters or CatalogProvider.Equips is null");
                 return;
             }
 
@@ -141,7 +144,6 @@ namespace Customization
                 var icon = charIcons[i];
 
                 toggle.SetOwned(DataManager.Instance.HasCharacter(def.id));
-                Debug.Log(DataManager.Instance.HasCharacter(def.id));
 
                 toggle.Bind(
                     id: def.id,
@@ -153,11 +155,7 @@ namespace Customization
                         _stagedCombo.characterId = id;
                         ChangeCharacter(id).Forget();
                         UpdateApplyButton();
-                    },
-                    onClicked: (id, isOn) =>
-                    {
-                        if (!isOn) return;
-                        ShowPurchasePopup(id);
+                        UpdatePurchaseButton();
                     });
             }
 
@@ -179,11 +177,7 @@ namespace Customization
                         _stagedCombo.equipId = id;
                         ChangeEquip(id).Forget();
                         UpdateApplyButton();
-                    },
-                    onClicked: (id, isOn) =>
-                    {
-                        if (!isOn) return;
-                        ShowPurchasePopup(id);
+                        UpdatePurchaseButton();
                     });
             }
 
@@ -195,7 +189,7 @@ namespace Customization
             SetActiveGroup(equipmentCanvasGroup, true);
 
 
-            Debug.Log("[ClosetPrebuilder] prebuild complete");
+            Debug.Log("[ClosetController] prebuild complete");
         }
 
         #region Toggle Build
@@ -298,7 +292,7 @@ namespace Customization
 
             if (charToggle == null || equipToggle == null)
             {
-                Debug.LogError("[ClosetPreBuilder] apply initial selection error");
+                Debug.LogError("[ClosetController] apply initial selection error");
                 return;
             }
 
@@ -308,19 +302,7 @@ namespace Customization
 
             _initializing = false;
         }
-
-
-        // ===== 구매 팝업 호출 =====
-        private void ShowPurchasePopup(string charId)
-        {
-            var popup = Manager.UI.CreatePopupUI<UI_Popup_ItemPurchase>();
-
-            //가격, 이미지 정보 가져오기
-
-            //popup.SetData();
-
-            Manager.UI.ShowPopupUI(popup).Forget();
-        }
+        
 
         #endregion
 
@@ -330,12 +312,35 @@ namespace Customization
         {
             if (_stagedCombo.characterId == null || _stagedCombo.equipId == null) return;
 
+            bool valid = DataManager.Instance.HasCharacter(_stagedCombo.characterId) && DataManager.Instance.HasEquip(_stagedCombo.equipId);
             bool modified = Manager.Custom.IsModified(_stagedCombo);
-            bool valid = !string.IsNullOrEmpty(_stagedCombo.characterId) && !string.IsNullOrEmpty(_stagedCombo.equipId);
+          
 
             applyButton.interactable = !_applying && modified && valid;
         }
 
+        private void UpdatePurchaseButton()
+        {
+            if (_stagedCombo.characterId == null || _stagedCombo.equipId == null) return;
+            
+            bool owned = DataManager.Instance.HasCharacter(_stagedCombo.characterId) && DataManager.Instance.HasEquip(_stagedCombo.equipId);
+
+            purchaseButton.interactable = !owned;
+
+        }
+
+        
+        // ===== 구매 팝업 호출 =====
+        private void PurchaseClicked()
+        {
+            var popup = Manager.UI.CreatePopupUI<UI_Popup_ItemPurchase>();
+
+            //가격, 이미지 정보 가져오기
+
+            //popup.SetData();
+
+            Manager.UI.ShowPopupUI(popup).Forget();
+        }
         private async UniTaskVoid ApplyClicked()
         {
             if (!_stagedCombo.characterId?.Any() ?? true) return;
@@ -345,6 +350,7 @@ namespace Customization
             Debug.Log("ApplyClicked && 현재 장착 상태 적용가능");
             _applying = true;
             UpdateApplyButton();
+            UpdatePurchaseButton();
 
             // 실제 저장 API 호출
             bool ok = await Manager.Custom.UpdateComboAsync(_stagedCombo);
@@ -362,6 +368,7 @@ namespace Customization
 
             _applying = false;
             UpdateApplyButton();
+            UpdatePurchaseButton();
         }
 
         public void ResetClicked()
@@ -369,6 +376,7 @@ namespace Customization
             _stagedCombo = Manager.Custom.GetEquippedLocal();
             ApplyInitialSelection(_stagedCombo);
             UpdateApplyButton();
+            UpdatePurchaseButton();
         }
 
         #endregion
