@@ -1408,7 +1408,7 @@ GameObject:
   - component: {fileID: 2809039533752380092}
   - component: {fileID: 4310822013161977443}
   m_Layer: 5
-  m_Name: Area_Goods
+  m_Name: Area_Currency
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1873,7 +1873,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -5, y: -60}
+  m_AnchoredPosition: {x: -4.999939, y: -60}
   m_SizeDelta: {x: -90, y: -120}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1001 &2944080047954743726

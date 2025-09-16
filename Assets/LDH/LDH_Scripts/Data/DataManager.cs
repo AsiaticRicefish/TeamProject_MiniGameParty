@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using DesignPattern;
+using LDH_Util;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -16,6 +17,7 @@ namespace Data
         public UserData User { get; private set; }
         public CustomizationData Custom => User.customization;
         public CurrencyData Currency => User.currency;
+        
         
         // action
         public event Action<UserData> OnUserDataChanged;
@@ -62,45 +64,52 @@ namespace Data
                 Debug.LogWarning($"[DataManager] Do not have {newCharId } or {newEquipId}. Fail to update customization data.");
                 return false;
             }
+
+            // 트랜잭션으로 서버 저장
+            var (committed, latest) = await _repo.SaveCustomizationAsync(_uid, cur =>
+            {
+                if (cur.ownedCharacters == null || !cur.ownedCharacters.Contains(newCharId))
+                    return (false, cur);
+                if (cur.ownedEquips == null || !cur.ownedEquips.Contains(newEquipId))
+                    return (false, cur);
+
+                cur.characterId = newCharId;
+                cur.equipId = newEquipId;
+
+                return (true, cur);
+            });
             
-            // 메모리 갱신
-            Custom.characterId = newCharId;
-            Custom.equipId     = newEquipId;
-
-            // 서버 저장 (Repo)
-            await _repo.SaveCustomizationAsync(_uid, Custom);
-
+            if (!committed || latest == null)
+            {
+                Debug.LogWarning("[DataManager] Customization transaction aborted or failed.");
+                return false;
+            }
+            
+            // 성공시 로컬 데이터 업데이트
+            User.customization = latest;
             // 이벤트
-            OnCustomizationChanged?.Invoke(Custom);
+            OnCustomizationChanged?.Invoke(latest);
             OnUserDataChanged?.Invoke(User);
-
             await UniTask.Yield();
             return true;
         }
-        
-        // 커스터마이징 데이터 메모리 업데이트 & 서버에 저장
-        // public async UniTask<bool> UpdateCurrencyDataAsync(int d1, int d2, int d3) 
-        // {
-        //     if (User == null) return false;
-        //     
-        //     // 메모리 갱신
-        //     User.currency = latest;
-        //     OnCurrencyChanged?.Invoke(latest);
-        //     OnUserDataChanged?.Invoke(User);
-        //     
-        //     await UniTask.Yield();
-        //     return true;
-        // }
-
+   
         
 
         #endregion
 
-        
-        
-        
+
+        #region Helper API
+
         public bool HasCharacter(string id) => Custom.ownedCharacters.Contains(id);
         public bool HasEquip(string id) => Custom.ownedEquips.Contains(id);
-        
+
+        public long GetCurrencyByType(Define_LDH.CurrencyType currencyType)
+        {
+            return Currency.GetCurrencyByType(currencyType);
+        }
+
+        #endregion
+
     }
 }

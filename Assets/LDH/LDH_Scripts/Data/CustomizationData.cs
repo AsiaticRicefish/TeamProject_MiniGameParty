@@ -21,6 +21,32 @@ namespace Data
         public IReadOnlyList<string> OwnedEquips => ownedEquips.ToList();
         public UnimoCombo CurrentCombo => new UnimoCombo(characterId, equipId);
         
+        
+        //----- 생성자 ----- //
+        public CustomizationData()
+        {
+            characterId = default;
+            equipId = default;
+            ownedCharacters = new();
+            ownedEquips = new HashSet<string>();
+            updatedAt = 0;
+        }
+
+        public CustomizationData(Dictionary<string, object> dict)
+        {
+            characterId =
+                dict != null && dict.TryGetValue("characterId", out var v1) ? v1.ToString() : "";
+            equipId =
+                dict != null && dict.TryGetValue("equipId", out var v2) ? v2.ToString() : "";
+            ownedCharacters = dict != null && dict.TryGetValue("ownedCharacters", out var v3)
+                ? UserDataRepository.ParseToHashSet(v3): new();
+            ownedEquips = dict != null && dict.TryGetValue("ownedEquips", out var v4)
+                ? UserDataRepository.ParseToHashSet(v4): new();
+            updatedAt = dict != null && dict.TryGetValue("updatedAt", out var time)
+                ? UserDataRepository.ReadTime(time)
+                : 0;
+        }
+
         public static CustomizationData CreateDefault()
         {
             var defaultCharacterId =  Define_LDH.DefaultData.DefaultCharacter;

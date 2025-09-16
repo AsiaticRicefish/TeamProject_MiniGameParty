@@ -137,7 +137,17 @@ namespace LDH_Util
             public const int DefaultCurrency2 = 10000;
             public const int DefaultCurrency3 = 10000;
         }
+        
+        public enum CurrencyType
+        {
+            Currency1,
+            Currency2,
+            Currency3,
+        }
 
+        public const long MaxCurrencyValue = 999999999;
+        public const long MinCurrencyValue = 0;
+        
         #endregion
         
         #region Setting

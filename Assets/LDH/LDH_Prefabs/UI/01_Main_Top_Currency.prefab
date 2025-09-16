@@ -249,8 +249,9 @@ GameObject:
   - component: {fileID: 7084120756407921352}
   - component: {fileID: 8393282006274977447}
   - component: {fileID: 5422304415345411131}
+  - component: {fileID: 7296246247271243014}
   m_Layer: 5
-  m_Name: 01_Main_Top_Goods
+  m_Name: 01_Main_Top_Currency
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -341,6 +342,20 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!114 &7296246247271243014
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1970067816615293966}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b06e62365f3b4e94903f7ee6e225ac19, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  valueText: {fileID: 1968554582768718001}
+  currencyType: 0
 --- !u!1 &9028930186120413982
 GameObject:
   m_ObjectHideFlags: 0

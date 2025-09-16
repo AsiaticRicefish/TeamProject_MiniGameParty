@@ -3,6 +3,7 @@ using Cysharp.Threading.Tasks;
 using Firebase;
 using Firebase.Auth;
 using Firebase.Database;
+using Managers;
 using UnityEngine;
 
 public class AuthBootstrapper : MonoBehaviour
@@ -92,6 +93,7 @@ public class AuthBootstrapper : MonoBehaviour
         if (verbose) Debug.Log("WebGL 빌드에서는 RTDB persistence 미지원 → 스킵");
 #endif
         // BackendManager에 바인딩
+        await UniTask.WaitUntil(() => BackendManager.Instance != null);
         BackendManager.BindDataBase(databaseUrl, db);
         
         s_DbConfigured = true;
