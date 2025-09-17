@@ -49,6 +49,9 @@ namespace KYG
         [Header("Tap Limits per Turn")]
         [SerializeField] private int minTapPerTurn = 1;
         [SerializeField] private int maxTapPerTurn = 3;
+        
+        [SerializeField] private float bannerShowTime = 0.9f;   // 배너 노출 시간(짧게)
+        [SerializeField] private float bannerFadeOut  = 0.2f;   // 페이드아웃 시간
 
         // 내부 상태
         private int  currentEndingCount;
@@ -69,6 +72,11 @@ namespace KYG
         /// </summary>
         public void InitTurnWithEnding(bool isMine, int roundIndex, int alivePlayerCount, int sharedEndingCount)
         {
+            Debug.Log($"[MTM] InitTurnWithEnding start mine={isMine}  " +
+                      $"mineTxt={(turnBannerMine? turnBannerMine.name : "null")}#{(turnBannerMine? turnBannerMine.GetInstanceID():0)} " +
+                      $"otherTxt={(turnBannerOther? turnBannerOther.name : "null")}#{(turnBannerOther? turnBannerOther.GetInstanceID():0)} " +
+                      $"instances={FindObjectsOfType<MeteorTapMiniGame>(true).Length}");
+            
             myTurn = isMine;
             currentTap = 0;
             tapsThisTurn = 0;
@@ -78,8 +86,8 @@ namespace KYG
 
             // UI/비주얼 초기화
             if (starRenderer && starNormalMat) starRenderer.material = starNormalMat;
-            SafeSetActive(turnBannerMine,  isMine);
-            SafeSetActive(turnBannerOther, !isMine);
+            //SafeSetActive(turnBannerMine,  isMine);
+            //SafeSetActive(turnBannerOther, !isMine);
             if (unimoFace) unimoFace.Play("Idle", 0, 0);
 
             turnTimeMax = 10f;
@@ -88,6 +96,32 @@ namespace KYG
 
             SafeSetActive(countNumberText, isMine); // 숫자 카운트는 내 턴만 표시
             EnsureUIVisible();                      // 렌더/알파 잠김 대비
+            
+            // InitTurnWithEnding 내부 UI/비주얼 초기화 부분 교체
+            // (둘 다 끄고 → 하나만 켜서 '동시 ON'을 원천 차단)
+            if (turnBannerMine)  turnBannerMine.gameObject.SetActive(false);
+            if (turnBannerOther) turnBannerOther.gameObject.SetActive(false);
+
+            if (isMine) {
+                if (turnBannerMine)  turnBannerMine.gameObject.SetActive(true);   // 내 턴만 보임
+            } else {
+                if (turnBannerOther) turnBannerOther.gameObject.SetActive(true);  // 상대 턴 전환은 모두에게
+            }
+            
+            // 잘못된 참조(같은 오브젝트를 두 슬롯에 꽂은 경우) 탐지
+            if (turnBannerMine && turnBannerOther && ReferenceEquals(turnBannerMine, turnBannerOther)) {
+                Debug.LogError("[MeteorTapMiniGame] turnBannerMine과 turnBannerOther가 같은 오브젝트를 참조하고 있습니다!");
+            }
+
+            // 씬에 복수 인스턴스 가드(두 컴포넌트가 서로 켜는 상황 방지)
+            if (FindObjectsOfType<MeteorTapMiniGame>(true).Length > 1) {
+                Debug.LogWarning("[MeteorTapMiniGame] 씬에 MeteorTapMiniGame이 2개 이상 존재합니다. 배너 중복 노출 원인일 수 있습니다.");
+            }
+            
+            // 배너는 "짧게" 보여주고 자동 숨김
+            // 모든 플레이어: turnBannerOther = 상대 턴 전환 알림 (NEXT >>)
+            // 내 턴인 플레이어만: turnBannerMine = 내 턴 알림 (MY TURN!)
+            PlayTurnTransitionBanners(isMine);
 
             if (isMine) StartCoroutine(CoCountWindow());
             else        countActive = false;
@@ -320,6 +354,50 @@ namespace KYG
                     TryNextTurnOrLocalFallback();
                 }
             }
+        }
+        
+        // (유틸) 텍스트를 짧게 보여주고 자동으로 숨김
+        private IEnumerator CoFlashText(TMP_Text txt, float showSec, float fadeSec)
+        {
+            if (!txt) yield break;
+            var go = txt.gameObject;
+
+            // 보장: 보이도록
+            if (!go.activeSelf) go.SetActive(true);
+            txt.canvasRenderer.SetAlpha(1f);
+
+            // 짧게 유지
+            yield return new WaitForSeconds(showSec);
+
+            // 페이드아웃
+            if (fadeSec > 0f)
+                txt.CrossFadeAlpha(0f, fadeSec, ignoreTimeScale: true);
+            else
+                txt.canvasRenderer.SetAlpha(0f);
+
+            yield return new WaitForSeconds(Mathf.Max(0.01f, fadeSec));
+
+            // 완전히 꺼두기
+            go.SetActive(false);
+        }
+
+        // (추가) 턴 전환 시 배너 연출 총괄
+        private void PlayTurnTransitionBanners(bool isMine)
+        {
+            // 1) 모두에게 "상대 턴으로 넘어갑니다(NEXT >>)" 배너를 짧게 노출
+            //    turnBannerOther 를 공용 전환 배너로 사용
+            if (turnBannerOther)
+                StartCoroutine(CoFlashText(turnBannerOther, bannerShowTime, bannerFadeOut));
+
+            // 2) 내 턴이면 "MY TURN!"(turnBannerMine)도 바로 이어서 짧게 노출
+            if (isMine && turnBannerMine)
+                StartCoroutine(CoFlashMyTurnAfterDelay(0.05f)); // 살짝 텀을 두고 노출
+        }
+
+        private IEnumerator CoFlashMyTurnAfterDelay(float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            yield return CoFlashText(turnBannerMine, bannerShowTime, bannerFadeOut);
         }
 
         // ────────────────────── UI 보강 유틸 ──────────────────────
