@@ -24,7 +24,7 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
 
     [Header("대기 UI")]
     [SerializeField] private GameObject waitingPanel;
-    [SerializeField] private RawImage waitingPreview; // 선택: 없으면 null 유지
+    
     private bool _iAmEliminated = false;
     private InputLockToken _eliminateLock;
 
@@ -50,10 +50,6 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
             // 초기 시간 설정
             UpdateTimerUI(JengaGameManager.Instance.GetRemainingTime());
             Debug.Log("[JengaUIManager - Initialize] 이벤트 구독 완료");
-        }
-        else
-        {
-            Debug.LogWarning("[JengaUIManager - Initialize] JengaGameManager.Instance가 null입니다.");
         }
 
         // UI 요소들 초기 상태 설정
@@ -304,11 +300,10 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
     #endregion
 
     #region 대기 UI
-    public void ShowWaiting(RenderTexture rt = null)
+    public void ShowWaiting()
     {
         _iAmEliminated = true;
 
-        if (waitingPreview && rt) waitingPreview.texture = rt;
         if (waitingPanel) waitingPanel.SetActive(true);
 
         if (_eliminateLock == null)
