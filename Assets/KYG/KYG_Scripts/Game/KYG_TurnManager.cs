@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using DesignPattern;
 using Photon.Pun;
+using DesignPattern;
 
 namespace KYG
 {
@@ -70,28 +71,66 @@ namespace KYG
             else
                 Debug.LogWarning("[TurnManager] EggManager not found in this scene. Skip clearing egg.");
 
-            currentTurnIndex++;
-            if (currentTurnIndex > PhotonNetwork.CurrentRoom.PlayerCount)
+            int tries = PhotonNetwork.CurrentRoom.PlayerCount + 2; // 안전 가드
+            do
             {
-                currentTurnIndex = 1;
-                currentRound++;
-                if (currentRound > totalRounds)
+                currentTurnIndex++;
+                if (currentTurnIndex > PhotonNetwork.CurrentRoom.PlayerCount)
                 {
-                    Debug.Log("[TurnManager] 게임 종료(마스터만 로그).");
-                    RoomPropertyObserver.Instance?.SetRoomProperty(ShootingGamePropertyKeys.State, "CheckGameWinnderState");
-                    return;
+                    currentTurnIndex = 1;
+                    currentRound++;
+                }
+                tries--;
+            }
+            while (tries > 0 && IsTurnIndexEliminated(currentTurnIndex));
+
+            BroadcastCurrentTurn();
+        }
+        
+        private bool IsTurnIndexEliminated(int turnIndex1Based)
+        {
+            // turnIndex == X 인 Actor 찾기 → 탈락 여부 확인
+            foreach (var p in PhotonNetwork.PlayerList)
+            {
+                if (p.CustomProperties != null &&
+                    p.CustomProperties.TryGetValue("turnIndex", out var v) &&
+                    v is int idx && idx == turnIndex1Based)
+                {
+                    return KYG.ShootingGameManager.Instance != null &&
+                           KYG.ShootingGameManager.Instance.IsEliminated(p.ActorNumber);
                 }
             }
-            BroadcastCurrentTurn();
+            return false;
+        }
+        
+        public int GetCurrentTurnActor()
+        {
+            foreach (var p in PhotonNetwork.PlayerList)
+            {
+                if (p.CustomProperties != null &&
+                    p.CustomProperties.TryGetValue("turnIndex", out var v) &&
+                    v is int idx && idx == currentTurnIndex)
+                {
+                    // 탈락자는 제외
+                    if (KYG.ShootingGameManager.Instance != null &&
+                        KYG.ShootingGameManager.Instance.IsEliminated(p.ActorNumber))
+                        continue;
+                    return p.ActorNumber;
+                }
+            }
+            return -1;
         }
 
         /// <summary>현재 턴/라운드 + 이번 라운드 엔딩카운트를 모든 클라에 브로드캐스트.</summary>
         public void BroadcastCurrentTurn()
         {
-            int alive  = PhotonNetwork.CurrentRoom.PlayerCount;
-            int ending = ComputeEndingCount(currentRound, alive); // ★ 라운드별 “총 탭 수” 확정
+            int alive = KYG.ShootingGameManager.Instance != null
+                ? KYG.ShootingGameManager.Instance.ActiveCount
+                : PhotonNetwork.CurrentRoom.PlayerCount;
+
+            int ending = ComputeEndingCount(currentRound, alive); // ★ 생존자 수 반영
             photonView.RPC(nameof(RPC_SetCurrentTurn), RpcTarget.All,
-                           currentTurnIndex, currentRound, ending);
+                currentTurnIndex, currentRound, ending);
         }
 
         // 라운드/인원에 따른 엔딩카운트 산출(미니게임 규칙과 동일)
@@ -169,7 +208,9 @@ namespace KYG
                    !mini.gameObject.activeInHierarchy)
                 yield return null;
 
-            int aliveCount = PhotonNetwork.CurrentRoom.PlayerCount;
+            int aliveCount = KYG.ShootingGameManager.Instance != null
+                ? KYG.ShootingGameManager.Instance.ActiveCount
+                : PhotonNetwork.CurrentRoom.PlayerCount;
             mini.InitTurnWithEnding(isMyTurn, roundIndex, aliveCount, sharedEndingCount);
         }
 

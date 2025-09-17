@@ -23,6 +23,17 @@ namespace KYG
             }
         }
         
+        public void NextLocalTurn()
+        {
+            var mini = FindObjectOfType<MeteorTapMiniGame>();
+            if (mini == null) return;
+
+            // 간단 2인 토글(필요 시 alivePlayers 이용해 라운드/순번 로직 확장)
+            bool nextIsMine = !mini.IsMyTurn;
+            mini.InitTurn(nextIsMine, debugRound, alivePlayers);
+            Debug.Log($"[LocalMiniGameBoot] NextLocalTurn → mine={nextIsMine}, alive={alivePlayers}");
+        }
+        
         public void StartByCardOrder(int firstOwnerIndex, int alivePlayers)
         {
             var mini = FindObjectOfType<MeteorTapMiniGame>();
