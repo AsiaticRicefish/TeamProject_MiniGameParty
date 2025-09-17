@@ -115,7 +115,7 @@ namespace LDH_Util
 
         #region Customizing
 
-        public enum ClosetCategory
+        public enum ItemType
         {
             Character,
             Equip,
@@ -160,8 +160,11 @@ namespace LDH_Util
             public const string Terms   = "https://hwiggames38434.imweb.me/termofuse";
             public const string Privacy = "https://hwig.games/?mode=privacy";
             public const string Support = "https://www.notion.so/2697de437a0c8007b7eeceb6a707547a?source=copy_link";
+
+            public const string RTDB = "https://unimo-56ebc-default-rtdb.asia-southeast1.firebasedatabase.app/";
         }
 
+      
         #endregion
         
     }

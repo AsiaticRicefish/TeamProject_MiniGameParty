@@ -19,6 +19,7 @@ namespace LDH_Game
 
         private UI_Loading _loadingUI;
         
+        
         /// <summary>
         /// - 어드레서블 다운로드
         /// - 커스터마이징을 위한 매니저/컨트롤러 초기화(CatalogProvider, CustomManager)
@@ -32,19 +33,35 @@ namespace LDH_Game
             _loadingUI.OnCloseRequested += DestroyGameBootstrap;
             Manager.UI.ShowPopupUI(_loadingUI).Forget();
             
-            
+            Util_LDH.ConsoleLog(this, "[0단계 - 1] 파괴되지 않도록 dont destroy처리");
             // 1) 작업이 완료되지 않았는데 씬이 전환되는 경우 파괴되지 않도록 하기 위해 dont destroy 처리
             DontDestroyOnLoad(gameObject);
             
-           Util_LDH.ConsoleLog(this, "BackendManager의 RTDB 준비를 대기.");
-            // 2) BackendManager RTDB 준비를 대기
-            await BackendManager.WhenDatabaseReady();
-               
-            Util_LDH.ConsoleLog(this, "BackendManager의 RTDB 준비 완료.");
-            // 3) UID 확보
-            var uid = BackendManager.Auth.CurrentUser.UserId;
-            Util_LDH.ConsoleLog(this, $"UID 가져오기 : {uid}");
+            Util_LDH.ConsoleLog(this, "[0단계 - 2] 데이터 베이스초기화");
+            // 2) 데이터베이스 초기화 및 준비
+            await FirebaseBootstrap.InitializeAsync(Define_LDH.Urls.RTDB);
+            
+            Util_LDH.ConsoleLog(this, "[0단계 - 3] DataManager, BackendManager Instance가 생성될때까지 대기");
+            // 3) DataManager, BackendManager Instance가 생성될때까지 대기
+            await UniTask.WaitUntil(() => DataManager.Instance != null && BackendManager.Instance != null);
 
+            
+            var uid = BackendManager.Auth.CurrentUser.UserId;
+            Util_LDH.ConsoleLog(this, $"[0단계 - 4] UID 가져오기 : {uid}");
+
+            
+            Util_LDH.ConsoleLog(this, "[0단계 - 5] DataBase Binding");
+            var userRepo = new RealTimeUserDataRepository(FirebaseBootstrap.Rtdb, FirebaseBootstrap.Root);
+            
+            var itemRepo = new FirestoreItemRepository(FirebaseBootstrap.Firestore);
+            
+                 
+            DataManager.Instance.BindUserDataRepository(userRepo,uid);
+            DataManager.Instance.BindItemRepository(itemRepo);
+            
+            Util_LDH.ConsoleLog(this, "[0단계] 완료");
+            
+            
             // [1단계]
             // 1) Addressable 초기화
             await Addressables.InitializeAsync().Task;
@@ -78,9 +95,13 @@ namespace LDH_Game
                 Util_LDH.ConsoleLog(this, $"catalog progress : {catalogProgress*100}");
                 catalogProgress = d;
             });
-            UniTask dataTask = DataManager.Instance.LoadOrCreatedUserDataAsync();
+            UniTask userDataTask = DataManager.Instance.LoadOrCreatedUserDataAsync();
 
-            await UniTask.WhenAll(catalogTask, dataTask);
+            UniTask itemDataTask = DataManager.Instance.LoadItemsDataAsync();
+
+            
+            
+            await UniTask.WhenAll(catalogTask, userDataTask, itemDataTask);
             
             // 5) 커스터마이징 매니저에서 DataManager에 저장된 데이터를 가져와 커스템 데이터를 셋팅해준다.
             await Manager.Custom.InitAsync();

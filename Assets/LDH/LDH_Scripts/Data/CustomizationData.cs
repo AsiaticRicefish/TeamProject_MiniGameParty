@@ -39,11 +39,11 @@ namespace Data
             equipId =
                 dict != null && dict.TryGetValue("equipId", out var v2) ? v2.ToString() : "";
             ownedCharacters = dict != null && dict.TryGetValue("ownedCharacters", out var v3)
-                ? UserDataRepository.ParseToHashSet(v3): new();
+                ? RealTimeUserDataRepository.ParseToHashSet(v3): new();
             ownedEquips = dict != null && dict.TryGetValue("ownedEquips", out var v4)
-                ? UserDataRepository.ParseToHashSet(v4): new();
+                ? RealTimeUserDataRepository.ParseToHashSet(v4): new();
             updatedAt = dict != null && dict.TryGetValue("updatedAt", out var time)
-                ? UserDataRepository.ReadTime(time)
+                ? RealTimeUserDataRepository.ReadTime(time)
                 : 0;
         }
 

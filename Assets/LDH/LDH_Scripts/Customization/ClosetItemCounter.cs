@@ -18,12 +18,12 @@ namespace Customization
         public void SetCounter(string id)
         {
 
-            if (id.Equals(Define_LDH.ClosetCategory.Character.ToString()))
+            if (id.Equals(Define_LDH.ItemType.Character.ToString()))
             {
                 _ownedCount = DataManager.Instance.Custom.OwnedCharacters.Count.ToString();
                 _totalCount = CatalogProvider.Characters.Count.ToString();
             }
-            else if (id.Equals(Define_LDH.ClosetCategory.Equip.ToString()))
+            else if (id.Equals(Define_LDH.ItemType.Equip.ToString()))
             {
                 _ownedCount = DataManager.Instance.Custom.OwnedEquips.Count().ToString();
                 _totalCount = CatalogProvider.Equips.Count().ToString();

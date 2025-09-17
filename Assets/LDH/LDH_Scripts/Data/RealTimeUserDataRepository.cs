@@ -11,18 +11,16 @@ using UnityEngine.Events;
 
 namespace Data
 {
-    public class UserDataRepository
+    public class RealTimeUserDataRepository
     {
-        private FirebaseDatabase _database;
-        private DatabaseReference _root;
-        private string _databaseUrl;
+        private readonly FirebaseDatabase _database;
+        private readonly DatabaseReference _root;
 
         // 생성자
-        public UserDataRepository(FirebaseDatabase database, DatabaseReference root, string databaseUrl)
+        public RealTimeUserDataRepository(FirebaseDatabase database, DatabaseReference root)
         {
             _database = database;
             _root = root;
-            _databaseUrl = databaseUrl;
         }
 
         #region RealTimeDataBase - path helper

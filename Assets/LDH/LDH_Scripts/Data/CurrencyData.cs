@@ -36,7 +36,7 @@ namespace Data
                 ? Convert.ToInt64(v3)
                 : 0;
             updatedAt = dict != null && dict.TryGetValue("updatedAt", out var time)
-                ? UserDataRepository.ReadTime(time)
+                ? RealTimeUserDataRepository.ReadTime(time)
                 : 0;
         }
         
