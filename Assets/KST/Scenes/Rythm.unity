@@ -1462,11 +1462,9 @@ MonoBehaviour:
   - {fileID: 7399149748938395269, guid: 0a722b1decae9694f81723a270052692, type: 3}
   _hitEffect: {fileID: 5732806957617258665, guid: add9d2ba9f14c924f90d22e29d350f13,
     type: 3}
-  _spawnTiming: 2
   _songBpm: 160
   _songOffsetSec: 0
   _songSource: {fileID: 1725985995}
-  _continueHoldBeats: 2
 --- !u!114 &847317607
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2516,6 +2514,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1427228805}
   m_CullTransparentMesh: 1
+--- !u!1 &1488249299
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1488249300}
+  m_Layer: 0
+  m_Name: LoadingUIController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1488249300
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1488249299}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -3.401201, y: 4.494507, z: 11.129992}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1495509203
 GameObject:
   m_ObjectHideFlags: 0
@@ -3912,3 +3941,4 @@ SceneRoots:
   - {fileID: 1694464849}
   - {fileID: 81365056}
   - {fileID: 18443742}
+  - {fileID: 1488249300}
