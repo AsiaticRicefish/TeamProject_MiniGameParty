@@ -124,6 +124,7 @@ MonoBehaviour:
   - ChangeStateByType
   - RPC_RequestStateChange
   - RPC_ApplyStateChange
+  - RPC_CancelTimer
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

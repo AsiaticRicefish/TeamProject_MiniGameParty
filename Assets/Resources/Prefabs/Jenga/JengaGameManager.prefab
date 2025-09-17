@@ -44,7 +44,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 969bbd7afefbb8244817045ef21a245c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isPersistent: 1
   gameTime: 180
-  mainMapSceneName: 
   currentState: 0
   remainingTime: 0
+  returnToLobbyDelay: 5
+  countdownDuration: 3
+  useCountdown: 1
