@@ -19,11 +19,6 @@ public class CheckGameWinnderState : ShootingGameState
         if (PhotonNetwork.IsMasterClient)
         {       
             ShootingGameManager.Instance.CheckGameWinner();
-            //
-            // EggManager.Instance.ReturnAllEggOwnership();
-            //
-            // EggManager.Instance.DestroyAllEggs();                
-
             RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.State, "GameEndState");
         }      
     }
