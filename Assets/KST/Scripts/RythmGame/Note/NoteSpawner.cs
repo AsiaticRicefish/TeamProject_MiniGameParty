@@ -12,7 +12,7 @@ namespace RhythmGame
     /// 
     /// 해당 클래스는 독립성이 보장되어야 하며, 추후 게임매니저 및 네트워크 매니저에서도 이용할 가능성이 있기에, 싱글톤으로 구현
     /// </summary>
-    public class NoteSpawner : PunSingleton<NoteSpawner>
+    public class NoteSpawner : PunSingleton<NoteSpawner>,IGameComponent
     {
         //오브젝트 풀 관련
         [SerializeField] PooledObject[] _notePrefabs; // 노트 풀링 프리팹들(로컬용)
@@ -46,6 +46,11 @@ namespace RhythmGame
         [SerializeField] float _songBpm = 160f;  // 곡 BPM
         [SerializeField] double _songOffsetSec = 0.0; // 시작 보정
         [SerializeField] AudioSource _songSource; 
+
+        //TODO 김승태 : IGameComponent 인터페이스 구현
+        public void Initialize()
+        {
+        }
 
         protected override void Awake()
         {

@@ -9,7 +9,7 @@ using UnityEngine;
 namespace RhythmGame
 {
     // public class GameManager : CombinedSingleton<GameManager>
-    public class GameManager : PunSingleton<GameManager>
+    public class GameManager : PunSingleton<GameManager>,IGameComponent
     {
         // 게임 시간 관리
         [SerializeField] float gameTime = 180f; //게임 플레이타임
@@ -42,6 +42,13 @@ namespace RhythmGame
         [SerializeField] Transform[] playerPoints;
         //노트 스폰 오프셋
         [SerializeField] float noteSpawnDist = 12f;
+        
+
+        //TODO 김승태 : IGameComponent 인터페이스 구현
+
+        public void Initialize()
+        {
+        }
 
         #region 게임 시작 종료 로직
         /// <summary>
@@ -51,7 +58,7 @@ namespace RhythmGame
         public void StartGame()
         {
             if (!PhotonNetwork.IsMasterClient) return;
-            
+
             // 플레이어 자리 배정
             LaneManager.Instance.SetLane();
 

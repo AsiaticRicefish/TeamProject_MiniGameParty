@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace RhythmGame
 {
-    public class LaneManager : PunSingleton<LaneManager>
+    public class LaneManager : PunSingleton<LaneManager>,IGameComponent
     {
         private Dictionary<int, int> _laneByActor = new(); // 액터넘버와 레인 번호 매핑
         private Dictionary<int, int> _actorByLane = new(); // 액터넘버와 레인 번호 매핑
@@ -16,6 +16,13 @@ namespace RhythmGame
         public Dictionary<int,int> LaneByNoteId => _laneByNoteId;
 
         public int ActiveLaneCount => _laneByActor.Count; //현재 배정 된 Lane 수(플레이어 수)
+
+
+        //TODO 김승태 : IGameComponent 인터페이스 구현
+
+        public void Initialize()
+        {
+        }
 
         // 마스터가 Lane 배정 후 모든 클라에게 알려줌
         [PunRPC]
@@ -86,5 +93,6 @@ namespace RhythmGame
             //레인 재배정
             if (PhotonNetwork.LocalPlayer == newMasterClient) SetLane();
         }
+
     }
 }

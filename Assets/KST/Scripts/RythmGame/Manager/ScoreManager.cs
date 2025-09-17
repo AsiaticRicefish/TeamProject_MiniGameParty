@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace RhythmGame
 {
-    public class ScoreManager : PunSingleton<ScoreManager>
+    public class ScoreManager : PunSingleton<ScoreManager>,IGameComponent
     {
         //점수
         int _score; //개인 별 점수
@@ -29,6 +29,12 @@ namespace RhythmGame
         public event Action<int> OnOverHeatScoreChanaged;
         public event Action OnHeatScoreOver;
         public event Action<Verdict, int, int> OnVerdict;
+
+        //TODO 김승태 : IGameComponent 인터페이스 구현
+
+        public void Initialize()
+        {
+        }
 
         void Start()
         {
