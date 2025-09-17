@@ -3,6 +3,7 @@ using UnityEngine;
 using Photon.Pun;
 using ShootingScene;
 using UnityEngine.UI;
+using Customization;
 
 [RequireComponent(typeof(LocalPlayerInput))]
 [RequireComponent(typeof(Rigidbody))]
@@ -11,8 +12,11 @@ public class UnimoEgg : MonoBehaviourPun
     [Header("유니모 스크립트")]
     public LocalPlayerInput localPlayerInput;                   //유니모 인풋 관련
     public ChargeController chargeController;                   //Charge관련
+
     public PlayerInputUIController playerUiController;          //UI관련
     public PlayerEffectController playerEffectController;       //이펙트 관련
+
+    public AvatarStruct playerAvatar;
 
     public Rigidbody rb;
     private float stopSpeed = 0.01f; // 속도 기준
@@ -30,16 +34,19 @@ public class UnimoEgg : MonoBehaviourPun
     {
         if (rb == null) rb = GetComponent<Rigidbody>();
         if (localPlayerInput == null) localPlayerInput = GetComponent<LocalPlayerInput>();
+
+        if (photonView.IsMine) return;
+
+        
+        //playerAvatar = 
     }
 
-    #region 플레이어 마커 렌더러 컬러 변경 
-    
+    #region 플레이어 마커 렌더러 컬러 변경  
     public void SetMaterial()
     {
         if (ShooterUid == null) return;
         playerUiController.PlayerMarker.GetComponent<SpriteRenderer>().color = ShootingScene.ShootingGame.ShootingUIManager.Instance.GetPlayerColor(ShooterUid);
     }
-
     #endregion
 
     public void Initialize()

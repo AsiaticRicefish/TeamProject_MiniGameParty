@@ -168,7 +168,7 @@ namespace ShootingScene
         //네트워크 콜백 되는 함수
         public IEnumerator SetCurrentTurn()
         {
-            string myUid = PMS_Util.PMS_Util.GetMyUid();
+            string myUid = PMS_Util.Util.GetMyUid();
             if (string.IsNullOrEmpty(myUid))
             {
                 Debug.LogWarning("[TurnManager] - UID를 가져올 수 없습니다.");
@@ -193,7 +193,7 @@ namespace ShootingScene
             {
                 Debug.Log("내 턴 입니다!");
                 UnimoEgg newEgg = EggManager.Instance.SpawnEgg(myUid);
-                newEgg.ShooterUid = PMS_Util.PMS_Util.GetMyUid();
+                newEgg.ShooterUid = PMS_Util.Util.GetMyUid();
 
                 var localInput = newEgg.GetComponent<LocalPlayerInput>();
                 if (localInput != null)
