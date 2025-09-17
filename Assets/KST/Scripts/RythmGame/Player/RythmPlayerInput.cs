@@ -86,6 +86,7 @@ namespace RhythmGame
                 _holdTarget = t;
                 _holdTimer = 0f;
                 _requireHoldTime = _holdTarget.GetHoldTime();
+                Debug.Log($"홀드 지속 시간 : {_requireHoldTime}");
                 _isPress = true;
                 _isDone = false;
                 // _noteToTap = null;
@@ -99,6 +100,7 @@ namespace RhythmGame
         }
         void EndHold()
         {
+            if (!CanInput()) return;
             if (_isDone)
             {
                 _isDone = false;
@@ -239,7 +241,7 @@ namespace RhythmGame
         bool CanInput()
         {
             //게임 시작 전 입력 방지
-            if (!GameManager.Instance || !GameManager.Instance.IsGameStart) return false;
+            if (!GameManager.Instance || !GameManager.Instance.IsGameStart || GameManager.Instance.IsGameOver) return false;
 
             //스턴 시 입력 방지
             if (GameManager.Instance.IsOverHeat) return false;
