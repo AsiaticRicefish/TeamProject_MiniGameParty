@@ -74,8 +74,10 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
         //string CharacterIDKey = PlayerProps.GetPlayerInfoKey(PlayerProps.PlayerInfoKey.CharacterId);
         //string EquipIDKey = PlayerProps.GetPlayerInfoKey(PlayerProps.PlayerInfoKey.EquipId);
 
-        string myCharacterID = PMS_Util.Util.GetPlayerProperty<string>(PlayerProps.GetPlayerInfoKey(PlayerProps.PlayerInfoKey.CharacterId));
-        string myEquipID = PMS_Util.Util.GetPlayerProperty<string>(PlayerProps.GetPlayerInfoKey(PlayerProps.PlayerInfoKey.EquipId));
+        string myCharacterID = CustomizationManager.Instance.GetEquippedLocal().characterId;
+        string myEquipID = CustomizationManager.Instance.GetEquippedLocal().equipId;
+
+        Debug.Log($"[EggManager] 커스터마이징 데이터 가져오기 - characterID : {myCharacterID}, equipID{myEquipID}");
 
         for (int i = 0; i < poolSizePerPlayer; i++)
         {

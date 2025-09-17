@@ -108,6 +108,7 @@ MonoBehaviour:
   chargeController: {fileID: 816720513667826849}
   playerUiController: {fileID: 7461243334416690372}
   playerEffectController: {fileID: 0}
+  playerAvatar: {fileID: 1180685571345266689}
   rb: {fileID: 8990860213725507007}
   turnEnded: 0
   isLaunched: 0
@@ -503,13 +504,13 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1698855235677192148}
-  m_LocalRotation: {x: 0, y: 0, z: 0.38268343, w: 0.92387956}
+  m_LocalRotation: {x: 0, y: 0, z: 0.42261827, w: 0.9063079}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1630469554402826646}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 45}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 50}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
@@ -548,7 +549,7 @@ MonoBehaviour:
   m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
-  m_FillAmount: 0.25
+  m_FillAmount: 0.28
   m_FillClockwise: 1
   m_FillOrigin: 2
   m_UseSpriteMesh: 0
@@ -900,7 +901,7 @@ Transform:
   m_GameObject: {fileID: 8556661253972926254}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1.2312605, y: 1.8430986, z: 0.07575464}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -968,7 +969,7 @@ Transform:
   m_GameObject: {fileID: 9045420368551829945}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 1, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -991,17 +992,17 @@ PrefabInstance:
     - target: {fileID: 2441716627875014694, guid: 1ce882f5a8a11254e95e4a9491221266,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1.2312605
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2441716627875014694, guid: 1ce882f5a8a11254e95e4a9491221266,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: -1.8430986
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2441716627875014694, guid: 1ce882f5a8a11254e95e4a9491221266,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.07575464
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2441716627875014694, guid: 1ce882f5a8a11254e95e4a9491221266,
         type: 3}
@@ -1170,7 +1171,7 @@ PrefabInstance:
     - target: {fileID: 2183313340420586615, guid: da55b3c5f82598248bf205162c4a98e3,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2183313340420586615, guid: da55b3c5f82598248bf205162c4a98e3,
         type: 3}
