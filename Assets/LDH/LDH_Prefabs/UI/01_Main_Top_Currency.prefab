@@ -193,7 +193,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 18, y: 0}
-  m_SizeDelta: {x: 10, y: 0}
+  m_SizeDelta: {x: 80, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &7972179401569462375
 CanvasRenderer:
@@ -354,6 +354,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b06e62365f3b4e94903f7ee6e225ac19, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  currencyIcon: {fileID: 6345770290383643209}
   valueText: {fileID: 1968554582768718001}
   currencyType: 0
 --- !u!1 &9028930186120413982

@@ -72,10 +72,7 @@ namespace Data
 
         public async UniTask LoadItemsDataAsync()
         {
-            Debug.Log($"Auth user: {BackendManager.Auth?.CurrentUser?.UserId}");
-            Debug.Log($"App.ProjectId: {Firebase.FirebaseApp.DefaultInstance.Options.ProjectId}");
-            
-            
+          
             if (_itemRepo == null) return;
             
             var charTask = _itemRepo.LoadEntriesAsync(ItemType.Character);
@@ -148,6 +145,7 @@ namespace Data
 
         #region Helper API
 
+        // ----- user data 관련 helper ------ //
         public bool HasCharacter(string id) => Custom.ownedCharacters.Contains(id);
         public bool HasEquip(string id) => Custom.ownedEquips.Contains(id);
 
@@ -156,6 +154,24 @@ namespace Data
             return Currency.GetCurrencyByType(currencyType);
         }
 
+        
+        // ------ item data 관련 Helper ------ //
+        public (CurrencyType, long) GetItemPrice(ItemType itemType, string itemId)
+        {
+            ItemData itemData = itemType switch
+            {
+                ItemType.Character => _characterItemDict.GetValueOrDefault(itemId),
+                ItemType.Equip => _equipItemDict.GetValueOrDefault(itemId),
+                _ => null
+            };
+
+            if (itemData == null) return (default, 0);
+
+            
+            Debug.Log($"<color=blue> item id : {itemId}, currency type : {itemData.CurrencyType}, price : {itemData.Price}</color>");
+            return (itemData.CurrencyType, itemData.Price);
+        }
+        
         #endregion
 
 

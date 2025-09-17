@@ -15,7 +15,7 @@ MonoBehaviour:
   m_DefaultGroup: 8dc196d36c902c4439b304ad961ef94d
   m_currentHash:
     serializedVersion: 2
-    Hash: 29395af5c52f4761fc67e338df175270
+    Hash: f61703bb34c1bc327c7921d4c0d8f526
   m_OptimizeCatalogSize: 0
   m_BuildRemoteCatalog: 0
   m_BundleLocalCatalog: 0
@@ -48,6 +48,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 86f15fd145e6745f6b1b6055836a813f, type: 2}
   - {fileID: 11400000, guid: da02b2f145e151c4489fe26b546ea6ed, type: 2}
   - {fileID: 11400000, guid: 466617cd8ed6e4c9fadf194639b081a1, type: 2}
+  - {fileID: 11400000, guid: 9fc8afe4261d74344b423eb713d97050, type: 2}
   - {fileID: 11400000, guid: 50ecc3c23fbb7e944994ad1d4a053c19, type: 2}
   - {fileID: 11400000, guid: aa7d9b149dfd96048843149b878eaa5b, type: 2}
   - {fileID: 11400000, guid: 5ef6ea55b29e7400ab3c02c8bb421c5d, type: 2}
@@ -95,6 +96,7 @@ MonoBehaviour:
     - default
     - catalog:character
     - catalog:equip
+    - catalog:currency
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: d81bc7557919e14458ac8c6441537685, type: 2}

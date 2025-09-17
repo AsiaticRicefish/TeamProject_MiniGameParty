@@ -143,12 +143,15 @@ namespace LDH_Util
             Currency1,
             Currency2,
             Currency3,
+            Count,
         }
 
         public const long MaxCurrencyValue = 999999999;
         public const long MinCurrencyValue = 0;
         
         #endregion
+        
+        
         
         #region Setting
 

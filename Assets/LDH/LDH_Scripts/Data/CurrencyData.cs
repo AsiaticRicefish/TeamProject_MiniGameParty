@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace Data
 {
+    //사용자 데이터
     [Serializable]
     public class CurrencyData
     {
