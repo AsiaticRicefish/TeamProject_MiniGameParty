@@ -291,16 +291,19 @@ namespace RhythmGame
         /// <returns></returns>
         Verdict ApplyVerdict(Verdict verdict)
         {
+            int delta = 0;
             switch (verdict)
             {
                 case Verdict.Perfect:
                 case Verdict.Good:
                     _combo++;
                     _bestCombo = Mathf.Max(_bestCombo, _combo);
+                    delta = +1;
                     break;
                 case Verdict.Bad:
                 case Verdict.Miss:
                     _combo = 0;
+                    delta = -1;
                     break;
             }
 
@@ -334,13 +337,19 @@ namespace RhythmGame
             //이벤트 발행 -> _verdictScore는 추후 마지막 점수 집계시 합산되어야함.
             OnVerdict?.Invoke(verdict, _combo, _verdictScore);
 
+            photonView.RPC(nameof(RPC_VerdictDelta), RpcTarget.MasterClient, PhotonNetwork.LocalPlayer.ActorNumber, delta);
+
             return verdict;
         }
 
-
+        [PunRPC]
+        void RPC_VerdictDelta(int actorNumber, int delta)
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+            if (NoteSpawner.Instance)
+                NoteSpawner.Instance.VerdictDelta(actorNumber, delta);
+        }
 
         #endregion
-
-
     }
 }
