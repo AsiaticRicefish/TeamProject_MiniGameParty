@@ -109,33 +109,37 @@ namespace RhythmGame
             //게임 시작 플래그 설정
             IsGameStart = true;
 
-            //TODO 김승태 : 임시 bgm 및 순서 추후 enum 변경과 함께 파라미터도 변경 필수.
-
-            //리듬게임 브금 시작(랜덤으로 정하려면 새로운 enum 그룹 만든 후, 오버로드 추가하여 랜덤선택 방식으로 변경 필요)
-            SoundManager.Instance.PlayBGM(Bgm_RhythmGame.BGM_1);
+            //리듬게임 랜덤 브금 시작
+            var index = SoundManager.Instance.RandomSelectBGM();
+            SoundManager.Instance.PlayBGM(index);
             OnGameStart?.Invoke();
         }
 
-        //TODO 김승태 : 마스터만 게임 종료하게끔 하고 클라이언트는 전파받기.
         /// <summary>
         /// 게임 종료 시
         /// </summary>
-        public void EndGame()
+        [PunRPC]
+        public void RPC_EndGame()
         {
-
-            // if (!PhotonNetwork.IsMasterClient) return;
-
             if (!IsGameStart) return;
 
             IsGameStart = false;
+            IsGameOver = true;
+
             NoteSpawner.Instance.StopSpawn();
             SoundManager.Instance.StopBGM();
-
-            IsGameOver = true;
 
             //게임 종료 이벤트 호출
             OnGameOver?.Invoke();
             Debug.Log("게임 오버");
+        }
+
+        public void EndGame()
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+            if (!IsGameStart || IsGameOver) return;
+
+            photonView.RPC(nameof(RPC_EndGame), RpcTarget.All);
         }
         #endregion
 
