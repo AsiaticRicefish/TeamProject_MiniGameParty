@@ -23,7 +23,8 @@ public class UnimoRTBBinder : MonoBehaviour
         _rt = new RenderTexture(size, size, 16, RenderTextureFormat.ARGB32)
         {
             useMipMap = false,
-            antiAliasing = 1
+            antiAliasing = 1,
+            depthStencilFormat = UnityEngine.Experimental.Rendering.GraphicsFormat.D16_UNorm,
         };
         _rt.Create();
 
