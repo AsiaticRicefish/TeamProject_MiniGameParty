@@ -39,8 +39,7 @@ namespace Data
             {
                 try
                 {
-                    var data = doc.ConvertTo<ItemData>();
-                    data.id = doc.Id; // 안전하게 한번 더
+                    var data = ItemData.From(doc, type);
                     list.Add(data);
                 }
                 catch (Exception e)
@@ -65,8 +64,7 @@ namespace Data
                     var list = new List<ItemData>(snapshot.Count);
                     foreach (var doc in snapshot.Documents)
                     {
-                        var data = doc.ConvertTo<ItemData>();
-                        data.id = doc.Id;
+                        var data = ItemData.From(doc);
                         list.Add(data);
                     }
                     onChanged?.Invoke(list);

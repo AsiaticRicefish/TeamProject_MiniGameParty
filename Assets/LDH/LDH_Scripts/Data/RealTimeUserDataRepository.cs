@@ -254,7 +254,6 @@ namespace Data
             if (!mapSnap.Exists) return hashSet;
             foreach (var child in mapSnap.Children)
             {
-                Debug.Log($"[UserDataRepository] {child.Key} - {child.Value}");
                 if (Convert.ToBoolean(child.Value)) hashSet.Add(child.Key);
             }
 

@@ -92,7 +92,7 @@ namespace Data
             Util_LDH.ConsoleLog(this, $"complete loading item data - character : {charItems.Count}, equip - {equipItems.Count}");
 
             var item = _characterItemDict[Define_LDH.DefaultData.DefaultCharacter];
-            Util_LDH.ConsoleLog(this, $"데이터 테스트 - id : {item.id}, name : {item.name}, price : {item.price}, enabled : {enabled}");
+            Util_LDH.ConsoleLog(this, $"데이터 테스트 - id : {item.Id}, name : {item.Name}, price : {item.Price}, enabled : {enabled}");
         }
 
         
@@ -166,8 +166,8 @@ namespace Data
             var dict = new Dictionary<string, ItemData>(StringComparer.Ordinal);
             if (list == null) return dict;
             foreach (var it in list)
-                if (!string.IsNullOrWhiteSpace(it.id))
-                    dict[it.id] = it;
+                if (!string.IsNullOrWhiteSpace(it.Id))
+                    dict[it.Id] = it;
             return dict;
         }
 
