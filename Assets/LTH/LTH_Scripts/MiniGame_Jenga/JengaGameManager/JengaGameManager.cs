@@ -75,6 +75,7 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
     private double? _roomStartTime;
     private double? _roomDuration;
     private Coroutine _timerCo;
+    private Coroutine _timerWatchdog;
 
     // 게임 종료 후 입력 차단
     private InputLockToken _endGameLock;
@@ -92,11 +93,29 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
 
         InitializePlayers(); // 플레이어 정보 세팅
         currentState = JengaGameState.Waiting;
+        
         remainingTime = gameTime;
+        OnTimeUpdated?.Invoke(remainingTime); // UI 초기값 3:00 표시
 
         JengaUIManager.Instance?.HideRotateButton();
 
         Debug.Log("[JengaGameManager - Initialize] 초기화 완료");
+
+        // 이미 기록된 ROOM PROPS가 있으면 즉시 적용(레이트 조인/타이밍 보정)
+        // 다른 클라이언트의 접속 순서에 상관없이 동기화 보장
+        if (PhotonNetwork.InRoom)
+        {
+            var table = PhotonNetwork.CurrentRoom.CustomProperties;
+            if (JengaRoomProps.TryGet<double>(table, JengaRoomProps.KEY_START_TIME, out var st) &&
+                JengaRoomProps.TryGet<double>(table, JengaRoomProps.KEY_DURATION, out var du))
+            {
+                ApplySyncedTimerFromRoomProps(st, du); // 내부에서 TryStartRoomPropTimer() 호출됨
+            }
+            if (JengaRoomProps.TryGet<int>(table, JengaRoomProps.KEY_STATE, out var stateInt))
+            {
+                ApplyGameStateChange((JengaGameState)stateInt);
+            }
+        }
 
         // 초기화 완료 후 카운트다운 시작 (마스터만)
         if (PhotonNetwork.IsMasterClient)
@@ -186,6 +205,20 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
             return;
         }
 
+        if (useCountdown && _roomStartTime.HasValue && PhotonNetwork.Time < _roomStartTime.Value)
+        {
+            return;
+        }
+
+        if (!useCountdown)
+        {
+            var props = new Hashtable {
+            { JengaRoomProps.KEY_START_TIME, PhotonNetwork.Time },
+            { JengaRoomProps.KEY_DURATION,   (double)gameTime }
+        };
+            PhotonNetwork.CurrentRoom.SetCustomProperties(props);
+        }
+
         // 1) 마스터 로컬 먼저 Playing 세팅
         Debug.Log("[JengaGameManager] Step 1: ApplyGameStateChange(Playing)");
         ApplyGameStateChange(JengaGameState.Playing);
@@ -194,19 +227,17 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         Debug.Log("[JengaGameManager] Step 2: BroadcastGameState(Playing)");
         JengaNetworkManager.Instance.BroadcastGameState(JengaGameState.Playing);
 
-        // 3) 타이머는 카운트다운이 완전히 끝난 후에만 시작
-        Debug.Log("[JengaGameManager] Step 3: StartCoroutine(GameTimer)");
-        if (!useCountdown && PhotonNetwork.IsMasterClient)
-        {
-            var props = new Hashtable
-    {
-        { JengaRoomProps.KEY_START_TIME, PhotonNetwork.Time },
-        { JengaRoomProps.KEY_DURATION,   (double)gameTime }
-    };
-            PhotonNetwork.CurrentRoom.SetCustomProperties(props);
-        }
-
-        StartCoroutine(GameTimer());
+        //    // 3) 타이머는 카운트다운이 완전히 끝난 후에만 시작
+        //    Debug.Log("[JengaGameManager] Step 3: StartCoroutine(GameTimer)");
+        //    if (!useCountdown && PhotonNetwork.IsMasterClient)
+        //    {
+        //        var props = new Hashtable
+        //{
+        //    { JengaRoomProps.KEY_START_TIME, PhotonNetwork.Time },
+        //    { JengaRoomProps.KEY_DURATION,   (double)gameTime }
+        //};
+        //        PhotonNetwork.CurrentRoom.SetCustomProperties(props);
+        //    }
     }
 
     #region 카운트다운 관련
@@ -225,24 +256,19 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
     /// </summary>
     public void StartGameWithCountdown()
     {
-        if (!PhotonNetwork.IsMasterClient)
-        {
-            Debug.Log("[JengaGameManager] Not master client - waiting for countdown broadcast");
-            return;
-        }
+        if (!PhotonNetwork.IsMasterClient) return;
+        if (currentState == JengaGameState.Finished) return;
 
-        if (currentState == JengaGameState.Finished)
-        {
-            Debug.Log("[JengaGameManager] Skip countdown: game already finished");
-            return;
-        }
-
-        // 바로 Playing 상태로 변경
-        ApplyGameStateChange(JengaGameState.Playing);
-        JengaNetworkManager.Instance?.BroadcastGameState(JengaGameState.Playing);
 
         if (useCountdown)
         {
+            // 카운트다운 시작 전에, 모두가 공유할 "미래 시각"을 기록 (START_TIME 고정)
+            double startAt = PhotonNetwork.Time + countdownDuration + 1.0; // "START!" 1초 표시 포함
+            PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable {
+            { JengaRoomProps.KEY_START_TIME, startAt },
+            { JengaRoomProps.KEY_DURATION,   (double)gameTime }
+        });
+
             // 네트워크 매니저를 통해 모든 클라이언트에게 카운트다운 시작 신호
             JengaNetworkManager.Instance?.BroadcastStartCountdown(countdownDuration);
 
@@ -251,7 +277,12 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         }
         else
         {
-            // 카운트다운 없이 바로 게임 시작
+            // 카운트다운 없이 바로 시작할 땐 지금 시각 기준
+            PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable {
+            { JengaRoomProps.KEY_START_TIME, PhotonNetwork.Time },
+            { JengaRoomProps.KEY_DURATION,   (double)gameTime }
+        });
+
             StartGame();
         }
     }
@@ -267,19 +298,8 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         // 모든 클라이언트에게 카운트다운 완료 알림
         JengaNetworkManager.Instance?.BroadcastCountdownComplete();
 
-        // 마스터: 시작시각/지속시간을 룸 프로퍼티에 기록
-        if (PhotonNetwork.IsMasterClient)
-        {
-            var props = new Hashtable
-        {
-            { JengaRoomProps.KEY_START_TIME, PhotonNetwork.Time },   // 절대 동기 시간
-            { JengaRoomProps.KEY_DURATION,   (double)gameTime }      // seconds (double로 통일)
-        };
-            PhotonNetwork.CurrentRoom.SetCustomProperties(props);
-        }
-
-        // 타이머 시작
-        StartCoroutine(GameTimer());
+        ApplyGameStateChange(JengaGameState.Playing);
+        JengaNetworkManager.Instance?.BroadcastGameState(JengaGameState.Playing);
     }
 
     // 룸 프로퍼티(START_TIME, DURATION)로부터 남은 시간을 재계산해 UI에 반영
@@ -289,13 +309,39 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         _roomStartTime = startTime;
         _roomDuration = durationSec;
 
-        var remain = Mathf.Max(0f, (float)((startTime + durationSec) - PhotonNetwork.Time));
+        double now = PhotonNetwork.Time;
+        double elapsed = Math.Max(0.0, now - startTime); // 시작 전이면 0으로 고정
+        remainingTime = Mathf.Max(0f, (float)(_roomDuration.Value - elapsed));
 
-        remainingTime = (float)remain;
         OnTimeUpdated?.Invoke(remainingTime);
-
         TryStartRoomPropTimer();
     }
+
+    // ROOM PROPS 미수신 시 재조회
+    private IEnumerator GameTimerWatchdog()
+    {
+        float probe = 0f;
+        while (currentState == JengaGameState.Playing && (!_roomStartTime.HasValue || !_roomDuration.HasValue))
+        {
+            probe += Time.unscaledDeltaTime;
+            if (probe > 3f)
+            {
+                var table = PhotonNetwork.CurrentRoom?.CustomProperties;
+                if (table != null &&
+                    JengaRoomProps.TryGet<double>(table, JengaRoomProps.KEY_START_TIME, out var st) &&
+                    JengaRoomProps.TryGet<double>(table, JengaRoomProps.KEY_DURATION, out var du))
+                {
+                    ApplySyncedTimerFromRoomProps(st, du);
+                    TryStartRoomPropTimer();
+                    yield break;
+                }
+                Debug.LogWarning("[JengaTimer] start/dur not set yet. Waiting...");
+                probe = 0f;
+            }
+            yield return null;
+        }
+    }
+
 
     #endregion
 
@@ -304,13 +350,15 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
     /// </summary>
     public void ApplyGameStateChange(JengaGameState newState)
     {
+        if (currentState == newState) return;
+
         currentState = newState;
         OnGameStateChanged?.Invoke(currentState);
 
         // 마스터: 게임 상태를 룸 프로퍼티로도 기록
         if (PhotonNetwork.IsMasterClient && PhotonNetwork.InRoom)
         {
-            var props = new Hashtable { { JengaRoomProps.KEY_STATE, (byte)currentState } };
+            var props = new Hashtable { { JengaRoomProps.KEY_STATE, (int)currentState } };
             PhotonNetwork.CurrentRoom.SetCustomProperties(props);
         }
 
@@ -322,6 +370,9 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
                 _endGameLock?.Dispose();
                 _endGameLock = null;
                 TryStartRoomPropTimer();
+
+                if (_timerWatchdog != null) StopCoroutine(_timerWatchdog);
+                _timerWatchdog = StartCoroutine(GameTimerWatchdog());
                 break;
 
             case JengaGameState.Finished:
@@ -333,6 +384,7 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
                     );
 
                 StopRoomPropTimer();
+                if (_timerWatchdog != null) { StopCoroutine(_timerWatchdog); _timerWatchdog = null; }
                 JengaUIManager.Instance.HideRotateButton();
                 break;
         }
@@ -569,6 +621,22 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         if (currentState != JengaGameState.Playing) return;
         if (!_roomStartTime.HasValue || !_roomDuration.HasValue) return;
         if (_timerCo != null) return;               // 이미 돌고 있으면 스킵
+
+
+        if (PhotonNetwork.Time < _roomStartTime.Value)
+        {
+            // 아직 시작시각 전 -> 먼저 기다렸다가 시작
+            _timerCo = StartCoroutine(CoWaitUntilStartThenRun());
+            return;
+        }
+
+        _timerCo = StartCoroutine(GameTimer());
+    }
+
+    private IEnumerator CoWaitUntilStartThenRun()
+    {
+        while (PhotonNetwork.Time < _roomStartTime.Value)
+            yield return null;
         _timerCo = StartCoroutine(GameTimer());
     }
 
@@ -774,7 +842,7 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         }
 
         // 3. 룸 프로퍼티에서 젠가 관련 데이터 제거 (다음 게임을 위해)
-        if (PhotonNetwork.InRoom)
+        if (PhotonNetwork.IsMasterClient && PhotonNetwork.InRoom && currentState == JengaGameState.Finished)
         {
             var clearProps = new Hashtable
             {

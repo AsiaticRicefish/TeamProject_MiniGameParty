@@ -38,10 +38,7 @@ public class UnimoEgg : MonoBehaviourPun
     public void SetMaterial()
     {
         if (ShooterUid == null) return;
-
-        playerUiController.PlayerMarker.GetComponent<SpriteRenderer>().color = unimoMats[TurnManager.Instance.currentTurnIndex - 1];
-        //_renderer.material = unimoMats[TurnManager.Instance.currentTurnIndex - 1];
-
+        playerUiController.PlayerMarker.GetComponent<SpriteRenderer>().color = ShootingScene.ShootingGame.ShootingUIManager.Instance.GetPlayerColor(ShooterUid);
     }
 
     #endregion

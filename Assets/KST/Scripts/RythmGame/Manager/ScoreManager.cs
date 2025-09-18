@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace RhythmGame
 {
-    public class ScoreManager : PunSingleton<ScoreManager>
+    public class ScoreManager : PunSingleton<ScoreManager>,IGameComponent
     {
         //점수
         int _score; //개인 별 점수
@@ -13,10 +13,33 @@ namespace RhythmGame
         public int Score => _score;
         public int HeatScore => _heatScore;
 
+        //판정 및 콤보
+        private int _combo;
+        private int _bestCombo;
+        private int _verdictScore;
+
+        public int Combo => _combo;
+        public int BestCombo => _bestCombo;
+        public int VerdictScore => _verdictScore;
+        public VerdictConfig verdictConfig = new();
+
+
         //이벤트
         public event Action<int> OnScoreChanged;
         public event Action<int> OnOverHeatScoreChanaged;
         public event Action OnHeatScoreOver;
+        public event Action<Verdict, int, int> OnVerdict;
+
+        //TODO 김승태 : IGameComponent 인터페이스 구현
+
+        public void Initialize()
+        {
+        }
+
+        void Start()
+        {
+            _combo = 0; _bestCombo = 0; _verdictScore = 0;
+        }
 
         /// <summary>
         /// 점수 추가 로직
@@ -87,18 +110,6 @@ namespace RhythmGame
             OnOverHeatScoreChanaged?.Invoke(_heatScore);
             Debug.Log($"과열 점수 : {_heatScore}");
         }
-
-        // /// <summary>
-        // /// 과열 시 액션
-        // /// </summary>
-        // [PunRPC]
-        // public void RPC_IsOverHeat()
-        // {
-        //     Debug.Log("과열 Warning! 모든 플레이어 기절!");
-
-        //     // OnIsOverHeat?.Invoke(); //과열 점수 초기화, 플레이어 이펙트 등등 설정
-        // }
-
         #endregion
 
 
@@ -124,8 +135,9 @@ namespace RhythmGame
             if (noteLane != actorLane)
             {
                 //TODO 김승태 : 내 레인과 상대 레인에 노트가 동시에 도착하는 경우 과열처리가 날 수도 있음. 이걸 방지하는 코드가 필요함.
-                //과열 점수가 오르도록
-                GameManager.Instance.MissBlock(info.Sender);
+                //-> 과열 시스템이 현재 기획 상에서는 없어졌기에, 미스처리를 주석 처리하면 사실 상 문제 발생 x
+                // //과열 점수가 오르도록
+                // GameManager.Instance.MissBlock(info.Sender);
                 return;
             }
 
@@ -142,7 +154,7 @@ namespace RhythmGame
             else
             {
                 isHit = false;
-                GameManager.Instance.OverHeatCheck();
+                // GameManager.Instance.OverHeatCheck();
 
                 GameManager.Instance.MissBlock(info.Sender);
                 // SoundManager.Instance.PlaySFX_GAME(SfX_Game.SFX_Rhythm_Miss);
@@ -150,7 +162,7 @@ namespace RhythmGame
 
             // 파괴
             LaneManager.Instance.LaneByNoteId.Remove(noteId);
-            NoteSpawner.Instance.DestoryNote(noteId, isHit);
+            NoteSpawner.Instance.DestroyNote(noteId, isHit);
         }
 
         public void RequestMiss()
@@ -162,11 +174,188 @@ namespace RhythmGame
         void RPC_RequestMiss(PhotonMessageInfo info)
         {
             if (!PhotonNetwork.IsMasterClient) return;
-            GameManager.Instance.OverHeatCheck();
+            // GameManager.Instance.OverHeatCheck();
             GameManager.Instance.MissBlock(info.Sender);
+        }
+
+        /// <summary>
+        /// 맞춰야하는 노트 못 맞췄을 때
+        /// </summary>
+        /// <param name="noteId">해당 noteID</param>
+        /// <param name="actorNum">플레이어 액터넘버</param>
+        [PunRPC]
+        void RPC_RequesetLaneMiss(int noteId, int actorNum)
+        {
+            if (!LaneManager.Instance.LaneByNoteId.TryGetValue(noteId, out int noteLane)) return;
+            //액터 확인
+            if (!LaneManager.Instance.GetLane(actorNum, out int actorLane)) return;
+            //해당 액터의 레인과 노트 레인 일치 확인
+            if (noteLane != actorLane) return;
+
+            MissToAll(actorNum);
+
+            //노트 파괴()
+            NoteSpawner.Instance.DestroyNote(noteId, false);
+        }
+
+        public void RequestLaneMiss(int noteId)
+        {
+            photonView.RPC(nameof(RPC_RequesetLaneMiss), RpcTarget.MasterClient, noteId, PhotonNetwork.LocalPlayer.ActorNumber);
+        }
+
+        /// <summary>
+        /// 모두에게 해당 노트가 miss 됐다는 것을 전파
+        /// </summary>
+        [PunRPC]
+        void RPC_MissToAll(int actorNum)
+        {
+            if (PhotonNetwork.LocalPlayer.ActorNumber == actorNum)
+            {
+                VerdictMiss();
+            }
+        }
+
+        void MissToAll(int actorNum)
+        {
+            photonView.RPC(nameof(RPC_MissToAll), RpcTarget.All, actorNum);
+        }
+
+        /// <summary>
+        /// Fake 노트일 때는 노트 파괴 요청
+        /// </summary>
+        /// <param name="noteId"></param>
+        [PunRPC]
+        void RPC_RequestMissFake(int noteId)
+        {
+            if (!NoteSpawner.Instance.TryGetNote(noteId, out var note)) return;
+
+            //해당 노트가 fake가 아닐경우 미스처리로 넘기기
+            if (note.Type != NoteType.Fake)
+                RequestLaneMiss(note.NoteId);
+
+            NoteSpawner.Instance.DestroyNote(noteId, false);
+        }
+
+        public void RequestMissFake(int noteId)
+        {
+            photonView.RPC(nameof(RPC_RequestMissFake), RpcTarget.MasterClient, noteId);
         }
 
         #endregion
 
+        #region Perfect 판정 및 콤보 시스템
+
+        /// <summary>
+        /// 터치 판정시스템
+        /// </summary>
+        /// <param name="note"></param>
+        /// <param name="verdictPos"></param>
+        /// <returns></returns>
+        public Verdict VerdictTouch(Note note, Transform verdictPos)
+        {
+            if (!note || !verdictPos) return ApplyVerdict(Verdict.Miss);
+
+            if (note.Type == NoteType.Fake) return ApplyVerdict(Verdict.Bad);
+
+            Vector3 dist = note.transform.position - verdictPos.position;
+            float z = Mathf.Abs(Vector3.Dot(dist, Vector3.forward));
+
+            if (z <= verdictConfig.touchPerfect) return ApplyVerdict(Verdict.Perfect);
+            else return ApplyVerdict(Verdict.Good);
+        }
+
+        /// <summary>
+        /// 홀드 판정 시스템
+        /// </summary>
+        /// <param name="hold"></param>
+        /// <param name="perfectTime"></param>
+        /// <returns></returns>
+        public Verdict VerdictHold(float hold, float perfectTime)
+        {
+            if (perfectTime <= 0f) return ApplyVerdict(Verdict.Miss);
+            float requieTime = perfectTime * verdictConfig.holdGood;
+
+            if (hold >= perfectTime) return ApplyVerdict(Verdict.Perfect);
+            if (hold >= requieTime) return ApplyVerdict(Verdict.Good);
+            else return ApplyVerdict(Verdict.Miss);
+        }
+
+        /// <summary>
+        /// 미스 처리
+        /// </summary>
+        /// <returns></returns>
+        public Verdict VerdictMiss()
+        {
+            return ApplyVerdict(Verdict.Miss);
+        }
+
+
+        /// <summary>
+        /// 판정 적용 로직
+        /// </summary>
+        /// <param name="verdict"></param>
+        /// <returns></returns>
+        Verdict ApplyVerdict(Verdict verdict)
+        {
+            int delta = 0;
+            switch (verdict)
+            {
+                case Verdict.Perfect:
+                case Verdict.Good:
+                    _combo++;
+                    _bestCombo = Mathf.Max(_bestCombo, _combo);
+                    delta = +1;
+                    break;
+                case Verdict.Bad:
+                case Verdict.Miss:
+                    _combo = 0;
+                    delta = -1;
+                    break;
+            }
+
+            if (verdict == Verdict.Perfect)
+            {
+                _verdictScore++;
+                Debug.Log("퍼펙트");
+            }
+            else if (verdict == Verdict.Good)
+            {
+                _verdictScore++;
+                Debug.Log("굿");
+            }
+            else if (verdict == Verdict.Miss)
+            {
+                _verdictScore--;
+                Debug.Log("미스");
+            }
+            else //Bad
+            {
+                _verdictScore--;
+                Debug.Log("베드");
+            }
+
+            _verdictScore = Mathf.Clamp
+            (_verdictScore, verdictConfig.verdictScoreMin, verdictConfig.verdictScoreMax);
+
+            Debug.Log($"판정 점수 : {_verdictScore}");
+            Debug.Log($"콤보  : {_combo}");
+
+            //이벤트 발행 -> _verdictScore는 추후 마지막 점수 집계시 합산되어야함.
+            OnVerdict?.Invoke(verdict, _combo, _verdictScore);
+
+            photonView.RPC(nameof(RPC_VerdictDelta), RpcTarget.MasterClient, PhotonNetwork.LocalPlayer.ActorNumber, delta);
+
+            return verdict;
+        }
+
+        [PunRPC]
+        void RPC_VerdictDelta(int actorNumber, int delta)
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+            if (NoteSpawner.Instance)
+                NoteSpawner.Instance.VerdictDelta(actorNumber, delta);
+        }
+
+        #endregion
     }
 }

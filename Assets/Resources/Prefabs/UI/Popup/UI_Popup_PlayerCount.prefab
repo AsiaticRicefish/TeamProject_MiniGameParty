@@ -222,7 +222,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_text: "\uD568\uAED8 \uD50C\uB808\uC774\uD560 \uC778\uC6D0\uC744 \uC120\uD0DD\uD574
-    \uC8FC\uC138\uC694. (2\u20134\uBA85)"
+    \uC8FC\uC138\uC694. (2~4\uBA85)"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 263a5f6c8c323c84e9bd6ede05411f99, type: 2}
   m_sharedMaterial: {fileID: -363288562218260364, guid: 263a5f6c8c323c84e9bd6ede05411f99,
@@ -662,7 +662,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 225, y: -69}
+  m_AnchoredPosition: {x: 238, y: -69}
   m_SizeDelta: {x: 300, y: 138}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8141869696817816615

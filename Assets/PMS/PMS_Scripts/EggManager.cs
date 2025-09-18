@@ -24,7 +24,8 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
 
     private Dictionary<string, List<UnimoEgg>> playerEggPools = new();
 
-    private Dictionary<int, UnimoEgg> viewIdToEgg = new();
+    //모든 알이있는 딕셔너리 
+    public Dictionary<int, UnimoEgg> viewIdToEgg = new();
 
     private bool isPoolReady = false;
 
@@ -181,8 +182,8 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
         egg.transform.rotation = Quaternion.identity;
 
         egg.ShooterUid ??= shooterUid;
-        egg.SetMaterial();
 
+        egg.SetMaterial();
         egg.gameObject.SetActive(true);
 
         Rigidbody rb = egg.GetComponent<Rigidbody>();
