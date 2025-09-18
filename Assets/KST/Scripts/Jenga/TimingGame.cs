@@ -239,8 +239,8 @@ public class TimingGame : MonoBehaviour
     bool DescSpeed(int level)
     {
         float before = _speed;
-        float temp = before - level * 0.2f;
-        float after = Mathf.Clamp(temp, 1f, 1.6f);
+        float temp = before - level * 0.3f;
+        float after = Mathf.Clamp(temp, 0.6f, 1.6f);
 
         if (after < before)
         {
@@ -259,8 +259,8 @@ public class TimingGame : MonoBehaviour
     bool DescZone(int level)
     {
         float before = _zoneWRate;
-        float temp = before - level * 0.05f;
-        float after = Mathf.Clamp(temp, 0.3f, 0.45f);
+        float temp = before - level * 0.08f;
+        float after = Mathf.Clamp(temp, 0.15f, 0.45f);
 
         if (after < before)
         {
