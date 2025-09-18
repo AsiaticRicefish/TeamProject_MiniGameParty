@@ -17,18 +17,24 @@ public class TimingGame : MonoBehaviour
     [SerializeField] TMP_Text _finishText;
 
 
-    //설정
-    [SerializeField] float _limitTime = 5f; //제한시간 -> 5초로 변경하기
-    [SerializeField] float _speed = 1.6f; //별 이동 속도
-    [SerializeField] float _zoneW; //성공 존 너비
-    [SerializeField] float _zoneWRate = 0.45f; //성공 존 너비 비율
-    bool _isRun = false; //게임 실행 여부
+    [Header("타이밍 세팅")]
+    [SerializeField] float _limitTime = 5f; // 제한시간
+    [SerializeField] float _speed = 1.6f; // 별 이동 속도
+
+    [Header("성공 존")]
+    [SerializeField]
+    float _zoneWRate = 0.45f;                         // 성공존 가로폭 (슬라이더 폭 비율)
+    [SerializeField]
+    float _zoneHeight = 40f;                          // 성공존 세로 높이(px)
+
+
+    bool _isRun = false; // 게임 실행 여부
     float _remainTime; // 잔여 시간
     float _pingPongTimer;
-    public event Action<bool, float> OnFinished; //성공여부 이벤트
+    float _zoneW;
+    public event Action<bool, float> OnFinished; // 성공여부 이벤트
 
-    void Awake() =>
-        Init();
+    void Awake() => Init();
 
     void Update()
     {
@@ -42,18 +48,11 @@ public class TimingGame : MonoBehaviour
 
         bool tapped = false;
 
-#if ENABLE_INPUT_SYSTEM
-        // Unity Input System (패키지 기반)
         tapped = (Mouse.current?.leftButton.wasPressedThisFrame == true)
               || (Touchscreen.current?.primaryTouch.press.wasPressedThisFrame == true);
-#else
-    // 구 Input 시스템 (UnityEngine.Input)
-    tapped = Input.GetMouseButtonDown(0)
-          || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began);
-#endif
 
         if (tapped) 
-        { 
+        {
             var (ok, acc) = Calculate(); 
             GameEnd(ok, ok ? acc : 0f); 
         }
@@ -92,24 +91,16 @@ public class TimingGame : MonoBehaviour
 
         _isRun = true;
 
-        //TODO 김승태 : 타이밍 게임 BGM 실행
-
-        //성공 존 설정
+        // 성공 존 설정
         _sliderGo.SetActive(true);
         SetSuccesZone();
 
-        //초기화
+        // 초기화
         _slider.value = 0f;
         _pingPongTimer = 0f;
-        //_speed = 1.6f;
-        //_zoneWRate = 0.45f;
 
         _remainTime = _limitTime;
-        gameObject.SetActive(true);
-
         _timeText.text = Mathf.CeilToInt(_remainTime).ToString();
-
-        // StartCoroutine(IE_CountDown());
     }
 
     /// <summary>
@@ -119,12 +110,26 @@ public class TimingGame : MonoBehaviour
     {
         if (!_successZone) return;
 
-        float sliderWidth = _sliderRect.rect.width;
+        // 성공존을 Handle Slide Area 아래로 강제(좌표계 통일)
+        var slideArea = _slider.handleRect ? _slider.handleRect.parent as RectTransform : null;
+        if (slideArea && _successZone.parent != slideArea)
+        {
+            _successZone.SetParent(slideArea, worldPositionStays: false);
+        }
 
-        _zoneW = sliderWidth * _zoneWRate;
 
-        _successZone.sizeDelta = new(_zoneW, _successZone.sizeDelta.y);
-        _successZone.anchoredPosition = new((sliderWidth - _zoneW) / 2f, 0f);
+        float w = slideArea ? slideArea.rect.width : _sliderRect.rect.width;
+        _zoneW = w * _zoneWRate;
+
+        // 가로폭은 비율, 세로 높이는 인스펙터 값 사용
+        _successZone.sizeDelta = new(_zoneW, _zoneHeight);
+
+        // 중앙 배치
+        _successZone.anchoredPosition = Vector2.right * ((w - _zoneW) * 0.5f);
+
+        // 그리기 순서: 성공존 뒤, 핸들 앞
+        _successZone.SetSiblingIndex(0);                 // 성공존을 맨 뒤로
+        _slider.handleRect.SetAsLastSibling();           // 핸들을 맨 앞으로
 
         _successZone.gameObject.SetActive(true);
     }
@@ -147,33 +152,25 @@ public class TimingGame : MonoBehaviour
         if (_isRun) GameEnd(false, 0f);
     }
 
-    /// <summary>
-    /// 슬라이더 위치 값에 따른 성공 존 내부 여부와 정확도 계산 로직
-    /// </summary>
-    /// <returns>성공 여부 및 정확도 반환.</returns>
+
     (bool isSuccess, float accuracy) Calculate()
     {
-        //슬라이더 폭(px)을 구하기
-        float width = _sliderRect.rect.width;
+        var handleGraphic = _slider.handleRect.GetComponentInChildren<Image>()?.rectTransform
+                            ?? _slider.handleRect;
 
-        //슬라이더 핸들 위치를 픽셀 값으로 매핑
-        float nowPos = Mathf.Lerp(0f, width, _slider.value / 100f);
+        float handleCenterX = GetWorldCenterX(handleGraphic);
 
-        //성공 존 시작, 끝 지점
-        float start = _successZone.anchoredPosition.x;
-        float end = start + _successZone.rect.width;
+        var z = new Vector3[4];
+        _successZone.GetWorldCorners(z);
+        float start = z[0].x;      // left
+        float end = z[3].x;      // right
+        float center = 0.5f * (start + end);
+        float half = 0.5f * (end - start);
 
-        bool isInside = (start <= nowPos) && (nowPos <= end);
+        bool inside = (start <= handleCenterX) && (handleCenterX <= end);
+        if (!inside) return (false, 0f);
 
-        if (!isInside)
-            //게임 종료(실패 처리)
-            return (false, 0f);
-
-        //정확도 판정하기
-        float center = (start + end) * 0.5f;
-        float half = (end - start) * 0.5f;
-        float acc = 1f - Mathf.Clamp01(Mathf.Abs(nowPos - center) / half);
-
+        float acc = 1f - Mathf.Clamp01(Mathf.Abs(handleCenterX - center) / half);
         return (true, acc);
     }
 
@@ -187,13 +184,8 @@ public class TimingGame : MonoBehaviour
         if (!_isRun) return;
         _isRun = false;
 
-        Debug.Log($"성공 여부 : {isSuccess}, 정확도 : {accuracy}");
-
         _sliderGo.SetActive(false);
         StartCoroutine(IE_PanelCount(isSuccess, accuracy));
-
-        //이벤트 퍼블리싱
-        // OnFinished?.Invoke(isSuccess, accuracy);
     }
 
     /// <summary>
@@ -207,13 +199,12 @@ public class TimingGame : MonoBehaviour
         if (isSuccess)
         {
             _finishText.text = "성공!";
-            //TODO 김승태 : 성공 SFX 실행
+            // 성공 SFX 실행
         }
         else
         {
             _finishText.text = "실패...";
-            //TODO 김승태 : 실패 SFX 실행
-            //TODO 김승태 : 추후 젠가 실패 애니메이션 추가.
+            // 실패 SFX 실행
         }
 
         yield return new WaitForSeconds(2f);
@@ -225,10 +216,8 @@ public class TimingGame : MonoBehaviour
         _finishPanel.SetActive(false);
         _finishText.text = "";
 
-        //비활성화(테스트를 위해 잠시 비활성화)
         gameObject.SetActive(false);
 
-        // 결과 이벤트 발행(연출이 끝난 뒤)
         OnFinished?.Invoke(isSuccess, accuracy);
     }
 
@@ -238,9 +227,6 @@ public class TimingGame : MonoBehaviour
         //랜덤으로 아래 중 하나 고르기
         bool type = UnityEngine.Random.Range(0, 2) == 0;
         bool isChnaged = type ? DescSpeed(level) || DescZone(level) : DescZone(level) || DescSpeed(level);
-
-        if (!isChnaged)
-            Debug.Log("최고 난이도입니다.");
     }
 
 
@@ -259,8 +245,6 @@ public class TimingGame : MonoBehaviour
         if (after < before)
         {
             _speed = after;
-            Debug.Log($"after : {after} before : {before}");
-            Debug.Log($"왕복 시간 감소 {_speed}");
             return true;
         }
         return false;
@@ -281,12 +265,15 @@ public class TimingGame : MonoBehaviour
         if (after < before)
         {
             _zoneWRate = after;
-            Debug.Log($"after : {after} before : {before}");
-            Debug.Log($"판정 영역 감소 {_zoneWRate}");
             return true;
         }
         return false;
     }
 
-
+    float GetWorldCenterX(RectTransform rt)
+    {
+        var c = new Vector3[4];
+        rt.GetWorldCorners(c);
+        return 0.5f * (c[0].x + c[3].x);
+    } 
 }
