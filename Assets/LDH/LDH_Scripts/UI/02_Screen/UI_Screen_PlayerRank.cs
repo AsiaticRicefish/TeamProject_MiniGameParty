@@ -12,6 +12,7 @@ namespace LDH_UI
     {
         [SerializeField] private List<TMP_Text> playerNameTextList;
         [SerializeField] private List<Image> playerProfileImageList;
+        [SerializeField] private JengaRankingUIAnimated rankingUI;
 
         protected override void Init()
         {
@@ -126,6 +127,17 @@ namespace LDH_UI
                 tmpText.text = "";
             }
         }
-        
+
+        //시작할 때 한 번 UI를 키게 해야한다.
+        public void UpdateLiveRanks(Dictionary<string, int> ranks)
+        {
+            rankingUI.UpdateLiveRanks(ranks);
+        }
+
+        public Color GetColor(string playerUID, out Color playerColor)
+        {
+            rankingUI.TryGetColor(playerUID,out playerColor);
+            return playerColor;
+        }
     }
 }

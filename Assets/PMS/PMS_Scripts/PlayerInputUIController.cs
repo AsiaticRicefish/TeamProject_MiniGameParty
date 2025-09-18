@@ -40,8 +40,18 @@ public class PlayerInputUIController : MonoBehaviour
     public void StartCharge() => charger?.StartCharge();
     public void StopCharge() => charger?.StopCharge();
     public float GetChargePower() => charger != null ? charger.ChargePower : 0f;
-    #endregion 
+    #endregion
 
+    #region 플레이어 마커 UI 관련
+    public void UpdatePlayerMarker(string playerUID)
+    {
+        // 특정 플레이어의 색깔만 가져오기
+        Color MarkerColor = ShootingScene.ShootingGame.ShootingUIManager.Instance.GetPlayerColor(playerUID);
+
+        // 네임태그나 다른 UI 요소에 색깔 적용
+        PlayerMarker.GetComponent<Renderer>().material.color = MarkerColor;
+    }
+    #endregion
     // 초기화
     public void InitializeUI()
     {
