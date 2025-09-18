@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameTitle: "\uC138\uC5B4\uB77C \uC720\uB2C8\uBAA8!"
   bigDescription: "\uC0C1\uB300\uBCF4\uB2E4 \uBE60\uB974\uAC8C \uC820\uAC00\uB97C
-    \uC81C\uAC70\uD558\uC790!"
+    \n\uC81C\uAC70\uD558\uC790!"
   smallDescription: "\uC81C\uAC70\uD560 \uC820\uAC00\uB97C \uC120\uD0DD\uD558\uC5EC
     \uC81C\uAC70\uD558\uC138\uC694!"
-  titlePanelColor: {r: 0.3248629, g: 0.340498, b: 0.7584905, a: 1}
-  backgroundPanelColor: {r: 0.27495587, g: 0.7735849, b: 0.24959059, a: 1}
+  titlePanelColor: {r: 0, g: 0, b: 0, a: 1}
+  backgroundPanelColor: {r: 1, g: 1, b: 1, a: 1}
   descriptionPanelColor: {r: 1, g: 1, b: 1, a: 1}
   unimoPrefabs:
   - {fileID: 3380019038747022192, guid: 658f3813a0c86d341878bb3628d1b24f, type: 3}
