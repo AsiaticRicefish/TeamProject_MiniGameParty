@@ -6,6 +6,12 @@ using UnityEngine;
 using Photon.Pun;
 using DesignPattern;
 using Photon.Realtime;
+using ShootingScene;
+using static LDH_Util.Define_LDH;
+using Managers;
+using Customization;
+using UnityEngine.TextCore.Text;
+using Cysharp.Threading.Tasks;
 
 public class EggManager : PunSingleton<EggManager>, IGameComponent
 {
@@ -38,20 +44,18 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
         registerdPools.Clear();
     }
 
-    public void Initialize()
+    public async void Initialize()
     {
         Debug.Log("EggManager Initialize 시작");
-        StartCoroutine(LocalInitPool());
+        await LocalInitPool();              //끝까지 돌 때까지 
     }
 
     // 각자 자신의 풀 생성
-    private IEnumerator LocalInitPool()
+    private async UniTask LocalInitPool()
     {
-        Debug.Log("각자 EggManager 유니모 오브젝트 생성 시작");
-        
-        Debug.Log("1");
-        
-        string myUid = PMS_Util.PMS_Util.GetMyUid();     
+        Debug.Log("각자 EggManager 유니모 오브젝트 생성 시작");       
+
+        string myUid = PMS_Util.Util.GetMyUid();     
         Debug.Log($"{myUid}");// 내 UID를 가져오기
         List<int> viewIDs = new List<int>();                            //UnimoEgg를 viewID 매핑하기 위하여 초기화
 
@@ -65,7 +69,16 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
         {
             Debug.Log("[UnimoEgg] - 이미 내 UID에 맞는 pool이 존재함!");
         }
+
         Debug.Log($"{myUid} 에그 생성 시작");
+        //string CharacterIDKey = PlayerProps.GetPlayerInfoKey(PlayerProps.PlayerInfoKey.CharacterId);
+        //string EquipIDKey = PlayerProps.GetPlayerInfoKey(PlayerProps.PlayerInfoKey.EquipId);
+
+        string myCharacterID = CustomizationManager.Instance.GetEquippedLocal().characterId;
+        string myEquipID = CustomizationManager.Instance.GetEquippedLocal().equipId;
+
+        Debug.Log($"[EggManager] 커스터마이징 데이터 가져오기 - characterID : {myCharacterID}, equipID{myEquipID}");
+
         for (int i = 0; i < poolSizePerPlayer; i++)
         {
             
@@ -75,11 +88,14 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
             egg.ShooterUid = myUid;
             egg.gameObject.SetActive(false);            //로컬 비활성화
 
+            // TODO - 커스텀 데이터 들고와서 입히기
+            await Manager.Custom.ApplyToAvatarAsync(egg.playerAvatar, myCharacterID, myEquipID);
+
             playerEggPools[myUid].Add(egg);
             viewIdToEgg[egg.photonView.ViewID] = egg;
             viewIDs.Add(egg.photonView.ViewID);
 
-            yield return null;
+            await UniTask.Yield(); // 프레임 넘기기
         }
 
         registerdPools.Add(myUid);
@@ -88,39 +104,51 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
         
         Debug.Log($"[EggManager] - 내 풀을 남한테 전달합니다.");
         // 모든 유저에게 생성된 egg의 내가 생성한 viewIDs 전달
-        photonView.RPC(nameof(RPC_RegisterEgg), RpcTarget.OthersBuffered, myUid, viewIDs.ToArray());
+        // 커스터마이징에 대한 정보도 넘겨주는데 대신 비동기 작업이라 보장을 해주고 싶은데 RPC안에서는 await를 하지 못한다.
+        photonView.RPC(nameof(RPC_RegisterEgg), RpcTarget.OthersBuffered, myUid, viewIDs.ToArray(), myCharacterID, myEquipID);
 
-       
-       
+        // TODO - 커스텀 관련데이터 넘겨주기(rpc전송)
         CheckRegisterAllPool();
-
     }
 
-
     [PunRPC]
-    private void RPC_RegisterEgg(string uid, int[] viewIDs)
+    private void RPC_RegisterEgg(string uid,int[] viewIDs,string characterId,string equipId)
+    {
+        // 코루틴으로 래핑해서 UniTask 내부 await을 기다리게 함
+        StartCoroutine(RegisterEggCoroutine(uid, viewIDs, characterId, equipId));
+    }
+
+    private IEnumerator RegisterEggCoroutine(string uid, int[] viewIDs, string characterId, string equipId)
     {
         Debug.Log("register egg - view ids count : " + viewIDs.Length);
         //viewIDs를 전달 받음 배열로 전체 순회
         foreach (var id in viewIDs)
         {
             PhotonView view = PhotonView.Find(id);
-            if (view != null)
-            {
-                UnimoEgg egg = view.GetComponent<UnimoEgg>();
 
-                egg.ShooterUid = uid;
-                egg.gameObject.SetActive(false);                    //다른 클라이언트도 비활성화시키게 하기
+            if (view == null)
+                continue;
 
-                if (!playerEggPools.ContainsKey(uid))               //나 이외의 유저들은 해당 viewID를 가진 유니모를 해당 UID의 유저의 풀에 등록
-                    playerEggPools[uid] = new List<UnimoEgg>();
-                if (!playerEggPools[uid].Contains(egg))             
-                    playerEggPools[uid].Add(egg);
+            UnimoEgg egg = view.GetComponent<UnimoEgg>();
+            egg.ShooterUid = uid;
+            egg.gameObject.SetActive(false);                    //다른 클라이언트도 비활성화시키게 하기
 
-                viewIdToEgg[id] = egg;
-            }
+            if (!playerEggPools.ContainsKey(uid))               //나 이외의 유저들은 해당 viewID를 가진 유니모를 해당 UID의 유저의 풀에 등록
+                playerEggPools[uid] = new List<UnimoEgg>();
+            if (!playerEggPools[uid].Contains(egg))             
+                playerEggPools[uid].Add(egg);
+
+            viewIdToEgg[id] = egg;
+
+            // 커스터마이징 적용
+            yield return Manager.Custom
+            .ApplyToAvatarAsync(egg.playerAvatar, characterId, equipId)
+            .ToCoroutine();       
+
+            yield return null;  //한프레임 쉬게 하기 한 프레임 안에 모든 작업 처리하지 않고 프레임마다 분배
         }
-        //isPoolReady = true; -> 모든 플레이어의 풀이 다 적용되어 있으면 true가 되도록 하고 싶은데
+
+        // 모든 에그에 커스터마이징이 적용된 뒤에 풀 등록 처리
         registerdPools.Add(uid);
         Debug.Log($"{uid} 의 풀 전달 받아서 등록 완료");
 

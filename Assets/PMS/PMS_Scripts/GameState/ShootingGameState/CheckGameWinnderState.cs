@@ -15,7 +15,7 @@ public class CheckGameWinnderState : ShootingGameState
 
 
         Debug.Log("[CheckGameWinnderState] - CheckGameWinnderState Enter");
-        Debug.Log($"[CheckGameWinnderState] - 내 FireBaseUID {PMS_Util.PMS_Util.GetMyUid()}");
+        Debug.Log($"[CheckGameWinnderState] - 내 FireBaseUID {PMS_Util.Util.GetMyUid()}");
         if (PhotonNetwork.IsMasterClient)
         {       
             ShootingGameManager.Instance.CheckGameWinner();
