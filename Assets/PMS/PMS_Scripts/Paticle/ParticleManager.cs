@@ -1,43 +1,37 @@
+using DesignPattern;
 using System.Collections;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using static UnityEngine.ParticleSystem;
 
 //게임 끝날때 까지 사용할 매니저
-public class ParticleManager : MonoBehaviour //추후 SingleTon or PunSingleton으로 변경
+public class ParticleManager : CombinedSingleton<ParticleManager> //추후 SingleTon or PunSingleton으로 변경
 {
-    public static ParticleManager Instance { get; private set; }
-
     [Header("Inspector에 할당된 ParticleData SO들")]
+    [SerializeField] Transform ParticlePoolRegister_Transform;
     [SerializeField] ParticleData[] particles;
 
     // id → SO 참조 캐시
     private Dictionary<string, ParticleData> dataMap;
 
-    
     private readonly Dictionary<string, ParticlePool> pools = new();
     private readonly Dictionary<string, AsyncOperationHandle<GameObject>> handles = new();
     private readonly Dictionary<string, float> durations = new();
 
-    void Awake()
+    protected override void Awake()
     {
-        if (Instance != null) Destroy(gameObject);
-        else
-        {
-            Instance = this;
-            DontDestroyOnLoad(this);
-            // ParticleData SO들을 dataMap에 등록
-
-            BuildDataMap();
-        }
+        // ParticleData SO들을 dataMap에 등록
+        //BuildDataMap();
     }
 
     private void BuildDataMap()
     {
         dataMap.Clear();
+
+        if (dataMap == null) return;
+
         foreach (var pd in particles)
         {
             if (pd == null || dataMap.ContainsKey(pd.id))
@@ -56,13 +50,15 @@ public class ParticleManager : MonoBehaviour //추후 SingleTon or PunSingleton�
             var handle = Addressables.LoadAssetAsync<GameObject>(data.addressableKey);
             handles[data.id] = handle;
             var prefab = await handle.ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
-            pools[data.id] = new ParticlePool(prefab, data.initialPoolSize);
+            pools[data.id] = new ParticlePool(prefab, data.initialPoolSize,ParticlePoolRegister_Transform);
             durations[data.id] = data.duration;
         }
         catch
         {
             Debug.LogError($"Preload failed: {data.addressableKey}");
         }
+
+        Debug.Log("[Particle Manager - 파티클 데이터 비동기 로드 완료!]");
     }
 
     // Play 시점
@@ -77,7 +73,7 @@ public class ParticleManager : MonoBehaviour //추후 SingleTon or PunSingleton�
             else return;
         }
 
-        var ps = pools[id].Get();
+        var ps = pools[id].Get(ParticlePoolRegister_Transform);
         ps.transform.SetPositionAndRotation(pos, rot);
         ps.Play();
         await UniTask.Delay(System.TimeSpan.FromSeconds(durations[id]), cancellationToken: this.GetCancellationTokenOnDestroy());

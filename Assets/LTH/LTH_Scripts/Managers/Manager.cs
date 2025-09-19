@@ -22,6 +22,7 @@ namespace Managers
 
         public static CustomizationManager Custom => CustomizationManager.Instance;     // Customizing
         
+        public static ParticleManager Particle => ParticleManager.Instance;     // Particle
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         public static void Initialize()
@@ -36,6 +37,7 @@ namespace Managers
             manager.AddComponent<PlayerManager>();
             manager.AddComponent<UIManager>();
             manager.AddComponent<CameraManager>();
+
 
             SceneManager.sceneLoaded += OnSceneLoaded;
             

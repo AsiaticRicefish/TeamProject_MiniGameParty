@@ -1095,7 +1095,7 @@ MonoBehaviour:
   isPersistent: 1
   cameraSwipeController: {fileID: 0}
   touchAction:
-    m_Name: 
+    m_Name: Touch
     m_Type: 0
     m_ExpectedControlType: 
     m_Id: db643e4e-68fd-4aa5-8e72-681681f799bc
@@ -1104,7 +1104,7 @@ MonoBehaviour:
     m_SingletonActionBindings: []
     m_Flags: 0
   cameraControlAction:
-    m_Name: 
+    m_Name: Camera Control
     m_Type: 0
     m_ExpectedControlType: 
     m_Id: d6058ce7-e21e-4294-9b2f-621321919f3f
@@ -1113,7 +1113,7 @@ MonoBehaviour:
     m_SingletonActionBindings: []
     m_Flags: 0
   cameraPositionAction:
-    m_Name: 
+    m_Name: Camera Position
     m_Type: 0
     m_ExpectedControlType: 
     m_Id: 374ca01b-0c83-466f-ad0e-799473f4585a

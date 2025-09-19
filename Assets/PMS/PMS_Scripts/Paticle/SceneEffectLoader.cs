@@ -30,6 +30,7 @@ public class SceneEffectLoader : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
+        Debug.Log("[SceneEffectLoader] - 씬 변경 감지");
         // 1) 씬 이름으로 Config 조회, 없으면 바로 리턴
         if (!_configMap.TryGetValue(scene.name, out var sceneConfig))
             return;
@@ -38,6 +39,7 @@ public class SceneEffectLoader : MonoBehaviour
         if (sceneConfig.effects == null || sceneConfig.effects.Length == 0)
             return;
 
+        Debug.Log("[SceneEffectLoader] - Effect 비동기 로드 시작");
         // 3) 파티클 Preload
         foreach (var data in sceneConfig.effects)
             ParticleManager.Instance.PreloadAsync(data).Forget();
