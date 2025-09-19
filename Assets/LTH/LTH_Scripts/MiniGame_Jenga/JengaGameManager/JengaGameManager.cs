@@ -58,8 +58,11 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
     public Action<string> OnPlayerFinished;                 // 플레이어가 게임 완료
     public Action<Dictionary<string, int>> OnGameFinished;  // 최종 순위
     public Action<Dictionary<string, int>> OnRankingsUpdated; // 실시간 순위 갱신 이벤트
+    public Action OnPlayerDataUpdated;  // 플레이어 데이터 갱신 이벤트
 
     private Dictionary<string, JengaPlayerData> players = new(); // UID를 key로 가지는 플레이어 데이터
+    public IReadOnlyDictionary<string, JengaPlayerData> Players => players;
+
     private Dictionary<string, int> playerScores = new();        // 플레이어별 점수
     private Dictionary<string, bool> playerFinished = new();     // 플레이어별 게임 완료 여부
     public Dictionary<string, int> GetCurrentRanks() => CalculateRankings();
@@ -437,6 +440,7 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         {
             var ranks = GetCurrentRanks();
             JengaNetworkManager.Instance?.BroadcastRankSnapshot(ranks);
+            JengaNetworkManager.Instance?.BroadcastPlayerDataSnapshot();
         }
     }
 
@@ -508,6 +512,7 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
     {
         _lastRankSnapshot = new Dictionary<string, int>(ranks);
         OnRankingsUpdated?.Invoke(ranks);
+        OnPlayerDataUpdated?.Invoke();
     }
 
     private Dictionary<string, int> CalculateRankings()
@@ -649,11 +654,13 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
     public float GetRemainingTime() => remainingTime;
     public string GetFormattedTime()
     {
-        // 반올림으로 더 정확한 시간 표시
         int totalSeconds = Mathf.RoundToInt(remainingTime);
-        int minutes = totalSeconds / 60;
-        int seconds = totalSeconds % 60;
-        return $"{minutes}:{seconds:00}";
+        return totalSeconds.ToString();
+        //// 반올림으로 더 정확한 시간 표시
+        //int totalSeconds = Mathf.RoundToInt(remainingTime);
+        //int minutes = totalSeconds / 60;
+        //int seconds = totalSeconds % 60;
+        //return $"{minutes}:{seconds:00}";
     }
 
     private Vector3 GetPlayerTowerPosition(string playerId)
@@ -730,6 +737,12 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         }
 
         CheckAllPlayersFinished();
+
+        // 플레이어 데이터 동기화 추가
+        if (PhotonNetwork.IsMasterClient)
+        {
+            JengaNetworkManager.Instance?.BroadcastPlayerDataSnapshot();
+        }
     }
 
     /// <summary>

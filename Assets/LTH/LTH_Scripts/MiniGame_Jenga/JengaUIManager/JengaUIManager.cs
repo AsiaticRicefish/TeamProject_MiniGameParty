@@ -1,15 +1,18 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using DesignPattern;
+using InputBlocker;
 using Photon.Pun;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using InputBlocker;
+using DG.Tweening;
 
 public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
 {
-    [Header("UI 요소")]
+    [Header("타이머 UI")]
     [SerializeField] private TMP_Text timerText; // 타이머 기능 UI
 
     [Header("카운트다운 UI")]
@@ -24,7 +27,10 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
 
     [Header("대기 UI")]
     [SerializeField] private GameObject waitingPanel;
-    
+    [SerializeField] private Transform spectatorContent;
+    [SerializeField] private GameObject playerInfoItemPrefab; // 플레이어 정보 프리팹
+    private List<GameObject> spectatorItems = new List<GameObject>();
+
     private bool _iAmEliminated = false;
     private InputLockToken _eliminateLock;
 
@@ -46,6 +52,7 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
             JengaGameManager.Instance.OnGameStateChanged += OnGameStateChanged;         // 게임 상태 변경 이벤트 구독
             JengaGameManager.Instance.OnGameFinished += OnGameFinished_ShowRanking;
             JengaGameManager.Instance.OnRankingsUpdated += OnRankingsUpdated_Live;      // 실시간 랭킹 구독
+            JengaGameManager.Instance.OnPlayerDataUpdated += OnPlayerDataUpdated;
 
             // 초기 시간 설정
             UpdateTimerUI(JengaGameManager.Instance.GetRemainingTime());
@@ -88,8 +95,8 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
                 break;
 
             case JengaGameState.Finished:
-                // 게임 종료 시 00:00
-                if (timerText != null) timerText.text = "0:00";
+                // 게임 종료 시 0초
+                if (timerText != null) timerText.text = "0";
 
                 if (JengaGameManager.Instance != null)
                     JengaGameManager.Instance.OnRankingsUpdated -= OnRankingsUpdated_Live;
@@ -151,9 +158,9 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
         {
             countdownPanel.SetActive(true);
 
-            if (rotateButton) 
-            { 
-                rotateButton.gameObject.SetActive(false); 
+            if (rotateButton)
+            {
+                rotateButton.gameObject.SetActive(false);
             }
 
             StartCoroutine(CountdownCoroutine(duration));
@@ -240,6 +247,21 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
         if (timerText != null && JengaGameManager.Instance != null)
         {
             timerText.text = JengaGameManager.Instance.GetFormattedTime();
+
+            // 1초 이상 10초 이하일 때만 효과 적용
+            if (remainingTime > 0f && remainingTime <= 10f)
+            {
+                timerText.color = Color.red;
+
+                timerText.transform.DOKill();
+                timerText.transform.DOShakePosition(0.5f, 3f, 20, 45f, false, true)
+                    .SetLoops(-1, LoopType.Restart);
+            }
+            else
+            {
+                timerText.color = Color.black;
+                timerText.transform.DOKill();
+            }
         }
     }
 
@@ -295,6 +317,12 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
     {
         if (JengaGameManager.Instance.currentState == JengaGameState.Finished) return;
         rankingUI?.UpdateLiveRanks(ranks);
+
+        // 탈락자라면 관전 정보도 업데이트
+        if (_iAmEliminated)
+        {
+            UpdateSpectatorInfo();
+        }
     }
 
     #endregion
@@ -304,12 +332,66 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
     {
         _iAmEliminated = true;
 
-        if (waitingPanel) waitingPanel.SetActive(true);
+        if (waitingPanel)
+        {
+            waitingPanel.SetActive(true);
+            UpdateSpectatorInfo();
+        }
 
         if (_eliminateLock == null)
             _eliminateLock = InputManager.Instance?.Acquire(InputType.Interaction, "Jenga eliminated");
 
         HideRotateButton(); // 조작 불가
+    }
+
+    private void OnPlayerDataUpdated()
+    {
+        if (_iAmEliminated)
+        {
+            UpdateSpectatorInfo();
+        }
+    }
+
+    private void UpdateSpectatorInfo()
+    {
+        var gameManager = JengaGameManager.Instance;
+        if (gameManager == null || spectatorContent == null) return;
+
+        foreach (var item in spectatorItems)
+        {
+            if (item != null) Destroy(item);
+        }
+        spectatorItems.Clear();
+
+        int createdCount = 0;
+        foreach (var uid in gameManager.Players.Keys)
+        {
+            var gamePlayer = PlayerManager.Instance.GetPlayer(uid);
+            var jengaData = gameManager.Players[uid];
+
+            if (gamePlayer != null)
+            {
+                if (playerInfoItemPrefab == null)
+                {
+                    continue;
+                }
+
+                var item = Instantiate(playerInfoItemPrefab, spectatorContent);
+
+                var texts = item.GetComponentsInChildren<TMP_Text>();
+
+                if (texts.Length >= 3)
+                {
+                    texts[0].text = gamePlayer.Nickname;
+                    texts[1].text = jengaData.removedCount.ToString();
+                    texts[2].text = jengaData.isAlive ? "생존" : "파괴";
+                    texts[2].color = jengaData.isAlive ? Color.blue : Color.red;
+                }
+
+                spectatorItems.Add(item);
+                createdCount++;
+            }
+        }
     }
 
     private void PrimeRankingUIIfPossible()
@@ -355,6 +437,7 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
             JengaGameManager.Instance.OnGameStateChanged -= OnGameStateChanged;
             JengaGameManager.Instance.OnGameFinished -= OnGameFinished_ShowRanking;
             JengaGameManager.Instance.OnRankingsUpdated -= OnRankingsUpdated_Live;
+            JengaGameManager.Instance.OnPlayerDataUpdated -= OnPlayerDataUpdated;
         }
         _eliminateLock?.Dispose();
         _eliminateLock = null;

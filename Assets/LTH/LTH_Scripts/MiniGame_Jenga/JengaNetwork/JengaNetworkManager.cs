@@ -239,6 +239,19 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
         int bonus = Mathf.Clamp(Mathf.RoundToInt(clientAccuracy * MAX_BONUS), 0, MAX_BONUS);
         int finalScore = BASE_SCORE + bonus;
 
+        string uid = TryGetUidFromActor(actorNumber);
+        if (!string.IsNullOrEmpty(uid))
+        {
+            if (gm != null && gm.Players.TryGetValue(uid, out var playerData))
+            {
+                if (!playerData.isAlive)
+                {
+                    ReplyDeny(actorNumber, blockId, "player-eliminated");
+                    return;
+                }
+            }
+        }
+
         thisPhotonView.RPC(nameof(RPC_ApplyBlockRemoval), RpcTarget.All, actorNumber, blockId, true, finalScore, true);
     }
 
@@ -262,7 +275,11 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
             }
 
             var ranks = JengaGameManager.Instance?.GetCurrentRanks();
-            if (ranks != null) BroadcastRankSnapshot(ranks);
+            if (ranks != null)
+            {
+                BroadcastRankSnapshot(ranks);
+                BroadcastPlayerDataSnapshot();
+            }
         }
     }
 
@@ -658,6 +675,59 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     }
 
     #endregion
+
+    #region 게임 데이터 동기화 (젠가 제거 갯수, 파괴 여부)
+    public void BroadcastPlayerDataSnapshot()
+    {
+        if (!PhotonNetwork.IsMasterClient) return;
+
+        var gameManager = JengaGameManager.Instance;
+        if (gameManager == null) return;
+
+        Debug.Log("[BroadcastPlayerData] Sending player data snapshot...");
+
+        var uids = new List<string>();
+        var removedCounts = new List<int>();
+        var isAliveFlags = new List<bool>();
+
+        foreach (var kvp in gameManager.Players)
+        {
+            uids.Add(kvp.Key);
+            removedCounts.Add(kvp.Value.removedCount);
+            isAliveFlags.Add(kvp.Value.isAlive);
+
+            Debug.Log($"[BroadcastPlayerData] {kvp.Key}: removed={kvp.Value.removedCount}, alive={kvp.Value.isAlive}");
+        }
+
+        thisPhotonView.RPC(nameof(RPC_SyncPlayerData), RpcTarget.All,
+                           uids.ToArray(), removedCounts.ToArray(), isAliveFlags.ToArray());
+    }
+
+    [PunRPC]
+    private void RPC_SyncPlayerData(string[] uids, int[] removedCounts, bool[] isAliveFlags)
+    {
+        Debug.Log("[RPC_SyncPlayerData] Received player data sync");
+
+        var gameManager = JengaGameManager.Instance;
+        if (gameManager == null) return;
+
+        for (int i = 0; i < uids.Length && i < removedCounts.Length && i < isAliveFlags.Length; i++)
+        {
+            if (gameManager.Players.TryGetValue(uids[i], out var playerData))
+            {
+                Debug.Log($"[RPC_SyncPlayerData] Updating {uids[i]}: {playerData.removedCount} → {removedCounts[i]}, {playerData.isAlive} → {isAliveFlags[i]}");
+
+                playerData.removedCount = removedCounts[i];
+                playerData.isAlive = isAliveFlags[i];
+            }
+        }
+
+        JengaGameManager.Instance?.OnPlayerDataUpdated?.Invoke();
+    }
+
+
+    #endregion
+
 
     #region 랭킹 동기화
     public void BroadcastRankSnapshot(Dictionary<string, int> uidToRank)
