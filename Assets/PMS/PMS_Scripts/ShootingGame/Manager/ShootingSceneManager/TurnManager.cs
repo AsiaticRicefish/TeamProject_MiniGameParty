@@ -168,7 +168,7 @@ namespace ShootingScene
         //네트워크 콜백 되는 함수
         public IEnumerator SetCurrentTurn()
         {
-            string myUid = PMS_Util.PMS_Util.GetMyUid();
+            string myUid = PMS_Util.Util.GetMyUid();
             if (string.IsNullOrEmpty(myUid))
             {
                 Debug.LogWarning("[TurnManager] - UID를 가져올 수 없습니다.");
@@ -193,7 +193,7 @@ namespace ShootingScene
             {
                 Debug.Log("내 턴 입니다!");
                 UnimoEgg newEgg = EggManager.Instance.SpawnEgg(myUid);
-                newEgg.ShooterUid = PMS_Util.PMS_Util.GetMyUid();
+                newEgg.ShooterUid = PMS_Util.Util.GetMyUid();
 
                 var localInput = newEgg.GetComponent<LocalPlayerInput>();
                 if (localInput != null)
@@ -209,8 +209,27 @@ namespace ShootingScene
                 Debug.Log("상대방 턴 입니다");
                 
             }
-            
-           
+
+
+            #region 카메라 관련
+            if (isMyTurn)       
+            {
+                ShootingCameraManager.Instance.SwipePosInit();
+                ShootingScene.PlayerInputManager.Instance.EnableInput();
+                ShootingScene.PlayerInputManager.Instance.DisableCameraControl();
+                ShootingScene.PlayerInputManager.Instance.DisableCameraPosition();
+                Debug.Log("난 인풋 활성화");
+            }
+            else
+            {
+                ShootingScene.PlayerInputManager.Instance.DisableInput();
+                ShootingScene.PlayerInputManager.Instance.EnableCameraControl();
+                ShootingScene.PlayerInputManager.Instance.EnableCameraPosition();
+                Debug.Log("난 인풋 비활성화");
+            }
+            #endregion 
+
+
 
             //StartTurnCorutine(10.0f);
             ShootingNetworkManager.Instance.SetTurnCoroutine = null;

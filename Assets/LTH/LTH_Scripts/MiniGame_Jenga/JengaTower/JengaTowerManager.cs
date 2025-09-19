@@ -244,24 +244,10 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
             MuteArena(actorNumber, false); 
             SetTowerInputEnabled(actorNumber, true);
 
-            // 로컬 플레이어가 무너졌다면: 스냅샷 찍고 '대기중' UI
+            // 로컬 플레이어가 무너졌다면 대기 UI 표시
             if (actorNumber == PhotonNetwork.LocalPlayer.ActorNumber)
             {
-                var snapper = FindFirstObjectByType<JengaCollapseUICam>(FindObjectsInactive.Include);
-                if (snapper)
-                {
-                    var mask = GetArenaLayerMaskByActor(actorNumber);
-                    // 붕괴 연출이 살짝 정리되도록 0.05 ~ 0.2초 기다렸다 촬영
-                    StartCoroutine(snapper.CaptureCo(tower.gameObject, mask, 0.08f, tex =>
-                    {
-                        JengaUIManager.Instance?.ShowWaiting(tex);
-                    }));
-                }
-                else
-                {
-                    // 스냅샷 장치가 없으면 미리보기 없이 대기만
-                    JengaUIManager.Instance?.ShowWaiting(null);
-                }
+                JengaUIManager.Instance?.ShowWaiting();
             }
         };
         tower.CollapseStarted += on;
