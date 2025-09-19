@@ -9,17 +9,21 @@ using UnityEngine;
 namespace RhythmGame
 {
     // public class GameManager : CombinedSingleton<GameManager>
-    public class GameManager : PunSingleton<GameManager>
+    public class GameManager : PunSingleton<GameManager>,IGameComponent
     {
         // 게임 시간 관리
         [SerializeField] float gameTime = 180f; //게임 플레이타임
-
+        [SerializeField] float countDown = 3f; //카운트 다운
+        [SerializeField] float delayTime = 3f; //잔여 노트들이 남아있는 시간(임시)
         //TODO 김승태 게임 플레이 시간 (임시) 변경 예정
         [SerializeField] TMP_Text gameTimer;
         public bool IsGameStart = false;
+        public bool IsGameOver = false;
         public event Action OnGameStart; //게임 시작 이벤트
         public event Action OnGameOver; //게임 오버 여부에 따른 이벤트
-        Coroutine timerCo;
+        public event Action<double, double> OnTimer;
+        Coroutine _waitStartCo;
+        Coroutine _waitEndCo;
 
         //게임 규칙
         // [SerializeField] int hitScore = 100; //적중 시 점수
@@ -38,6 +42,13 @@ namespace RhythmGame
         [SerializeField] Transform[] playerPoints;
         //노트 스폰 오프셋
         [SerializeField] float noteSpawnDist = 12f;
+        
+
+        //TODO 김승태 : IGameComponent 인터페이스 구현
+
+        public void Initialize()
+        {
+        }
 
         #region 게임 시작 종료 로직
         /// <summary>
@@ -48,57 +59,79 @@ namespace RhythmGame
         {
             if (!PhotonNetwork.IsMasterClient) return;
 
-            // 초기화
-
-            // 모든 클라의 과열 스코어를 0으로 세팅 
-            overHeatValue = 0;
-
-            //과열 값 초기값 설정
-            ScoreManager.Instance.photonView.
-            RPC(nameof(ScoreManager.SetOverheat), RpcTarget.All, overHeatValue);
-
             // 플레이어 자리 배정
             LaneManager.Instance.SetLane();
 
             // 스폰 시작
-            NoteSpawner.Instance.photonView.RPC(nameof(NoteSpawner.RPC_StartSpawn), RpcTarget.All);
+            // NoteSpawner.Instance.photonView.RPC(nameof(NoteSpawner.RPC_StartSpawn), RpcTarget.All);
 
-            // 타이머 시작
-            if (timerCo != null) StopCoroutine(timerCo);
-            timerCo = StartCoroutine(IE_Timer());
+            double startTime = PhotonNetwork.Time + countDown;
+            double endTime = startTime + gameTime;
+
+            NoteSpawner.Instance.photonView.RPC(nameof(NoteSpawner.RPC_InitStart), RpcTarget.All, startTime);
 
             //게임 설정관련
-            photonView.RPC(nameof(GameStartSettings), RpcTarget.All);
+            photonView.RPC(nameof(PRC_StartGameTIme), RpcTarget.All, startTime, endTime);
+            // photonView.RPC(nameof(GameStartSettings), RpcTarget.All);
         }
+
+        [PunRPC]
+        void PRC_StartGameTIme(double startTime, double endTime)
+        {
+            OnTimer?.Invoke(startTime, endTime);
+
+            if (_waitStartCo != null) StopCoroutine(_waitStartCo);
+            if (_waitEndCo != null) StopCoroutine(_waitEndCo);
+
+            _waitStartCo = StartCoroutine(IE_WaitStart(startTime, endTime));
+        }
+
+        IEnumerator IE_WaitStart(double startTime, double endTime)
+        {
+            while (PhotonNetwork.Time < startTime) yield return null;
+
+            photonView.RPC(nameof(GameStartSettings), RpcTarget.All);
+
+            if (PhotonNetwork.IsMasterClient)
+            {
+                NoteSpawner.Instance.photonView.RPC(nameof(NoteSpawner.RPC_InitStart), RpcTarget.All, startTime);
+
+                NoteSpawner.Instance.photonView.RPC(nameof(NoteSpawner.RPC_StartSpawn), RpcTarget.All);
+            }
+            _waitEndCo = StartCoroutine(IE_WaitEnd(endTime));
+        }
+
+        IEnumerator IE_WaitEnd(double endTime)
+        {
+            while (PhotonNetwork.Time < endTime) yield return null;
+
+            EndGame();
+        }
+
 
         [PunRPC]
         public void GameStartSettings()
         {
+            if (IsGameStart) return;
             //게임 시작 플래그 설정
             IsGameStart = true;
 
-            //TODO 김승태 : 임시 bgm 및 순서 추후 enum 변경과 함께 파라미터도 변경 필수.
-
-            //리듬게임 브금 시작(랜덤으로 정하려면 새로운 enum 그룹 만든 후, 오버로드 추가하여 랜덤선택 방식으로 변경 필요)
-            SoundManager.Instance.PlayBGM(Bgm_RhythmGame.BGM_1);
+            //리듬게임 랜덤 브금 시작
+            var index = SoundManager.Instance.RandomSelectBGM();
+            SoundManager.Instance.PlayBGM(index);
             OnGameStart?.Invoke();
         }
 
-        //TODO 김승태 : 마스터만 게임 종료하게끔 하고 클라이언트는 전파받기.
         /// <summary>
         /// 게임 종료 시
         /// </summary>
-        public void EndGame()
+        [PunRPC]
+        public void RPC_EndGame()
         {
+            if (!IsGameStart) return;
 
-            // if (!PhotonNetwork.IsMasterClient) return;
-
-            //타이머 코루틴 초기화
-            if (timerCo != null)
-            {
-                StopCoroutine(timerCo);
-                timerCo = null;
-            }
+            IsGameStart = false;
+            IsGameOver = true;
 
             NoteSpawner.Instance.StopSpawn();
             SoundManager.Instance.StopBGM();
@@ -108,20 +141,15 @@ namespace RhythmGame
             Debug.Log("게임 오버");
         }
 
-        // [PunRPC]
-        // public void GameEndSettings()
-        // {
-            
-        // }
+        public void EndGame()
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+            if (!IsGameStart || IsGameOver) return;
+
+            photonView.RPC(nameof(RPC_EndGame), RpcTarget.All);
+        }
         #endregion
 
-        IEnumerator IE_Timer()
-        {
-            float end = Time.time + gameTime;
-            while (Time.time < end) yield return null;
-            //시간 초과 시 게임 종료
-            EndGame();
-        }
 
         /// <summary>
         /// Good 히트 → 개인 점수 증감
@@ -144,18 +172,18 @@ namespace RhythmGame
             switch (type)
             {
                 case NoteType.Fake:
-                    score = -1;
-                    OverHeatCheck();
+                    score = 4;
+                    // OverHeatCheck();
                     break;
 
                 case NoteType.Touch:
-                    score = 2;
-                    FrozenHeat();
+                    score = 1;
+                    // FrozenHeat();
                     break;
 
                 case NoteType.Continue:
-                    score = 10;
-                    FrozenHeat();
+                    score = 2;
+                    // FrozenHeat();
                     break;
             }
 

@@ -5,7 +5,7 @@ public class UI_LoadingTheme : ScriptableObject
 {
     [Header("텍스트")]
     public string gameTitle;                     // 큰 제목
-    public string bigDescription;                // 메인 설명 (큰 글씨)
+    [TextArea] public string bigDescription;     // 메인 설명 (큰 글씨)
     [TextArea] public string smallDescription;   // 서브 설명 (작은 글씨)
 
     [Header("배경 색")]

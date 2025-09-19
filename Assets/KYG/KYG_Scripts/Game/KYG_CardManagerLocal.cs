@@ -106,22 +106,27 @@ namespace KYG
 
                 Debug.Log($"[LOCAL] 턴 순서: {orderText}");
                 SetStatus($"모든 카드 공개!\n턴 순서: {orderText}\n(Reset 버튼으로 다시 테스트)");
-                
+
                 // 카드 UI 숨김
                 if (cardParent) cardParent.gameObject.SetActive(false);
 
                 // 미니게임 시작 (order[0]이 첫 공격자)
-                var mini = FindObjectOfType<KYG.MeteorTapMiniGame>();
-                if (mini != null)
+                var boot = FindObjectOfType<KYG.LocalMiniGameBoot>();
+                if (boot != null)
                 {
-                    bool iStartFirst = (order[0] == 0);      // 로컬 규칙: P0 = 나
-                    int alivePlayers = playerCount;          // 슬라이더/엔딩 카운트 계산용
-                    mini.InitTurn(iStartFirst, 1, alivePlayers);
+                    boot.SetOrder(order, playerCount);
+                    boot.StartOrder();
                 }
-            }
-            else
-            {
-                SetStatus($"선택됨! 다음 차례: {_mockPlayers[_pickerIndex]}");
+                else
+                {
+                    // 부트가 없으면 예전 방식으로도 동작하도록 폴백
+                    var mini = FindObjectOfType<KYG.MeteorTapMiniGame>();
+                    if (mini != null)
+                    {
+                        bool iStartFirst = (order[0] == 0); // 로컬 규칙: P0 = 나
+                        mini.InitTurn(iStartFirst, 1, playerCount);
+                    }
+                }
             }
         }
 
