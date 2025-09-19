@@ -41,6 +41,10 @@ namespace Customization
         [Header("Avatar")]  //--------------------------------------//
         [SerializeField] private AvatarStruct avatarStruct;
 
+        [Header("Setting")] [SerializeField] private bool includeOwnedEvenIfDisabled = true;
+
+        
+        
         // DataManager --------------------------------------//
         private DataManager Data => Manager.Data;
         
@@ -110,21 +114,45 @@ namespace Customization
 
             Debug.Log("[ClosetController] start prebuild");
 
-            // 1) 데이터 가져오기 (CatalogProvider에서 정의 제공)
-            var characters = CatalogProvider.CharactersSorted;
-            var equips = CatalogProvider.EquipsSorted;
-            if (characters == null || equips == null)
+            // 1) 정의(Definition) 목록
+            var allCharacters = CatalogProvider.CharactersSorted;
+            var allEquips     = CatalogProvider.EquipsSorted;
+            if (allCharacters == null || allEquips == null)
             {
-                Debug.LogError("[ClosetController] CatalogProvider.Characters or CatalogProvider.Equips is null");
+                Debug.LogError("[ClosetController] CatalogProvider.Characters or Equips is null");
                 return;
             }
+            
+            // 2) Firestore ItemData의 Enabled 기준으로 허용 id 집합 만들기
+            //    - 없으면(미등록) 비활성으로 간주
+            //    - 필요시 '보유중이면 비활성이어도 보이게' 옵션에 따라 설정
+            var enabledCharIds = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var kv in Data.CharacterItemDict)
+            {
+                if (kv.Value?.Enabled == true) enabledCharIds.Add(kv.Key);
+            }
+            if (includeOwnedEvenIfDisabled && Data.Custom.ownedCharacters !=null)
+                foreach (var id in  Data.Custom.ownedCharacters) enabledCharIds.Add(id);
+            
+            var enabledEquipIds = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var kv in Data.EquipItemDict)
+            {
+                if (kv.Value?.Enabled == true) enabledEquipIds.Add(kv.Key);
+            }
+            if (includeOwnedEvenIfDisabled && Data.Custom.ownedEquips !=null)
+                foreach (var id in Data.Custom.ownedEquips ) enabledEquipIds.Add(id);
+            
+            // 3) 실제 생성에 쓸 리스트는 Enabled만 통과
+            var characters = allCharacters.Where(def => enabledCharIds.Contains(def.id)).ToList();
+            var equips     = allEquips.Where(def => enabledEquipIds.Contains(def.id)).ToList();
 
+            
 
-            // 2) 버튼 프리팹들 미리 생성 (동기 Instantiate → 빠르게 끝남)
+            // 4) 버튼 프리팹들 미리 생성 (동기 Instantiate → 빠르게 끝남)
             BuildToggles(characterContent, _charToggles, characters.Count, charTogglePrefab, characterToggleGroup);
             BuildToggles(equipmentContent, _equipToggles, equips.Count, equipItemTogglePrefab, equipToggleGroup);
 
-            // 3) 아이콘 등 Addressables 리소스를 선로딩
+            // 5) 아이콘 등 Addressables 리소스를 선로딩
             // 비동기 task를 리스트에 넣어 아래 task가 끝날 때까지 대기
             var charIconTasks = new List<UniTask<Sprite>>();
             var equipIconTasks = new List<UniTask<Sprite>>();
@@ -139,7 +167,7 @@ namespace Customization
             var equipIcons = await UniTask.WhenAll(equipIconTasks);
 
 
-            // 4) 로드한 리소스를 적용
+            // 6) 로드한 리소스를 적용
             for (int i = 0; i < _charToggles.Count; i++)
             {
                 var toggle = _charToggles[i];
@@ -189,7 +217,7 @@ namespace Customization
                     });
             }
 
-            // 6) 레이아웃 리빌드 후 가시화
+            // 7) 레이아웃 리빌드 후 가시화
             ForceRebuild(characterContent as RectTransform);
             ForceRebuild(equipmentContent as RectTransform);
 
@@ -322,8 +350,6 @@ namespace Customization
             
             bool valid = Data.HasCharacter(_stagedCombo.characterId) && Data.HasEquip(_stagedCombo.equipId);
             bool modified = Manager.Custom.IsModified(_stagedCombo);
-            Debug.Log(modified);
-
             applyButton.interactable = !_applying && modified && valid;
         }
 

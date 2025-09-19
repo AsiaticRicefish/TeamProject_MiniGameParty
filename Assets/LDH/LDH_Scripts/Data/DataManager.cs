@@ -19,6 +19,7 @@ namespace Data
         private FirestoreItemRepository _itemRepo;
         
         //----- User Data ---- //
+        public string UID => _uid;
         public UserData User { get; private set; }
         public CustomizationData Custom => User.customization;
         public CurrencyData Currency => User.currency;
@@ -91,8 +92,8 @@ namespace Data
             
             Util_LDH.ConsoleLog(this, $"complete loading item data - character : {charItems.Count}, equip - {equipItems.Count}");
 
-            var item = _characterItemDict[Define_LDH.DefaultData.DefaultCharacter];
-            Util_LDH.ConsoleLog(this, $"데이터 테스트 - id : {item.Id}, name : {item.Name}, price : {item.Price}, enabled : {item.Enabled}");
+            // var item = _characterItemDict[Define_LDH.DefaultData.DefaultCharacter];
+            // Util_LDH.ConsoleLog(this, $"데이터 테스트 - id : {item.Id}, name : {item.Name}, price : {item.Price}, enabled : {item.Enabled}");
         }
 
         
@@ -156,11 +157,6 @@ namespace Data
 
             if (totalsByCurrency == null || totalsByCurrency.Length < CurrencyCount)
                 return new Store.PurchaseResult { Error = Store.PurchaseError.ItemNotFound, Message = "가격 정보가 올바르지 않습니다." };
-
-            
-            //트랜잭션 전에 캐시 채우기
-            await _userRepo.UserRef(_uid).GetValueAsync();
-            
             
             bool notEnough = false;
             var currencyKeys = CatalogProvider.Currency.GetCurrencyKeys();
@@ -171,7 +167,7 @@ namespace Data
             {
                 //mutable : 서버가 보내준 현재 값
                 // (C#에선 보통 Dictionary<string, object> or 기본형으로 옴)
-                await _userRepo.RunUserTransactionAsync(_uid, mutable =>
+                var (committed, _) =  await _userRepo.RunUserTransactionAsync(_uid, mutable =>
                 {
                     attempts++;
 
@@ -226,13 +222,27 @@ namespace Data
                     
                 });
 
-                if (notEnough)
+                // 트랜잭션 결과 해석
+                
+                //  5) 트랜잭션 실패
+                if (!committed)
+                {
+                    if (notEnough)
+                    {
+                        return new Store.PurchaseResult
+                        {
+                            Error = Store.PurchaseError.NotEnoughCurrency,
+                            Message = "재화가 부족합니다."
+                        };
+                    }
+                    // 그 외 비커밋 사유(초기화/경합 등) → 네트워크 오류로 안내
                     return new Store.PurchaseResult
                     {
-                        Error = Store.PurchaseError.NotEnoughCurrency,
-                        Message = "재화가 부족합니다."
+                        Error = Store.PurchaseError.Network,
+                        Message = "구매 처리 중 문제가 발생했습니다. 잠시 후 다시 시도해주세요."
                     };
-
+                }
+                
                 // 6) 트랜잭션 성공 → 최신 데이터 로컬로 다시 로드(이벤트도 여기서 쏴짐)
                 await LoadOrCreatedUserDataAsync();
                 

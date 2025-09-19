@@ -65,8 +65,10 @@ namespace Network
             PhotonNetwork.AutomaticallySyncScene = autoSyncScene;
 
 #if TEST_WITHOUT_LOGIN
-            if(SceneManager.GetActiveScene().name.Equals(lobbySceneName))
+            if (SceneManager.GetActiveScene().name.Equals(lobbySceneName))
+            {
                 GameObject gameBootstrap = new GameObject("Game Bootstrap", typeof(GameBootstrap));
+            }
 #endif
         }
         

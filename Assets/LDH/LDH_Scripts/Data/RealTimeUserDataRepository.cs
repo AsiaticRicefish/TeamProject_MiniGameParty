@@ -33,42 +33,23 @@ namespace Data
         public async UniTask<UserData> LoadOrCreateAsync(string uid)
         {
             var userSnap = await UserRef(uid).GetValueAsync();
-
-            if (!userSnap.Exists)
+            bool isNewUser = !userSnap.Exists;
+            
+            if (isNewUser)
             {
                 //------ 서버에 저장된 데이터가 없는 상황 -----//
                 Debug.Log("[UserDataRepository] 데이터베이스에 저장된 데이터가 없습니다.");
-                var customData = CustomizationData.CreateDefault();
-                var currencyData = CurrencyData.CreateDefault();
-
+                
                 // 2) 트랜잭션으로 '없을 때만' 기본값 생성
+                var (cOk, _) = await SaveCustomizationAsync(uid, cur => (true, CustomizationData.CreateDefault()), initializeIfMissing: true);
+                var (mOk, _) = await SaveCurrencyAsync(uid, cur => (true, CurrencyData.CreateDefault()), initializeIfMissing: true);
 
-                var customTask = SaveCustomizationAsync(uid, cur =>
-                {
-                    // 핵심: 존재 여부 판별 → 존재하면 Abort
-                    // (권장) CurrencyData(dict)에서 updatedAt을 읽어와야 함.
-                    bool exists = cur.updatedAt > 0; // 최초 생성 시에는 0, 저장된 적 있으면 > 0
-                    if (exists) return (false, cur); // → Abort (덮어쓰기 방지)
+                if (!cOk || !mOk)
+                    throw new Exception("[UserDataRepository] 신규 유저 생성 실패");
 
-                    // 없을 때만 기본값 커밋
-                    return (true, customData);
-                });
-
-                var currencyTask = SaveCurrencyAsync(uid, cur =>
-                {
-                    // 핵심: 존재 여부 판별 → 존재하면 Abort
-                    // (권장) CurrencyData(dict)에서 updatedAt을 읽어와야 함.
-                    bool exists = cur.updatedAt > 0; // 최초 생성 시에는 0, 저장된 적 있으면 > 0
-                    if (exists) return (false, cur); // → Abort (덮어쓰기 방지)
-
-                    // 없을 때만 기본값 커밋
-                    return (true, currencyData);
-                });
-
-                await UniTask.WhenAll(customTask, currencyTask);
-
-                // 서버타임 포함해 다시 읽어오기
+                // 서버 타임 포함해서 다시 읽기
                 userSnap = await UserRef(uid).GetValueAsync();
+                
             }
             else
             {
@@ -97,10 +78,12 @@ namespace Data
         #region Save Logic
 
         public async UniTask<(bool committed, CustomizationData latest)> SaveCustomizationAsync(string uid,
-            Func<CustomizationData, (bool ok, CustomizationData next)> mutator)
+            Func<CustomizationData, (bool ok, CustomizationData next)> mutator,
+            bool initializeIfMissing = false
+            )
         {
-            int attempts = 0;
 
+            int attempts = 0;
             try
             {
                 // 2) 트랜잭션 실행. 대상 노드는 CustRef(uid)
@@ -108,20 +91,41 @@ namespace Data
                     mutable =>
                     {
                         attempts++;
-
+                        Debug.Log($"[SaveCustomizationAsync] Transaction body entered! : attempts : {attempts}");
+                        Debug.Log($"Current mutable.Value: {mutable?.Value}");
+    
+                        
                         // 3) 서버가 현재 값을 mutable.Value로 넘겨준다.
                         //      RTDB의 JSON은 C#에선 보통 Dictionary<string,object>로 전달된다.
                         //      넘어온 mutable 데이터를 나만의 규칙(델리게이트 = mutator) 에 맞게 계산해서 서버로 돌려줘야한다.
                         var dict = mutable.Value as Dictionary<string, object>;
                         if (dict == null)
                         {
-                            if (attempts <= 2)
+                            if (initializeIfMissing)
                             {
-                                if (attempts == 1) Debug.Log($"[Tx] custom not loaded yet; retrying… / attempts : {attempts}");
+                                // 신규 유저거나 노드가 없는 경우 → 기본값 주입
+                                var def = CustomizationData.CreateDefault();
+                                mutable.Value = new Dictionary<string, object>
+                                {
+                                    ["characterId"] = def.characterId,
+                                    ["equipId"] = def.equipId,
+                                    ["ownedCharacters"] = HashToBoolMap(def.ownedCharacters),
+                                    ["ownedEquips"] = HashToBoolMap(def.ownedEquips),
+                                    ["updatedAt"] = ServerValue.Timestamp
+                                };
                                 return TransactionResult.Success(mutable);
                             }
-
-                            return TransactionResult.Abort();
+                            else
+                            {
+                                if (attempts <= 2)
+                                {
+                                    if (attempts == 1) Debug.Log($"[Tx] custom not loaded yet; retrying…");
+                                    return TransactionResult.Success(mutable);
+                                }
+                                
+                                return TransactionResult.Abort();
+                            }
+                         
                         }
 
                         // 4) 현재 값을 모델(CurrencyData)에 맞게 파싱한다.
@@ -166,33 +170,55 @@ namespace Data
         // 동시에 건드려도 값이 꼬이지 않도록 처리
         public async UniTask<(bool committed, CurrencyData latest)> SaveCurrencyAsync(
             string uid,
-            Func<CurrencyData, (bool ok, CurrencyData next)> mutator)
+            Func<CurrencyData, (bool ok, CurrencyData next)> mutator,
+            bool initializeIfMissing = false
+            )
         {
             int attempts = 0;
-
+            
             try
             {
                 // 2) 트랜잭션 실행. 대상 노드는 CurrencyRef(uid).
                 var result = await CurrencyRef(uid).RunTransaction(
                     mutable =>
                     {
+                        
                         attempts++;
+                        Debug.Log($"[SaveCurrencyAsync] Transaction body entered! : attempts : {attempts}");
+                        Debug.Log($"Current mutable.Value: {mutable?.Value}");
 
                         // 3) 서버가 현재 값을 mutable.Value로 넘겨준다.
                         //      RTDB의 JSON은 C#에선 보통 Dictionary<string,object>로 전달된다.
                         //      넘어온 mutable 데이터를 나만의 규칙(델리게이트 = mutator) 에 맞게 계산해서 서버로 돌려줘야한다.
-
+                        
                         var dict = mutable.Value as Dictionary<string, object>;
                         if (dict == null)
                         {
-                            if (attempts <= 2)
+                            
+                            if (initializeIfMissing)
                             {
-                                if (attempts == 1) Debug.Log($"[Tx] currency not loaded yet; retrying… / attempts : {attempts}");
+                                // 신규 유저거나 노드가 없는 경우 → 기본값 주입
+                                var def = CurrencyData.CreateDefault();
+                                mutable.Value = new Dictionary<string, object>
+                                {
+                                    ["currency1"] = def.currency1,
+                                    ["currency2"] = def.currency2,
+                                    ["currency3"] = def.currency3,
+                                    ["updatedAt"] = ServerValue.Timestamp
+                                };
                                 return TransactionResult.Success(mutable);
-
                             }
-
-                            return TransactionResult.Abort();
+                            else
+                            {
+                                if (attempts <= 2)
+                                {
+                                    if (attempts == 1) Debug.Log($"[Tx] currency not loaded yet; retrying…");
+                                    return TransactionResult.Success(mutable);
+                            
+                                }
+                            
+                                return TransactionResult.Abort();
+                            }
                         }
 
                         // 4) 현재 값을 모델(CurrencyData)에 맞게 파싱한다.
@@ -232,7 +258,7 @@ namespace Data
             }
         }
 
-        public async UniTask<DataSnapshot> RunUserTransactionAsync(
+        public async UniTask<(bool committed, DataSnapshot snapshot)> RunUserTransactionAsync(
             string uid,
             Func<Firebase.Database.MutableData, TransactionResult> mutator)
         {
@@ -250,11 +276,8 @@ namespace Data
                     }
                 });
 
-            if (result == null)
-                throw new Exception("[Repo] RunTransaction returned null result");
-
-            Debug.Log("[Repo] RunUserTransactionAsync committed.");
-            return result; // 또는 result.Snapshot (사용처에 맞게)
+            bool committed = result != null;
+            return (committed, result);
         }
 
         #endregion
