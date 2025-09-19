@@ -592,6 +592,37 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: -5}
   m_SizeDelta: {x: 0, y: -20}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &312057150
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 312057151}
+  m_Layer: 0
+  m_Name: pos4
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &312057151
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 312057150}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 4, y: 0, z: 1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1495509204}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &362434754
 GameObject:
   m_ObjectHideFlags: 0
@@ -1342,7 +1373,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &805367974
 Transform:
   m_ObjectHideFlags: 0
@@ -1388,6 +1419,9 @@ MonoBehaviour:
   - {fileID: 1398929283}
   - {fileID: 631666418}
   noteSpawnDist: 12
+  playerPrefabName: Prefabs/Rhythm/RhythmUnimo
+  backupPrefabName: Prefabs/Rhythm/RhythmPlayer
+  tempSpawnPos: {x: 0, y: 0, z: 0}
 --- !u!114 &805367976
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1427,7 +1461,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &847317605
 Transform:
   m_ObjectHideFlags: 0
@@ -1638,7 +1672,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &903585537
 Transform:
   m_ObjectHideFlags: 0
@@ -1938,8 +1972,8 @@ Transform:
   m_GameObject: {fileID: 1112175110}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 2}
-  m_LocalScale: {x: 4, y: 1, z: 1}
+  m_LocalPosition: {x: 1, y: 0, z: 2}
+  m_LocalScale: {x: 6, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -2019,7 +2053,7 @@ MonoBehaviour:
     m_ActionName: RythmGame/Press[/Mouse/press]
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
-  m_DefaultActionMap: RythmGame
+  m_DefaultActionMap: RhythmGame
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 0}
 --- !u!114 &1112175118
@@ -2523,6 +2557,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1488249300}
+  - component: {fileID: 1488249302}
+  - component: {fileID: 1488249301}
   m_Layer: 0
   m_Name: LoadingUIController
   m_TagString: Untagged
@@ -2545,6 +2581,44 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1488249301
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1488249299}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f19e40f2838341aeac12d8518fd398f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  initTimeout: 30
+  showDebugLogs: 1
+  syncCheckInterval: 0.1
+  rhythmLoadingTheme: {fileID: 11400000, guid: 93899089e555c457c961831a9783460c, type: 2}
+--- !u!114 &1488249302
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1488249299}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  observableSearch: 2
+  ObservedComponents: []
+  sceneViewId: 5
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
 --- !u!1 &1495509203
 GameObject:
   m_ObjectHideFlags: 0
@@ -2577,6 +2651,7 @@ Transform:
   - {fileID: 1846032767}
   - {fileID: 1398929283}
   - {fileID: 631666418}
+  - {fileID: 312057151}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1510611137
@@ -3480,8 +3555,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   isPersistent: 1
   _bgmList:
-  - {fileID: 8300000, guid: e915b70bc404eda44891990d8738bac1, type: 3}
-  _rhythmList: []
+  - {fileID: 8300000, guid: f584377ee7bd74e49ad104539e3a024e, type: 3}
+  - {fileID: 8300000, guid: b50ad78afe3ec4141805c1503769558f, type: 3}
+  - {fileID: 8300000, guid: d0d9fa3d1412232489992c0ab13f6b08, type: 3}
+  _rhythmList:
+  - {fileID: 8300000, guid: f584377ee7bd74e49ad104539e3a024e, type: 3}
+  - {fileID: 8300000, guid: b50ad78afe3ec4141805c1503769558f, type: 3}
+  - {fileID: 8300000, guid: d0d9fa3d1412232489992c0ab13f6b08, type: 3}
   _gameSfxList:
   - {fileID: 8300000, guid: 0bbf519493bf329468b93a3e3c7d78bb, type: 3}
   _uiSfxList: []
@@ -3520,7 +3600,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1764552358
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3789,9 +3869,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isPersistent: 0
-  playerPrefabName: Prefabs/DONOTSAVERythmPlayer
-  backupPrefabName: Prefabs/RythmPlayer
-  tempSpawnPos: {x: 0, y: 0, z: 0}
   gameRoomName: RythemTestRoom
   maxPlayers: 2
 --- !u!4 &2033308162
@@ -3864,7 +3941,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &2097752888
 Transform:
   m_ObjectHideFlags: 0

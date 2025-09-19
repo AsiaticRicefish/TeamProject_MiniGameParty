@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 6795706012366953312}
   - component: {fileID: 4041204040387756981}
   m_Layer: 0
-  m_Name: RythmPlayer
+  m_Name: RhythmPlayer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -156,5 +156,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16a0d8bbee97744ffb46bac109f79652, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _renderer: {fileID: 3905025938009392500}
   animator: {fileID: 0}

@@ -1,15 +1,20 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using DesignPattern;
+using LDH_MainGame;
 using Photon.Pun;
 using Photon.Realtime;
 using TMPro;
 using UnityEngine;
+using Hashtable = ExitGames.Client.Photon.Hashtable;
+
 
 namespace RhythmGame
 {
     // public class GameManager : CombinedSingleton<GameManager>
-    public class GameManager : PunSingleton<GameManager>,IGameComponent
+    public class GameManager : PunSingleton<GameManager>, IGameComponent
     {
         // 게임 시간 관리
         [SerializeField] float gameTime = 180f; //게임 플레이타임
@@ -42,12 +47,37 @@ namespace RhythmGame
         [SerializeField] Transform[] playerPoints;
         //노트 스폰 오프셋
         [SerializeField] float noteSpawnDist = 12f;
-        
+
+        [Header("플레이어 프리팹 이름")]
+        [SerializeField] string playerPrefabName = "RhythmPlayer";
+        [SerializeField] string backupPrefabName = "Prefabs/RhythmPlayer"; //테스트용
+        [SerializeField] Vector3 tempSpawnPos = Vector3.zero; // 임시 스폰 위치
+
+        private Dictionary<string, RhythmPlayerData> players = new(); // UID를 key로 가지는 플레이어 데이터
+        private Dictionary<string, int> playerScores = new();        // 플레이어별 점수
+        private readonly Dictionary<string, int> _gridOrder = new(); // uid -> 0,1,2,...
+        private Dictionary<string, int> _lastRankSnapshot;
+        public Action<Dictionary<string, int>> OnRankingsUpdated; // 실시간 순위 갱신 이벤트
+
+
+
+
 
         //TODO 김승태 : IGameComponent 인터페이스 구현
 
         public void Initialize()
         {
+            InitializePlayers();
+            //테스트 환경에서 리소스 없는 것을 방지
+            var prefab = Resources.Load<GameObject>(playerPrefabName);
+            if (prefab == null)
+            {
+                Debug.Log($"{playerPrefabName}가 없어서 {backupPrefabName}로 플레이어 캐릭터 모델 변경 ");
+                playerPrefabName = backupPrefabName;
+            }
+
+            // 캐릭터 생성
+            PhotonNetwork.Instantiate(playerPrefabName, tempSpawnPos, Quaternion.identity);
         }
 
         #region 게임 시작 종료 로직
@@ -139,6 +169,8 @@ namespace RhythmGame
             //게임 종료 이벤트 호출
             OnGameOver?.Invoke();
             Debug.Log("게임 오버");
+
+            MainGameManager.Instance.NotifyMiniGameFinish();
         }
 
         public void EndGame()
@@ -209,28 +241,28 @@ namespace RhythmGame
         /// 과열 증가 로직
         /// 미스(Miss)시 혹은 타 조건 만족 시 해당 로직 호출
         /// </summary>
-        public void OverHeatCheck()
-        {
-            //마스터 클라이언트만 판별하도록
-            if (!PhotonNetwork.IsMasterClient) return;
+        // public void OverHeatCheck()
+        // {
+        //     //마스터 클라이언트만 판별하도록
+        //     if (!PhotonNetwork.IsMasterClient) return;
 
-            // 과열 변수 값 증가
-            overHeatValue = Mathf.Max(0, overHeatValue + overHeatPoint);
+        //     // 과열 변수 값 증가
+        //     overHeatValue = Mathf.Max(0, overHeatValue + overHeatPoint);
 
-            //과열 값 반영
-            ScoreManager.Instance.photonView.RPC(
-                nameof(ScoreManager.SetOverheat), RpcTarget.All, overHeatValue
-                );
+        //     //과열 값 반영
+        //     ScoreManager.Instance.photonView.RPC(
+        //         nameof(ScoreManager.SetOverheat), RpcTarget.All, overHeatValue
+        //         );
 
-            // 과열 최대치 도달했을 경우
-            if (overHeatValue >= overHeatMaxValue)
-            {
-                // ScoreManager.Instance.photonView.RPC(nameof(ScoreManager.RPC_IsOverHeat), RpcTarget.All);
+        //     // 과열 최대치 도달했을 경우
+        //     if (overHeatValue >= overHeatMaxValue)
+        //     {
+        //         // ScoreManager.Instance.photonView.RPC(nameof(ScoreManager.RPC_IsOverHeat), RpcTarget.All);
 
-                //과열 코루틴 실행
-                StartCoroutine(IE_OverHeating());
-            }
-        }
+        //         //과열 코루틴 실행
+        //         StartCoroutine(IE_OverHeating());
+        //     }
+        // }
 
         /// <summary>
         /// 미스 시 개인점수 차감
@@ -254,27 +286,27 @@ namespace RhythmGame
             IsOverHeat = false;
         }
 
-        /// <summary>
-        /// 과열 시 코루틴 실행. n초 뒤 과열 초기화 
-        /// </summary>
-        IEnumerator IE_OverHeating()
-        {
-            //과열 시
-            photonView.RPC(nameof(DuringOverHeat), RpcTarget.All);
-            PlayerStunAnim(overHeatingTime);
+        // /// <summary>
+        // /// 과열 시 코루틴 실행. n초 뒤 과열 초기화 
+        // /// </summary>
+        // IEnumerator IE_OverHeating()
+        // {
+        //     //과열 시
+        //     photonView.RPC(nameof(DuringOverHeat), RpcTarget.All);
+        //     PlayerStunAnim(overHeatingTime);
 
-            yield return new WaitForSeconds(overHeatingTime);
-            //과열 시간 종료 후 로직
+        //     yield return new WaitForSeconds(overHeatingTime);
+        //     //과열 시간 종료 후 로직
 
-            photonView.RPC(nameof(AfterOverHeat), RpcTarget.All);
+        //     photonView.RPC(nameof(AfterOverHeat), RpcTarget.All);
 
-            overHeatValue = 0; //과열점수 리셋
-            Debug.Log($"과열 점수 초기화 {overHeatValue}");
+        //     overHeatValue = 0; //과열점수 리셋
+        //     Debug.Log($"과열 점수 초기화 {overHeatValue}");
 
-            ScoreManager.Instance.photonView.RPC(
-                nameof(ScoreManager.SetOverheat), RpcTarget.All, overHeatValue
-                );
-        }
+        //     ScoreManager.Instance.photonView.RPC(
+        //         nameof(ScoreManager.SetOverheat), RpcTarget.All, overHeatValue
+        //         );
+        // }
 
         public int LaneCapacity => playerPoints?.Length ?? 0;
 
@@ -331,33 +363,126 @@ namespace RhythmGame
             return new Pose(pos, rot);
         }
 
-        //플레이어 스턴
-        public void PlayerStunAnim(float time)
-        {
-            if (!PhotonNetwork.IsMasterClient) return;
+        // //플레이어 스턴
+        // public void PlayerStunAnim(float time)
+        // {
+        //     if (!PhotonNetwork.IsMasterClient) return;
 
-            foreach (var player in PhotonNetwork.PlayerList)
+        //     foreach (var player in PhotonNetwork.PlayerList)
+        //     {
+        //         photonView.RPC(nameof(RPC_Stun), RpcTarget.All, player.ActorNumber, time);
+        //     }
+        // }
+
+        // [PunRPC]
+        // void RPC_Stun(int actorNum, float time)
+        // {
+        //     if (!PlayerController.AvatarByActor.TryGetValue(actorNum, out var avatar)) return;
+
+        //     if (avatar.TryGetComponent<PlayerAnimController>(out var anim))
+        //     {
+        //         Debug.Log("anim 있음");
+        //         anim.PlayeStunAnim(time);
+        //     }
+        //     else
+        //     {
+        //         Debug.LogWarning($"actorNum {actorNum}의 아바타에서 PlayerAnimController를 찾지 못함");
+        //     }
+        // }
+
+        private void InitializePlayers()
+        {
+            // 현재 방에 접속해 있는 모든 Photon 플레이어 목록을 순회
+            foreach (var photonPlayer in PhotonNetwork.PlayerList)
             {
-                photonView.RPC(nameof(RPC_Stun), RpcTarget.All, player.ActorNumber, time);
+                // PhotonNetwork.PlayerList에서 꺼낸 플레이어 객체의 CustomProperties에서 uid (Firebase UID)를 추출
+                string uid = photonPlayer.CustomProperties["uid"] as string;
+
+                if (string.IsNullOrEmpty(uid))
+                {
+                    Debug.LogWarning($"[RhythmGameManager - InitializePlayers] Player {photonPlayer.NickName} has no UID in CustomProperties");
+                    continue;
+                }
+
+                // CreateOrGetPlayer를 사용하여 플레이어가 없으면 자동 생성
+                var gamePlayer = PlayerManager.Instance.CreateOrGetPlayer(uid, photonPlayer.NickName);
+
+                if (gamePlayer != null)
+                {
+                    // GamePlayer에 미니게임 전용 데이터인 JengaPlayerData를 새로 만들어 할당
+                    gamePlayer.RhythmPlayerData = new RhythmPlayerData
+                    {
+                        score = 0
+                    };
+
+                    // RhythmGameManager의 players 딕셔너리에 UID를 key로 사용해서 JengaPlayerData를 등록
+                    players[uid] = gamePlayer.RhythmPlayerData;
+                    // 점수를 저장하는 playerScores 딕셔너리에도 해당 UID로 0점 등록 (초기값)
+                    playerScores[uid] = 0;
+                    Debug.Log($"[RhythmGameManager - InitializePlayers] Successfully initialized player: {uid} ({photonPlayer.NickName})");
+                }
+                else
+                {
+                    Debug.LogError($"[RhythmGameManager - InitializePlayers] {uid}에 해당하는 GamePlayer를 찾을 수 없음");
+                }
+            }
+            Debug.Log($"[RhythmGameManager - InitializePlayers] Initialized {players.Count} players");
+
+            if (PhotonNetwork.IsMasterClient)
+            {
+                var uidList = PhotonNetwork.PlayerList
+                    .OrderBy(p => p.ActorNumber)
+                    .Select(p => p.CustomProperties["uid"] as string)
+                    .Where(uid => !string.IsNullOrEmpty(uid))
+                    .ToList();
+
+                SetGridOrder(uidList);
+
+                // 시작 직후 보이는 초기 순위
+                SeedInitialRanksFromGrid();
             }
         }
 
-        [PunRPC]
-        void RPC_Stun(int actorNum, float time)
+        /// <summary>
+        /// 마스터가 게임 시작 시 그리드 순서 확정
+        /// </summary>
+        /// <param name="uidList"></param>
+        public void SetGridOrder(IList<string> uidList)
         {
-            if (!PlayerController.AvatarByActor.TryGetValue(actorNum, out var avatar)) return;
-
-            if (avatar.TryGetComponent<PlayerAnimController>(out var anim))
-            {
-                Debug.Log("anim 있음");
-                anim.PlayeStunAnim(time);
-            }
-            else
-            {
-                Debug.LogWarning($"actorNum {actorNum}의 아바타에서 PlayerAnimController를 찾지 못함");
-            }
+            _gridOrder.Clear();
+            for (int i = 0; i < uidList.Count; i++) _gridOrder[uidList[i]] = i;
         }
 
+        /// <summary>
+        /// 그리드 순서에 따라 초기 랭킹 설정
+        /// </summary>
+        public void SeedInitialRanksFromGrid()
+        {
+            if (_gridOrder.Count == 0) return;
+
+            var rankMap = _gridOrder
+                .OrderBy(kv => kv.Value)
+                .Select((kv, idx) => new { kv.Key, Rank = idx + 1 })
+                .ToDictionary(x => x.Key, x => x.Rank);
+
+            _lastRankSnapshot = new Dictionary<string, int>(rankMap);
+            // UI/네트워크에 즉시 반영
+            OnRankingsUpdated?.Invoke(rankMap);
+            JengaNetworkManager.Instance?.BroadcastRankSnapshot(rankMap);
+
+            // 룸 프로퍼티에도 기록해서 늦게 들어온 클라 동기화
+            if (PhotonNetwork.IsMasterClient && PhotonNetwork.InRoom)
+            {
+                var uids = rankMap.Keys.ToArray();
+                var ranks = rankMap.Values.ToArray();
+                var props = new Hashtable
+            {
+                { RhythmRoomProps.KEY_RANK_UIDS, uids },
+                { RhythmRoomProps.KEY_RANK_VALS, ranks },
+            };
+                PhotonNetwork.CurrentRoom.SetCustomProperties(props);
+            }
+        }
 
     }
 }

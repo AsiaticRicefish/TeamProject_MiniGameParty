@@ -8,7 +8,7 @@ using UnityEngine.InputSystem;
 namespace RhythmGame
 {
     [RequireComponent(typeof(PlayerInput))]
-    public class RythmPlayerInput : MonoBehaviour
+    public class RhythmPlayerInput : MonoBehaviour
     {
         //판정바
         public VerdictNote verdictNote;

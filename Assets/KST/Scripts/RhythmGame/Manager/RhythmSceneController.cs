@@ -12,16 +12,14 @@ using RhythmGame;
 
 public class RhythmSceneController : BaseGameSceneController
 {
-    protected override string GameType => "Rythm";
+    protected override string GameType => "Rhythm";
 
     private static RhythmSceneController _only;
 
     private bool _startNotified;
 
-    // private const string ROOMKEY_SLOTS = "JG_SLOTS";
-
     [Header("Loading Theme")]
-    [SerializeField] private UI_LoadingTheme rhythmLoadingTheme; // 젠가 테마
+    [SerializeField] private UI_LoadingTheme rhythmLoadingTheme;
 
     private UI_Loading _uiLoading;
 
@@ -67,6 +65,7 @@ public class RhythmSceneController : BaseGameSceneController
 
         // 각 매니저들이 Awake에서 생성되기를 기다림
         yield return WaitForSingletonReady<GameManager>();
+        yield return WaitForSingletonReady<NetworkManager>();
         yield return WaitForSingletonReady<LaneManager>();
         yield return WaitForSingletonReady<ScoreManager>();
         yield return WaitForSingletonReady<NoteSpawner>();
@@ -80,12 +79,10 @@ public class RhythmSceneController : BaseGameSceneController
         // 순차적으로 초기화해야 할 매니저들
         var sequentialComponents = new IGameComponent[]
         {
-            // InputManager.Instance,          // 입력 시스템 먼저
-            // JengaNetworkManager.Instance,     // 네트워크 먼저
-            // JengaGameManager.Instance,        // 게임 로직
-            // JengaTowerManager.Instance,       // 타워 생성
-            // JengaUIManager.Instance,          // UI 매니저
-            // JengaUIManager.Instance,          // UI 매니저
+            GameManager.Instance,
+            LaneManager.Instance,
+            ScoreManager.Instance,
+            NoteSpawner.Instance,
         };
 
         yield return StartCoroutine(InitializeComponentsSafely(sequentialComponents));

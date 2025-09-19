@@ -1,9 +1,9 @@
 {
     "version": 1,
-    "name": "RythmInput",
+    "name": "RhythmInput",
     "maps": [
         {
-            "name": "RythmGame",
+            "name": "RhythmGame",
             "id": "c8f91740-b251-4517-8802-8f3d3631d622",
             "actions": [
                 {

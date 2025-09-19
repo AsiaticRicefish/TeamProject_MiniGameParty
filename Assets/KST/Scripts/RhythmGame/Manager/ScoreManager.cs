@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace RhythmGame
 {
-    public class ScoreManager : PunSingleton<ScoreManager>,IGameComponent
+    public class ScoreManager : PunSingleton<ScoreManager>, IGameComponent
     {
         //점수
         int _score; //개인 별 점수
@@ -38,7 +38,7 @@ namespace RhythmGame
 
         void Start()
         {
-            _combo = 0; _bestCombo = 0; _verdictScore = 0;
+            _combo = 0; _bestCombo = 0; _score = 0; _verdictScore = 0;
         }
 
         /// <summary>
@@ -57,6 +57,7 @@ namespace RhythmGame
             _score += amount;
             Debug.Log($" 점수 획득 {amount}");
             OnScoreChanged?.Invoke(_score);
+            SendScore();
         }
 
         /// <summary>
@@ -72,6 +73,16 @@ namespace RhythmGame
             Debug.Log($" 점수 차감 {amount}");
             if (_score < 0) _score = 0;
             OnScoreChanged?.Invoke(_score);
+            SendScore();
+        }
+
+        void SendScore()
+        {
+            if (!PhotonNetwork.IsConnected) return;
+            var uid = PhotonNetwork.LocalPlayer.CustomProperties?["uid"] as string;
+            if (string.IsNullOrEmpty(uid)) return;
+
+            // GameManager.Instance.photonView.RPC(nameof(GameManager.RPC_SendScore), RpcTarget.MasterClient, uid, _score, _verdictScore);
         }
 
         #region RPC
