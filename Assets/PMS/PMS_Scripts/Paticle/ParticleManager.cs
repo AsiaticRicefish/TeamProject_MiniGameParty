@@ -16,6 +16,8 @@ public class ParticleManager : MonoBehaviour //추후 SingleTon or PunSingleton�
 
     // id → SO 참조 캐시
     private Dictionary<string, ParticleData> dataMap;
+
+    
     private readonly Dictionary<string, ParticlePool> pools = new();
     private readonly Dictionary<string, AsyncOperationHandle<GameObject>> handles = new();
     private readonly Dictionary<string, float> durations = new();
@@ -66,6 +68,7 @@ public class ParticleManager : MonoBehaviour //추후 SingleTon or PunSingleton�
     // Play 시점
     public async UniTask PlayAsync(string id, Vector3 pos, Quaternion rot)
     {
+        //해당 id에 생성된 풀이 존재하지 않으면, 직접 id로 해당 프리팹을 찾는다.
         if (!pools.ContainsKey(id))
         {
             Debug.LogWarning($"Auto-preload {id}");

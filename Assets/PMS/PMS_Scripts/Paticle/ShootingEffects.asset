@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e096d8e14ef21ac4dba7968887de940a, type: 3}
   m_Name: ShootingEffects
   m_EditorClassIdentifier: 
-  sceneName: 
+  sceneName: PMS_ShootingTestScene
   effects:
   - {fileID: 11400000, guid: ba36dae31a5f1f14690bafebb363e2b1, type: 2}
   - {fileID: 11400000, guid: 3ccca32a4e31d6948af074659e253300, type: 2}

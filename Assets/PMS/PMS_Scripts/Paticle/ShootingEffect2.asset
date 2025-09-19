@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: ShootingEffect2
   m_EditorClassIdentifier: 
   id: StarExplosionOrange
-  addressableKey: 
+  addressableKey: Particles/ShootingGame/StarExplosionOrage
   initialPoolSize: 10
   duration: 2
