@@ -109,6 +109,17 @@ public static class NicknameRegistry
         Debug.Log($"[NicknameRegistry] VERIFY winner key={key} => {winner ?? "null"}");
         return string.Equals(winner, uid, StringComparison.Ordinal);
     }
+    
+    public static async Task<bool> IsAvailableAsync(string rawName, int timeoutMs = 3000)
+    {
+        string key = Normalize(rawName);
+        if (string.IsNullOrWhiteSpace(key)) return false; // 형식 오류는 가용(false)로 보지 않음
+
+        var node = NickRoot.Child(key);
+        var snap = await WithTimeout(node.GetValueAsync(), timeoutMs);
+        // 값이 없으면 사용 가능(true)
+        return snap == null || snap.Value == null;
+    }
 
     public static async Task<bool> ReserveStrictAsync(string uid, string rawName, int maxRetry = 3, int timeoutMs = 5000)
     {
