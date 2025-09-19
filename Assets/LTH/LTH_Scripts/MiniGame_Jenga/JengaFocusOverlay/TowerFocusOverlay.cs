@@ -94,7 +94,6 @@ public class TowerFocusOverlay : MonoBehaviour
 
     void OnEnable()
     {
-        // 오버레이가 늦게 켜졌을 때도 안전하게 마스크/RT 보정
         EnsureCameraAndTexture();
         if (arenaMask == 0 && JengaTowerManager.Instance != null)
         {
@@ -107,7 +106,7 @@ public class TowerFocusOverlay : MonoBehaviour
     {
         if (!active || _boundTower == null || towerCam == null) return;
 
-        Reframe(); // 클릭한 면(_faceLocalDir) 기준으로 리프레임
+        Reframe();
     }
 
 

@@ -40,7 +40,7 @@ namespace RhythmGame //추후 다른 스크립트에서도 사용할 경우 해�
             if (_bgmAudioSource.isPlaying && _bgmAudioSource.clip == _rhythmList[(int)bgms])
                 return;
 
-            _bgmAudioSource.clip = _bgmList[(int)bgms];
+            _bgmAudioSource.clip = _rhythmList[(int)bgms];
             _bgmAudioSource.loop = true;
             _bgmAudioSource.Play();
         }
@@ -90,6 +90,16 @@ namespace RhythmGame //추후 다른 스크립트에서도 사용할 경우 해�
             _sfxAudioSource.volume = volume;
         }
 
+        #endregion
+
+        #region 리듬게임 관련 로직
+        public Bgm_RhythmGame RandomSelectBGM()
+        {
+            if (_rhythmList == null || _rhythmList.Length == 0) return 0;
+
+            int index = Random.Range(0,_rhythmList.Length);
+            return (Bgm_RhythmGame)index;
+        }
         #endregion
 
     }

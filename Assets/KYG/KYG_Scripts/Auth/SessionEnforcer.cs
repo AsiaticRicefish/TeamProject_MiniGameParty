@@ -9,19 +9,22 @@ using UnityEngine;
 
 /// <summary>
 /// UID 단일 세션 강제기(멀티 디바이스 동시 접속 불가)
-/// - /sessions/{uid}에 deviceId/ts를 기록하고 onDisconnect로 자동 해제
-/// - 다른 기기에서 동일 UID로 로그인하면 소유권을 가져가며, 기존 기기는 DB 변경 수신 즉시 종료
+/// - /sessions/{uid} 에 deviceId/ts/nonce 기록 + onDisconnect 자동 해제
+/// - 동일 UID가 다른 기기에서 로그인하면 교체를 감지하여 즉시 로그아웃/Disconnect
+/// - 킥 플래그는 앱 부팅/로그인 시점에 항상 초기화
 /// </summary>
 public class SessionEnforcer : MonoBehaviour
 {
     public static SessionEnforcer Instance { get; private set; }
 
     [Header("Realtime DB URL (콘솔에서 복사한 URL)")]
-    [SerializeField] private string databaseUrl = "https://unimo-56ebc-default-rtdb.asia-southeast1.firebasedatabase.app";
+    [SerializeField] private string databaseUrl =
+        "https://<your-project-id>.asia-southeast1.firebasedatabase.app";
 
     [Header("Keepalive(ms) / 초기 지연(ms)")]
     [SerializeField] private int heartbeatMs = 15_000;
     [SerializeField] private int firstBeatDelayMs = 500;
+    
 
     private FirebaseDatabase _db;
     private DatabaseReference _node; // /sessions/{uid}
@@ -29,8 +32,22 @@ public class SessionEnforcer : MonoBehaviour
     private string _deviceId;
     private bool _watching;
     private bool _claimed;
-    
+
+    /// <summary>다른 기기에서 로그인 감지되어 강제 종료되었는지</summary>
     public static bool KickedByRemote { get; private set; } = false;
+
+    /// <summary>마지막 킥 발생 시각(UTC ms). 필요 시 최근 킥 여부 판단에 사용</summary>
+    public static long LastKickAtMs { get; private set; } = 0;
+
+    /// <summary>앱 부팅 시 static 값 초기화 (Domain Reload 없이 플레이해도 안전)</summary>
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    static void ResetKickFlagsOnBoot() => ClearKickFlag();
+
+    public static void ClearKickFlag()
+    {
+        KickedByRemote = false;
+        LastKickAtMs = 0;
+    }
 
     void Awake()
     {
@@ -42,7 +59,9 @@ public class SessionEnforcer : MonoBehaviour
     /// <summary>로그인 성공 직후 한번 호출: UID 단일 세션 시작</summary>
     public async Task<bool> StartForUidAsync(string uid)
     {
-        KickedByRemote = false;   // 새 세션 시도마다 초기화
+        // 새 로그인 시도마다 강제 초기화
+        ClearKickFlag();
+
         _uid = uid;
         if (string.IsNullOrEmpty(_uid))
         {
@@ -68,7 +87,7 @@ public class SessionEnforcer : MonoBehaviour
         // 안정적인 기기 식별자
         _deviceId = SystemInfo.deviceUniqueIdentifier;
         if (string.IsNullOrEmpty(_deviceId))
-            _deviceId = System.Guid.NewGuid().ToString("N");
+            _deviceId = Guid.NewGuid().ToString("N");
 
         // 1) onDisconnect: 내 세션 자동 정리
         try { await _node.OnDisconnect().RemoveValue(); } catch { /* ignore */ }
@@ -81,7 +100,7 @@ public class SessionEnforcer : MonoBehaviour
             return false;
         }
 
-        // 3) 변경 감시(다른 기기가 내 uid 세션을 뺏으면 즉시 로그아웃)
+        // 3) 변경 감시(다른 기기가 내 uid 세션을 뺏으면 즉시 강제 로그아웃)
         BeginWatch();
 
         // 4) Heartbeat(주기적으로 ts 갱신)
@@ -95,12 +114,11 @@ public class SessionEnforcer : MonoBehaviour
         _claimed = false;
         try { _db.GoOnline(); } catch { /* ignore */ }
 
-        // 경합 판별용 nonce(임의 토큰) 추가: 새 로그인 우선권이므로 그냥 덮어쓰기
+        // 경합 판별용 nonce(임의 토큰) 추가
         string nonce = Guid.NewGuid().ToString("N");
 
         try
         {
-            // 한 번에 쓰기 (deviceId / ts / nonce)
             var payload = new System.Collections.Generic.Dictionary<string, object>
             {
                 { "deviceId", _deviceId },
@@ -149,19 +167,18 @@ public class SessionEnforcer : MonoBehaviour
         if (!_watching) return;
 
         var dev = e?.Snapshot?.Child("deviceId")?.Value as string;
+
         // 내 기기 소유가 아닌 상태가 되면 즉시 강제 로그아웃
         if (!string.IsNullOrEmpty(dev) && dev != _deviceId)
         {
             Debug.LogWarning("[SessionEnforcer] 세션이 다른 기기에 의해 교체됨 → 강제 로그아웃/Disconnect");
-            
-            KickedByRemote = true;  // 강제 종료 플래그 세움
+
+            KickedByRemote = true;
+            LastKickAtMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
             try { FirebaseAuth.DefaultInstance.SignOut(); } catch { /* ignore */ }
             if (PhotonNetwork.IsConnected) PhotonNetwork.Disconnect();
 
-            // UI가 있다면 팝업 표시 로직 연결 (예: Toast/Popup)
-            // Toast.Show("다른 기기에서 로그인하여 연결이 종료되었습니다.");
-
-            // 내 세션 감시는 더 이상 필요 없음
             StopAll();
         }
     }
@@ -175,6 +192,14 @@ public class SessionEnforcer : MonoBehaviour
             yield return new WaitForSeconds(heartbeatMs / 1000f);
         }
     }
+    
+    // 최근 N ms 내 킥이 있었는지
+    public static bool WasKickedRecently(int windowMs = 10000)
+    {
+        if (!KickedByRemote && LastKickAtMs == 0) return false;
+        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        return (now - LastKickAtMs) <= windowMs;
+    }
 
     public void StopAll()
     {
@@ -186,4 +211,5 @@ public class SessionEnforcer : MonoBehaviour
     }
 
     private static long NowMs() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    
 }

@@ -54,7 +54,10 @@ public class RawImageClickForwarder : MonoBehaviour, IPointerClickHandler, IPoin
         foreach (var h in hits)
         {
             var proxy = h.collider.GetComponent<FaceHitProxy>();
-            if (proxy == null) continue;
+            if (proxy == null)
+            {
+                continue;
+            }
 
             var block = proxy.owner;
 
@@ -100,16 +103,16 @@ public class RawImageClickForwarder : MonoBehaviour, IPointerClickHandler, IPoin
     private bool PrepareRay(PointerEventData eventData, out Ray ray)
     {
         ray = default;
-        if (overlay == null || !overlay.IsActive) return false;
+        if (overlay == null || !overlay.IsActive)
+        {
+            return false;
+        }
 
         var cam = overlay.TowerCam;
-        if (cam == null) return false;
-
-        //if (jengaMask == 0)
-        //{
-        //    jengaMask = cam.cullingMask;
-        //    if (jengaMask == 0) return false; // 그래도 0이면 클릭 불가
-        //}
+        if (cam == null)
+        {
+            return false;
+        }
 
         if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
             rt, eventData.position, eventData.pressEventCamera, out var local))
@@ -140,10 +143,15 @@ public class RawImageClickForwarder : MonoBehaviour, IPointerClickHandler, IPoin
     private Rect GetDrawRectLocal(RawImage img)
     {
         var r = rt.rect;
-        if (img.texture == null || !compensateLetterbox) return r;
+
+        if (img.texture == null || !compensateLetterbox)
+        {
+            return r;
+        }
 
         float texAspect = (float)img.texture.width / img.texture.height;
         float rectAspect = r.size.x / r.size.y;
+
         if (Mathf.Approximately(texAspect, rectAspect)) return r;
 
         if (texAspect > rectAspect)

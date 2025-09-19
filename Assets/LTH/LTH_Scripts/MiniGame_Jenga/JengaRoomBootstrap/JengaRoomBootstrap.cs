@@ -50,11 +50,9 @@ public class JengaRoomBootstrap : MonoBehaviourPunCallbacks
 
     private IEnumerator EnsureManagersCo()
     {
-        // 한 프레임 양보: 동기화 중복 방지
         yield return null;
 
-        if (JengaNetworkManager.Instance != null)
-            yield break;
+        if (JengaNetworkManager.Instance != null) yield break;
 
         if (PhotonNetwork.IsMasterClient)
         {
@@ -63,16 +61,22 @@ public class JengaRoomBootstrap : MonoBehaviourPunCallbacks
             // 생성된 오브젝트를 현재 활성 씬(미니 씬)으로 강제 이동 → Additive 언로드 시 자동 파괴
             SceneManager.MoveGameObjectToScene(go, SceneManager.GetActiveScene());
 
+            // JengaNetworkManager만 대기 (다른 매니저들은 씬에 있음)
+            yield return new WaitUntil(() => JengaNetworkManager.Instance != null);
+
+            // NetworkManager가 완전히 초기화될 때까지 추가 대기
+            yield return new WaitUntil(() =>
+                JengaNetworkManager.Instance != null &&
+                JengaNetworkManager.Instance.GetComponent<PhotonView>()?.ViewID > 0);
+
             var h = new Hashtable { [ROOMKEY_READY] = true };
             PhotonNetwork.CurrentRoom.SetCustomProperties(h);
-
-            // 로컬에서도 인스턴스가 준비될 때까지 대기
-            yield return new WaitUntil(() => JengaNetworkManager.Instance != null);
         }
         else
         {
-            // 비마스터: 인스턴스가 생길 때까지 대기
-            yield return new WaitUntil(() => JengaNetworkManager.Instance != null);
+            yield return new WaitUntil(() =>
+                JengaNetworkManager.Instance != null &&
+                PhotonNetwork.CurrentRoom?.CustomProperties?.ContainsKey(ROOMKEY_READY) == true);
         }
     }
 }

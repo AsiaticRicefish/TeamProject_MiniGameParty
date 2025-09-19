@@ -3,15 +3,20 @@ using UnityEngine;
 using Photon.Pun;
 using ShootingScene;
 using UnityEngine.UI;
+using Customization;
 
 [RequireComponent(typeof(LocalPlayerInput))]
 [RequireComponent(typeof(Rigidbody))]
 public class UnimoEgg : MonoBehaviourPun
 {
     [Header("유니모 스크립트")]
-    public LocalPlayerInput localPlayerInput;
-    public ChargeController chargeController;
-    public PlayerInputUIController playerUiController;
+    public LocalPlayerInput localPlayerInput;                   //유니모 인풋 관련
+    public ChargeController chargeController;                   //Charge관련
+
+    public PlayerInputUIController playerUiController;          //UI관련
+    public PlayerEffectController playerEffectController;       //이펙트 관련
+
+    public AvatarStruct playerAvatar;
 
     public Rigidbody rb;
     private float stopSpeed = 0.01f; // 속도 기준
@@ -29,27 +34,20 @@ public class UnimoEgg : MonoBehaviourPun
     {
         if (rb == null) rb = GetComponent<Rigidbody>();
         if (localPlayerInput == null) localPlayerInput = GetComponent<LocalPlayerInput>();
+
+        if (photonView.IsMine) return;
+
+        
+        //playerAvatar = 
     }
 
-    #region Test용 Material 임시 추가
-
-    public Color[] unimoMats;
-    
+    #region 플레이어 마커 렌더러 컬러 변경  
     public void SetMaterial()
     {
         if (ShooterUid == null) return;
-
-        playerUiController.PlayerMarker.GetComponent<SpriteRenderer>().color = unimoMats[TurnManager.Instance.currentTurnIndex - 1];
-        //_renderer.material = unimoMats[TurnManager.Instance.currentTurnIndex - 1];
-
+        playerUiController.PlayerMarker.GetComponent<SpriteRenderer>().color = ShootingScene.ShootingGame.ShootingUIManager.Instance.GetPlayerColor(ShooterUid);
     }
-
     #endregion
-
-    /*private void Update()
-    {
-        playerUiController.PlayerMarker.transform.LookAt(Camera.main.transform);
-    }*/
 
     public void Initialize()
     {
@@ -135,6 +133,18 @@ public class UnimoEgg : MonoBehaviourPun
     {
         //ApplyForce(dir);
         WindHelper.AddForceWithWind(rb, dir);
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if(collision.gameObject.CompareTag("UnimoEgg"))
+        {
+            ContactPoint contact = collision.contacts[0];
+            Vector3 hitPosition = contact.point;
+            Vector3 hitNormal = contact.normal;
+
+            playerEffectController.Play(EffectType.Collision, hitPosition, Quaternion.identity);
+        }
     }
 
     //떨어졌을때

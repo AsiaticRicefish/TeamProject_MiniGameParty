@@ -1,15 +1,22 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Photon.Pun;
 using DesignPattern;
 using ExitGames.Client.Photon;
 using UnityEngine;
+using System.Linq;
 
+class ObserverEntry
+{
+    public string Id;
+    public Action<object> Callback;
+}
 
 public class RoomPropertyObserver : PunSingleton<RoomPropertyObserver>, IGameComponent
 {
-    private Dictionary<string, Action<object>> _observers = new();
-    private Dictionary<string, (string key, Action<object> callback)> _observerIds = new(); // ID로 추적
+    private Dictionary<string, List<ObserverEntry>> _observersByKey 
+        = new Dictionary<string, List<ObserverEntry>>();
 
     protected override void OnAwake()
     {
@@ -22,16 +29,12 @@ public class RoomPropertyObserver : PunSingleton<RoomPropertyObserver>, IGameCom
     /// </summary>
     public string RegisterObserver(string key, Action<object> callback)
     {
-        string observerId = Guid.NewGuid().ToString();          // GUID를 통한 고유 ID 생성(string)
+        string id = Guid.NewGuid().ToString();
+        if (!_observersByKey.ContainsKey(key))
+            _observersByKey[key] = new List<ObserverEntry>();
 
-        if (_observers.ContainsKey(key))
-            _observers[key] += callback;
-        else
-            _observers[key] = callback;
-
-        _observerIds[observerId] = (key, callback);             //Dictionary<id,(key,callback)>로 저장. key -> id , value -> (key,callback)
-
-        return observerId;                                      // ID 반환해서 나중에 해제할 때 사용
+        _observersByKey[key].Add(new ObserverEntry { Id = id, Callback = callback });
+        return id;
     }
     #endregion
 
@@ -40,91 +43,31 @@ public class RoomPropertyObserver : PunSingleton<RoomPropertyObserver>, IGameCom
     /// </summary>
     /// <param name="id">등록 시 반환된 Observer ID</param>
     /// <returns>해제 성공 시 true, 실패 시 false</returns>
-    public bool UnregisterObserverById(string observerId)
+    public bool UnregisterObserverById(string id)
     {
-        //발행받은 ID를 가지고 Observer을 해제하는 형식이다. 
-        if (_observerIds.TryGetValue(observerId, out (string key, Action<object> callback) info))        //var로 가능 
+        foreach (var kv in _observersByKey)
         {
-            string key = info.key;                                      
-            Action<object> callback = info.callback;
-
-            // 실제 observer에서 해당 콜백 제거
-            if (_observers.ContainsKey(key))
+            var list = kv.Value;
+            if (list.RemoveAll(o => o.Id == id) > 0)
             {
-                _observers[key] -= callback;
-                if (_observers[key] == null)
-                    _observers.Remove(key);
+                if (list.Count == 0)
+                    _observersByKey.Remove(kv.Key);
+                return true;
             }
-
-            _observerIds.Remove(observerId);
-            return true;
         }
         return false;
     }
 
-    /// <summary>
-    /// 특정 RoomProperty Key 구독 해제
-    /// </summary>
-    public void UnregisterObserver(string key, Action<object> callback)
+    public override void OnRoomPropertiesUpdate(ExitGames.Client.Photon.Hashtable changed)
     {
-        if (_observers.ContainsKey(key))
-        {
-            _observers[key] -= callback;
-            if (_observers[key] == null)
-                _observers.Remove(key);
-
-            // _observerIds에서도 해당 콜백을 찾아서 제거
-            var toRemove = new List<string>();
-            foreach (var kvp in _observerIds)
-            {
-                if (kvp.Value.key == key && kvp.Value.callback.Equals(callback))
-                {
-                    toRemove.Add(kvp.Key);
-                }
-            }
-
-            foreach (var id in toRemove)
-            {
-                _observerIds.Remove(id);
-            }
-
-        }
-    }
-
-    /// <summary>
-    /// 특정 Key의 모든 Observer 해제
-    /// </summary>
-    public void UnregisterAllObservers(string key)
-    {
-        if (_observers.ContainsKey(key))
-        {
-            _observers.Remove(key);
-
-            // _observerIds에서도 해당 key의 모든 observer 제거
-            var toRemove = new List<string>();
-            foreach (var kvp in _observerIds)
-            {
-                if (kvp.Value.key == key)
-                {
-                    toRemove.Add(kvp.Key);
-                }
-            }
-
-            foreach (var id in toRemove)
-            {
-                _observerIds.Remove(id);
-            }
-        }
-    }
-
-    public override void OnRoomPropertiesUpdate(Hashtable propertiesThatChanged)
-    {
-        foreach (var prop in propertiesThatChanged)
+        foreach (DictionaryEntry prop in changed)
         {
             string key = prop.Key.ToString();
-            if (_observers.TryGetValue(key, out var callback))
+            if (_observersByKey.TryGetValue(key, out var list))
             {
-                callback?.Invoke(prop.Value);
+                var copy = list.ToList(); // 또는 list.ToArray()
+                foreach (var obs in copy)
+                    obs.Callback.Invoke(prop.Value);
             }
         }
     }
@@ -151,7 +94,7 @@ public class RoomPropertyObserver : PunSingleton<RoomPropertyObserver>, IGameCom
 
         if (PhotonNetwork.InRoom && key != null && value != null)
         {
-            var props = new Hashtable { { key, value } };
+            var props = new ExitGames.Client.Photon.Hashtable { { key, value } };
             PhotonNetwork.CurrentRoom.SetCustomProperties(props);
         }
     }
@@ -178,8 +121,7 @@ public class RoomPropertyObserver : PunSingleton<RoomPropertyObserver>, IGameCom
 
     public override void OnLeftRoom()
     {
-        _observers.Clear();         //개인적인 _observers clear해줘야함
-        _observerIds.Clear();
+        _observersByKey.Clear();
         Destroy(gameObject);
     }
 

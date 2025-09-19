@@ -37,5 +37,6 @@ public class CardSelectState : ShootingGameState
         {
             ShootingGameManager.Instance.photonView.RPC("InputOn", RpcTarget.All);
         }
+        ShootingScene.ShootingGame.ShootingUIManager.Instance.StartRanking();
     }
 }
