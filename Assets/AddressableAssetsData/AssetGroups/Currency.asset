@@ -18,7 +18,7 @@ MonoBehaviour:
   m_GUID: 997781820bc274d34b60764d255c5d2d
   m_SerializeEntries:
   - m_GUID: db6ff5af33dc34bc6835852b1a27ab76
-    m_Address: Assets/LDH/LDH_Resources/Definitions/Currency/CurrencyCatalog.asset
+    m_Address: CurrencyCatalog
     m_ReadOnly: 0
     m_SerializedLabels:
     - catalog:currency

@@ -6,6 +6,8 @@ using Data;
 using LDH_UI;
 using LDH_Util;
 using Managers;
+using Store;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -66,7 +68,7 @@ namespace Customization
             SetActiveGroup(equipmentCanvasGroup, false);
 
             applyButton.onClick.RemoveAllListeners();
-            applyButton.onClick.AddListener(() => ApplyClicked().Forget());
+            applyButton.onClick.AddListener(ApplyClicked);
 
             resetButton.onClick.RemoveAllListeners();
             resetButton.onClick.AddListener(ResetClicked);
@@ -144,6 +146,9 @@ namespace Customization
                 var def = characters[i];
                 var icon = charIcons[i];
 
+                //딕셔너리에 등록
+                _charBtnById.TryAdd(def.id, toggle);
+                
                 toggle.SetOwned(Data.HasCharacter(def.id));
 
                 toggle.Bind(
@@ -165,7 +170,9 @@ namespace Customization
                 var toggle = _equipToggles[i];
                 var def = equips[i];
                 var icon = equipIcons[i];
-
+               
+                //딕셔너리에 등록
+                _equipBtnById.TryAdd(def.id, toggle);
                 toggle.SetOwned(Data.HasEquip(def.id));
 
                 toggle.Bind(
@@ -312,10 +319,10 @@ namespace Customization
         private void UpdateApplyButton()
         {
             if (_stagedCombo.characterId == null || _stagedCombo.equipId == null) return;
-
+            
             bool valid = Data.HasCharacter(_stagedCombo.characterId) && Data.HasEquip(_stagedCombo.equipId);
             bool modified = Manager.Custom.IsModified(_stagedCombo);
-          
+            Debug.Log(modified);
 
             applyButton.interactable = !_applying && modified && valid;
         }
@@ -332,24 +339,49 @@ namespace Customization
 
         
         // ===== 구매 팝업 호출 =====
-        private void PurchaseClicked()
+        private async void PurchaseClicked()
         {
             //보유하지 않은 아이템인 경우 가격 조회
-            List<(CurrencyType, long)> priceInfo = new();
+            List<PurchaseLine> purchaseLines = new();
 
             if (!Data.HasCharacter(_stagedCombo.characterId))
-                priceInfo.Add(Data.GetItemPrice(ItemType.Character, _stagedCombo.characterId));
+                purchaseLines.Add(new PurchaseLine(new ItemUnit(ItemKind.Character, _stagedCombo.characterId), 1));
             if(!Data.HasEquip(_stagedCombo.equipId))
-                priceInfo.Add(Data.GetItemPrice(ItemType.Equip, _stagedCombo.equipId));
-            
-            var totals = Util_LDH.SumByCurrencyType(priceInfo);
-            
-            
-            var popup = Manager.UI.CreatePopupUI<UI_Popup_ItemPurchase>();
-            popup.SetData(totals);
-            Manager.UI.ShowPopupUI(popup).Forget();
+                purchaseLines.Add(new PurchaseLine(new ItemUnit(ItemKind.Equip, _stagedCombo.equipId), 1));
+
+            try
+            {
+                var purchaseQuote = await Manager.Purchase.QuoteAsync(purchaseLines);
+                var popup = Manager.UI.CreatePopupUI<UI_Popup_ItemPurchase>();
+                popup.SetData(purchaseQuote);
+                popup.OnPurchaseSuccess = async (grantedItems) =>
+                {
+                    var tasks = new List<UniTask>();
+                    foreach (var item in grantedItems)
+                    {
+                        if (item.Kind == ItemKind.Character)
+                            tasks.Add(ChangeCharacter(item.Id));
+                            
+                           
+                        else if (item.Kind == ItemKind.Equip)
+                            tasks.Add(ChangeEquip(item.Id));
+                        else
+                            continue;
+                    }
+                    
+                    await UniTask.WhenAll(tasks);
+                    MarkOwned(grantedItems);
+                };
+                
+                Manager.UI.ShowPopupUI(popup).Forget();
+            }
+            catch(Exception e)
+            {
+                Debug.LogException(e);
+                Manager.UI.EnqueueToast("가격 계산 중 오류가 발생했습니다. 나중에 시도해주세요.");
+            }
         }
-        private async UniTaskVoid ApplyClicked()
+        private async void ApplyClicked()
         {
             if (!_stagedCombo.characterId?.Any() ?? true) return;
             if (!_stagedCombo.equipId?.Any() ?? true) return;
@@ -357,12 +389,10 @@ namespace Customization
 
             Debug.Log("ApplyClicked && 현재 장착 상태 적용가능");
             _applying = true;
-            UpdateApplyButton();
-            UpdatePurchaseButton();
 
             // 실제 저장 API 호출
             bool ok = await Manager.Custom.UpdateComboAsync(_stagedCombo);
-
+            
             if (ok)
             {
                 Debug.Log($"[Closet] Success saving staged combo");
@@ -388,6 +418,22 @@ namespace Customization
         }
 
         #endregion
+        
+        
+        private void MarkOwned(IEnumerable<ItemUnit> items)
+        {
+            foreach (var it in items)
+            {
+                if (it.Kind == ItemKind.Character && _charBtnById.TryGetValue(it.Id, out var cbtn))
+                    cbtn.SetOwned(true);
+                else if (it.Kind == ItemKind.Equip && _equipBtnById.TryGetValue(it.Id, out var ebtn))
+                    ebtn.SetOwned(true);
+            }
+
+            // 버튼 상태 갱신
+            UpdateApplyButton();
+            UpdatePurchaseButton();
+        }
         
     }
 }

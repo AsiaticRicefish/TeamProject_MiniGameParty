@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Cysharp.Threading.Tasks;
 using DesignPattern;
+using Firebase.Database;
 using LDH_Util;
+using Store;
 using UnityEngine;
 using static LDH_Util.Define_LDH;
 
@@ -89,7 +92,7 @@ namespace Data
             Util_LDH.ConsoleLog(this, $"complete loading item data - character : {charItems.Count}, equip - {equipItems.Count}");
 
             var item = _characterItemDict[Define_LDH.DefaultData.DefaultCharacter];
-            Util_LDH.ConsoleLog(this, $"데이터 테스트 - id : {item.Id}, name : {item.Name}, price : {item.Price}, enabled : {enabled}");
+            Util_LDH.ConsoleLog(this, $"데이터 테스트 - id : {item.Id}, name : {item.Name}, price : {item.Price}, enabled : {item.Enabled}");
         }
 
         
@@ -142,7 +145,148 @@ namespace Data
 
         #endregion
 
+        #region 구매(Purchase) API
 
+        public async UniTask<Store.PurchaseResult> TryPurchaseAsync(
+            long[] totalsByCurrency, 
+            Action<MutableData> applyOnSuccess)
+        {
+            if (_userRepo == null || string.IsNullOrEmpty(_uid))
+                return new Store.PurchaseResult { Error = Store.PurchaseError.Network, Message = "로그인이 필요합니다." };
+
+            if (totalsByCurrency == null || totalsByCurrency.Length < CurrencyCount)
+                return new Store.PurchaseResult { Error = Store.PurchaseError.ItemNotFound, Message = "가격 정보가 올바르지 않습니다." };
+
+            
+            //트랜잭션 전에 캐시 채우기
+            await _userRepo.UserRef(_uid).GetValueAsync();
+            
+            
+            bool notEnough = false;
+            var currencyKeys = CatalogProvider.Currency.GetCurrencyKeys();
+            
+            int attempts = 0;
+            
+            try
+            {
+                //mutable : 서버가 보내준 현재 값
+                // (C#에선 보통 Dictionary<string, object> or 기본형으로 옴)
+                await _userRepo.RunUserTransactionAsync(_uid, mutable =>
+                {
+                    attempts++;
+
+                    // 값 읽고 → 계산하고 → mutable.Value에 "새 값" 세팅
+                    // 1) 잔액 로드
+                    var cur = mutable.Child("currency");
+                    
+                    if (cur.Value == null || cur.ChildrenCount == 0)
+                    {
+                        if (attempts <= 2)
+                        {
+                            if (attempts == 1) Debug.Log($"[Tx] currency not loaded yet; retrying… / attempts : {attempts}");
+                            return TransactionResult.Success(mutable);
+                        }
+                        // 3번 이상 비어있으면 경로/권한/초기화 문제로 보고 실패
+                        return TransactionResult.Abort();
+                    }
+                    
+                    long[] bal = new long[CurrencyCount];
+                    for (int i = 0; i < CurrencyCount; i++)
+                        bal[i] = (long)(cur.Child(currencyKeys[i]).Value);
+                    
+
+                    // 2) 잔액이 부족한지 체크
+                    for (int i = 0; i < CurrencyCount; i++)
+                    {
+                        long cost = totalsByCurrency[i];
+                        if (cost > 0 && bal[i] < cost)
+                        {
+                            notEnough = true;
+                            Debug.LogWarning($"[Tx] not enough currency{i+1}: have={bal[i]} need={cost}");
+
+                            return TransactionResult.Abort();
+                        }
+                    }
+                    
+                    // 3) 차감 반영
+                    // 바로 mutable에 쓰기
+                    for (int i = 0; i < CurrencyCount; i++)
+                    {
+                        long cost = totalsByCurrency[i];
+                        if (cost <= 0) continue;
+                        bal[i] -= cost;
+                        cur.Child($"currency{i + 1}").Value = bal[i];
+                        
+                    }
+                    
+                    // 4) 성공 변이(커스텀 로직) 적용
+                    applyOnSuccess?.Invoke(mutable);
+
+                    return TransactionResult.Success(mutable);
+                    
+                });
+
+                if (notEnough)
+                    return new Store.PurchaseResult
+                    {
+                        Error = Store.PurchaseError.NotEnoughCurrency,
+                        Message = "재화가 부족합니다."
+                    };
+
+                // 6) 트랜잭션 성공 → 최신 데이터 로컬로 다시 로드(이벤트도 여기서 쏴짐)
+                await LoadOrCreatedUserDataAsync();
+                
+                var spent = new List<(Define_LDH.CurrencyType, long)>();
+                for (int i = 0; i < CurrencyCount; i++)
+                    if (totalsByCurrency[i] > 0)
+                        spent.Add(((Define_LDH.CurrencyType)i, totalsByCurrency[i]));
+
+                return new Store.PurchaseResult
+                {
+                    Error = Store.PurchaseError.None,
+                    Message = "구매가 완료되었습니다.",
+                    Spent = spent,
+                };
+                
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[DataManager] Tx body exception: {e}");
+                return new Store.PurchaseResult
+                {
+                    Error = Store.PurchaseError.Network,
+                    Message = "구매에 실패했습니다. 잠시 후 다시 시도해주세요."
+                };
+            }
+        }
+        
+        public static Action<MutableData> BuildCustomizationMutation(GrantPatch patch)
+        {
+            if (patch == null) return null;
+            return mutable =>
+            {
+                var cust = mutable.Child("customization");
+
+                var ownedChars = cust.Child("ownedCharacters");
+                foreach (var id in patch.AddOwnedCharacters)
+                    ownedChars.Child(id).Value = true;
+
+                var ownedEquips = cust.Child("ownedEquips");
+                foreach (var id in patch.AddOwnedEquips)
+                    ownedEquips.Child(id).Value = true;
+
+                if (!string.IsNullOrEmpty(patch.EquipCharacterId))
+                    cust.Child("characterId").Value = patch.EquipCharacterId;
+
+                if (!string.IsNullOrEmpty(patch.EquipEquipId))
+                    cust.Child("equipId").Value = patch.EquipEquipId;
+            };
+        }
+
+        #endregion
+        
+        
+        
         #region Helper API
 
         // ----- user data 관련 helper ------ //

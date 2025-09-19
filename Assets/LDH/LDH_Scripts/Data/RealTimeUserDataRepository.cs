@@ -1,13 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Cysharp.Threading.Tasks;
 using Firebase.Database;
-using LDH_Util;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace Data
 {
@@ -25,9 +21,9 @@ namespace Data
 
         #region RealTimeDataBase - path helper
 
-        private DatabaseReference UserRef(string uid) => _root.Child("users").Child(uid);
-        private DatabaseReference CustRef(string uid) => UserRef(uid).Child("customization");
-        private DatabaseReference CurrencyRef(string uid) => UserRef(uid).Child("currency");
+        public DatabaseReference UserRef(string uid) => _root.Child("users").Child(uid);
+        public DatabaseReference CustRef(string uid) => UserRef(uid).Child("customization");
+        public DatabaseReference CurrencyRef(string uid) => UserRef(uid).Child("currency");
 
         #endregion
 
@@ -46,7 +42,7 @@ namespace Data
                 var currencyData = CurrencyData.CreateDefault();
 
                 // 2) 트랜잭션으로 '없을 때만' 기본값 생성
-                
+
                 var customTask = SaveCustomizationAsync(uid, cur =>
                 {
                     // 핵심: 존재 여부 판별 → 존재하면 Abort
@@ -57,7 +53,7 @@ namespace Data
                     // 없을 때만 기본값 커밋
                     return (true, customData);
                 });
-                
+
                 var currencyTask = SaveCurrencyAsync(uid, cur =>
                 {
                     // 핵심: 존재 여부 판별 → 존재하면 Abort
@@ -68,7 +64,7 @@ namespace Data
                     // 없을 때만 기본값 커밋
                     return (true, currencyData);
                 });
-                
+
                 await UniTask.WhenAll(customTask, currencyTask);
 
                 // 서버타임 포함해 다시 읽어오기
@@ -99,20 +95,34 @@ namespace Data
 
 
         #region Save Logic
-        
-        public async UniTask<(bool committed, CustomizationData latest)>  SaveCustomizationAsync(string uid, 
+
+        public async UniTask<(bool committed, CustomizationData latest)> SaveCustomizationAsync(string uid,
             Func<CustomizationData, (bool ok, CustomizationData next)> mutator)
         {
+            int attempts = 0;
+
             try
             {
                 // 2) 트랜잭션 실행. 대상 노드는 CustRef(uid)
                 var result = await CustRef(uid).RunTransaction(
                     mutable =>
                     {
+                        attempts++;
+
                         // 3) 서버가 현재 값을 mutable.Value로 넘겨준다.
                         //      RTDB의 JSON은 C#에선 보통 Dictionary<string,object>로 전달된다.
                         //      넘어온 mutable 데이터를 나만의 규칙(델리게이트 = mutator) 에 맞게 계산해서 서버로 돌려줘야한다.
                         var dict = mutable.Value as Dictionary<string, object>;
+                        if (dict == null)
+                        {
+                            if (attempts <= 2)
+                            {
+                                if (attempts == 1) Debug.Log($"[Tx] custom not loaded yet; retrying… / attempts : {attempts}");
+                                return TransactionResult.Success(mutable);
+                            }
+
+                            return TransactionResult.Abort();
+                        }
 
                         // 4) 현재 값을 모델(CurrencyData)에 맞게 파싱한다.
                         var cur = new CustomizationData(dict);
@@ -158,16 +168,32 @@ namespace Data
             string uid,
             Func<CurrencyData, (bool ok, CurrencyData next)> mutator)
         {
+            int attempts = 0;
+
             try
             {
                 // 2) 트랜잭션 실행. 대상 노드는 CurrencyRef(uid).
                 var result = await CurrencyRef(uid).RunTransaction(
                     mutable =>
                     {
+                        attempts++;
+
                         // 3) 서버가 현재 값을 mutable.Value로 넘겨준다.
                         //      RTDB의 JSON은 C#에선 보통 Dictionary<string,object>로 전달된다.
                         //      넘어온 mutable 데이터를 나만의 규칙(델리게이트 = mutator) 에 맞게 계산해서 서버로 돌려줘야한다.
+
                         var dict = mutable.Value as Dictionary<string, object>;
+                        if (dict == null)
+                        {
+                            if (attempts <= 2)
+                            {
+                                if (attempts == 1) Debug.Log($"[Tx] currency not loaded yet; retrying… / attempts : {attempts}");
+                                return TransactionResult.Success(mutable);
+
+                            }
+
+                            return TransactionResult.Abort();
+                        }
 
                         // 4) 현재 값을 모델(CurrencyData)에 맞게 파싱한다.
                         var cur = new CurrencyData(dict);
@@ -204,6 +230,31 @@ namespace Data
                 Debug.LogError($"RunTransaction failed: {e}");
                 return (false, null);
             }
+        }
+
+        public async UniTask<DataSnapshot> RunUserTransactionAsync(
+            string uid,
+            Func<Firebase.Database.MutableData, TransactionResult> mutator)
+        {
+            var result = await UserRef(uid).RunTransaction(
+                mutable =>
+                {
+                    try
+                    {
+                        return mutator(mutable);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogError($"[Repo] Tx delegate exception: {e}");
+                        return TransactionResult.Abort();
+                    }
+                });
+
+            if (result == null)
+                throw new Exception("[Repo] RunTransaction returned null result");
+
+            Debug.Log("[Repo] RunUserTransactionAsync committed.");
+            return result; // 또는 result.Snapshot (사용처에 맞게)
         }
 
         #endregion
@@ -259,6 +310,7 @@ namespace Data
 
             return hashSet;
         }
+
         public static HashSet<string> ParseToHashSet(object mapObj)
         {
             var hashSet = new HashSet<string>();
@@ -271,7 +323,10 @@ namespace Data
                         if (Convert.ToBoolean(kv.Value))
                             hashSet.Add(kv.Key);
                     }
-                    catch { /* 불리언 변환 실패는 무시 */ }
+                    catch
+                    {
+                        /* 불리언 변환 실패는 무시 */
+                    }
                 }
             }
 

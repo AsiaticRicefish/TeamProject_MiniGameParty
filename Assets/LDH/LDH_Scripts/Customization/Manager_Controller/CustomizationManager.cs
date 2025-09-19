@@ -224,13 +224,13 @@ namespace Customization
 
         public bool IsModified(UnimoCombo stagedUnimoCombo)
         {
-            return !customData.Equals(stagedUnimoCombo);
+            return !(customData.CurrentCombo.Equals(stagedUnimoCombo));
         }
 
         public bool IsModified(string stagedCharId, string stagedEquipId)
         {
             var staged = new UnimoCombo(stagedCharId.Trim(), stagedEquipId.Trim());
-            return !customData.Equals(staged);
+            return !customData.CurrentCombo.Equals(staged);
         }
 
         // 바뀐 항목만 알고 싶으면 flags/diff도 제공

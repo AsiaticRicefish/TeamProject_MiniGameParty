@@ -150,7 +150,9 @@ namespace LDH_Util
 
         public static long[] SumByCurrencyType(IEnumerable<(Define_LDH.CurrencyType type, long price)> priceInfo)
         {
-            var totals = new long[(int)Define_LDH.CurrencyType.Count];
+            int currencyCount = Enum.GetValues(typeof(Define_LDH.CurrencyType)).Length;
+
+            var totals = new long[currencyCount];
             foreach (var (t, p) in priceInfo)
             {
                 if (p <= 0) continue;
@@ -166,7 +168,23 @@ namespace LDH_Util
             }
             return totals;
         }
-        
+
+        public static long SafeAdd(long a, long b, long clampMax)
+        {
+            try
+            {
+                checked
+                {
+                    long s = a + b;
+                    if (s > clampMax) return clampMax;
+                    return s;
+                }
+            }
+            catch (OverflowException)
+            {
+                return clampMax;
+            }
+        }
         
         #endregion
         

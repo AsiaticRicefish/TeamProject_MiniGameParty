@@ -1,8 +1,12 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Customization;
+using Cysharp.Threading.Tasks;
 using Data;
 using LDH_Util;
+using Managers;
+using Store;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,19 +22,26 @@ namespace LDH_UI
         [Header("Button")]
         [SerializeField] private Button closeButton;
         [SerializeField] private Button purchaseButton;
+
+
+        private PurchaseQuote _quote;
+
+        public Func<List<ItemUnit>, UniTask> OnPurchaseSuccess; 
         
         
         protected override void Init()
         { 
             base.Init();
             closeButton.onClick.AddListener(RequestClose);
-            
-            //todo: 구매버튼
+            purchaseButton.onClick.AddListener(Purchase);
         }
 
-        public void SetData(long[] totals)
-
+        public void SetData(PurchaseQuote quote)
         {
+            _quote = quote;
+            var totals = quote.TotalsByCurrency;
+            
+            // 가격 UI
             ClearRows();
             if (CatalogProvider.Currency == null) return;
             
@@ -49,16 +60,32 @@ namespace LDH_UI
             }
         }
         
-        
-        private int GetSortOrder(Define_LDH.CurrencyType t)
-            => CatalogProvider.TryGetCurrency(t, out var e) ? e.sortOrder : int.MaxValue;
-
-        private string FormatAmount(long value, string fmt)
-            => value.ToString(string.IsNullOrEmpty(fmt) ? "N0" : fmt);
-
         private void ClearRows()
         {
             Util_LDH.RemoveAllChildren(priceRowsParent);
         }
+        
+        
+        // 구매
+        private async void Purchase()
+        {
+            PurchaseResult result = await Manager.Purchase.PurchaseAsync(_quote.Lines, true);
+            
+            //결과에 대한 UI 반영
+            if (result.Success)
+            {
+                if (OnPurchaseSuccess != null)
+                {
+                    // 아바타 적용 끝날 때까지 대기
+                    await OnPurchaseSuccess(result.GrantedItems);
+                }
+            }
+           
+            Manager.UI.EnqueueToast(result.Message);
+            
+            //UI 닫기
+            RequestClose();
+        }
+        
     }
 }

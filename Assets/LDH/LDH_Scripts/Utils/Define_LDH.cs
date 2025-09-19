@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -143,12 +144,19 @@ namespace LDH_Util
             Currency1,
             Currency2,
             Currency3,
-            Count,
         }
 
+        public static int CurrencyCount => Enum.GetValues(typeof(CurrencyType)).Length;
         public const long MaxCurrencyValue = 999999999;
         public const long MinCurrencyValue = 0;
         
+        #endregion
+
+        #region Data
+
+        public enum TxAbortReason { None, NotEnoughCurrency }
+
+
         #endregion
         
         

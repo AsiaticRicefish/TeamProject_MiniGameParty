@@ -19,7 +19,7 @@ namespace Data
         // 라벨 상수(프로젝트에서 바꾸고 싶으면 여기만 수정)
         public const string CharacterLabel = "catalog:character";
         public const string EquipLabel     = "catalog:equip";
-        public const string CurrencyLabel = "catalog:currency";
+        public const string CurrencyAddressKey = "CurrencyCatalog";
 
      
         //----- Character / Equipment Catalog -------//
@@ -51,16 +51,17 @@ namespace Data
         public static async UniTask InitAsync(Action<float> progressReport = null)
         {
             progressReport?.Invoke(0f);
+            
             // 여러 자산: LoadAssetsAsync(label, callback)
             _charHandle = Addressables.LoadAssetsAsync<CharacterDefinition>(CharacterLabel, null);
             _equipHandle = Addressables.LoadAssetsAsync<EquipmentDefinition>(EquipLabel, null);
-            _currencyHandle = Addressables.LoadAssetAsync<CurrencyCatalog>(CurrencyLabel);
+            _currencyHandle = Addressables.LoadAssetAsync<CurrencyCatalog>(CurrencyAddressKey);
 
             
             // 모든 so 가져오기
             IList<CharacterDefinition> charList  = await _charHandle.Task;
             IList<EquipmentDefinition> equipList = await _equipHandle.Task;
-            Currency       = await _currencyHandle.Task;
+            Currency  = await _currencyHandle.Task;
 
             progressReport?.Invoke(0.3f);
             
@@ -76,7 +77,18 @@ namespace Data
                 .ToDictionary(g => g.Key, g => g.First());
             progressReport?.Invoke(0.7f);
             
-            Currency?.Init();
+               if (Currency == null)
+            {
+                Debug.LogError($"[CatalogProvider] CurrencyCatalog not found by key '{CurrencyAddressKey}'.");
+            }
+            else
+            {
+                Currency.Init();
+                // 진단 로그: 등록된 통화 목록 찍기
+                var list = string.Join(", ",
+                    Currency.AllSorted().Select(e => $"{e.type}({e.displayName})"));
+                Debug.Log($"[CatalogProvider] Currency ready: {list}");
+            }
             progressReport?.Invoke(0.8f);
             
             // 정렬 리스트

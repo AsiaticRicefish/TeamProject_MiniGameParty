@@ -7,6 +7,7 @@ using Data;
 using Firebase.Database;
 using LDH_UI;
 using Network;
+using Store;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.SceneManagement;
@@ -25,6 +26,7 @@ namespace Managers
         public static CustomizationManager Custom => CustomizationManager.Instance;     // Customizing
 
         public static DataManager Data => DataManager.Instance;             // Data
+        public static PurchaseManager Purchase => PurchaseManager.Instance;     //Purchase
         
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -41,6 +43,7 @@ namespace Managers
             manager.AddComponent<PlayerManager>();
             manager.AddComponent<UIManager>();
             manager.AddComponent<CameraManager>();
+            manager.AddComponent<PurchaseManager>();
 
             SceneManager.sceneLoaded += OnSceneLoaded;
             

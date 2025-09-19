@@ -13,19 +13,21 @@ namespace Data
         public class Entry
         {
             public Define_LDH.CurrencyType type;
-            public string displayName;   // "골드", "보석" 등 (로컬라이즈 키로 써도 OK)
+            public string firebaseKey;
+            public string displayName;   // "골드", "보석" 등
             public Sprite icon;
             public int sortOrder = 0;    // UI에서 표시 순서
             public string numberFormat = "N0"; // 1,234 처럼
         }
         
         [SerializeField] private Entry[] entries; // 인스펙터에서 채움
-        private Entry[] _byType;
+        private Entry[] _byType = null;
 
         public void Init()
         {
-            if (_byType != null) return;
-            _byType = new Entry[(int)Define_LDH.CurrencyType.Count];
+            int currencyCount = Define_LDH.CurrencyCount;
+            
+            _byType = new Entry[currencyCount];
             if (entries == null) return;
             
             foreach (var e in entries)
@@ -35,6 +37,8 @@ namespace Data
                 if ((uint)idx < (uint)_byType.Length)
                     _byType[idx] = e;
             }
+            
+            Debug.Log($"[CurrencyCatalog] Init complete");
         }
         
         public bool TryGet(Define_LDH.CurrencyType type, out Entry entry)
@@ -57,6 +61,18 @@ namespace Data
                 if (_byType[i] != null) list.Add(_byType[i]);
             list.Sort((a,b) => a.sortOrder.CompareTo(b.sortOrder));
             return list;
+        }
+
+        public string[] GetCurrencyKeys()
+        {
+            string[] currencyKeys = new string[_byType.Length];
+            
+            for(int i=0; i<_byType.Length; i++)
+            {
+                currencyKeys[i] = _byType[i].firebaseKey;
+            }
+
+            return currencyKeys;
         }
     }
 }
