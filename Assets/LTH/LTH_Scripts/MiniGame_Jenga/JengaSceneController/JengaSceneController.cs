@@ -39,6 +39,7 @@ public class JengaSceneController : BaseGameSceneController
 
         // 로딩창 생성 및 테마 적용
         _uiLoading = Manager.UI.CreatePopupUI<UI_Loading>();
+        
         if (jengaLoadingTheme)
         {
             _uiLoading.ApplyTheme(jengaLoadingTheme);
@@ -83,7 +84,7 @@ public class JengaSceneController : BaseGameSceneController
         // 순차적으로 초기화해야 할 매니저들
         var sequentialComponents = new IGameComponent[]
         {
-            InputManager.Instance,          // 입력 시스템 먼저
+            InputManager.Instance,            // 입력 시스템 먼저
             JengaNetworkManager.Instance,     // 네트워크 먼저
             JengaGameManager.Instance,        // 게임 로직
             JengaTowerManager.Instance,       // 타워 생성
