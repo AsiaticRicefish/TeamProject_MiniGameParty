@@ -38,7 +38,7 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/KYG/KYG_Scene/MiniGameScene.unity
     guid: 25303574da5dd81498a3031c5ccb0d60
-  - enabled: 0
+  - enabled: 1
     path: Assets/KYG/KYG_Scene/MeteorScene.unity
     guid: 1c63b2b15a7697a4390d8636cae8c147
   m_configObjects:

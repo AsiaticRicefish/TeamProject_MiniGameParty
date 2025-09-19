@@ -18,9 +18,6 @@ namespace KYG
     public class MeteorTapMiniGame : MonoBehaviourPun
     {
         [Header("Refs")]
-        [SerializeField] private Renderer starRenderer;
-        [SerializeField] private Material starNormalMat;
-        [SerializeField] private Material starWarningMat;
         [SerializeField] private AudioSource sfxTap;
         [SerializeField] private AudioSource sfxMeteor;
         [SerializeField] private AudioSource sfxWarning;
@@ -29,6 +26,38 @@ namespace KYG
         [SerializeField] private TMP_Text  turnBannerMine;
         [SerializeField] private TMP_Text  turnBannerOther;
         [SerializeField] private Slider    turnTimerUI;
+        
+        [Header("Ending – Hidden BG Star")]
+        [SerializeField] private GameObject bgHiddenStar; // 뒷배경에 숨겨둔 별(처음엔 비활성/알파0)
+        
+        [Header("Ending – Sky Meteor")]
+        [SerializeField] private GameObject meteorPrefab;   // 운석(별똥별) 프리팹(트레일/파티클)
+        [SerializeField] private Transform  meteorSpawnTop; // 화면 상단 스폰 기준
+        [SerializeField] private Vector2    meteorSpawnX = new(-3.5f, 3.5f);
+        [SerializeField] private Vector2    meteorEndXOffset = new(-1.0f, 1.0f);
+        [SerializeField] private float      meteorFallDist = 6.5f;
+        [SerializeField] private float      meteorFallTime = 0.6f; // 사선 낙하 시간
+        
+        [Header("Tap Flash")]
+        [SerializeField] private Material starTapFlashMat;   // yellow1 (짧은 번쩍)
+        [SerializeField] private float    starFlashSec = 0.07f;
+        
+        [Header("Tap FX")]
+        [SerializeField] private AudioClip[] tapClips;      // shine1, shine2 등록
+        [SerializeField] private float       tapPitchMin = 0.98f;
+        [SerializeField] private float       tapPitchMax = 1.02f;
+
+        [SerializeField] private float    shakeDuration = 0.12f; // 아주 짧게
+        [SerializeField] private float    shakeAmplitude = 0.08f;// 좌우 진폭
+        [SerializeField] private AnimationCurve shakeEase = AnimationCurve.EaseInOut(0,0, 1,1);
+
+        [Header("Danger Gradation")]
+        [SerializeField] private Renderer starRenderer;     // MainStar MeshRenderer
+        [SerializeField] private Material starNormalMat;    // Yellow
+        [SerializeField] private Material starOrangeMat;    // Orange
+        [SerializeField] private Material starWarningMat;   // Red
+        
+        [SerializeField] private AudioClip changeClip;
         
         [SerializeField] private Transform starRoot;          // 별 오브젝트 루트(상승용)
         [SerializeField] private float     starRiseHeight = 2f;
@@ -49,6 +78,9 @@ namespace KYG
         [Header("Tap Limits per Turn")]
         [SerializeField] private int minTapPerTurn = 1;
         [SerializeField] private int maxTapPerTurn = 3;
+        
+        [SerializeField] private float bannerShowTime = 0.9f;   // 배너 노출 시간(짧게)
+        [SerializeField] private float bannerFadeOut  = 0.2f;   // 페이드아웃 시간
 
         // 내부 상태
         private int  currentEndingCount;
@@ -60,6 +92,13 @@ namespace KYG
         private bool countActive  = false;
         private int  tapsThisTurn = 0;
         private bool endedThisTurn = false;
+        
+        private AudioSource _changeSrc;
+        private int _lastDangerTier = -1; // 0=yellow, 1=orange, 2=red (변경 시에만 사운드)
+        
+        private bool _isFlashing; // 플래시 중인지 가드
+        
+        
 
         // ─────────────────────────────────────────────────────────
 
@@ -69,8 +108,17 @@ namespace KYG
         /// </summary>
         public void InitTurnWithEnding(bool isMine, int roundIndex, int alivePlayerCount, int sharedEndingCount)
         {
+            Debug.Log($"[MTM] InitTurnWithEnding start mine={isMine}  " +
+                      $"mineTxt={(turnBannerMine? turnBannerMine.name : "null")}#{(turnBannerMine? turnBannerMine.GetInstanceID():0)} " +
+                      $"otherTxt={(turnBannerOther? turnBannerOther.name : "null")}#{(turnBannerOther? turnBannerOther.GetInstanceID():0)} " +
+                      $"instances={FindObjectsOfType<MeteorTapMiniGame>(true).Length}");
+            
+            // 로컬 오프라인 테스트면 항상 내 턴으로 강제
+            if (!Photon.Pun.PhotonNetwork.IsConnected)
+                isMine = true;
+            
             myTurn = isMine;
-            currentTap = 0;
+            //currentTap = 0;
             tapsThisTurn = 0;
             endedThisTurn = false;
 
@@ -78,8 +126,8 @@ namespace KYG
 
             // UI/비주얼 초기화
             if (starRenderer && starNormalMat) starRenderer.material = starNormalMat;
-            SafeSetActive(turnBannerMine,  isMine);
-            SafeSetActive(turnBannerOther, !isMine);
+            //SafeSetActive(turnBannerMine,  isMine);
+            //SafeSetActive(turnBannerOther, !isMine);
             if (unimoFace) unimoFace.Play("Idle", 0, 0);
 
             turnTimeMax = 10f;
@@ -88,6 +136,32 @@ namespace KYG
 
             SafeSetActive(countNumberText, isMine); // 숫자 카운트는 내 턴만 표시
             EnsureUIVisible();                      // 렌더/알파 잠김 대비
+            
+            // InitTurnWithEnding 내부 UI/비주얼 초기화 부분 교체
+            // (둘 다 끄고 → 하나만 켜서 '동시 ON'을 원천 차단)
+            if (turnBannerMine)  turnBannerMine.gameObject.SetActive(false);
+            if (turnBannerOther) turnBannerOther.gameObject.SetActive(false);
+
+            if (isMine) {
+                if (turnBannerMine)  turnBannerMine.gameObject.SetActive(true);   // 내 턴만 보임
+            } else {
+                if (turnBannerOther) turnBannerOther.gameObject.SetActive(true);  // 상대 턴 전환은 모두에게
+            }
+            
+            // 잘못된 참조(같은 오브젝트를 두 슬롯에 꽂은 경우) 탐지
+            if (turnBannerMine && turnBannerOther && ReferenceEquals(turnBannerMine, turnBannerOther)) {
+                Debug.LogError("[MeteorTapMiniGame] turnBannerMine과 turnBannerOther가 같은 오브젝트를 참조하고 있습니다!");
+            }
+
+            // 씬에 복수 인스턴스 가드(두 컴포넌트가 서로 켜는 상황 방지)
+            if (FindObjectsOfType<MeteorTapMiniGame>(true).Length > 1) {
+                Debug.LogWarning("[MeteorTapMiniGame] 씬에 MeteorTapMiniGame이 2개 이상 존재합니다. 배너 중복 노출 원인일 수 있습니다.");
+            }
+            
+            // 배너는 "짧게" 보여주고 자동 숨김
+            // 모든 플레이어: turnBannerOther = 상대 턴 전환 알림 (NEXT >>)
+            // 내 턴인 플레이어만: turnBannerMine = 내 턴 알림 (MY TURN!)
+            PlayTurnTransitionBanners(isMine);
 
             if (isMine) StartCoroutine(CoCountWindow());
             else        countActive = false;
@@ -118,34 +192,90 @@ namespace KYG
             Debug.Log($"[MeteorTapMiniGame] 내 턴 탭 횟수: {tapsThisTurn}/{maxTapPerTurn}, 총 누적 탭: {currentTap}/{currentEndingCount}");
         }
 
-        // 1회 탭 처리
         private void DoOneTapFXAndLogic()
         {
             currentTap++;
 
-            if (starRenderer && starNormalMat) starRenderer.material = starNormalMat;
+            // (A) 색상 순간 전환 (yellow → yellow1 → 후처리에서 단계색)
+            StartCoroutine(CoStarFlash());  // ★ 추가 1
+
+          
+            // (B) 탭 사운드 랜덤(shine1/shine2)
+            PlayRandomTapSfx();              // ★ 추가 2
+
+            // 기존: vfx/유니모 표정
             if (sfxTap)     sfxTap.Play();
             if (vfxMeteor)  vfxMeteor.Play();
             if (unimoFace)  unimoFace.Play("Smile", 0, 0);
-
+            
             float r = (float)currentTap / Mathf.Max(1, currentEndingCount);
-            ApplyDanger(r);
+            
+            if (!_isFlashing)
+                StartCoroutine(CoStarFlashThenApplyDanger(r));
+            else
+                ApplyDanger(r); // 중복 플래시 중이면 안전하게 스킵
 
+            // (C) 중앙 별 쉐이크
+            StartCoroutine(CoShakeStar());   // ★ 추가 3
+
+            // (D) 하늘 별똥별 대각 낙하
+            SpawnSkyMeteor();                // ★ 추가 4
+
+            // 엔딩 도달 시 동기 종료
             if (currentTap >= currentEndingCount)
                 photonView.RPC(nameof(RPC_OnEndingReached), RpcTarget.All);
+        }
+        
+        private IEnumerator CoStarFlashThenApplyDanger(float ratioAfterTap)
+        {
+            if (!starRenderer || !starTapFlashMat)
+            {
+                // 플래시 자원 누락 시 그냥 위험도만 반영
+                ApplyDanger(ratioAfterTap);
+                yield break;
+            }
+
+            _isFlashing = true;
+
+            // 1) yellow1로 '번쩍'
+            var prev = starRenderer.material; // 개별 인스턴스화(material) 사용
+            starRenderer.material = starTapFlashMat;
+
+            yield return new WaitForSeconds(starFlashSec);
+
+            // 2) 위험도 단계 색상으로 정착
+            //    - 여기서 바로 prev로 롤백하지 않고, 기획대로 현재 위험도 색상(노말/경고)로 세팅
+            ApplyDanger(ratioAfterTap);
+
+            _isFlashing = false;
         }
 
         private void ApplyDanger(float r)
         {
-            if (r > 0.66f)
+            int tier = (r > 0.66f) ? 2 : ((r > 0.33f) ? 1 : 0);
+
+            // 색상 전환
+            if (starRenderer)
             {
-                if (starRenderer && starWarningMat) starRenderer.material = starWarningMat;
-                if (sfxWarning && !sfxWarning.isPlaying) sfxWarning.Play();
-                if (unimoFace) unimoFace.Play("Anxious", 0, 0);
+                if (tier == 0 && starNormalMat)      starRenderer.material = starNormalMat;   // yellow
+                else if (tier == 1 && starOrangeMat) starRenderer.material = starOrangeMat;   // orange
+                else if (tier == 2 && starWarningMat)starRenderer.material = starWarningMat;  // red
             }
-            else if (r > 0.33f)
+
+            // 단계가 바뀔 때만 change.wav 재생
+            if (tier != _lastDangerTier)
             {
-                if (unimoFace) unimoFace.Play("Worried", 0, 0);
+                _lastDangerTier = tier;
+                if (changeClip)
+                {
+                    if (_changeSrc == null)
+                    {
+                        _changeSrc = gameObject.AddComponent<AudioSource>();
+                        _changeSrc.playOnAwake = false;
+                        _changeSrc.spatialBlend = 0f; // 2D
+                    }
+                    _changeSrc.PlayOneShot(changeClip);
+                }
             }
         }
         
@@ -207,12 +337,12 @@ namespace KYG
             }
 
             // 마스터만 다음 턴 스케줄 (엔딩 미도달 시)
-            if (PhotonNetwork.IsMasterClient)
+            if (IsAuthoritative()) // 온라인=마스터, 오프라인=항상 true
             {
                 yield return new WaitForSeconds(afterDelay);
-                if (!endedThisTurn && currentTap < currentEndingCount && IsAuthoritative())
+                if (!endedThisTurn && currentTap < currentEndingCount)
                 {
-                    TryNextTurnOrLocalFallback();
+                    TryNextTurnOrLocalFallback(); // ← 내부에서 LocalMiniGameBoot.NextLocalTurn() 호출
                 }
             }
         }
@@ -266,60 +396,249 @@ namespace KYG
             if (exclamationText) exclamationText.gameObject.SetActive(true);
             if (sfxExclamation)  sfxExclamation.Play();
 
-            // 3) 별 오브젝트 위로 상승
-            StartCoroutine(CoEndingSequence());
-
-            if (IsAuthoritative())
-            {
-                TryNextTurnOrLocalFallback();
-            }
+            StartCoroutine(CoEndingSequence_Ordered());
         }
         
-        private IEnumerator CoEndingSequence()
+        private IEnumerator CoEndingSequence_Ordered()
         {
-            // 살짝 지연을 줘서 느낌표 노출
-            yield return new WaitForSeconds(0.25f);
-
-            // 별 상승
-            if (starRoot != null)
-            {
-                Vector3 start = starRoot.position;
-                Vector3 end   = start + Vector3.up * starRiseHeight;
-                float t = 0f;
-                while (t < starRiseDuration)
+            // 4) 별 상승(천천히)
+            yield return StartCoroutine(CoStarRise(starRiseHeight, starRiseDuration,
+                onHalf: () =>
                 {
-                    t += Time.deltaTime;
-                    starRoot.position = Vector3.Lerp(start, end, t / starRiseDuration);
-                    yield return null;
-                }
-            }
+                    // 5) 중간 시점에 배경별 드러내기
+                    if (bgHiddenStar != null) StartCoroutine(CoRevealBGStar(bgHiddenStar, 0.35f));
+                }));
 
-            // 4) 폭발 이펙트 + 표정 "불안"
+            // 6) 운석이 사선으로 떨어진다 (+ 낙하음이 있다면 여기서 재생)
+            GameObject meteor = SpawnSkyMeteor();
+            if (sfxMeteor) sfxMeteor.Play();              // 낙하/충돌계열 사운드
+            yield return new WaitForSeconds(meteorFallTime);
+
+            // 7) (보류) 불안 표정
             if (unimoFace) unimoFace.Play(animFacePanic, 0, 0);
+
+            // 8) 폭발 VFX
             if (vfxExplosion) vfxExplosion.Play();
-            if (sfxMeteor) sfxMeteor.Play(); // 메테오/충돌 계열 사운드
 
-            // 5) 탈락자 처리(마스터 권한)
-            if (IsAuthoritative())
+            // 운석 제거
+            if (meteor) Destroy(meteor);
+
+            // 탈락 처리 및 다음 턴/다음 라운드 흐름
+            HandleEliminationAndAdvance();
+        }
+        
+        private IEnumerator CoStarRise(float height, float duration, System.Action onHalf = null)
+{
+    if (starRoot == null || duration <= 0f) yield break;
+    Vector3 s = starRoot.position;
+    Vector3 e = s + Vector3.up * height;
+    float t = 0f;
+    bool halfCalled = false;
+
+    while (t < duration)
+    {
+        t += Time.deltaTime;
+        float k = Mathf.Clamp01(t / duration);
+        starRoot.position = Vector3.Lerp(s, e, k);
+        if (!halfCalled && k >= 0.5f)
+        {
+            halfCalled = true;
+            onHalf?.Invoke();
+        }
+        yield return null;
+    }
+    starRoot.position = e;
+}
+
+private IEnumerator CoRevealBGStar(GameObject go, float fadeSec)
+{
+    if (!go) yield break;
+    // CanvasGroup 있으면 페이드, 아니면 단순 활성
+    var cg = go.GetComponent<CanvasGroup>();
+    if (cg != null)
+    {
+        if (!go.activeSelf) go.SetActive(true);
+        cg.alpha = 0f;
+        float t = 0f;
+        while (t < fadeSec)
+        {
+            t += Time.deltaTime;
+            cg.alpha = Mathf.Lerp(0f, 1f, t / fadeSec);
+            yield return null;
+        }
+        cg.alpha = 1f;
+    }
+    else
+    {
+        go.SetActive(true);
+    }
+}
+
+private GameObject SpawnSkyMeteor()
+{
+    if (meteorPrefab == null || meteorSpawnTop == null) return null;
+
+    float sx = Random.Range(meteorSpawnX.x, meteorSpawnX.y);
+    float ex = sx + Random.Range(meteorEndXOffset.x, meteorEndXOffset.y);
+
+    Vector3 start = meteorSpawnTop.position + new Vector3(sx, 0f, 0f);
+    Vector3 end   = start + new Vector3(ex - sx, -meteorFallDist, 0f);
+
+    var go = Instantiate(meteorPrefab, start, Quaternion.identity);
+    StartCoroutine(CoMeteorFall(go.transform, start, end, meteorFallTime));
+    return go;
+}
+
+private IEnumerator CoMeteorFall(Transform tf, Vector3 s, Vector3 e, float sec)
+{
+    if (!tf || sec <= 0f) yield break;
+    float t = 0f;
+    while (t < sec)
+    {
+        t += Time.deltaTime;
+        tf.position = Vector3.Lerp(s, e, t / sec);
+        yield return null;
+    }
+    tf.position = e;
+}
+
+private void HandleEliminationAndAdvance()
+{
+    // 현재 턴의 플레이어 탈락 처리(온라인=마스터 / 오프라인=로컬 폴백)
+    if (IsAuthoritative())
+    {
+        int actor = (KYG.TurnManager.Instance != null)
+            ? KYG.TurnManager.Instance.GetCurrentTurnActor()
+            : -1;
+
+        // 온라인: 매니저에 위임
+        if (KYG.ShootingGameManager.Instance != null && Photon.Pun.PhotonNetwork.IsConnectedAndReady)
+        {
+            KYG.ShootingGameManager.Instance.Eliminate(actor);
+            if (!KYG.ShootingGameManager.Instance.IsGameOver())
+                TryNextTurnOrLocalFallback(); // 다음 턴
+            // 게임오버면 ShootingGameManager가 마무리
+        }
+        else
+        {
+            // 로컬 1인 테스트: 다음 턴 순환(카드 순서 기반)
+            TryNextTurnOrLocalFallback();
+        }
+    }
+}
+        
+        // 2-1) 별 색상 순간 전환: normal ↔ flash
+        private IEnumerator CoStarFlash()
+        {
+            if (starRenderer == null || starNormalMat == null || starTapFlashMat == null)
+            yield break;
+
+            var before = starRenderer.material;
+            starRenderer.material = starTapFlashMat;
+            yield return new WaitForSeconds(starFlashSec);
+            // 위험도 단계(ApplyDanger)에서 warningMat로 바뀔 수 있으므로,
+            // 여기서는 '기본'으로 되돌리되, 위에서 곧 ApplyDanger가 후처리
+            starRenderer.material = starNormalMat;
+        }
+
+        // 2-2) 탭 사운드 랜덤
+        private void PlayRandomTapSfx()
+        {
+            if (sfxTap == null || tapClips == null || tapClips.Length == 0) return;
+            var clip = tapClips[Random.Range(0, tapClips.Length)];
+            sfxTap.pitch = Random.Range(tapPitchMin, tapPitchMax);
+            sfxTap.PlayOneShot(clip);
+        }
+
+        // 2-3) 중앙 별 좌우 흔들림(짧게)
+        private IEnumerator CoShakeStar()
+        {
+            if (starRoot == null) yield break;
+            Vector3 origin = starRoot.localPosition;
+            float t = 0f;
+        
+            while (t < shakeDuration)
             {
-                int actor = KYG.TurnManager.Instance != null
-                    ? KYG.TurnManager.Instance.GetCurrentTurnActor()
-                    : -1;
-
-                // 승패/탈락 로직은 온라인 기준 설계이므로, 오프라인 테스트에선 단순 턴 회전만.
-                if (KYG.ShootingGameManager.Instance != null && Photon.Pun.PhotonNetwork.IsConnectedAndReady)
-                {
-                    KYG.ShootingGameManager.Instance.Eliminate(actor);
-                    if (!KYG.ShootingGameManager.Instance.IsGameOver())
-                        TryNextTurnOrLocalFallback();
-                    // 게임오버면 ShootingGameManager가 처리
-                }
-                else
-                {
-                    // 로컬이면 걍 다음 턴
-                    TryNextTurnOrLocalFallback();
-                }
+                t += Time.deltaTime;
+                float n = shakeEase.Evaluate(Mathf.Clamp01(t / shakeDuration)); // 0→1
+                // 한 번 왼→오른쪽으로 스윙하는 느낌
+                float phase = Mathf.Sin(n * Mathf.PI); // 0→π (한 사이클)
+                float dx = phase * shakeAmplitude;
+                starRoot.localPosition = origin + new Vector3(dx, 0f, 0f);
+                yield return null;
             }
+            starRoot.localPosition = origin;
+        }
+
+        /* 2-4) 하늘 별똥별 낙하(대각선)
+        private void SpawnSkyMeteor()
+        {
+            if (meteorPrefab == null || meteorSpawnTop == null) return;
+        
+            float sx = Random.Range(meteorSpawnX.x, meteorSpawnX.y);
+            float ex = sx + Random.Range(meteorEndXOffset.x, meteorEndXOffset.y);
+        
+            Vector3 start = meteorSpawnTop.position + new Vector3(sx, 0f, 0f);
+            Vector3 end   = start + new Vector3(ex - sx, -meteorFallDist, 0f);
+            StartCoroutine(CoMeteorFall(start, end, meteorFallTime));
+        }*/
+
+private IEnumerator CoMeteorFall(Vector3 start, Vector3 end, float dur)
+{
+    var go = Instantiate(meteorPrefab, start, Quaternion.identity);
+    float t = 0f;
+    while (t < dur)
+    {
+        t += Time.deltaTime;
+        float k = Mathf.Clamp01(t / dur);
+        go.transform.position = Vector3.Lerp(start, end, k);
+        yield return null;
+    }
+    Destroy(go);
+}
+        
+        // (유틸) 텍스트를 짧게 보여주고 자동으로 숨김
+        private IEnumerator CoFlashText(TMP_Text txt, float showSec, float fadeSec)
+        {
+            if (!txt) yield break;
+            var go = txt.gameObject;
+
+            // 보장: 보이도록
+            if (!go.activeSelf) go.SetActive(true);
+            txt.canvasRenderer.SetAlpha(1f);
+
+            // 짧게 유지
+            yield return new WaitForSeconds(showSec);
+
+            // 페이드아웃
+            if (fadeSec > 0f)
+                txt.CrossFadeAlpha(0f, fadeSec, ignoreTimeScale: true);
+            else
+                txt.canvasRenderer.SetAlpha(0f);
+
+            yield return new WaitForSeconds(Mathf.Max(0.01f, fadeSec));
+
+            // 완전히 꺼두기
+            go.SetActive(false);
+        }
+
+        // (추가) 턴 전환 시 배너 연출 총괄
+        private void PlayTurnTransitionBanners(bool isMine)
+        {
+            // 1) 모두에게 "상대 턴으로 넘어갑니다(NEXT >>)" 배너를 짧게 노출
+            //    turnBannerOther 를 공용 전환 배너로 사용
+            if (turnBannerOther)
+                StartCoroutine(CoFlashText(turnBannerOther, bannerShowTime, bannerFadeOut));
+
+            // 2) 내 턴이면 "MY TURN!"(turnBannerMine)도 바로 이어서 짧게 노출
+            if (isMine && turnBannerMine)
+                StartCoroutine(CoFlashMyTurnAfterDelay(0.05f)); // 살짝 텀을 두고 노출
+        }
+
+        private IEnumerator CoFlashMyTurnAfterDelay(float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            yield return CoFlashText(turnBannerMine, bannerShowTime, bannerFadeOut);
         }
 
         // ────────────────────── UI 보강 유틸 ──────────────────────
