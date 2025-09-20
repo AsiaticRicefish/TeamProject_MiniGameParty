@@ -121,7 +121,9 @@ namespace LDH_MainGame
         public void ShowLoading()
         {
             // 로딩창 설정
-            _loadingUI = Managers.Manager.UI.CreatePopupUI<UI_Loading>();
+            _loadingUI = Manager.UI.CreatePopupUI<UI_Loading>();
+            UI_LoadingTheme theme = Resources.Load<UI_LoadingTheme>(loadingThemePath);
+            _loadingUI.ApplyTheme(theme);
             _loadingUI.SetBigDescription("로비로 이동 중...");
             _loadingUI.SetSmallDescription("잠시만 기다려 주세요.");
             _loadingUI.SetProgress(0f);

@@ -26,25 +26,39 @@ namespace LDH_Game
         private async void Start()
         {
             
-            // 로딩 창 띄우기
-            _loadingUI = Manager.UI.CreatePopupUI<UI_Loading>();
-            SetupLoadingUI();
-            
-            
-            // Phase 구성
+            // ------ Phase 구성 --------
+            // 1) 트리 전체 생성
+            //    루트노드
             var root = new ProgressNode(p =>
             {
                 _loadingUI.SetProgress(p);
                 Debug.Log($"<color=red> loading total progress = {p}</color>");
             });
+            //   3개의 페이즈로 분할(0단계, 1단계, 2단계)
             var phases = root.Fan(0.25f, 0.55f, 0.20f);
             var phaseInit  = phases[0];
             var phaseLoad  = phases[1];
             var phaseFinal = phases[2];
+            
+            //  1단계 페이즈 세부 분할
+            var loadFan = phaseLoad.Fan(0.15f, 0.10f, 0.05f, 0.70f);
+            var subStep1   = loadFan[0];
+            var subStep2   = loadFan[1];
+            var subStep3   = loadFan[2];
+            var subStep4   = loadFan[3];
+            
+            //  1단계 페이지의 병렬 작업에 대한 세부 분할
+            var par = subStep4.Fan(0.5f, 0.3f, 0.2f);
+            var prCatalog = par[0];
+            var prUser    = par[1];
+            var prItems   = par[2];
+
+            
+            //-------  로딩창 설정 ---------
+            SetupLoadingUI();
             Manager.UI.ShowPopupUI(_loadingUI).Forget();
             
             // ========== [0단계] ========== 
-            
             Big("초기화 중");
             Small("초기화 준비…");
             // Util_LDH.ConsoleLog(this, "[0단계 - 1] 파괴되지 않도록 dont destroy처리");
@@ -83,12 +97,7 @@ namespace LDH_Game
             
             
             //============= [1단계] ==================
-            var loadFan = phaseLoad.Fan(0.15f, 0.10f, 0.05f, 0.70f);
-            var subStep1   = loadFan[0];
-            var subStep2   = loadFan[1];
-            var subStep3   = loadFan[2];
-            var subStep4   = loadFan[3];
-            
+          
             Big("리소스 및 데이터 로딩 중");
 
             // 1) Addressable 초기화
@@ -124,19 +133,25 @@ namespace LDH_Game
             // 4) 병렬 작업
             // - 카탈로그 SO 로드 및 초기화
             // - RTDB 로드 및 생성
+
+            float catalogProgress = 0f, userProgress = 0f, itemsProgress = 0f;
             
             Small($"데이터 불러오는 중...");
-            var par = subStep4.Fan(0.5f, 0.3f, 0.2f);
-            var prCatalog = par[0];
-            var prUser    = par[1];
-            var prItems   = par[2];
-            
             UniTask catalogTask = CatalogProvider.InitAsync((p) =>
             {
-                prCatalog.Report(p);
+                catalogProgress = Mathf.Clamp(p, catalogProgress, 1f);
+                prCatalog.Report(catalogProgress);
             });
-            UniTask userDataTask = DataManager.Instance.LoadOrCreatedUserDataAsync(p => prUser.Report(p));
-            UniTask itemDataTask = DataManager.Instance.LoadItemsDataAsync(p => prItems.Report(p));
+            UniTask userDataTask = DataManager.Instance.LoadOrCreatedUserDataAsync(p =>
+            {
+                userProgress = Mathf.Clamp(p, userProgress, 1f);
+                prUser.Report(userProgress);
+            });
+            UniTask itemDataTask = DataManager.Instance.LoadItemsDataAsync(p =>
+            {
+                itemsProgress= Mathf.Clamp(p, itemsProgress, 1f);
+                prItems.Report(p);
+            });
             
             
             await UniTask.WhenAll(catalogTask, userDataTask, itemDataTask);
@@ -160,11 +175,13 @@ namespace LDH_Game
 
         private void SetupLoadingUI()
         {
-            Debug.Log("[GameBootstrap] Loading 창 설정 - 테마 적용");
+            //로딩창 생성
+            _loadingUI = Manager.UI.CreatePopupUI<UI_Loading>();
+            //테마 적용
             UI_LoadingTheme theme = Resources.Load<UI_LoadingTheme>(loadingThemePath);
             _loadingUI.ApplyTheme(theme);
             
-            Debug.Log("[GameBootstrap] Loading 창 설정 - 이벤트 설정");
+            //이벤트 설정
             _loadingUI.OnCloseRequested += DestroyGameBootstrap;
             _loadingUI.onSceneLoaded = (s) =>
             {
