@@ -35,6 +35,7 @@ namespace LDH_UI
         private void OnEnable()
         {
             //계정 정보 반영하기
+          
             uid.text = Manager.Data.UID.Trim();
             nickname.text = PhotonNetwork.LocalPlayer.NickName.Trim();
 

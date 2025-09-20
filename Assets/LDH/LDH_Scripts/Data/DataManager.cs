@@ -65,35 +65,43 @@ namespace Data
         #region Load Data
         
         // 전체 유저 데이터 load or create
-        public async UniTask LoadOrCreatedUserDataAsync()
+        public async UniTask LoadOrCreatedUserDataAsync(Action<float> progressReport = null)
         {
+            progressReport?.Invoke(0f);
+
             if (_userRepo == null) throw new Exception("Repository not bound.");
             User = await _userRepo.LoadOrCreateAsync(_uid);
+            progressReport?.Invoke(0.8f);
+
             OnUserDataChanged?.Invoke(User);
             OnCustomizationChanged?.Invoke(User.customization);
             OnCurrencyChanged?.Invoke(User.currency);
+            progressReport?.Invoke(1f);
         }
 
-        public async UniTask LoadItemsDataAsync()
+        public async UniTask LoadItemsDataAsync(Action<float> progressReport = null)
         {
-          
+            progressReport?.Invoke(0f);
+
             if (_itemRepo == null) return;
             
             var charTask = _itemRepo.LoadEntriesAsync(ItemType.Character);
             var equipTask = _itemRepo.LoadEntriesAsync(ItemType.Equip);
             
             var (charItems, equipItems) = await UniTask.WhenAll(charTask, equipTask);
+            progressReport?.Invoke(0.7f);
 
+            
             // …dict로 변환해서 DataManager에 저장
             _characterItemDict = ToDict(charItems);
             _equipItemDict = ToDict(equipItems);
 
+            progressReport?.Invoke(0.9f);
             OnItemCatalogChanged?.Invoke();
             
             Util_LDH.ConsoleLog(this, $"complete loading item data - character : {charItems.Count}, equip - {equipItems.Count}");
+            progressReport?.Invoke(1f);
 
-            // var item = _characterItemDict[Define_LDH.DefaultData.DefaultCharacter];
-            // Util_LDH.ConsoleLog(this, $"데이터 테스트 - id : {item.Id}, name : {item.Name}, price : {item.Price}, enabled : {item.Enabled}");
         }
 
         

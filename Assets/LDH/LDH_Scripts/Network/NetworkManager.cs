@@ -24,7 +24,8 @@ namespace Network
         [SerializeField] private string gameSceneName;
         [SerializeField] private string lobbySceneName;
         [SerializeField] private bool autoSyncScene = true;
-
+        public string LobbySceneName => lobbySceneName;
+        
         // ---- 인증 여부, 로비 진입과 관련 플래그
         private bool _authReady = false;
 

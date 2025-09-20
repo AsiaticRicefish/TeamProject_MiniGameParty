@@ -8,16 +8,14 @@ using Managers;
 using Photon.Pun;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.Assertions.Must;
 
 namespace LDH_Game
 {
     public class GameBootstrap : MonoBehaviour
     {
-        [SerializeField] private float dataProgress;
-        [SerializeField] private float catalogProgress;
-        [SerializeField] private float totalProgress;
-
         private UI_Loading _loadingUI;
+        private const string loadingThemePath = "Data/Lobby_Theme";
         
         
         /// <summary>
@@ -27,30 +25,51 @@ namespace LDH_Game
         /// </summary>
         private async void Start()
         {
-            // [0단계]
-            // 0) 로딩 창 띄우기
+            
+            // 로딩 창 띄우기
             _loadingUI = Manager.UI.CreatePopupUI<UI_Loading>();
-            _loadingUI.OnCloseRequested += DestroyGameBootstrap;
+            SetupLoadingUI();
+            
+            
+            // Phase 구성
+            var root = new ProgressNode(p =>
+            {
+                _loadingUI.SetProgress(p);
+                Debug.Log($"<color=red> loading total progress = {p}</color>");
+            });
+            var phases = root.Fan(0.25f, 0.55f, 0.20f);
+            var phaseInit  = phases[0];
+            var phaseLoad  = phases[1];
+            var phaseFinal = phases[2];
             Manager.UI.ShowPopupUI(_loadingUI).Forget();
             
-            Util_LDH.ConsoleLog(this, "[0단계 - 1] 파괴되지 않도록 dont destroy처리");
+            // ========== [0단계] ========== 
+            
+            Big("초기화 중");
+            Small("초기화 준비…");
+            // Util_LDH.ConsoleLog(this, "[0단계 - 1] 파괴되지 않도록 dont destroy처리");
             // 1) 작업이 완료되지 않았는데 씬이 전환되는 경우 파괴되지 않도록 하기 위해 dont destroy 처리
             DontDestroyOnLoad(gameObject);
             
-            Util_LDH.ConsoleLog(this, "[0단계 - 2] 데이터 베이스초기화");
+            // Util_LDH.ConsoleLog(this, "[0단계 - 2] 데이터 베이스초기화");
             // 2) 데이터베이스 초기화 및 준비
+            phaseInit.Report(0.1f);
+            Small("서버 연결 준비 중…");
             await FirebaseBootstrap.InitializeAsync(Define_LDH.Urls.RTDB);
             
-            Util_LDH.ConsoleLog(this, "[0단계 - 3] DataManager, BackendManager Instance가 생성될때까지 대기");
+            // Util_LDH.ConsoleLog(this, "[0단계 - 3] DataManager, BackendManager Instance가 생성될때까지 대기");
             // 3) DataManager, BackendManager Instance가 생성될때까지 대기
+            phaseInit.Report(0.4f);
+            Small("인증 상태 확인…");
+
             await UniTask.WaitUntil(() => DataManager.Instance != null && BackendManager.Instance != null);
-
-            
             var uid = BackendManager.Auth.CurrentUser.UserId;
-            Util_LDH.ConsoleLog(this, $"[0단계 - 4] UID 가져오기 : {uid}");
+            // Util_LDH.ConsoleLog(this, $"[0단계 - 4] UID 가져오기 : {uid}");
 
             
-            Util_LDH.ConsoleLog(this, "[0단계 - 5] DataBase Binding");
+            //Util_LDH.ConsoleLog(this, "[0단계 - 5] DataBase Binding");
+            phaseInit.Report(0.7f);
+            Small("데이터 동기화 설정…");
             var userRepo = new RealTimeUserDataRepository(FirebaseBootstrap.Rtdb, FirebaseBootstrap.Root);
             
             var itemRepo = new FirestoreItemRepository(FirebaseBootstrap.Firestore);
@@ -59,17 +78,30 @@ namespace LDH_Game
             DataManager.Instance.BindUserDataRepository(userRepo,uid);
             DataManager.Instance.BindItemRepository(itemRepo);
             
+            phaseInit.Complete();
             Util_LDH.ConsoleLog(this, "[0단계] 완료");
             
             
-            // [1단계]
+            //============= [1단계] ==================
+            var loadFan = phaseLoad.Fan(0.15f, 0.10f, 0.05f, 0.70f);
+            var subStep1   = loadFan[0];
+            var subStep2   = loadFan[1];
+            var subStep3   = loadFan[2];
+            var subStep4   = loadFan[3];
+            
+            Big("리소스 및 데이터 로딩 중");
+
             // 1) Addressable 초기화
+            Small("리소스 시스템 초기화…");
             await Addressables.InitializeAsync().Task;
+            subStep1.Complete();
             
             // 2) 원격 카탈로그 최신화 (카탈로그 파일만 다운로드)
+            Small("콘텐츠 업데이트 확인…");
             var updates = await Addressables.CheckForCatalogUpdates().Task;
             if (updates != null && updates.Count > 0)
             {
+                Small("업데이트 적용 중…");
                 Util_LDH.ConsoleLog(this, $"update 내역이 있습니다. 다운로드 시작");
                 await Addressables.UpdateCatalogs(updates).Task;
             }
@@ -77,43 +109,69 @@ namespace LDH_Game
             {
                 Util_LDH.ConsoleLog(this, $"update 내역이 없습니다.");
             }
+            subStep2.Complete();
             
             // 3) Addressables 선 다운로드
+            Small("필요 용량 계산…");
             var keys = new object[] { CatalogProvider.CharacterLabel, CatalogProvider.EquipLabel };
             // 필요 용량 체크
             var sizeH = Addressables.GetDownloadSizeAsync(keys);
             await sizeH.Task;
             var bytes = sizeH.Result;
             Addressables.Release(sizeH);
+            subStep3.Complete();
             
             // 4) 병렬 작업
             // - 카탈로그 SO 로드 및 초기화
             // - RTDB 로드 및 생성
             
-            UniTask catalogTask = CatalogProvider.InitAsync((d) =>
+            Small($"데이터 불러오는 중...");
+            var par = subStep4.Fan(0.5f, 0.3f, 0.2f);
+            var prCatalog = par[0];
+            var prUser    = par[1];
+            var prItems   = par[2];
+            
+            UniTask catalogTask = CatalogProvider.InitAsync((p) =>
             {
-                Util_LDH.ConsoleLog(this, $"catalog progress : {catalogProgress*100}");
-                catalogProgress = d;
+                prCatalog.Report(p);
             });
-            UniTask userDataTask = DataManager.Instance.LoadOrCreatedUserDataAsync();
-
-            UniTask itemDataTask = DataManager.Instance.LoadItemsDataAsync();
-
+            UniTask userDataTask = DataManager.Instance.LoadOrCreatedUserDataAsync(p => prUser.Report(p));
+            UniTask itemDataTask = DataManager.Instance.LoadItemsDataAsync(p => prItems.Report(p));
             
             
             await UniTask.WhenAll(catalogTask, userDataTask, itemDataTask);
             
+            //============= [2단계] ==================
+
+            Big("세션 진입 준비");
             // 5) 커스터마이징 매니저에서 DataManager에 저장된 데이터를 가져와 커스템 데이터를 셋팅해준다.
+            Small("아바타 설정 적용…");
             await Manager.Custom.InitAsync();
             
-
+            phaseFinal.Report(0.2f);
             // 6) 씬 이동 및 파괴를 위해 photon network로 연결
+            Small("네트워크 연결 중…");
             PhotonNetwork.ConnectUsingSettings();
             
-            // 7) 로딩 창 닫기
-            Debug.Log("로딩창 닫기");
-            _loadingUI.AutoCloseAfter(2.5f, this.destroyCancellationToken).Forget();
+            phaseFinal.Report(0.7f);
             
+        }
+
+
+        private void SetupLoadingUI()
+        {
+            Debug.Log("[GameBootstrap] Loading 창 설정 - 테마 적용");
+            UI_LoadingTheme theme = Resources.Load<UI_LoadingTheme>(loadingThemePath);
+            _loadingUI.ApplyTheme(theme);
+            
+            Debug.Log("[GameBootstrap] Loading 창 설정 - 이벤트 설정");
+            _loadingUI.OnCloseRequested += DestroyGameBootstrap;
+            _loadingUI.onSceneLoaded = (s) =>
+            {
+                Small("잠시 후 로비로 진입합니다!");
+                _loadingUI.SetProgress(1f);
+                _loadingUI.AutoCloseAfter(1f, this.destroyCancellationToken).Forget();
+            };
         }
 
         private void DestroyGameBootstrap(UI_Base uiBase)
@@ -129,6 +187,9 @@ namespace LDH_Game
             }
                
         }
+        
+        void Big(string s)   => _loadingUI?.SetBigDescription(s);
+        void Small(string s) => _loadingUI?.SetSmallDescription(s);
 
     }
 }
