@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 604056280655868369}
   - component: {fileID: 7246177200287667240}
   - component: {fileID: 800709719120635535}
+  - component: {fileID: -2621797398405278423}
   m_Layer: 0
   m_Name: '@Manager'
   m_TagString: Untagged
@@ -67,6 +68,34 @@ MonoBehaviour:
   isPersistent: 1
   charPoolRegistry_Transform: {fileID: 4031691767248806508}
   equipPoolRegistry_Transform: {fileID: 6561803264738523195}
+--- !u!114 &-2621797398405278423
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1005027553336937955}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6923f52efbb86ac41a9313853aa83f54, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isPersistent: 1
+  _bgmList: []
+  _rhythmList: []
+  _gameSfxList: []
+  _uiSfxList: []
+  audioMixer: {fileID: 24100000, guid: eba9e5d0d1f1fab4ea6c116f2f25bfd0, type: 2}
+  bgmMixerGroup: {fileID: 44504754267785944, guid: eba9e5d0d1f1fab4ea6c116f2f25bfd0,
+    type: 2}
+  sfxMixerGroup: {fileID: -8341177989497949001, guid: eba9e5d0d1f1fab4ea6c116f2f25bfd0,
+    type: 2}
+  _bgmAudioSource: {fileID: 0}
+  _sfxAudioSource: {fileID: 0}
+  allGameSettings:
+  - {fileID: 11400000, guid: 9381c5ddb975ab7459eb992cd7369312, type: 2}
+  sceneMappingConfig: {fileID: 11400000, guid: 5f345a74cd81c684684e972398d13743, type: 2}
+  currentGameType: 0
 --- !u!1 &1379040109739422052
 GameObject:
   m_ObjectHideFlags: 0
