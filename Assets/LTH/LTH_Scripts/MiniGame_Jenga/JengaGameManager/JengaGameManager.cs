@@ -229,18 +229,6 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         // 2) 전체에 전파
         Debug.Log("[JengaGameManager] Step 2: BroadcastGameState(Playing)");
         JengaNetworkManager.Instance.BroadcastGameState(JengaGameState.Playing);
-
-        //    // 3) 타이머는 카운트다운이 완전히 끝난 후에만 시작
-        //    Debug.Log("[JengaGameManager] Step 3: StartCoroutine(GameTimer)");
-        //    if (!useCountdown && PhotonNetwork.IsMasterClient)
-        //    {
-        //        var props = new Hashtable
-        //{
-        //    { JengaRoomProps.KEY_START_TIME, PhotonNetwork.Time },
-        //    { JengaRoomProps.KEY_DURATION,   (double)gameTime }
-        //};
-        //        PhotonNetwork.CurrentRoom.SetCustomProperties(props);
-        //    }
     }
 
     #region 카운트다운 관련
@@ -261,7 +249,6 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
     {
         if (!PhotonNetwork.IsMasterClient) return;
         if (currentState == JengaGameState.Finished) return;
-
 
         if (useCountdown)
         {
@@ -300,6 +287,12 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
 
         // 모든 클라이언트에게 카운트다운 완료 알림
         JengaNetworkManager.Instance?.BroadcastCountdownComplete();
+
+        // 게임 시작 BGM을 모든 클라이언트에 브로드캐스트
+        if (PhotonNetwork.IsMasterClient)
+        {
+            JengaNetworkManager.Instance?.BroadcastBGMChange("JengaBGM");
+        }
 
         ApplyGameStateChange(JengaGameState.Playing);
         JengaNetworkManager.Instance?.BroadcastGameState(JengaGameState.Playing);
@@ -379,6 +372,8 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
                 break;
 
             case JengaGameState.Finished:
+                SoundManager.Instance.StopBGM();
+
                 // 게임 종료: 젠가 상호작용 차단
                 if (_endGameLock == null && InputManager.Instance != null)
                     _endGameLock = InputManager.Instance.Acquire(
@@ -476,6 +471,13 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         // 1) 타이머 0으로 고정 & 즉시 UI 반영
         remainingTime = 0f;
         OnTimeUpdated?.Invoke(remainingTime);
+
+        // 게임 종료 사운드 추가
+        SoundManager.Instance.PlayBGM("Finished");
+        if (PhotonNetwork.IsMasterClient)
+        {
+            JengaNetworkManager.Instance?.BroadcastBGMChange("Finished");
+        }
 
         // 2) 상태 전환 (ApplyGameStateChange 내부에서 KEY_STATE를 룸 프로퍼티로 기록)
         ApplyGameStateChange(JengaGameState.Finished);
@@ -833,6 +835,9 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
     protected override void OnDestroy()
     {
         Debug.Log("[JengaGameManager] OnDestroy - cleaning up resources");
+
+        // 사운드 전체 정리
+        SoundManager.Instance?.StopAllSounds();
 
         // 1. 이벤트 해제 (메모리 누수 방지)
         OnTimeUpdated = null;

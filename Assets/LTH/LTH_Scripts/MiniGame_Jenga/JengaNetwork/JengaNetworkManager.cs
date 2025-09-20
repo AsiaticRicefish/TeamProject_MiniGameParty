@@ -532,6 +532,8 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     {
         Debug.Log($"[JengaNetwork] Received countdown start RPC: {duration}s");
 
+        SoundManager.Instance.PlaySFX("Countdown");
+
         // 카운트다운 동안 입력 잠금 (모든 클라 공통)
         AcquireCountdownLock(duration);
 
@@ -556,6 +558,9 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     private void RPC_CountdownComplete()
     {
         Debug.Log("[JengaNetwork] Received countdown complete RPC");
+
+        // 카운트다운 완료 후 게임 BGM 시작
+        SoundManager.Instance.PlayBGM("JengaBGM");
 
         // 카운트다운 락 해제
         ReleaseCountdownLock();
@@ -728,7 +733,6 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
 
     #endregion
 
-
     #region 랭킹 동기화
     public void BroadcastRankSnapshot(Dictionary<string, int> uidToRank)
     {
@@ -784,6 +788,21 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
             RPC_SyncRanks(uids, vals);
             _receivedRankOnce = true;
         }
+    }
+
+    #endregion
+
+    #region 사운드 동기화
+    public void BroadcastBGMChange(string bgmName)
+    {
+        if (!PhotonNetwork.IsMasterClient) return;
+        thisPhotonView.RPC(nameof(RPC_ChangeBGM), RpcTarget.Others, bgmName);
+    }
+
+    [PunRPC]
+    private void RPC_ChangeBGM(string bgmName)
+    {
+        SoundManager.Instance.PlayBGM(bgmName);
     }
 
     #endregion

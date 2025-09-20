@@ -89,6 +89,9 @@ public class TimingGame : MonoBehaviour
 
         if (_isRun) return;
 
+        // 타이밍 게임 시작 사운드
+        SoundManager.Instance.PlaySFX("Timing");
+
         _isRun = true;
 
         // 성공 존 설정
@@ -200,11 +203,13 @@ public class TimingGame : MonoBehaviour
         {
             _finishText.text = "성공!";
             // 성공 SFX 실행
+            SoundManager.Instance.PlaySFX("Success");
         }
         else
         {
             _finishText.text = "실패...";
             // 실패 SFX 실행
+            SoundManager.Instance.PlaySFX("Fail");
         }
 
         yield return new WaitForSeconds(2f);

@@ -271,6 +271,8 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
 
     public void OnClick_RotateTower()
     {
+        SoundManager.Instance.PlaySFX("Click");
+
         var mgr = JengaTowerManager.Instance;
         if (mgr == null)  return;
 
