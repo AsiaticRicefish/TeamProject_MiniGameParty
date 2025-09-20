@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace PMS_Util
 {
-    public static class PMS_Util
+    public static class Util
     {
         //한방에 100명씩 있는 대규모 멀티게임이 아니니깐 괜찮지 않을까? 
         //아 그냥 bool값 이 몇개인지만 마스터가 확인하면 되지 않을까, 일일히 확인하지 않고
@@ -90,7 +90,7 @@ namespace PMS_Util
 
         //범용적 사용 - 제한 두지 않음 로비/룸
         //자신의 플레이어 프로퍼티 변경하는 함수 -> Myself
-        public static void SetPlayerProperty(string prop, object value)
+        /*public static void SetPlayerProperty(string prop, object value)
         {
             ExitGames.Client.Photon.Hashtable props = new ExitGames.Client.Photon.Hashtable 
             {
@@ -99,7 +99,7 @@ namespace PMS_Util
             PhotonNetwork.LocalPlayer.SetCustomProperties(props);
 
             Debug.Log($"[PMS_Util] 플레이어 {PhotonNetwork.LocalPlayer.NickName} 프로퍼티 '{prop}' = {value} 설정 완료");
-        }
+        }*/
 
         public static string TryGetUidFromActor(int actorNumber)
         {
@@ -154,5 +154,66 @@ namespace PMS_Util
             }
             return null;
         }
+
+        #region PhotonPropertyUtil - 룸프로퍼티 관련
+        public static void SetRoomProperty(string key, object value)
+        {
+            if (!PhotonNetwork.IsMasterClient || !PhotonNetwork.InRoom || key == null || value == null)
+                return;
+
+            var props = new ExitGames.Client.Photon.Hashtable { { key, value } };
+            PhotonNetwork.CurrentRoom.SetCustomProperties(props);
+        }
+
+        public static void SetRoomProperties(Dictionary<string, object> properties)
+        {
+            if (!PhotonNetwork.IsMasterClient || !PhotonNetwork.InRoom || properties == null)
+                return;
+
+            var props = new ExitGames.Client.Photon.Hashtable();
+            foreach (var prop in properties)
+            {
+                props.Add(prop.Key, prop.Value);
+            }
+
+            PhotonNetwork.CurrentRoom.SetCustomProperties(props);
+        }
+        #endregion
+
+        #region PhotonPropertyUtil - 플레이어 프로퍼티 관련
+        public static void SetPlayerProperty(string key, object value)
+        {
+            if (PhotonNetwork.LocalPlayer == null || key == null || value == null)
+                return;
+
+            var props = new ExitGames.Client.Photon.Hashtable { { key, value } };
+            PhotonNetwork.LocalPlayer.SetCustomProperties(props);
+        }
+
+        public static void SetPlayerProperties(Dictionary<string, object> properties)
+        {
+            if (PhotonNetwork.LocalPlayer == null || properties == null)
+                return;
+
+            var props = new ExitGames.Client.Photon.Hashtable();
+            foreach (var prop in properties)
+            {
+                props.Add(prop.Key, prop.Value);
+            }
+
+            PhotonNetwork.LocalPlayer.SetCustomProperties(props);
+        }
+
+        public static T GetPlayerProperty<T>(string key)
+        {
+            if (PhotonNetwork.LocalPlayer != null &&
+                PhotonNetwork.LocalPlayer.CustomProperties.TryGetValue(key, out object value) &&
+                value is T typedValue)
+            {
+                return typedValue;
+            }
+            return default;
+        }
+        #endregion
     }
 }

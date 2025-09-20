@@ -13,23 +13,8 @@ public class GamePlayState : ShootingGameState
         {
             WindSystem.Instance.UpdateWind();
             TurnManager.Instance.BroadcastCurrentTurn();
-        }       
+        }
 
-        if (!TurnManager.Instance.IsMyTurn())       //턴 정보 업데이트 전에 호출
-        {
-            ShootingCameraManager.Instance.SwipePosInit();
-            ShootingScene.PlayerInputManager.Instance.EnableInput();
-            ShootingScene.PlayerInputManager.Instance.DisableCameraControl();
-            ShootingScene.PlayerInputManager.Instance.DisableCameraPosition();
-            Debug.Log("난 인풋 활성화");
-        }
-        else
-        {
-            ShootingScene.PlayerInputManager.Instance.DisableInput();
-            ShootingScene.PlayerInputManager.Instance.EnableCameraControl();
-            ShootingScene.PlayerInputManager.Instance.EnableCameraPosition();
-            Debug.Log("난 인풋 비활성화");
-        }
         //ShootingNetworkManager.Instance.ShootingGameTurnAndRoundRoomPropertiesReigster();
         //if (PhotonNetwork.IsMasterClient)
         //{
