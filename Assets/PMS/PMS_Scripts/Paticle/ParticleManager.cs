@@ -5,6 +5,7 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using System;
 
 //게임 끝날때 까지 사용할 매니저
 public class ParticleManager : CombinedSingleton<ParticleManager> //추후 SingleTon or PunSingleton으로 변경
@@ -61,6 +62,9 @@ public class ParticleManager : CombinedSingleton<ParticleManager> //추후 Singl
         Debug.Log("[Particle Manager - 파티클 데이터 비동기 로드 완료!]");
     }
 
+    /// <summary>
+    /// 파티클이 한번만 실행될 때
+    /// </summary>
     // Play 시점
     public async UniTask PlayAsync(string id, Vector3 pos, Quaternion rot)
     {
@@ -76,7 +80,54 @@ public class ParticleManager : CombinedSingleton<ParticleManager> //추후 Singl
         var ps = pools[id].Get(ParticlePoolRegister_Transform);
         ps.transform.SetPositionAndRotation(pos, rot);
         ps.Play();
-        await UniTask.Delay(System.TimeSpan.FromSeconds(durations[id]), cancellationToken: this.GetCancellationTokenOnDestroy());
+        /*var lifetime = ps.main.startLifetime.constantMax;
+        await UniTask.Delay(System.TimeSpan.FromSeconds(lifetime), cancellationToken: this.GetCancellationTokenOnDestroy()); */
+
+        await UniTask.Delay(System.TimeSpan.FromSeconds(ps.main.duration), cancellationToken: this.GetCancellationTokenOnDestroy());
+        //await UniTask.Delay(System.TimeSpan.FromSeconds(durations[id]), cancellationToken: this.GetCancellationTokenOnDestroy());
+        pools[id].Release(ps);
+    }
+
+    /// <summary>
+    /// 파티클이 Loop형식 일 때(duration 값을 직접 지정해주세요)
+    /// </summary>
+    public async UniTask PlayLoopAsync(string id, Vector3 pos, Quaternion rot,float duration)
+    {
+        //해당 id에 생성된 풀이 존재하지 않으면, 직접 id로 해당 프리팹을 찾는다.
+        if (!pools.ContainsKey(id))
+        {
+            Debug.LogWarning($"Auto-preload {id}");
+            var data = FindParticleData(id);
+            if (data != null) await PreloadAsync(data);
+            else return;
+        }
+
+        var ps = pools[id].Get(ParticlePoolRegister_Transform);
+        ps.transform.SetPositionAndRotation(pos, rot);
+        ps.Play();
+        await UniTask.Delay(System.TimeSpan.FromSeconds(duration), cancellationToken: this.GetCancellationTokenOnDestroy());
+        pools[id].Release(ps);
+    }
+
+    /// <summary>
+    /// 파티클이 특정 조건이 끝날 때 까지 사용되야 할 때
+    /// </summary>
+    public async UniTask PlayUntilAsync(string id, Vector3 pos, Quaternion rot, Func<bool> condition)
+    {
+        if (!pools.ContainsKey(id))
+        {
+            Debug.LogWarning($"Auto-preload {id}");
+            var data = FindParticleData(id);
+            if (data != null) await PreloadAsync(data);
+            else return;
+        }
+
+        var ps = pools[id].Get(ParticlePoolRegister_Transform);
+        ps.transform.SetPositionAndRotation(pos, rot);
+        ps.Play();
+
+        await UniTask.WaitUntil(condition, cancellationToken: this.GetCancellationTokenOnDestroy());
+
         pools[id].Release(ps);
     }
 
