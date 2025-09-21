@@ -79,10 +79,11 @@ namespace RhythmGame
         void SendScore()
         {
             if (!PhotonNetwork.IsConnected) return;
+
             var uid = PhotonNetwork.LocalPlayer.CustomProperties?["uid"] as string;
             if (string.IsNullOrEmpty(uid)) return;
 
-            // GameManager.Instance.photonView.RPC(nameof(GameManager.RPC_SendScore), RpcTarget.MasterClient, uid, _score, _verdictScore);
+            GameManager.Instance.photonView.RPC(nameof(GameManager.RPC_ReceiveScore), RpcTarget.MasterClient, uid, _score, _verdictScore);
         }
 
         #region RPC
@@ -159,7 +160,21 @@ namespace RhythmGame
                 GameManager.Instance.GoodHitScore(type, info.Sender);
 
                 // SoundManager.Instance.PlaySFX_GAME(SfX_Game.SFX_Rhythm_NoteDestory);
-                SoundManager.Instance.PlaySFX_GAME(0);
+
+                //todo 김승태 : 노트 타입별 sfx 다르게 임시
+                switch (type)
+                {
+                    case NoteType.Continue:
+                        SoundManager.Instance.PlaySFX_GAME(SfX_Game.SFX_Timer);
+                        break;
+
+                    case NoteType.Fake:
+                    case NoteType.Touch:
+                        SoundManager.Instance.PlaySFX_GAME(SfX_Game.SFX_Destory);
+                        break;
+
+
+                }
 
             }
             else
@@ -316,11 +331,14 @@ namespace RhythmGame
                     _combo++;
                     _bestCombo = Mathf.Max(_bestCombo, _combo);
                     delta = +1;
+                    //TODO 김승태:콤보 유지시 플레이어 캐릭터에 이펙트 유지
                     break;
                 case Verdict.Bad:
                 case Verdict.Miss:
                     _combo = 0;
                     delta = -1;
+                    //TODO 김승태: 콤보 실패시 플레이어 캐릭터 이펙트 해지
+
                     break;
             }
 
@@ -353,6 +371,8 @@ namespace RhythmGame
 
             //이벤트 발행 -> _verdictScore는 추후 마지막 점수 집계시 합산되어야함.
             OnVerdict?.Invoke(verdict, _combo, _verdictScore);
+
+            SendScore();
 
             photonView.RPC(nameof(RPC_VerdictDelta), RpcTarget.MasterClient, PhotonNetwork.LocalPlayer.ActorNumber, delta);
 

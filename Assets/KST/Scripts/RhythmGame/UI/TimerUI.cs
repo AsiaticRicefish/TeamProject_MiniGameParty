@@ -85,6 +85,9 @@ namespace RhythmGame
             if (!_isInit) yield break;
 
             _countDownText.gameObject.SetActive(true);
+            //TODO 김승태 : 카운트다운 사운드 (임시);
+            SoundManager.Instance.PlaySFX_UI(SFX_UI.SFX_Btn1);
+
 
             while (PhotonNetwork.Time < _startTime)
             {
@@ -94,9 +97,10 @@ namespace RhythmGame
 
                 _countDownText.text = sec.ToString();
 
+
                 yield return null;
             }
-
+            SoundManager.Instance.StopSFX();
             _countDownText.gameObject.SetActive(false);
             _timerText.gameObject.SetActive(true);
 

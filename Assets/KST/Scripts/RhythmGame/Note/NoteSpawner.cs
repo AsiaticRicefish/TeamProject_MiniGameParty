@@ -12,12 +12,13 @@ namespace RhythmGame
     /// 
     /// 해당 클래스는 독립성이 보장되어야 하며, 추후 게임매니저 및 네트워크 매니저에서도 이용할 가능성이 있기에, 싱글톤으로 구현
     /// </summary>
-    public class NoteSpawner : PunSingleton<NoteSpawner>,IGameComponent
+    public class NoteSpawner : PunSingleton<NoteSpawner>, IGameComponent
     {
         //오브젝트 풀 관련
         [SerializeField] PooledObject[] _notePrefabs; // 노트 풀링 프리팹들(로컬용)
-        [SerializeField] PooledObject _hitEffect; //적중 시 파티클
-        private ObjectPool _effectPool; //이펙트 풀
+        [SerializeField] PooledObject[] _hitEffect; //적중 시 파티클
+        // [SerializeField] PooledObject _hitEffect; //적중 시 파티클
+        private ObjectPool[] _effectPool; //이펙트 풀
         Dictionary<string, ObjectPool> _notePools = new();
         Dictionary<int, PooledObject> _activeById = new();
 
@@ -36,6 +37,7 @@ namespace RhythmGame
         Dictionary<int, List<Coroutine>> _laneLists = new();
 
         //스폰 사이클 관련 상수
+        [SerializeField] float speed = 4f;
         int basePoint = 30;
         int minPoint = 15;
         int maxPoint = 45;
@@ -45,7 +47,7 @@ namespace RhythmGame
 
         [SerializeField] float _songBpm = 160f;  // 곡 BPM
         [SerializeField] double _songOffsetSec = 0.0; // 시작 보정
-        [SerializeField] AudioSource _songSource; 
+        [SerializeField] AudioSource _songSource;
 
         //TODO 김승태 : IGameComponent 인터페이스 구현
         public void Initialize()
@@ -85,14 +87,23 @@ namespace RhythmGame
         /// </summary>
         private void InitPools()
         {
-            _effectPool = new(null, _hitEffect, 5);
-
             foreach (var prefab in _notePrefabs)
                 if (!_notePools.ContainsKey(prefab.name))
                     _notePools.Add(prefab.name, new ObjectPool(transform, prefab, 5));
+
+            _effectPool = new ObjectPool[_hitEffect.Length];
+            for (int i = 0; i < _hitEffect.Length; i++)
+            {
+                _effectPool[i] = new(null, _hitEffect[i], 5);
+            }
         }
 
-        public PooledObject GetEffectPool() => _effectPool.PopPool();
+        public PooledObject GetEffectPool(NoteType type)
+        {
+            int index = type == NoteType.Continue ? 0 : 1;
+
+            return _effectPool[index].PopPool();
+        }
 
         [PunRPC]
         public void RPC_InitStart(double startTime)
@@ -267,7 +278,6 @@ namespace RhythmGame
             int noteId = ++_seqId;
             LaneManager.Instance.RegisterNote(noteId, lane);
 
-            float speed = 3f;
             photonView.RPC(nameof(RPC_NoteSpawn),
                 RpcTarget.All, prefabName, lane, speed, noteId);
         }
@@ -302,7 +312,7 @@ namespace RhythmGame
                     //적중 시 히트 이펙트
                     if (isHit)
                     {
-                        var effect = GetEffectPool();
+                        var effect = GetEffectPool(mover.Type);
                         var particle = effect.GetComponent<PooledEffect>();
                         particle.PlayEffect(mover.transform.position, Quaternion.identity);
                         Debug.Log("적중");

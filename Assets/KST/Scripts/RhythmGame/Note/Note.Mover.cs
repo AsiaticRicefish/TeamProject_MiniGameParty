@@ -12,12 +12,12 @@ namespace RhythmGame
     {
         private float _speed;
         private Vector3 _spawnPos;
-        [SerializeField] private float _moveDist = 30f; //움직이는 거리
+        private float _moveDist = 1000f; //움직이는 거리
         private Vector3 _moveDir; // 월드 고정 이동 방향
 
         void Update()
         {
-            transform.Translate(-_moveDir * (_speed * Time.deltaTime), Space.World);
+            transform.Translate(_moveDir * (_speed * Time.deltaTime), Space.World);
 
             if ((transform.position - _spawnPos).sqrMagnitude >= _moveDist * _moveDist)
                 ReturnPool();

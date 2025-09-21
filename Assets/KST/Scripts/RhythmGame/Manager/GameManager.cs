@@ -58,10 +58,8 @@ namespace RhythmGame
         private readonly Dictionary<string, int> _gridOrder = new(); // uid -> 0,1,2,...
         private Dictionary<string, int> _lastRankSnapshot;
         public Action<Dictionary<string, int>> OnRankingsUpdated; // 실시간 순위 갱신 이벤트
-
-
-
-
+        Dictionary<string, int> _totalScores = new();
+        bool _receivedRank;
 
         //TODO 김승태 : IGameComponent 인터페이스 구현
 
@@ -355,7 +353,8 @@ namespace RhythmGame
             var p = playerPoints[idx];
 
             //위치
-            Vector3 pos = p.position + p.forward * noteSpawnDist;
+            // Vector3 pos = p.position + p.forward * noteSpawnDist;
+            Vector3 pos = p.position + p.forward * NoteSpawner.Instance.transform.position.z;
             //회전
             Quaternion rot = Quaternion.LookRotation(p.forward, Vector3.up);
 
@@ -468,7 +467,7 @@ namespace RhythmGame
             _lastRankSnapshot = new Dictionary<string, int>(rankMap);
             // UI/네트워크에 즉시 반영
             OnRankingsUpdated?.Invoke(rankMap);
-            JengaNetworkManager.Instance?.BroadcastRankSnapshot(rankMap);
+            BroadcastRankSnapshot(rankMap);
 
             // 룸 프로퍼티에도 기록해서 늦게 들어온 클라 동기화
             if (PhotonNetwork.IsMasterClient && PhotonNetwork.InRoom)
@@ -482,6 +481,100 @@ namespace RhythmGame
             };
                 PhotonNetwork.CurrentRoom.SetCustomProperties(props);
             }
+        }
+
+        [PunRPC]
+        public void RPC_ReceiveScore(string uid, int score, int verdictScore)
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+            if (string.IsNullOrEmpty(uid)) return;
+
+            // 합산 스코어 집계
+            int total = score + verdictScore;
+            _totalScores[uid] = total;
+
+            // 옵션: 내부 플레이어 데이터에도 보관(원하면)
+            if (players.TryGetValue(uid, out var rp)) rp.score = total;
+
+            // 랭킹 계산/브로드캐스트
+            CalculateAndBroadcastRanks();
+        }
+
+        private void CalculateAndBroadcastRanks()
+        {
+            // players 기준으로 빠진 UID는 0점으로 취급
+            foreach (var uid in players.Keys)
+                if (!_totalScores.ContainsKey(uid)) _totalScores[uid] = 0;
+
+            // 정렬: 합산점수 내림차순 → 그리드 순서(안정화)
+            var ordered = _totalScores
+                .OrderByDescending(kv => kv.Value)
+                .ThenBy(kv => _gridOrder.TryGetValue(kv.Key, out var ord) ? ord : int.MaxValue)
+                .ToList();
+
+            var ranks = new Dictionary<string, int>(ordered.Count);
+            for (int i = 0; i < ordered.Count; i++)
+                ranks[ordered[i].Key] = i + 1;
+
+            BroadcastRankSnapshot(ranks);
+            OnRankingsUpdated?.Invoke(ranks);
+            _lastRankSnapshot = new Dictionary<string, int>(ranks);
+        }
+
+        public void BroadcastRankSnapshot(Dictionary<string, int> uidToRank)
+        {
+            if (!PhotonNetwork.IsMasterClient || uidToRank == null) return;
+
+            var uids = uidToRank.Keys.ToArray();
+            var vals = uidToRank.Values.ToArray();
+
+            // 1) RPC 전파
+            photonView.RPC(nameof(RPC_SyncRanks), RpcTarget.All, uids, vals);
+
+            // 2) 룸 프로퍼티 저장(레이트 조인 대비)
+            var table = new Hashtable
+            {
+                { RhythmRoomProps.KEY_RANK_UIDS, uids },
+                { RhythmRoomProps.KEY_RANK_VALS, vals },
+            };
+
+            PhotonNetwork.CurrentRoom?.SetCustomProperties(table);
+        }
+
+        [PunRPC]
+        public void RPC_SyncRanks(string[] uids, int[] vals)
+        {
+            var ranks = new Dictionary<string, int>(uids.Length);
+            for (int i = 0; i < uids.Length && i < vals.Length; i++)
+                ranks[uids[i]] = vals[i];
+
+            _lastRankSnapshot = new Dictionary<string, int>(ranks);
+            OnRankingsUpdated?.Invoke(ranks);
+            _receivedRank = true;
+        }
+
+        // 레이트 조인용 (방 커스텀 프로퍼티 갱신 수신)
+        public override void OnRoomPropertiesUpdate(Hashtable props)
+        {
+            if (_receivedRank) return;
+
+            if (props.TryGetValue(RhythmRoomProps.KEY_RANK_UIDS, out var uObj) &&
+                props.TryGetValue(RhythmRoomProps.KEY_RANK_VALS, out var vObj) &&
+                uObj is string[] uids && vObj is int[] vals)
+            {
+                RPC_SyncRanks(uids, vals);
+                _receivedRank = true;
+            }
+        }
+        public bool TryGetLastRankSnapshot(out Dictionary<string, int> ranks)
+        {
+            if (_lastRankSnapshot != null && _lastRankSnapshot.Count > 0)
+            {
+                ranks = new Dictionary<string, int>(_lastRankSnapshot);
+                return true;
+            }
+            ranks = null;
+            return false;
         }
 
     }

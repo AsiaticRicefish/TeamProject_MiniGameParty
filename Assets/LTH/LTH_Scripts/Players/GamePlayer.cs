@@ -32,6 +32,7 @@ public class GamePlayer
     #region 미니게임 관련 데이터
     public JengaPlayerData JengaData { get; set; }
     public ShootingPlayerData ShootingData { get; set; }
+    public RhythmPlayerData RhythmPlayerData { get; set; }
     #endregion
 
 
@@ -52,5 +53,6 @@ public class GamePlayer
 
         JengaData = new JengaPlayerData(); // 미니게임 데이터 초기화
         ShootingData = new();
+        RhythmPlayerData = new();
     }
 }
