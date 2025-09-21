@@ -165,12 +165,14 @@ namespace RhythmGame
                 switch (type)
                 {
                     case NoteType.Continue:
-                        SoundManager.Instance.PlaySFX_GAME(SfX_Game.SFX_Timer);
+                        // SoundManager.Instance.PlaySFX_GAME(SfX_Game.SFX_Timer);
+                        SoundManager.Instance.PlaySFX("Continue");
                         break;
 
                     case NoteType.Fake:
                     case NoteType.Touch:
-                        SoundManager.Instance.PlaySFX_GAME(SfX_Game.SFX_Destory);
+                        SoundManager.Instance.PlaySFX("Touch");
+                        // SoundManager.Instance.PlaySFX_GAME(SfX_Game.SFX_Destory);
                         break;
 
 

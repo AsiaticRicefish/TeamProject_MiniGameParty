@@ -145,6 +145,7 @@ namespace RhythmGame
             IsGameStart = true;
 
             //리듬게임 랜덤 브금 시작
+            //TODO 김승태: 플레이어마다 다른 노래를 선택하는 이슈 O
             var index = SoundManager.Instance.RandomSelectBGM();
             SoundManager.Instance.PlayBGM(index);
             OnGameStart?.Invoke();
