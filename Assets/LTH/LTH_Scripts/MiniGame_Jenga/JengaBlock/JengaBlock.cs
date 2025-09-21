@@ -141,6 +141,10 @@ public class JengaBlock : MonoBehaviour, IPointerClickHandler
             {
                 _isSelected = true; 
                 Highlight(true);
+
+                // 클릭 사운드
+                SoundManager.Instance.PlaySFX("Click");
+
                 OnAnyBlockSelected?.Invoke(this);
             }
             else
@@ -161,6 +165,8 @@ public class JengaBlock : MonoBehaviour, IPointerClickHandler
             {
                 _isSelected = true; 
                 Highlight(true);
+                // 클릭 사운드
+                SoundManager.Instance.PlaySFX("Click");
                 OnAnyBlockSelected?.Invoke(this);
             }
             else
@@ -194,6 +200,8 @@ public class JengaBlock : MonoBehaviour, IPointerClickHandler
 
                 _isSelected = true;
                 Highlight(true);
+                // 클릭 사운드
+                SoundManager.Instance.PlaySFX("Click");
                 OnAnyBlockSelected?.Invoke(this);
             }
             else
