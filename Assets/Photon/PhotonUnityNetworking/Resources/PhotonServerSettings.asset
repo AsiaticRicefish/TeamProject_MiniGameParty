@@ -125,6 +125,13 @@ MonoBehaviour:
   - RPC_RequestStateChange
   - RPC_ApplyStateChange
   - RPC_CancelTimer
+  - PRC_StartGameTIme
+  - RPC_EndGame
+  - RPC_InitStart
+  - RPC_MissToAll
+  - RPC_RequesetLaneMiss
+  - RPC_RequestMissFake
+  - RPC_VerdictDelta
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

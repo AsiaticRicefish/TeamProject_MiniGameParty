@@ -4,36 +4,39 @@ using TMPro;
 using System.Collections;
 using KYG.Auth;
 using Managers;
-using Photon.Pun; // GuestLoginManager 참조
+using Photon.Pun;
 
 public class GuestLoginUI : MonoBehaviour
 {
-    [Header("UI Roots")] [SerializeField] private GameObject buttonRoot;
-    [SerializeField] private Button guestLoginButton;
-    [SerializeField] private Button gpgsLoginButton;    // GPGS 로그인 버튼
-    [SerializeField] private GameObject inputRoot;
-    [SerializeField] private GameObject loadingRoot;
+    [Header("UI Roots")] [SerializeField] private GameObject buttonRoot; // 팝업 카드(버튼 컨테이너)
+    [SerializeField] private Button guestLoginButton; // "게스트로 바로 시작하기"
+    [SerializeField] private Button gpgsLoginButton; // "Google Play Games 연결"
+    [SerializeField] private GameObject inputRoot; // 닉네임 입력 컨테이너(별도 오브젝트 권장)
+    [SerializeField] private GameObject loadingRoot; // 로딩 컨테이너(선택)
 
-    [Header("Input")] [SerializeField] private TMP_InputField nicknameInput;
-    [SerializeField] private TextMeshProUGUI hintText;
-    [SerializeField] private Button confirmButton;
+    [Header("Input")] [SerializeField] private TMP_InputField nicknameInput; // 입력 필드
+    [SerializeField] private TextMeshProUGUI hintText; // 안내/오류 텍스트
+    [SerializeField] private Button confirmButton; // 닉네임 확인 버튼
 
     [Header("옵션")] [SerializeField] private int minLength = 2;
     [SerializeField] private int maxLength = 16;
-    [SerializeField] private float idleSubmitSec = 1.0f;
-    
-    [Header("취소 버튼")]
-    [SerializeField] private Button cancelInInputButton;   // 닉네임 입력창에서의 취소
-    [SerializeField] private Button cancelLoadingButton;   // 로딩(연결중) 화면에서의 취소
-    [SerializeField] private bool returnToFirstOnInputCancel = true; // 입력취소 시 첫 화면으로
+    [SerializeField] private float idleSubmitSec = 1.0f; // 입력 멈춘 뒤 자동 제출까지 딜레이(0이면 비활성)
+
+    [Header("취소 버튼")] [SerializeField] private Button cancelInInputButton; // 입력창 내 취소
+    [SerializeField] private Button cancelLoadingButton; // 로딩중 취소
+    [SerializeField] private bool returnToFirstOnInputCancel = true; // 입력 취소 시 첫 화면(버튼 루트 숨김/표시 정책)에 맞춤
 
     [Header("Hint Style")] [SerializeField]
     private Color normalHintColor = new Color(1, 1, 1, 0.75f);
 
     [SerializeField] private Color errorHintColor = new Color(1, 0.25f, 0.25f, 1f);
-    [SerializeField] private CanvasGroup toastGroup; // 힌트 텍스트를 감싸는 CanvasGroup (선택)
-    [SerializeField] private float toastFade = 0.15f; // 페이드 시간
-    [SerializeField] private float toastHold = 1.5f; // 보여주는 시간
+    [SerializeField] private CanvasGroup toastGroup; // 선택: 토스트용
+    [SerializeField] private float toastFade = 0.15f;
+    [SerializeField] private float toastHold = 1.5f;
+
+    [SerializeField] private GameObject nicknamePopupPrefab; // 닉네임 팝업 프리팹(위 NicknamePopup.cs 포함)
+    [SerializeField] private Canvas popupCanvasOverride; // 팝업을 띄울 최상단 Canvas (비우면 자동 탐색)
+    [SerializeField] private int popupOrderBoost = 100; // 최상단 보장용 정렬 가산치
 
     private float _lastTypeTime;
     private bool _submitting;
@@ -41,36 +44,46 @@ public class GuestLoginUI : MonoBehaviour
     private bool _lastReady;
     private int _effectiveMax = 8;
     private bool _blockSubmit;
-    
+    private GameObject _nicknamePopupInstance;
+
+    // 한글/대문자 혼합 시 6자, 소문자만 8자 룰
     private static readonly System.Text.RegularExpressions.Regex RxKorean =
         new System.Text.RegularExpressions.Regex("[가-힣]", System.Text.RegularExpressions.RegexOptions.Compiled);
+
     private static readonly System.Text.RegularExpressions.Regex RxUpper =
         new System.Text.RegularExpressions.Regex("[A-Z]", System.Text.RegularExpressions.RegexOptions.Compiled);
-    
+
     private void Awake()
     {
-        SafeShowButton();
+        // 시작 시 버튼/입력/로딩 모두 숨김(팝업은 ScreenTapCatcher가 ShowLoginChoice로 띄움)
+        SafeShowFirst();
 
-        if (guestLoginButton != null) guestLoginButton.onClick.AddListener(SwitchToInput);
-        else Debug.LogWarning("[GuestLoginUI] guestLoginButton 참조가 비어있습니다.");
+        if (guestLoginButton)
+        {
+            guestLoginButton.onClick.RemoveAllListeners(); // ← 기존 SwitchToInput 등 전부 제거
+            guestLoginButton.onClick.AddListener(OpenNicknamePopup);
+        }
 
-        if (nicknameInput != null)
+        if (gpgsLoginButton)
+        {
+            gpgsLoginButton.onClick.RemoveAllListeners();
+            gpgsLoginButton.onClick.AddListener(OnClickGpgsLogin);
+        }
+
+        if (nicknameInput)
         {
             nicknameInput.onValueChanged.AddListener(OnTyping);
             nicknameInput.onSubmit.AddListener(OnSubmit);
-            //nicknameInput.onEndEdit.AddListener(OnSubmit);
         }
-        else Debug.LogWarning("[GuestLoginUI] nicknameInput 참조가 비어있습니다.");
 
-        if (confirmButton != null)
+        if (confirmButton)
         {
             confirmButton.onClick.AddListener(OnClickConfirm);
             confirmButton.interactable = false;
         }
-        else Debug.LogWarning("[GuestLoginUI] confirmButton 참조가 비어있습니다.");
-        
-        if (cancelInInputButton != null) cancelInInputButton.onClick.AddListener(OnClickCancelInput);
-        if (cancelLoadingButton != null) cancelLoadingButton.onClick.AddListener(OnClickCancelLoading);
+
+        if (cancelInInputButton) cancelInInputButton.onClick.AddListener(OnClickCancelInput);
+        if (cancelLoadingButton) cancelLoadingButton.onClick.AddListener(OnClickCancelLoading);
     }
 
     private void OnDestroy()
@@ -79,19 +92,18 @@ public class GuestLoginUI : MonoBehaviour
         _submitting = true;
         enabled = false;
 
-        if (guestLoginButton != null) guestLoginButton.onClick.RemoveListener(SwitchToInput);
+        if (guestLoginButton) guestLoginButton.onClick.RemoveListener(SwitchToInput);
+        if (gpgsLoginButton) gpgsLoginButton.onClick.RemoveListener(OnClickGpgsLogin);
 
-        if (nicknameInput != null)
+        if (nicknameInput)
         {
             nicknameInput.onValueChanged.RemoveListener(OnTyping);
             nicknameInput.onSubmit.RemoveListener(OnSubmit);
-            //nicknameInput.onEndEdit.RemoveListener(OnSubmit);
         }
 
-        if (confirmButton != null) confirmButton.onClick.RemoveListener(OnClickConfirm);
-        
-        if (cancelInInputButton != null) cancelInInputButton.onClick.RemoveListener(OnClickCancelInput);
-        if (cancelLoadingButton != null) cancelLoadingButton.onClick.RemoveListener(OnClickCancelLoading);
+        if (confirmButton) confirmButton.onClick.RemoveListener(OnClickConfirm);
+        if (cancelInInputButton) cancelInInputButton.onClick.RemoveListener(OnClickCancelInput);
+        if (cancelLoadingButton) cancelLoadingButton.onClick.RemoveListener(OnClickCancelLoading);
     }
 
     private void Update()
@@ -105,22 +117,48 @@ public class GuestLoginUI : MonoBehaviour
             RefreshReadyUI();
         }
 
-        // ▼ 여기 수정: _blockSubmit일 때는 자동 제출 금지
         if (!isActiveAndEnabled || _submitting || _blockSubmit) return;
         if (inputRoot == null || nicknameInput == null) return;
         if (!inputRoot.activeInHierarchy) return;
         if (!nowReady) return;
+        if (idleSubmitSec <= 0f) return;
 
-        if (idleSubmitSec > 0f && Time.unscaledTime - _lastTypeTime >= idleSubmitSec)
-        {
+        if (Time.unscaledTime - _lastTypeTime >= idleSubmitSec)
             TrySubmit(nicknameInput.text);
-        }
     }
 
-    // ------- 외부에서 쓰는 공개 API --------
+    // ---------- 공개 API ----------
 
-    /// <summary>입력/버튼 인터랙션 토글 (로딩 중 잠금 등)</summary>
-    public void SetInteractable(bool value) // ★ 추가
+    /// <summary>처음(팝업 뜨기 전) 상태로 안전 초기화</summary>
+    private void SafeShowFirst()
+    {
+        if (buttonRoot) buttonRoot.SetActive(false);
+        if (guestLoginButton) guestLoginButton.gameObject.SetActive(false);
+        if (gpgsLoginButton) gpgsLoginButton.gameObject.SetActive(false);
+        if (inputRoot) inputRoot.SetActive(false);
+        if (confirmButton) confirmButton.gameObject.SetActive(false);
+        if (loadingRoot) loadingRoot.SetActive(false);
+        if (cancelInInputButton) cancelInInputButton.gameObject.SetActive(false);
+        if (cancelLoadingButton) cancelLoadingButton.gameObject.SetActive(false);
+        SafeSetHint(string.Empty);
+        LogButtonStates("SafeShowFirst");
+    }
+
+    /// <summary>
+    /// ScreenTapCatcher에서 호출: 로그인 선택(버튼) 팝업을 표시.
+    /// 강제 표시/그래픽/레이캐스트까지 정리하여 SetActive(false)로 가려지는 문제를 무력화.
+    /// </summary>
+    public void ShowLoginChoice()
+    {
+        if (inputRoot) inputRoot.SetActive(false);
+        if (loadingRoot) loadingRoot.SetActive(false);
+
+        ForceButtonsOn(); // 핵심: 버튼/그래픽/레이캐스트 강제 ON
+        LogButtonStates("ShowLoginChoice-done");
+    }
+
+    /// <summary>UI 전체 입력 토글(로딩 중 잠금 등)</summary>
+    public void SetInteractable(bool value)
     {
         if (nicknameInput) nicknameInput.interactable = value;
         if (confirmButton)
@@ -128,8 +166,8 @@ public class GuestLoginUI : MonoBehaviour
                 value && nicknameInput && nicknameInput.text.Trim().Length >= minLength && IsReady();
     }
 
-    /// <summary>실패 후 재입력 플로우: 입력창 다시 보여주고 포커스</summary>
-    public void EnableNicknameRetry() // ★ 추가
+    /// <summary>실패 후 재입력 플로우</summary>
+    public void EnableNicknameRetry()
     {
         _submitting = false;
         ShowSubmittingUI(false);
@@ -142,14 +180,12 @@ public class GuestLoginUI : MonoBehaviour
         if (confirmButton) confirmButton.interactable = false;
     }
 
-    /// <summary>힌트 문구 안전하게 교체</summary>
-    public void SafeSetHint(string msg) // 기존 메서드는 그대로 두고
+    /// <summary>힌트 문구 안전 교체</summary>
+    public void SafeSetHint(string msg)
     {
-        if (hintText)
-        {
-            hintText.color = normalHintColor;
-            hintText.text = msg ?? "";
-        }
+        if (!hintText) return;
+        hintText.color = normalHintColor;
+        hintText.text = msg ?? "";
     }
 
     public void ShowErrorHint(string msg)
@@ -158,80 +194,16 @@ public class GuestLoginUI : MonoBehaviour
         hintText.color = errorHintColor;
         hintText.text = msg ?? "";
 
-        // 선택: 토스트 페이드 인/아웃 (toastGroup 있으면)
-        if (toastGroup)
-            StartCoroutine(CoToast());
-        else
-            StartCoroutine(CoShake(hintText.transform)); // toastGroup 없으면 살짝 흔들기
-    }
-    
-    
-
-    private IEnumerator CoShake(Transform tr, float amp = 10f, float dur = 0.18f)
-    {
-        Vector3 basePos = tr.localPosition;
-        float t = 0f;
-        while (t < dur)
-        {
-            t += Time.unscaledDeltaTime;
-            float p = Mathf.Sin(t * 80f) * (1f - t / dur); // 감쇠
-            tr.localPosition = basePos + Vector3.right * p * amp;
-            yield return null;
-        }
-
-        tr.localPosition = basePos;
+        if (toastGroup) StartCoroutine(CoToast());
+        else StartCoroutine(CoShake(hintText.transform));
     }
 
-    private IEnumerator CoToast()
-    {
-        // fade in
-        toastGroup.gameObject.SetActive(true);
-        float t = 0f;
-        while (t < toastFade)
-        {
-            t += Time.unscaledDeltaTime;
-            toastGroup.alpha = Mathf.Lerp(0f, 1f, t / toastFade);
-            yield return null;
-        }
-
-        toastGroup.alpha = 1f;
-
-        yield return new WaitForSecondsRealtime(toastHold);
-
-        // fade out
-        t = 0f;
-        while (t < toastFade)
-        {
-            t += Time.unscaledDeltaTime;
-            toastGroup.alpha = Mathf.Lerp(1f, 0f, t / toastFade);
-            yield return null;
-        }
-
-        toastGroup.alpha = 0f;
-        toastGroup.gameObject.SetActive(false);
-    }
-
-    // --------------- 내부 구현 ---------------
+    // ---------- 내부 구현 ----------
 
     private bool IsReady()
     {
         var mgr = GuestLoginManager.Instance;
         return mgr != null && mgr.IsFirebaseReady;
-    }
-
-    private void SafeShowButton()
-    {
-        if (buttonRoot) buttonRoot.SetActive(true);
-        if (inputRoot) inputRoot.SetActive(false);
-        if (confirmButton) confirmButton.gameObject.SetActive(false);
-        if (loadingRoot) loadingRoot.SetActive(false);
-        
-        // 로그인 화면 전용 버튼은 여기서만 보이게
-        if (guestLoginButton) guestLoginButton.gameObject.SetActive(true);
-        if (gpgsLoginButton) gpgsLoginButton.gameObject.SetActive(true);
-        
-        if (cancelInInputButton) cancelInInputButton.gameObject.SetActive(false);
-        if (cancelLoadingButton) cancelLoadingButton.gameObject.SetActive(false);
     }
 
     private void SwitchToInput()
@@ -243,32 +215,43 @@ public class GuestLoginUI : MonoBehaviour
         if (confirmButton) confirmButton.gameObject.SetActive(true);
         if (loadingRoot) loadingRoot.SetActive(false);
 
-        // 입력 취소 버튼 표시
         if (cancelInInputButton) cancelInInputButton.gameObject.SetActive(true);
         if (cancelLoadingButton) cancelLoadingButton.gameObject.SetActive(false);
-        
-        // 입력 화면에서는 숨김
+
         if (guestLoginButton) guestLoginButton.gameObject.SetActive(false);
         if (gpgsLoginButton) gpgsLoginButton.gameObject.SetActive(false);
 
-        if (nicknameInput != null)
+        if (nicknameInput)
         {
             nicknameInput.text = string.Empty;
-
-            // ★ 처음 들어올 때도 규칙 기반 최대치 세팅
             _effectiveMax = CalcEffectiveMax(nicknameInput.text);
             nicknameInput.characterLimit = _effectiveMax;
-
-            SafeSetHint(IsReady() ? $"닉네임을 입력하세요 (최소 {minLength}자, 최대 {_effectiveMax}자)" : "초기화 중... 잠시만 기다려주세요");
+            SafeSetHint(IsReady()
+                ? $"닉네임을 입력하세요 (최소 {minLength}자, 최대 {_effectiveMax}자)"
+                : "초기화 중... 잠시만 기다려주세요");
             if (confirmButton) confirmButton.interactable = false;
             ActivateInput();
         }
-        else Debug.LogWarning("[GuestLoginUI] nicknameInput이 없어 입력창을 활성화할 수 없습니다.");
+
+        LogButtonStates("SwitchToInput");
+    }
+
+    private void OnClickGpgsLogin()
+    {
+        // GPGS 팝업/흐름은 별도 매니저가 처리
+        var g = FindObjectOfType<KYG.Auth.GPGSLoginManager>();
+        if (g == null)
+        {
+            Debug.LogWarning("[GuestLoginUI] GPGSLoginManager가 씬에 없습니다.");
+            return;
+        }
+
+        g.LoginWithGPGS();
     }
 
     private void ActivateInput()
     {
-        if (nicknameInput == null) return;
+        if (!nicknameInput) return;
         nicknameInput.lineType = TMP_InputField.LineType.SingleLine;
         nicknameInput.contentType = TMP_InputField.ContentType.Standard;
         nicknameInput.keyboardType = TouchScreenKeyboardType.Default;
@@ -281,10 +264,8 @@ public class GuestLoginUI : MonoBehaviour
     private void OnTyping(string _)
     {
         if (_destroyed) return;
-
         _lastTypeTime = Time.unscaledTime;
 
-        // ★ 현재 텍스트 기준 최대치 계산 & characterLimit 갱신
         _effectiveMax = CalcEffectiveMax(nicknameInput != null ? nicknameInput.text : string.Empty);
         if (nicknameInput) nicknameInput.characterLimit = _effectiveMax;
 
@@ -295,21 +276,20 @@ public class GuestLoginUI : MonoBehaviour
         if (hintText)
         {
             if (!lenOk) hintText.text = $"닉네임을 입력하세요 (최소 {minLength}자, 최대 {_effectiveMax}자)";
-            else hintText.text = ready ? "완료/확인 버튼을 누르거나 잠시 기다리면 연결됩니다" : "초기화 중... 잠시만 기다려주세요";
+            else
+                hintText.text = ready
+                    ? "완료/확인 버튼을 누르거나 잠시 기다리면 연결됩니다"
+                    : "초기화 중... 잠시만 기다려주세요";
         }
 
         if (confirmButton) confirmButton.interactable = lenOk && ready;
-
-        // 입력 취소 버튼 가시성 갱신
         if (cancelInInputButton) cancelInInputButton.gameObject.SetActive(inputRoot && inputRoot.activeSelf);
     }
 
     private void OnSubmit(string _)
     {
-        // 차단 중이거나 입력창이 비활성일 때 무시
         if (_blockSubmit || _destroyed || nicknameInput == null || inputRoot == null || !inputRoot.activeInHierarchy)
             return;
-
         TrySubmit(nicknameInput.text);
     }
 
@@ -320,7 +300,6 @@ public class GuestLoginUI : MonoBehaviour
 
     private void TrySubmit(string raw)
     {
-        // 차단 중이면 무시
         if (_blockSubmit || _destroyed || _submitting) return;
 
         if (!IsReady())
@@ -332,8 +311,6 @@ public class GuestLoginUI : MonoBehaviour
         }
 
         string nick = Sanitize(raw);
-
-        // ★ 제출 시에도 동적 최대 길이 재평가
         _effectiveMax = CalcEffectiveMax(nick);
         if (nicknameInput) nicknameInput.characterLimit = _effectiveMax;
 
@@ -345,7 +322,7 @@ public class GuestLoginUI : MonoBehaviour
             return;
         }
 
-        var mgr = KYG.Auth.GuestLoginManager.Instance;
+        var mgr = GuestLoginManager.Instance;
         if (mgr == null)
         {
             Debug.LogWarning("[GuestLoginUI] GuestLoginManager.Instance 를 찾지 못했습니다.");
@@ -364,9 +341,9 @@ public class GuestLoginUI : MonoBehaviour
         {
 #if TEST_WITHOUT_LOGIN
             Managers.Manager.Network.SetTestNicknameAndID(nick);
-            Photon.Pun.PhotonNetwork.ConnectUsingSettings();
+            PhotonNetwork.ConnectUsingSettings();
 #else
-        mgr.LoginAsGuestWithNickname(nick);
+            mgr.LoginAsGuestWithNickname(nick);
 #endif
         }
         catch (System.Exception e)
@@ -387,26 +364,24 @@ public class GuestLoginUI : MonoBehaviour
         if (confirmButton) confirmButton.gameObject.SetActive(!on);
         if (loadingRoot) loadingRoot.SetActive(on);
 
-        // 로딩 취소 버튼은 로딩 화면에서만 보이게
         if (cancelLoadingButton) cancelLoadingButton.gameObject.SetActive(on);
-        // 입력 취소 버튼은 입력 화면에서만 보이게
         if (cancelInInputButton) cancelInInputButton.gameObject.SetActive(!on && inputRoot && inputRoot.activeSelf);
-        
-        // 로딩 중에도 숨김 유지
+
         if (guestLoginButton) guestLoginButton.gameObject.SetActive(false);
         if (gpgsLoginButton) gpgsLoginButton.gameObject.SetActive(false);
+
+        LogButtonStates(on ? "ShowSubmittingUI-ON" : "ShowSubmittingUI-OFF");
     }
-    
-    // (옵션) 처음 화면으로 복귀하고 싶을 때 호출
+
     public void ReturnToFirstIfWanted()
     {
         if (!returnToFirstOnInputCancel) return;
-        SafeShowButton();
+        SafeShowFirst();
     }
 
     private void RefreshReadyUI()
     {
-        if (nicknameInput == null) return;
+        if (!nicknameInput) return;
         int len = nicknameInput.text.Trim().Length;
         bool lenOk = len >= minLength;
 
@@ -425,60 +400,263 @@ public class GuestLoginUI : MonoBehaviour
         if (s.Length > maxLength) s = s.Substring(0, maxLength);
         return s;
     }
-    
-    // 닉네임 입력창의 취소 버튼
+
+    // 입력창 취소
     private void OnClickCancelInput()
     {
-        _blockSubmit = true;          // ★ 제출 차단
-        _submitting = false;          // 혹시나 진행 중 플래그 해제
-        StopAllCoroutines();          // 토스트/셰이크 등 코루틴 정리
+        _blockSubmit = true;
+        _submitting = false;
+        StopAllCoroutines();
 
-        // 입력 단계 취소 → 첫 화면 또는 입력창 닫기
-        if (returnToFirstOnInputCancel) SafeShowButton();
+        if (returnToFirstOnInputCancel) SafeShowFirst();
         else
         {
             if (inputRoot) inputRoot.SetActive(false);
             if (confirmButton) confirmButton.gameObject.SetActive(false);
             if (buttonRoot) buttonRoot.SetActive(true);
+            if (guestLoginButton) guestLoginButton.gameObject.SetActive(true);
+            if (gpgsLoginButton) gpgsLoginButton.gameObject.SetActive(true);
             if (loadingRoot) loadingRoot.SetActive(false);
         }
 
-        // UI 정리
         if (nicknameInput) nicknameInput.text = string.Empty;
         if (confirmButton) confirmButton.interactable = false;
         SafeSetHint("");
 
-        // 약간의 프레임 지연 뒤 제출 차단 해제 (포커스 전환/EndEdit 이벤트가 모두 끝난 후)
         StartCoroutine(CoUnblockSubmitNextFrame());
+        LogButtonStates("OnClickCancelInput");
     }
-    
-    private System.Collections.IEnumerator CoUnblockSubmitNextFrame()
+
+    private IEnumerator CoUnblockSubmitNextFrame()
     {
-        // 다음 프레임까지 대기해서 onEndEdit로 인한 OnSubmit 꼬임 방지
-        yield return null;
+        yield return null; // onEndEdit/Submit 꼬임 방지
         _blockSubmit = false;
     }
-    
+
+    // 로딩 취소
     private void OnClickCancelLoading()
     {
-        // 로딩(연결 중) 취소: 매니저에 취소 요청
-        var mgr = KYG.Auth.GuestLoginManager.Instance;
+        var mgr = GuestLoginManager.Instance;
         if (mgr != null) mgr.CancelPendingLogin();
         else
         {
-            // 매니저가 없다면 로딩 UI만 닫고 입력으로 복귀
             ShowSubmittingUI(false);
             EnableNicknameRetry();
             SafeSetHint("취소했습니다. 다시 시도하세요.");
         }
     }
-    
+
+    private IEnumerator CoShake(Transform tr, float amp = 10f, float dur = 0.18f)
+    {
+        var basePos = tr.localPosition;
+        float t = 0f;
+        while (t < dur)
+        {
+            t += Time.unscaledDeltaTime;
+            float p = Mathf.Sin(t * 80f) * (1f - t / dur);
+            tr.localPosition = basePos + Vector3.right * p * amp;
+            yield return null;
+        }
+
+        tr.localPosition = basePos;
+    }
+
+    private IEnumerator CoToast()
+    {
+        toastGroup.gameObject.SetActive(true);
+        float t = 0f;
+        while (t < toastFade)
+        {
+            t += Time.unscaledDeltaTime;
+            toastGroup.alpha = Mathf.Lerp(0f, 1f, t / toastFade);
+            yield return null;
+        }
+
+        toastGroup.alpha = 1f;
+        yield return new WaitForSecondsRealtime(toastHold);
+        t = 0f;
+        while (t < toastFade)
+        {
+            t += Time.unscaledDeltaTime;
+            toastGroup.alpha = Mathf.Lerp(1f, 0f, t / toastFade);
+            yield return null;
+        }
+
+        toastGroup.alpha = 0f;
+        toastGroup.gameObject.SetActive(false);
+    }
+
     private int CalcEffectiveMax(string s)
     {
         if (string.IsNullOrEmpty(s)) return 8;
-        // 한글 또는 대문자 한 글자라도 포함되어 있으면 6
         if (RxKorean.IsMatch(s) || RxUpper.IsMatch(s)) return 6;
-        // 그 외(전부 소문자 등) 8
         return 8;
     }
+
+    // ---------- 디버그/강제표시 유틸 ----------
+
+    private void LogButtonStates(string tag)
+    {
+        bool br = buttonRoot && buttonRoot.activeSelf;
+        bool brH = buttonRoot && buttonRoot.activeInHierarchy;
+        bool g1 = guestLoginButton && guestLoginButton.gameObject.activeSelf;
+        bool g1H = guestLoginButton && guestLoginButton.gameObject.activeInHierarchy;
+        bool g2 = gpgsLoginButton && gpgsLoginButton.gameObject.activeSelf;
+        bool g2H = gpgsLoginButton && gpgsLoginButton.gameObject.activeInHierarchy;
+
+        Debug.Log($"[GuestLoginUI][{tag}] buttonRoot act={br}/{brH}, guest act={g1}/{g1H}, gpgs act={g2}/{g2H}");
+    }
+
+    private void ForceButtonsOn()
+    {
+        if (buttonRoot && !buttonRoot.activeSelf) buttonRoot.SetActive(true);
+        if (guestLoginButton && !guestLoginButton.gameObject.activeSelf) guestLoginButton.gameObject.SetActive(true);
+        if (gpgsLoginButton && !gpgsLoginButton.gameObject.activeSelf) gpgsLoginButton.gameObject.SetActive(true);
+
+        // CanvasGroup 차단 해제
+        if (buttonRoot)
+        {
+            var cg = buttonRoot.GetComponent<CanvasGroup>();
+            if (cg)
+            {
+                cg.alpha = 1f;
+                cg.interactable = true;
+                cg.blocksRaycasts = true;
+            }
+        }
+
+        // 하위 그래픽 강제 표시
+        TouchGraphics(guestLoginButton ? guestLoginButton.gameObject : null);
+        TouchGraphics(gpgsLoginButton ? gpgsLoginButton.gameObject : null);
+    }
+
+    private void TouchGraphics(GameObject go)
+    {
+        if (!go) return;
+        foreach (var g in go.GetComponentsInChildren<Graphic>(true))
+        {
+            var c = g.color;
+            c.a = 1f;
+            g.color = c;
+            g.raycastTarget = true;
+            g.gameObject.SetActive(true);
+        }
+    }
+
+    private Canvas FindTopCanvas()
+    {
+        Canvas top = null;
+        int topOrder = int.MinValue;
+        foreach (var cv in FindObjectsOfType<Canvas>(true))
+        {
+            if (!cv.enabled) continue;
+            if (cv.sortingOrder > topOrder)
+            {
+                topOrder = cv.sortingOrder;
+                top = cv;
+            }
+        }
+
+        return top != null ? top : GetComponentInParent<Canvas>();
+    }
+
+    private bool IsSceneCanvas(Canvas c)
+    {
+        return c != null && c.gameObject.scene.IsValid() && c.isActiveAndEnabled;
+    }
+
+    private Canvas ResolveTargetCanvas()
+    {
+        // override가 프리팹이거나 비활성이면 무시하고 자동 탐색
+        if (!IsSceneCanvas(popupCanvasOverride))
+        {
+            var top = FindTopCanvas();
+            if (top != null) return top;
+
+            // 최후: 자신의 상위에서라도 찾기
+            var self = GetComponentInParent<Canvas>();
+            if (IsSceneCanvas(self)) return self;
+        }
+
+        return popupCanvasOverride;
+    }
+
+    private void OpenNicknamePopup()
+{
+    // 1) 로그인 선택 팝업은 끄기
+    if (buttonRoot) buttonRoot.SetActive(false);
+
+    // 2) 타겟 Canvas 결정(씬 오브젝트)
+    var canvas = ResolveTargetCanvas(); // 이전에 드린 메서드 그대로 사용
+    if (canvas == null)
+    {
+        Debug.LogError("[GuestLoginUI] Canvas가 없어 닉네임 팝업을 표시할 수 없습니다.");
+        return;
+    }
+
+    // 3) 프리팹 지정 확인
+    if (nicknamePopupPrefab == null)
+    {
+        Debug.LogError("[GuestLoginUI] nicknamePopupPrefab 미지정");
+        return;
+    }
+
+    // 4) 항상 새 인스턴스 생성(씬 오브젝트/프리팹 여부 상관없이)
+    //    ※ 프리팹 루트가 비활성이라면 인스턴스도 비활성로 생성되므로 곧바로 SetActive(true) 처리
+    var go = Instantiate(nicknamePopupPrefab, canvas.transform);
+    go.SetActive(true);
+
+    // 5) 최상단 보장
+    var c = go.GetComponent<Canvas>() ?? go.AddComponent<Canvas>();
+    c.overrideSorting = true;
+    c.sortingOrder = canvas.sortingOrder + popupOrderBoost;
+    if (!go.GetComponent<UnityEngine.UI.GraphicRaycaster>())
+        go.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+
+    // (디버그) 생성 상태 출력
+    Debug.Log($"[GuestLoginUI] NicknamePopup instanced. activeSelf={go.activeSelf}, inHierarchy={go.activeInHierarchy}");
+
+    // 6) 초기화(확인/취소 콜백 연결)
+    var popup = go.GetComponent<NicknamePopup>();
+    if (popup != null)
+    {
+        popup.Init(
+            onConfirm: (raw) =>
+            {
+                string nick = Sanitize(raw);
+                int effMax = CalcEffectiveMax(nick);
+                if (nick.Length < 2 || nick.Length > effMax)
+                {
+                    popup.ShowError($"닉네임을 2~{effMax}자 범위로 입력하세요");
+                    return;
+                }
+
+                popup.Close();          // 입력 성공 → 팝업 닫기
+                ShowSubmittingUI(true); // 로딩 표시
+                TrySubmit(nick);        // 기존 로그인 흐름(예약/Photon 연결 포함)
+            },
+            onCancel: () =>
+            {
+                if (buttonRoot) buttonRoot.SetActive(true);
+                ForceButtonsOn();
+            },
+            placeholder: "(최대 한글 6자, 영문 8자)",
+            onCheck: async (raw) =>
+            {
+                // ★ 단순 가용성 조회(예약 X)
+                string nick = Sanitize(raw);
+                int effMax = CalcEffectiveMax(nick);
+                if (nick.Length < 2 || nick.Length > effMax) return false;
+                return await NicknameRegistry.IsAvailableAsync(nick);
+            }
+        );
+    }
+    else
+    {
+        Debug.LogWarning("[GuestLoginUI] NicknamePopup 컴포넌트가 프리팹에 없습니다.");
+    }
+
+    _nicknamePopupInstance = go;
+    Debug.Log("[GuestLoginUI] 로그인 팝업 OFF, 닉네임 팝업 ON(Instantiate).");
+}
 }
