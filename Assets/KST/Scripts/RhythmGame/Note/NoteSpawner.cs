@@ -111,13 +111,13 @@ namespace RhythmGame
             _gameStartTime = startTime;
             _isInit = true;
 
-            if (_songSource != null)
-            {
-                // 모든 클라에서 같은 시각에 재생되도록
-                double dspNow = AudioSettings.dspTime;
-                double delay = Mathf.Max(0.05f, (float)(_gameStartTime - PhotonNetwork.Time)); // 50ms 이상 여유
-                _songSource.PlayScheduled(dspNow + delay);
-            }
+            // if (_songSource != null)
+            // {
+            //     // 모든 클라에서 같은 시각에 재생되도록
+            //     double dspNow = AudioSettings.dspTime;
+            //     double delay = Mathf.Max(0.05f, (float)(_gameStartTime - PhotonNetwork.Time)); // 50ms 이상 여유
+            //     _songSource.PlayScheduled(dspNow + delay);
+            // }
         }
 
         IEnumerator IE_SpawnScheduler()
