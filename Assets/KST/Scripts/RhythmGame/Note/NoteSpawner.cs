@@ -49,6 +49,8 @@ namespace RhythmGame
         [SerializeField] double _songOffsetSec = 0.0; // 시작 보정
         [SerializeField] AudioSource _songSource;
 
+        HashSet<int> _waitingLocal = new();
+
         //TODO 김승태 : IGameComponent 인터페이스 구현
         public void Initialize()
         {
@@ -309,18 +311,19 @@ namespace RhythmGame
                 _activeById.Remove(noteId);
                 if (inst.TryGetComponent(out Note mover))
                 {
-                    //적중 시 히트 이펙트
-                    if (isHit)
-                    {
-                        var effect = GetEffectPool(mover.Type);
-                        var particle = effect.GetComponent<PooledEffect>();
-                        particle.PlayEffect(mover.transform.position, Quaternion.identity);
-                        Debug.Log("적중");
-                    }
-
+                    // //적중 시 히트 이펙트
+                    // if (isHit)
+                    // {
+                    //     var effect = GetEffectPool(mover.Type);
+                    //     var particle = effect.GetComponent<PooledEffect>();
+                    //     particle.PlayEffect(mover.transform.position, Quaternion.identity);
+                    //     Debug.Log("적중");
+                    // }
                     mover.ReturnPool();
+                    mover.Visible();
                 }
             }
+            _waitingLocal.Remove(noteId);
         }
 
         //스폰 정지
@@ -370,6 +373,21 @@ namespace RhythmGame
             firstBeat = Mathf.CeilToInt((float)((start - SongNetworkTime()) / bSec));
             // 마지막 비트: 창 끝 미만인 마지막 비트
             lastBeat = Mathf.FloorToInt((float)((end - SongNetworkTime()) / bSec));
+        }
+
+        public void ClientLocalHit(int noteId)
+        {
+            if (_activeById.TryGetValue(noteId, out var po) && po.TryGetComponent(out Note mover))
+            {
+                var effect = GetEffectPool(mover.Type);
+                var particle = effect.GetComponent<PooledEffect>();
+                particle.PlayEffect(mover.transform.position, Quaternion.identity);
+
+
+                mover.SetWait(true);
+                mover.Invisible();
+                _waitingLocal.Add(noteId);
+            }
         }
     }
 }

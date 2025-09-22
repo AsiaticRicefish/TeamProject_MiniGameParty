@@ -32,6 +32,7 @@ namespace RhythmGame
                 if (_holdTimer >= _requireHoldTime)
                 {
                     ScoreManager.Instance.VerdictHold(_holdTimer, _requireHoldTime);
+                    NoteSpawner.Instance.ClientLocalHit(_holdTarget.NoteId);
                     ScoreManager.Instance.RequestHit(_holdTarget.NoteId, true, NoteType.Continue);
                     _isDone = true;
                     InitHold();
@@ -114,7 +115,10 @@ namespace RhythmGame
 
                 bool success = _holdTimer >= _requireHoldTime && IsInVerdictBar(_holdTarget);
                 if (success)
+                {
+                    NoteSpawner.Instance.ClientLocalHit(_holdTarget.NoteId);
                     ScoreManager.Instance.RequestHit(_holdTarget.NoteId, true, NoteType.Continue);
+                }
                 else
                     ScoreManager.Instance.RequestMiss();
 
@@ -140,8 +144,9 @@ namespace RhythmGame
 
                     if (isCan)
                     {
-                        ScoreManager.Instance.RequestHit(t.NoteId, true, t.Type);
                         ScoreManager.Instance.VerdictTouch(t, verdictNote.transform);
+                        NoteSpawner.Instance.ClientLocalHit(t.NoteId);
+                        ScoreManager.Instance.RequestHit(t.NoteId, true, t.Type);
                         anyHit = true;
 
                     }

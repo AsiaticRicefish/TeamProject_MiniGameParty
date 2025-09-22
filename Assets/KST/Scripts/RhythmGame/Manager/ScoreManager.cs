@@ -136,75 +136,32 @@ namespace RhythmGame
         void RPC_RequestHit(int noteId, bool isCanInteract, NoteType type, PhotonMessageInfo info)
         {
             if (!PhotonNetwork.IsMasterClient) return;
-            bool isHit = false;
 
             // 라인 검증 (내 라인의 노트인지 판별하기)
 
             if (!LaneManager.Instance.LaneByNoteId.TryGetValue(noteId, out int noteLane)) return;
             if (!LaneManager.Instance.GetLane(info.Sender.ActorNumber, out int actorLane)) return;
-
             //내 레인이 아닐 경우에
-            if (noteLane != actorLane)
-            {
-                //TODO 김승태 : 내 레인과 상대 레인에 노트가 동시에 도착하는 경우 과열처리가 날 수도 있음. 이걸 방지하는 코드가 필요함.
-                //-> 과열 시스템이 현재 기획 상에서는 없어졌기에, 미스처리를 주석 처리하면 사실 상 문제 발생 x
-                // //과열 점수가 오르도록
-                // GameManager.Instance.MissBlock(info.Sender);
-                return;
-            }
+            if (noteLane != actorLane) return;
+            if (!LaneManager.Instance.LaneByNoteId.Remove(noteId)) return;
+
+            // 파괴
+            // LaneManager.Instance.LaneByNoteId.Remove(noteId);
+            NoteSpawner.Instance.DestroyNote(noteId, isCanInteract);
 
             // 득점 및 과열 처리
             if (isCanInteract)
             {
-                isHit = true;
                 GameManager.Instance.GoodHitScore(type, info.Sender);
+                if (SoundManager.Instance != null)
+                    SoundManager.Instance.PlaySFX
+                    (type == NoteType.Continue ? "Continue" : "Touch");
 
-                // SoundManager.Instance.PlaySFX_GAME(SfX_Game.SFX_Rhythm_NoteDestory);
-
-                //todo 김승태 : 노트 타입별 sfx 다르게 임시
-                switch (type)
-                {
-                    case NoteType.Continue:
-                        // SoundManager.Instance.PlaySFX_GAME(SfX_Game.SFX_Timer);
-                        if (SoundManager.Instance == null)
-                            Debug.LogError("사운드매니저 없음");
-                        else
-                        {
-                            SoundManager.Instance.PlaySFX("Continue");
-                            // Debug.LogError("사운드매니저 있음 oooooooooooooooo");
-                        }
-                        // SoundManager.Instance.PlaySFX("Continue");
-                        break;
-
-                    case NoteType.Fake:
-                    case NoteType.Touch:
-                        if (SoundManager.Instance == null)
-                            Debug.LogError("사운드매니저 없음");
-                        else
-                        {
-                            SoundManager.Instance.PlaySFX("Touch");
-                            // Debug.LogError("사운드매니저 있음 oooooooooooooooo");
-                        }
-                        // SoundManager.Instance.PlaySFX("Touch");
-                        // SoundManager.Instance.PlaySFX_GAME(SfX_Game.SFX_Destory);
-                        break;
-
-
-                }
-
+                return;
+                
             }
-            else
-            {
-                isHit = false;
-                // GameManager.Instance.OverHeatCheck();
-
-                GameManager.Instance.MissBlock(info.Sender);
-                // SoundManager.Instance.PlaySFX_GAME(SfX_Game.SFX_Rhythm_Miss);
-            }
-
-            // 파괴
-            LaneManager.Instance.LaneByNoteId.Remove(noteId);
-            NoteSpawner.Instance.DestroyNote(noteId, isHit);
+            GameManager.Instance.MissBlock(info.Sender);
+            // SoundManager.Instance.PlaySFX_GAME(SfX_Game.SFX_Rhythm_Miss);
         }
 
         public void RequestMiss()
