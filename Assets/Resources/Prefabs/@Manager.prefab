@@ -11,8 +11,6 @@ GameObject:
   - component: {fileID: 604056280655868369}
   - component: {fileID: 7246177200287667240}
   - component: {fileID: 800709719120635535}
-  - component: {fileID: 7988731337092413245}
-  - component: {fileID: 5421876069588281086}
   m_Layer: 0
   m_Name: '@Manager'
   m_TagString: Untagged
@@ -36,7 +34,6 @@ Transform:
   - {fileID: 4031691767248806508}
   - {fileID: 6561803264738523195}
   - {fileID: 5845888735509695037}
-  - {fileID: 8264703690310701815}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &7246177200287667240
@@ -70,35 +67,6 @@ MonoBehaviour:
   isPersistent: 1
   charPoolRegistry_Transform: {fileID: 4031691767248806508}
   equipPoolRegistry_Transform: {fileID: 6561803264738523195}
---- !u!114 &7988731337092413245
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1005027553336937955}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5a90389a77be37346a0c11ea1d39a424, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  isPersistent: 1
-  ParticlePoolRegister_Transform: {fileID: 5845888735509695037}
-  particles: []
---- !u!114 &5421876069588281086
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1005027553336937955}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: da6bdad2dc7063b489f182fda62fe6c5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  configs:
-  - {fileID: 11400000, guid: a27cd74cbd48afb4dab788119a2fa959, type: 2}
 --- !u!1 &1379040109739422052
 GameObject:
   m_ObjectHideFlags: 0
