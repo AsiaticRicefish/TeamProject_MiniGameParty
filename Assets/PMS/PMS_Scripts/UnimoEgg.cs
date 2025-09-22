@@ -70,7 +70,7 @@ public class UnimoEgg : MonoBehaviourPun
         if (!photonView.IsMine) return;
 
         ShootingScene.PlayerInputManager.Instance.DisableInput();
-        ShootingCameraManager.Instance.StartFollowTarget(gameObject);
+        //ShootingCameraManager.Instance.StartFollowTarget(gameObject);
         // 자기 화면에서 AddForce 적용
         isLaunched = true;
         //ApplyForce(dir);
@@ -97,7 +97,7 @@ public class UnimoEgg : MonoBehaviourPun
         }
 
         yield return new WaitForSeconds(1.0f);
-        ShootingCameraManager.Instance.StopFollowTarget(); //돌아가는 부분
+        //ShootingCameraManager.Instance.StopFollowTarget(); //돌아가는 부분
 
         // 내가 던진 알일 때만 마스터에게 턴 종료 요청
         if (photonView.IsMine && !turnEnded)
@@ -167,7 +167,7 @@ public class UnimoEgg : MonoBehaviourPun
         if (other.CompareTag("PlayGround") && isLaunched)
         {
             isLaunched = false; // 바깥으로 나가며 턴 종료 → 발사 상태 해제
-            ShootingCameraManager.Instance.StopFollowTarget();
+            //ShootingCameraManager.Instance.StopFollowTarget();
             TurnManager.Instance.photonView.RPC(("RequestTurnEnd"), RpcTarget.MasterClient);
 
         }
@@ -183,7 +183,7 @@ public class UnimoEgg : MonoBehaviourPun
         if(isCameraFollowing)       //카메라가 연출중이니깐
         {
             Debug.Log("[UnimoEgg] - 유니모를 잃어버려서 카메라가 원위치로 돌아가는중");
-            ShootingCameraManager.Instance?.StopFollowTarget();
+            //ShootingCameraManager.Instance?.StopFollowTarget();
         }
     }
 }

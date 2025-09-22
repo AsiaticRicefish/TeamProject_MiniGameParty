@@ -212,7 +212,7 @@ namespace ShootingScene
 
 
             #region 카메라 관련
-            /*if (isMyTurn)       
+            if (isMyTurn)       
             {
                 ShootingCameraManager.Instance.SwipePosInit();
                 ShootingScene.PlayerInputManager.Instance.EnableInput();
@@ -226,7 +226,7 @@ namespace ShootingScene
                 ShootingScene.PlayerInputManager.Instance.EnableCameraControl();
                 ShootingScene.PlayerInputManager.Instance.EnableCameraPosition();
                 Debug.Log("난 인풋 비활성화");
-            }*/
+            }
             #endregion 
 
 

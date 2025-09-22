@@ -89,6 +89,9 @@ namespace ShootingScene
             if (vcamFollow) vcamFollow.Priority = 5;
 
             initCameraPos = vcamDefault.transform.position;
+
+            startFov = vcamFollow.m_Lens.FieldOfView;
+            startRotX = vcamFollow.transform.eulerAngles.y;
         }
 
         public void StartFollowTarget(GameObject currentUnimoEgg)
@@ -110,7 +113,7 @@ namespace ShootingScene
             vcamFollow.Priority = 5;
             vcamFollow.LookAt = null;
 
-            StopZoomIn(); // 줌 효과 중단
+            //StopZoomIn(); // 줌 효과 중단
 
             //vcamFollow.Follow = null;
             //vc2Follow.target = null;

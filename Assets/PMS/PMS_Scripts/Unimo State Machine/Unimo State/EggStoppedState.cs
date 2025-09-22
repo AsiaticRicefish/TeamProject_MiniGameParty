@@ -10,7 +10,7 @@ public class EggStoppedState : UnimoEggStateBase
 
     public override void Enter(UnimoStateController egg)
     {
-        ShootingCameraManager.Instance.StopFollowTarget();
+        //ShootingCameraManager.Instance.StopFollowTarget();
 
         if (egg.photonView.IsMine && !egg.turnEnded)
         {
