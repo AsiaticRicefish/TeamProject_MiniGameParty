@@ -39,7 +39,6 @@ namespace Customization
         
         
         UniTask<Sprite> GetIconAsync(string characterId); // 2D 프로필 조회
-        event Action<UnimoCombo> OnEquippedChanged;                        // UI용
         void DisposePools();                        
     }
 }

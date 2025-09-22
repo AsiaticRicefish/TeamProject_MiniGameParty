@@ -1,7 +1,10 @@
+using System;
 using LDH_MainGame;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 namespace LDH_UI
 {
@@ -22,6 +25,33 @@ namespace LDH_UI
         [SerializeField] private Image descriptionPanel;      // 설명창 패널
 
         private GameObject _spawnedUnimo;
+        
+        // event
+        public Action<Scene> onSceneLoaded;
+        
+
+        #region Unity Life Cycle / Scene Loaded
+
+        protected override void Init()
+        {
+            base.Init();
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        protected override void Clear()
+        {
+            base.Clear();
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            onSceneLoaded?.Invoke(scene);
+        }
+
+
+        #endregion
+       
 
         /// <summary>
         /// 테마 적용 (텍스트/유니모)

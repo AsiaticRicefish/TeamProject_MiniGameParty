@@ -9,14 +9,15 @@ public class ParticlePool
     /// <summary>
     /// 풀 생성자: 프리팹과 초기 사이즈 지정
     /// </summary>
-    public ParticlePool(GameObject prefab, int initialSize)
+    public ParticlePool(GameObject prefab, int initialSize,Transform parent)
     {
+        Debug.Log("[Particle Pool] - 파티클 풀 생성!]");
         this.prefab = prefab;
         pool = new Queue<ParticleSystem>(initialSize);
 
         for (int i = 0; i < initialSize; i++)
         {
-            var ps = CreateInstance();
+            var ps = CreateInstance(parent);
             ps.gameObject.SetActive(false);
             pool.Enqueue(ps);
         }
@@ -25,11 +26,11 @@ public class ParticlePool
     /// <summary>
     /// 풀에서 인스턴스가 모자라면 새로 만들고, 사용 대기 큐에서 하나 꺼내 활성화 후 반환
     /// </summary>
-    public ParticleSystem Get()
+    public ParticleSystem Get(Transform parent)
     {
         if (pool.Count == 0)
         {
-            pool.Enqueue(CreateInstance());
+            pool.Enqueue(CreateInstance(parent));
         }
 
         var ps = pool.Dequeue();
@@ -63,10 +64,10 @@ public class ParticlePool
     /// 프리팹에서 새로운 ParticleSystem 인스턴스를 생성하고
     /// ParticleManager 오브젝트 아래에 두어 계층 정리
     /// </summary>
-    private ParticleSystem CreateInstance()
+    private ParticleSystem CreateInstance(Transform parent)
     {
         var go = Object.Instantiate(prefab);
-        go.transform.SetParent(ParticleManager.Instance.transform, false);
+        go.transform.SetParent(parent, false);
         return go.GetComponent<ParticleSystem>();
     }
 }

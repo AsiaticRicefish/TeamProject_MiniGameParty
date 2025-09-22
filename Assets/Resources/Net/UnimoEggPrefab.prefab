@@ -107,7 +107,7 @@ MonoBehaviour:
   localPlayerInput: {fileID: 7507564535323960775}
   chargeController: {fileID: 816720513667826849}
   playerUiController: {fileID: 7461243334416690372}
-  playerEffectController: {fileID: 0}
+  playerEffectController: {fileID: 6302642763533126903}
   playerAvatar: {fileID: 1180685571345266689}
   rb: {fileID: 8990860213725507007}
   turnEnded: 0
@@ -214,8 +214,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultLifetime: 2
-  dashEffect: {fileID: 0}
-  collisionEffect: {fileID: 113576, guid: a3ed4c6faf2c54531b2ba473689ee7dc, type: 3}
+  ParticleKeys:
+  - 
+  - 
 --- !u!114 &1180685571345266689
 MonoBehaviour:
   m_ObjectHideFlags: 0
