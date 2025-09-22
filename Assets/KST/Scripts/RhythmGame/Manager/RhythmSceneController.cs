@@ -51,7 +51,7 @@ public class RhythmSceneController : BaseGameSceneController
 
     protected override IEnumerator WaitForManagersAwake()
     {
-        EnsureInputManagerForScene();
+        // EnsureInputManagerForScene();
 
         // 초기 진행률 설정
         if (_uiLoading) _uiLoading.SetProgress(0.1f);
@@ -64,11 +64,11 @@ public class RhythmSceneController : BaseGameSceneController
         if (_uiLoading) _uiLoading.SetProgress(0.5f);
 
         // 각 매니저들이 Awake에서 생성되기를 기다림
-        yield return WaitForSingletonReady<GameManager>();
-        yield return WaitForSingletonReady<NetworkManager>();
-        yield return WaitForSingletonReady<LaneManager>();
-        yield return WaitForSingletonReady<ScoreManager>();
-        yield return WaitForSingletonReady<NoteSpawner>();
+        // yield return WaitForSingletonReady<GameManager>();
+        // yield return WaitForSingletonReady<NetworkManager>();
+        // yield return WaitForSingletonReady<LaneManager>();
+        // yield return WaitForSingletonReady<ScoreManager>();
+        // yield return WaitForSingletonReady<NoteSpawner>();
 
         if (_uiLoading) _uiLoading.SetProgress(0.7f);
         Debug.Log("리듬 매니저들 Awake 완료");

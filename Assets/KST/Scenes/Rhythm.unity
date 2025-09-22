@@ -2171,7 +2171,7 @@ Transform:
   m_GameObject: {fileID: 847317604}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 3.4, z: -49.4}
+  m_LocalPosition: {x: 0, y: 3.4, z: -45}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2197,7 +2197,7 @@ MonoBehaviour:
   _hitEffect:
   - {fileID: -2183472396014260670, guid: 33cbbf70a735d40c09095dad893fe459, type: 3}
   - {fileID: -9122617242247568557, guid: cc4edba986607ba48b17927b27d25e4e, type: 3}
-  speed: 4
+  speed: 20
   _songBpm: 160
   _songOffsetSec: 0
   _songSource: {fileID: 1725985995}
@@ -5049,7 +5049,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!82 &1725985994
 AudioSource:
   m_ObjectHideFlags: 0

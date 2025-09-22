@@ -166,12 +166,26 @@ namespace RhythmGame
                 {
                     case NoteType.Continue:
                         // SoundManager.Instance.PlaySFX_GAME(SfX_Game.SFX_Timer);
-                        SoundManager.Instance.PlaySFX("Continue");
+                        if (SoundManager.Instance == null)
+                            Debug.LogError("사운드매니저 없음");
+                        else
+                        {
+                            SoundManager.Instance.PlaySFX("Continue");
+                            // Debug.LogError("사운드매니저 있음 oooooooooooooooo");
+                        }
+                        // SoundManager.Instance.PlaySFX("Continue");
                         break;
 
                     case NoteType.Fake:
                     case NoteType.Touch:
-                        SoundManager.Instance.PlaySFX("Touch");
+                        if (SoundManager.Instance == null)
+                            Debug.LogError("사운드매니저 없음");
+                        else
+                        {
+                            SoundManager.Instance.PlaySFX("Touch");
+                            // Debug.LogError("사운드매니저 있음 oooooooooooooooo");
+                        }
+                        // SoundManager.Instance.PlaySFX("Touch");
                         // SoundManager.Instance.PlaySFX_GAME(SfX_Game.SFX_Destory);
                         break;
 

@@ -355,7 +355,7 @@ namespace RhythmGame
 
             //위치
             // Vector3 pos = p.position + p.forward * noteSpawnDist;
-            Vector3 pos = p.position + p.forward * NoteSpawner.Instance.transform.position.z;
+            Vector3 pos = new Vector3(p.position.x, p.position.y, 0f) + p.forward * NoteSpawner.Instance.transform.position.z;
             //회전
             Quaternion rot = Quaternion.LookRotation(p.forward, Vector3.up);
 

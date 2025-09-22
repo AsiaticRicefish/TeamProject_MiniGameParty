@@ -87,7 +87,13 @@ namespace RhythmGame
             _countDownText.gameObject.SetActive(true);
             //TODO 김승태 : 카운트다운 사운드 (임시);
             // SoundManager.Instance.PlaySFX_UI(SFX_UI.SFX_Btn1);
-            SoundManager.Instance.PlaySFX("321");
+            if (SoundManager.Instance == null)
+                Debug.LogError("사운드매니저 없음");
+            else
+            {
+                SoundManager.Instance.PlaySFX("321");
+                Debug.LogError("사운드매니저 있음 oooooooooooooooo");
+            }
 
 
             while (PhotonNetwork.Time < _startTime)
