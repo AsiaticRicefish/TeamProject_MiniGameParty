@@ -5,6 +5,7 @@ using LDH_UI;
 using LDH_Util;
 using LDH.LDH_Scripts.Test;
 using Managers;
+using Network;
 using Photon.Realtime;
 using UnityEngine;
 
@@ -15,14 +16,17 @@ namespace LDH_MainGame
         private readonly MiniGameRegistry _registry;
         private readonly Action<int> _setLocalSlot;
         private readonly Action<int> _onClickReady;
-
-
+        
         private MainGameDebugPanel _debugUI;
         private UI_Popup_PrivateRoom _readyPanel;
         private UI_GameInfo _gameInfo;
 
         private List<UI_Screen> _mainGameScreenUIs;
         private UI_Popup_QuitGame _quitPopup;
+
+        private UI_Loading _loadingUI;
+        private const string loadingThemePath = "Data/Lobby_Theme";
+
 
         // 생성자
         // 생성자
@@ -113,6 +117,36 @@ namespace LDH_MainGame
             await UniTask.WhenAll(tasks);
         }
 
+        
+        public void ShowLoading()
+        {
+            // 로딩창 설정
+            _loadingUI = Manager.UI.CreatePopupUI<UI_Loading>();
+            UI_LoadingTheme theme = Resources.Load<UI_LoadingTheme>(loadingThemePath);
+            _loadingUI.ApplyTheme(theme);
+            _loadingUI.SetBigDescription("로비로 이동 중...");
+            _loadingUI.SetSmallDescription("잠시만 기다려 주세요.");
+            _loadingUI.SetProgress(0f);
+            
+            
+            // 로딩 UI 이벤트 설정
+            _loadingUI.onSceneLoaded = (s) =>
+            {
+                if (!s.name.Equals(Manager.Network.LobbySceneName, StringComparison.Ordinal))
+                    return;
+                
+                _loadingUI.SetProgress(1f);
+                _loadingUI.AutoCloseAfter(1.5f, _loadingUI.destroyCancellationToken).Forget();
+            };
+            
+            // 로딩창 띄우기
+            Manager.UI.ShowPopupUI(_loadingUI).Forget();
+            
+            
+        }
+        
+        public void SetLoadingProgress(float percent) => _loadingUI?.SetProgress(percent);
+        
 
         #region 게임 강제 종료 팝업
 

@@ -4,6 +4,7 @@ using Firebase.Auth;
 using Firebase.Extensions;
 using GooglePlayGames;
 using GooglePlayGames.BasicApi;
+using LDH_Game;
 using Managers; // SignInStatus
 using Photon.Pun;
 using Photon.Realtime;
@@ -182,9 +183,12 @@ namespace KYG.Auth
             Debug.Log($"[GPGS] Photon.AuthValues.UserId={PhotonNetwork.AuthValues?.UserId}");
             
             
-            if (!PhotonNetwork.IsConnected) PhotonNetwork.ConnectUsingSettings();
-            else if (!PhotonNetwork.InLobby && PhotonNetwork.NetworkClientState != ClientState.JoiningLobby) // 방어로직 추가
-                PhotonNetwork.JoinLobby();
+            //game 리소스 다운 / 초기화 및 파이어베이스 데이터 로드 진행 후 서버로 연결하기 위해 game boot strap을 생성한다.
+            GameObject gameBootstrap = new GameObject("Game Bootstrap", typeof(GameBootstrap));
+            
+            // if (!PhotonNetwork.IsConnected) PhotonNetwork.ConnectUsingSettings();
+            // else if (!PhotonNetwork.InLobby && PhotonNetwork.NetworkClientState != ClientState.JoiningLobby) // 방어로직 추가
+            //     PhotonNetwork.JoinLobby();
         }
 
         public override void OnConnectedToMaster()
