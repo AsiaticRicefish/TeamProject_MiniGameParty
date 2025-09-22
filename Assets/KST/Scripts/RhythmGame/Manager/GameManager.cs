@@ -7,6 +7,7 @@ using LDH_MainGame;
 using Photon.Pun;
 using Photon.Realtime;
 using TMPro;
+using Unity.Mathematics;
 using UnityEngine;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
 
@@ -61,6 +62,8 @@ namespace RhythmGame
         Dictionary<string, int> _totalScores = new();
         bool _receivedRank;
 
+        int _songIndex = -1;
+
         //TODO 김승태 : IGameComponent 인터페이스 구현
 
         public void Initialize()
@@ -98,14 +101,19 @@ namespace RhythmGame
 
             NoteSpawner.Instance.photonView.RPC(nameof(NoteSpawner.RPC_InitStart), RpcTarget.All, startTime);
 
+            //곡 선택
+            int songIndex = UnityEngine.Random.Range(1, 4);
+            Debug.LogError($"index : {songIndex}");
+
             //게임 설정관련
-            photonView.RPC(nameof(PRC_StartGameTIme), RpcTarget.All, startTime, endTime);
+            photonView.RPC(nameof(PRC_StartGameTIme), RpcTarget.All, startTime, endTime, songIndex);
             // photonView.RPC(nameof(GameStartSettings), RpcTarget.All);
         }
 
         [PunRPC]
-        void PRC_StartGameTIme(double startTime, double endTime)
+        void PRC_StartGameTIme(double startTime, double endTime, int songIndex)
         {
+            _songIndex = songIndex;
             OnTimer?.Invoke(startTime, endTime);
 
             if (_waitStartCo != null) StopCoroutine(_waitStartCo);
@@ -118,11 +126,11 @@ namespace RhythmGame
         {
             while (PhotonNetwork.Time < startTime) yield return null;
 
-            photonView.RPC(nameof(GameStartSettings), RpcTarget.All);
 
             if (PhotonNetwork.IsMasterClient)
             {
-                NoteSpawner.Instance.photonView.RPC(nameof(NoteSpawner.RPC_InitStart), RpcTarget.All, startTime);
+                // NoteSpawner.Instance.photonView.RPC(nameof(NoteSpawner.RPC_InitStart), RpcTarget.All, startTime);
+                photonView.RPC(nameof(GameStartSettings), RpcTarget.All);
 
                 NoteSpawner.Instance.photonView.RPC(nameof(NoteSpawner.RPC_StartSpawn), RpcTarget.All);
             }
@@ -144,10 +152,7 @@ namespace RhythmGame
             //게임 시작 플래그 설정
             IsGameStart = true;
 
-            //리듬게임 랜덤 브금 시작
-            //TODO 김승태: 플레이어마다 다른 노래를 선택하는 이슈 O
-            var index = SoundManager.Instance.RandomSelectBGM();
-            SoundManager.Instance.PlayBGM(index);
+            SoundManager.Instance.PlayBGM($"RhythmBgm{_songIndex}");
             OnGameStart?.Invoke();
         }
 
