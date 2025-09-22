@@ -113,6 +113,9 @@ MonoBehaviour:
   isLaunched: 0
   isCameraFollowing: 0
   hasCrossedStartLine: 0
+  targetLayers:
+    serializedVersion: 2
+    m_Bits: 1048576
   ShooterUid: 
 --- !u!114 &5773829714023628006
 MonoBehaviour:
