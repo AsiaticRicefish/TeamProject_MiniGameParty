@@ -92,7 +92,6 @@ namespace RhythmGame
             else
             {
                 SoundManager.Instance.PlaySFX("321");
-                Debug.LogError("사운드매니저 있음 oooooooooooooooo");
             }
 
 
