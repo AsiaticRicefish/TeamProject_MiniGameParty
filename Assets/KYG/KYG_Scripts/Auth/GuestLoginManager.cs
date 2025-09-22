@@ -10,7 +10,7 @@ using Managers;
 using UnityEngine;
 using Network;
 using System.Threading.Tasks;
-
+using LDH_Game;
 
 
 namespace KYG.Auth
@@ -315,7 +315,7 @@ namespace KYG.Auth
         /// <summary>
         /// Photon 인증 정보 세팅 후 서버 연결 시작
         /// </summary>
-        private void ApplyPhotonIdentityAndConnect(string uid, string nickname)
+        public void ApplyPhotonIdentityAndConnect(string uid, string nickname)
         {
             PhotonNetwork.NickName = nickname;
             PhotonNetwork.AuthValues = new AuthenticationValues(uid);
@@ -324,46 +324,51 @@ namespace KYG.Auth
             Debug.Log($"[GuestLogin] Firebase UID={uid}, Nickname={PhotonNetwork.NickName}");
             Debug.Log($"[GuestLogin] Photon.AuthValues.UserId={PhotonNetwork.AuthValues?.UserId}");
 
-            if (!PhotonNetwork.IsConnected)
-            {
-                PhotonNetwork.ConnectUsingSettings();
-                Debug.Log("[GuestLogin] Connecting to Photon...");
-            }
-            else if (!PhotonNetwork.InLobby)
-            {
-                PhotonNetwork.JoinLobby();
-            }
-
-            var nm = NetworkManager.Instance;
-            if (nm != null)
-            {
-                nm.ConnectedToMaster += () =>
-                {
-                    Debug.Log("[GuestLogin] Handing off to NetworkManager");
-                    nm.ConnectServer();
-                };
-            }
+            //game 리소스 다운 / 초기화 및 파이어베이스 데이터 로드 진행 후 서버로 연결하기 위해 game boot strap을 생성한다.(bootstrap 이 완료되면 자동으로 서버연결이 됩니다)
+            GameObject gameBootstrap = new GameObject("Game Bootstrap", typeof(GameBootstrap));
+            
+            
+            
+            // if (!PhotonNetwork.IsConnected)
+            // {
+            //    // PhotonNetwork.ConnectUsingSettings();
+            //     Debug.Log("[GuestLogin] Connecting to Photon...");
+            // }
+            // else if (!PhotonNetwork.InLobby)
+            // {
+            //     //PhotonNetwork.JoinLobby();
+            // }
+            //
+            // var nm = NetworkManager.Instance;
+            // if (nm != null)
+            // {
+            //     nm.ConnectedToMaster += () =>
+            //     {
+            //         Debug.Log("[GuestLogin] Handing off to NetworkManager");
+            //         //nm.ConnectServer();
+            //     };
+            // }
         }
 
-        public override void OnConnectedToMaster()
-        {
-            Debug.Log("[GuestLoginManager] ConnectedToMaster.");
-            //SafeReapplyUid();
-            
-            if (user == null)
-            {                   // 아직 Firebase 로그인 전
-                Debug.Log("[GuestLoginManager] Photon connected before auth; skip JoinLobby until user != null");
-                return;
-            }
-            
-         
-            if (user == null) return; // Firebase 로그인 전이면 패스
-            
-            
-            // Photon 기본 로비 들어가기
-            if (PhotonNetwork.InLobby || PhotonNetwork.NetworkClientState == ClientState.JoiningLobby) return;  // 방어로직 추가
-                PhotonNetwork.JoinLobby();
-        }
+        // public override void OnConnectedToMaster()
+        // {
+        //     Debug.Log("[GuestLoginManager] ConnectedToMaster.");
+        //     //SafeReapplyUid();
+        //     
+        //     if (user == null)
+        //     {                   // 아직 Firebase 로그인 전
+        //         Debug.Log("[GuestLoginManager] Photon connected before auth; skip JoinLobby until user != null");
+        //         return;
+        //     }
+        //     
+        //  
+        //     if (user == null) return; // Firebase 로그인 전이면 패스
+        //     
+        //     
+        //     // Photon 기본 로비 들어가기
+        //     // if (PhotonNetwork.InLobby || PhotonNetwork.NetworkClientState == ClientState.JoiningLobby) return;  // 방어로직 추가
+        //     //     PhotonNetwork.JoinLobby();
+        // }
         
         // ----- NetworkManager로 기능 통합 ----- 0829(이도현)
         // public override void OnJoinedLobby()

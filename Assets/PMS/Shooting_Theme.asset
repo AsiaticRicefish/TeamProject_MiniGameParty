@@ -19,4 +19,6 @@ MonoBehaviour:
   titlePanelColor: {r: 0.47308543, g: 1, b: 0.36320752, a: 1}
   backgroundPanelColor: {r: 0, g: 0.5799813, b: 1, a: 1}
   descriptionPanelColor: {r: 0, g: 0.91027117, b: 1, a: 1}
-  unimoPrefabs: []
+  unimoPrefabs:
+  - {fileID: 3380019038747022192, guid: 658f3813a0c86d341878bb3628d1b24f, type: 3}
+  - {fileID: 3380019038747022192, guid: f61a8b3cfcc1fb7479287411ec8fb801, type: 3}

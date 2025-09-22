@@ -1,5 +1,9 @@
+using System;
+using Cysharp.Threading.Tasks;
 using Firebase;
 using Firebase.Auth;
+using Firebase.Database;
+using Managers;
 using UnityEngine;
 
 public class AuthBootstrapper : MonoBehaviour
@@ -9,6 +13,8 @@ public class AuthBootstrapper : MonoBehaviour
 
     [Header("Logs")]
     [SerializeField] private bool verbose = true;
+
+    private static bool s_DbConfigured; // DB 초기화(퍼시스턴스+URL)를 딱 1회만 수행하도록 막는 가드
 
     private void Awake()
     {
