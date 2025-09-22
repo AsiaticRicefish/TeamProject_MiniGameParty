@@ -13,24 +13,104 @@ MonoBehaviour:
   m_Name: Shooting Sound Collection
   m_EditorClassIdentifier: 
   bgmSounds:
-  - soundName: 
+  - soundName: ShootingBGM
     audioClip:
-      m_AssetGUID: 
+      m_AssetGUID: e7107e5f08f1a3f48abdb0ffd3136988
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
-    defaultVolume: 0
+    defaultVolume: 0.8
+    isLoop: 1
+    preloadOnStart: 0
+    keepInMemory: 0
+  - soundName: GameEndBGM
+    audioClip:
+      m_AssetGUID: 4ffbc3d1c8a2f8a47878224574f22971
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    defaultVolume: 1
+    isLoop: 0
+    preloadOnStart: 0
+    keepInMemory: 0
+  - soundName: GameWinBGM
+    audioClip:
+      m_AssetGUID: 4a2fbed884fe3d545a94480ae632456d
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    defaultVolume: 1
+    isLoop: 0
+    preloadOnStart: 0
+    keepInMemory: 0
+  - soundName: GameLoseBGM
+    audioClip:
+      m_AssetGUID: 4e688ead4b5db88458f7df613cd3ecf0
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 1
+    defaultVolume: 1
     isLoop: 0
     preloadOnStart: 0
     keepInMemory: 0
   sfxSounds:
-  - soundName: 
+  - soundName: CardFlipSFX
     audioClip:
-      m_AssetGUID: 
+      m_AssetGUID: 532a5eccbc7323244a312a85e08589d9
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
-    defaultVolume: 0
+    defaultVolume: 1
+    isLoop: 0
+    preloadOnStart: 0
+    keepInMemory: 0
+  - soundName: ButtonTouchSFX
+    audioClip:
+      m_AssetGUID: b1399649105c4d34487eb2ea35eca3ff
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 1
+    defaultVolume: 1
+    isLoop: 0
+    preloadOnStart: 0
+    keepInMemory: 0
+  - soundName: MyTurnSFX
+    audioClip:
+      m_AssetGUID: 4971625a34f54b34db882bfcc16d6828
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 1
+    defaultVolume: 1
+    isLoop: 0
+    preloadOnStart: 0
+    keepInMemory: 0
+  - soundName: CountDownSFX
+    audioClip:
+      m_AssetGUID: f8712fda032d9eb499d70593d3ddb3d5
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    defaultVolume: 1
+    isLoop: 0
+    preloadOnStart: 0
+    keepInMemory: 0
+  - soundName: UnimoShootingSFX
+    audioClip:
+      m_AssetGUID: a8f66ebd5b712bd40b6306c76aa7b849
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    defaultVolume: 1
+    isLoop: 0
+    preloadOnStart: 0
+    keepInMemory: 0
+  - soundName: Shooting_Crush
+    audioClip:
+      m_AssetGUID: fc8806c80e23bf54bbef8616db876b3a
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 1
+    defaultVolume: 1
     isLoop: 0
     preloadOnStart: 0
     keepInMemory: 0
