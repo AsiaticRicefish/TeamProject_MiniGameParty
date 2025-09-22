@@ -84,12 +84,18 @@ namespace LDH_Game
             //Util_LDH.ConsoleLog(this, "[0단계 - 5] DataBase Binding");
             phaseInit.Report(0.7f);
             Small("데이터 동기화 설정…");
+
+
+#if TEST_WITHOUT_LOGIN
+#else
             var userRepo = new RealTimeUserDataRepository(FirebaseBootstrap.Rtdb, FirebaseBootstrap.Root);
-            
+#endif
             var itemRepo = new FirestoreItemRepository(FirebaseBootstrap.Firestore);
             
-                 
+#if TEST_WITHOUT_LOGIN                 
+#else
             DataManager.Instance.BindUserDataRepository(userRepo,uid);
+#endif
             DataManager.Instance.BindItemRepository(itemRepo);
             
             phaseInit.Complete();
@@ -142,6 +148,7 @@ namespace LDH_Game
                 catalogProgress = Mathf.Clamp(p, catalogProgress, 1f);
                 prCatalog.Report(catalogProgress);
             });
+            
             UniTask userDataTask = DataManager.Instance.LoadOrCreatedUserDataAsync(p =>
             {
                 userProgress = Mathf.Clamp(p, userProgress, 1f);

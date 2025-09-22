@@ -64,8 +64,12 @@ namespace Customization
         public async UniTask<bool> UpdateComboAsync(string characterId, string equipId)
         {
             if (!IsModified(characterId, equipId)) return false;
-            
+            #if TEST_WITHOUT_LOGIN
+            var ok = await Data.DataManager.Instance.UpdateCustomizationLocalAsync(characterId, equipId);
+            #else
             var ok = await Data.DataManager.Instance.UpdateCustomizationAsync(characterId, equipId);
+            #endif
+            
             return ok;
         }
 
@@ -216,6 +220,8 @@ namespace Customization
             };
 
             PhotonNetwork.LocalPlayer.SetCustomProperties(table);
+            
+            Debug.Log( "[CustomizationManager] PlayerProps에 custom 장착 data를 저장합니다. 장착한 character id :" + PhotonNetwork.LocalPlayer.CustomProperties[Define_LDH.PlayerProps.GetPlayerInfoKey(Define_LDH.PlayerProps.PlayerInfoKey.CharacterId)].ToString());
         }
 
         #endregion

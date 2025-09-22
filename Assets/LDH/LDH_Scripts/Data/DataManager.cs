@@ -5,6 +5,7 @@ using Cysharp.Threading.Tasks;
 using DesignPattern;
 using Firebase.Database;
 using LDH_Util;
+using Network;
 using Store;
 using UnityEngine;
 using static LDH_Util.Define_LDH;
@@ -40,6 +41,11 @@ namespace Data
         public event Action OnItemCatalogChanged;
 
 
+        
+        private const string USER_FILE_NAME = "user.json";
+
+        
+        
         #region Init Logic
 
         protected override void OnAwake()
@@ -67,15 +73,33 @@ namespace Data
         // 전체 유저 데이터 load or create
         public async UniTask LoadOrCreatedUserDataAsync(Action<float> progressReport = null)
         {
+            
             progressReport?.Invoke(0f);
 
+#if TEST_WITHOUT_LOGIN
+            // 로컬 파일 로드 시도
+            if (!JsonStore.TryLoad<UserData>(USER_FILE_NAME, out var userData) || userData == null)
+            {
+                // 2) 파일이 없으면 기본값 생성
+                var custom   = CustomizationData.CreateDefault();
+                var currency = CurrencyData.CreateDefault();
+                userData     = new UserData(custom, currency);
+                
+                // 3) 즉시 저장 (에러 무시 가능)
+                try { await JsonStore.SaveAsync(USER_FILE_NAME, userData); }
+                catch (Exception e) { Debug.LogWarning($"[UserData] initial save failed: {e.Message}"); }
+            }
+            User = userData;
+#else
             if (_userRepo == null) throw new Exception("Repository not bound.");
             User = await _userRepo.LoadOrCreateAsync(_uid);
             progressReport?.Invoke(0.8f);
-
+#endif
             OnUserDataChanged?.Invoke(User);
             OnCustomizationChanged?.Invoke(User.customization);
             OnCurrencyChanged?.Invoke(User.currency);
+
+            
             progressReport?.Invoke(1f);
         }
 
@@ -112,6 +136,7 @@ namespace Data
         // 커스터마이징 데이터 메모리 업데이트 & 서버에 저장
         public async UniTask<bool> UpdateCustomizationAsync(string newCharId, string newEquipId)
         {
+            
             if (User == null) return false;
             
             // 소유 여부 검증
@@ -351,5 +376,145 @@ namespace Data
 
         #endregion
 
+
+        #region Local 저장용 (테스트용)
+        private static long NowMs() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        private async UniTask PersistLocalAsync()
+        {
+            if (User != null)
+                await JsonStore.SaveAsync(USER_FILE_NAME, User);
+        }
+
+        public async UniTask<bool> UpdateCustomizationLocalAsync(string newCharId, string newEquipId)
+        {
+#if !TEST_WITHOUT_LOGIN
+            Debug.LogWarning("[DataManager] UpdateCustomizationLocalAsync는 TEST_WITHOUT_LOGIN에서만 사용하세요.");
+#endif
+            if (User == null) return false;
+
+            // 소유 검증
+            if (!HasCharacter(newCharId) || !HasEquip(newEquipId))
+            {
+                Debug.LogWarning($"[DataManager] Do not have {newCharId} or {newEquipId}. Fail to update customization (local).");
+                return false;
+            }
+            
+            
+            // 로컬 데이터 수정
+            var cur = User.customization ??= new CustomizationData();
+            cur.characterId = newCharId;
+            cur.equipId     = newEquipId;
+            cur.updatedAt   = NowMs();
+
+            // 이벤트 & 저장
+            OnCustomizationChanged?.Invoke(cur);
+            OnUserDataChanged?.Invoke(User);
+            await PersistLocalAsync();
+            return true;
+            
+        }
+
+        public async UniTask<Store.PurchaseResult> TryPurchaseLocalAsync(
+            long[] totalsByCurrency, // 통화별 총 비용
+            GrantPatch patch // 구매 성공 시 로컬에 적용할 변경(소유 추가/장착 등)
+        )
+        {
+#if !TEST_WITHOUT_LOGIN
+            Debug.LogWarning("[DataManager] TryPurchaseLocalAsync는 TEST_WITHOUT_LOGIN에서만 사용하세요.");
+#endif
+            if (User == null)
+                return new Store.PurchaseResult { Error = Store.PurchaseError.Network, Message = "유저 데이터가 없습니다." };
+
+            if (totalsByCurrency == null || totalsByCurrency.Length < CurrencyCount)
+                return new Store.PurchaseResult { Error = Store.PurchaseError.ItemNotFound, Message = "가격 정보가 올바르지 않습니다." };
+            
+            var cur = User.currency ??= new CurrencyData();
+            long[] bal =
+            {
+                cur.currency1,
+                cur.currency2,
+                cur.currency3
+            };
+            // 1) 잔액 체크
+            for (int i = 0; i < CurrencyCount; i++)
+            {
+                long cost = totalsByCurrency[i];
+                if (cost > 0 && bal[i] < cost)
+                {
+                    return new Store.PurchaseResult
+                    {
+                        Error = Store.PurchaseError.NotEnoughCurrency,
+                        Message = "재화가 부족합니다."
+                    };
+                }
+            }
+
+            // 2) 차감 적용
+            for (int i = 0; i < CurrencyCount; i++)
+            {
+                long cost = totalsByCurrency[i];
+                if (cost <= 0) continue;
+                bal[i] -= cost;
+            }
+            cur.currency1 = bal[0];
+            cur.currency2 = bal[1];
+            cur.currency3 = bal[2];
+            cur.updatedAt = NowMs();
+
+            // 3) 보상/장착 적용 (GrantPatch를 로컬 데이터에 직접 반영)
+            ApplyGrantPatchLocal(patch);
+
+            // 4) 이벤트 & 저장
+            OnCurrencyChanged?.Invoke(cur);
+            OnCustomizationChanged?.Invoke(User.customization);
+            OnUserDataChanged?.Invoke(User);
+            await PersistLocalAsync();
+
+            var spent = new List<(Define_LDH.CurrencyType, long)>();
+            for (int i = 0; i < CurrencyCount; i++)
+                if (totalsByCurrency[i] > 0)
+                    spent.Add(((Define_LDH.CurrencyType)i, totalsByCurrency[i]));
+
+            return new Store.PurchaseResult
+            {
+                Error = Store.PurchaseError.None,
+                Message = "구매가 완료되었습니다.",
+                Spent = spent,
+            };
+        }
+
+        private void ApplyGrantPatchLocal(GrantPatch patch)
+        {
+            if (patch == null) return;
+
+            var cust = User.customization ??= new CustomizationData();
+            cust.ownedCharacters ??= new HashSet<string>();
+            cust.ownedEquips     ??= new HashSet<string>();
+
+            // 소유 추가
+            if (patch.AddOwnedCharacters != null)
+                foreach (var id in patch.AddOwnedCharacters)
+                    if (!string.IsNullOrEmpty(id))
+                        cust.ownedCharacters.Add(id);
+
+            if (patch.AddOwnedEquips != null)
+                foreach (var id in patch.AddOwnedEquips)
+                    if (!string.IsNullOrEmpty(id))
+                        cust.ownedEquips.Add(id);
+
+            // 장착 변경(입력 값이 비어있지 않은 경우에만)
+            if (!string.IsNullOrEmpty(patch.EquipCharacterId))
+                cust.characterId = patch.EquipCharacterId;
+
+            if (!string.IsNullOrEmpty(patch.EquipEquipId))
+                cust.equipId = patch.EquipEquipId;
+
+            cust.updatedAt = NowMs();
+        }
+
+        #endregion
+        
+        
     }
 }
