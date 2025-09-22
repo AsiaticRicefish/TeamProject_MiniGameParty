@@ -7,6 +7,7 @@ using LDH_UI;
 using Managers;
 using Photon.Pun;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace ShootingScene.ShootingGame
 {
@@ -17,6 +18,7 @@ namespace ShootingScene.ShootingGame
        [SerializeField] private UI_Screen_OtherTurn otherTurnUI;
        [SerializeField] private UI_Screen_Timer timerUI;
        [SerializeField] private UI_Screen_PlayerRank playerRank;
+       [SerializeField] private UI_Screen_Charging chargingUI;
 
         private Coroutine _timerCoroutine;
        
@@ -186,5 +188,32 @@ namespace ShootingScene.ShootingGame
         }
         #endregion
 
+        public UI_Screen_Charging GetChargingUI()
+        {
+            return chargingUI;
+        }
+
+        #region charging UI
+        public void ShowChargingUI()
+        {
+            Debug.Log("유니모 차징 UI 호출");
+
+            if (chargingUI.IsVisible)
+            {
+                Manager.UI.CloseScreenUI(chargingUI).Forget();
+                Debug.Log("유니모 차징 UI 끄기");
+            }
+            else
+            {
+                Manager.UI.ShowScreenUI(chargingUI).Forget();
+                Debug.Log("유니모 차징 UI 켜기");
+            }
+        }
+
+        public Slider GetSlider()
+        {
+            return chargingUI.GetComponent<Slider>();
+        }
+        #endregion
     }
 }

@@ -1,15 +1,11 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using Photon.Pun;
 
-public class ChargeController : MonoBehaviourPun
+public class ChargeController : MonoBehaviour
 {
     public float chargeMax;
     public float chargeMin;
     public float chargePeriod = 4f;
-    public Slider chargeSlider;
 
     private float pressStartTime;
     private float chargePower;
@@ -17,15 +13,13 @@ public class ChargeController : MonoBehaviourPun
 
     public float ChargePower => chargePower;
 
-    //private void OnEnable()
-    //{
-    //    StartCharge(); // 활성화될 때 차징 시작
-    //}
+    //chargeUI
+    public Slider chargeSlider;
 
-    //private void OnDisable()
-    //{
-    //    StopCharge();  // 비활성화될 때 차징 초기화
-    //}
+    private void Awake()
+    {
+        chargeSlider = GetComponent<Slider>();
+    }
 
     public void Initialize()
     {

@@ -1,14 +1,22 @@
 using System.Collections;
 using System.Collections.Generic;
+using ShootingScene.ShootingGame;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerInputUIController : MonoBehaviour
 {
     [SerializeField] private DirectionUIArrow arrow;
     [SerializeField] private GameObject arrowRangeImage;
-    [SerializeField] private ChargeController charger;
-
     [SerializeField] public GameObject PlayerMarker;
+
+    //슈팅 UI 매니저 ui
+    [SerializeField]private ChargeController charger;
+
+    private void Awake()
+    {
+        charger = ShootingUIManager.Instance.GetChargingUI().GetComponent<ChargeController>();
+    }
 
     #region 차징 UI 관련
     // 화살표 표시/숨기기
@@ -33,7 +41,7 @@ public class PlayerInputUIController : MonoBehaviour
     public void ShowCharger(bool show)
     {
         if (charger != null && charger.chargeSlider != null)
-            charger.chargeSlider.gameObject.SetActive(show);
+            ShootingUIManager.Instance.ShowChargingUI();//charger.chargeSlider.gameObject.SetActive(show);
     }
 
 
@@ -58,6 +66,5 @@ public class PlayerInputUIController : MonoBehaviour
         arrow?.Initialize();
         charger?.Initialize();
         ShowArrow(false);
-        ShowCharger(false);
     }
 }

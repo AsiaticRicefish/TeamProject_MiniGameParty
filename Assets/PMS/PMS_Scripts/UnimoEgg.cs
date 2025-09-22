@@ -28,7 +28,11 @@ public class UnimoEgg : MonoBehaviourPun
     [SerializeField] private bool isCameraFollowing;
     [SerializeField] private bool hasCrossedStartLine;
 
+    [Header("충돌 관련 변수")]
+    [SerializeField] public LayerMask targetLayers;
+
     public string ShooterUid; // 누가 던졌는지 저장
+    
     
     private void Awake()
     {
@@ -137,19 +141,17 @@ public class UnimoEgg : MonoBehaviourPun
 
     private void OnCollisionEnter(Collision collision)
     {
-        ContactPoint contact = collision.contacts[0];
-        Vector3 hitPosition = contact.point;
-        playerEffectController.Play(ParticleIDs.SH_UnimoCollisionEffect, hitPosition, Quaternion.identity);
-
-
-        /*if (collision.gameObject.CompareTag("UnimoEgg"))
+        //ContactPoint contact = collision.contacts[0];
+        //Vector3 hitPosition = contact.point;
+        //playerEffectController.Play(ParticleIDs.SH_UnimoCollisionEffect, hitPosition, Quaternion.identity);
+        if (collision.gameObject.layer)
         {
             ContactPoint contact = collision.contacts[0];
             Vector3 hitPosition = contact.point;
             Vector3 hitNormal = contact.normal;
 
             playerEffectController.Play(ParticleIDs.SH_UnimoCollisionEffect, hitPosition, Quaternion.identity);
-        }*/
+        }
     }
 
     //떨어졌을때
