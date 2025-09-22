@@ -130,8 +130,12 @@ namespace Store
             }
 
             //3) 트랜잭션 실행
-            var mutation = Data.DataManager.BuildCustomizationMutation(patch);
-            PurchaseResult purchaseResult = await Manager.Data.TryPurchaseAsync( quote.TotalsByCurrency, mutation);
+            #if TEST_WITHOUT_LOGIN
+                PurchaseResult purchaseResult = await Manager.Data.TryPurchaseLocalAsync( quote.TotalsByCurrency, patch);
+            #else
+                var mutation = Data.DataManager.BuildCustomizationMutation(patch);
+                PurchaseResult purchaseResult = await Manager.Data.TryPurchaseAsync( quote.TotalsByCurrency, mutation);
+            #endif
             if (purchaseResult.Success)
                 purchaseResult.GrantedItems = quote.Lines.Select(l => l.ItemUnit).ToList();
 

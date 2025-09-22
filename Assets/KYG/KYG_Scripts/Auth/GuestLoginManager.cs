@@ -315,7 +315,7 @@ namespace KYG.Auth
         /// <summary>
         /// Photon 인증 정보 세팅 후 서버 연결 시작
         /// </summary>
-        private void ApplyPhotonIdentityAndConnect(string uid, string nickname)
+        public void ApplyPhotonIdentityAndConnect(string uid, string nickname)
         {
             PhotonNetwork.NickName = nickname;
             PhotonNetwork.AuthValues = new AuthenticationValues(uid);
