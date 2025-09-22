@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 055b28e40ead8874eafe83265d9f0365, type: 3}
   m_Name: Jenga_Collapse
   m_EditorClassIdentifier: 
-  id: Jenga_Collapse
-  addressableKey: 
+  id: ConstructBuilding01
+  addressableKey: Jenga_Collapse
   initialPoolSize: 10
   duration: 2
