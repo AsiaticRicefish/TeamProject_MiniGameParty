@@ -69,17 +69,19 @@ namespace LDH_Game
             // 2) 데이터베이스 초기화 및 준비
             phaseInit.Report(0.1f);
             Small("서버 연결 준비 중…");
+#if !TEST_WITHOUT_LOGIN
             await FirebaseBootstrap.InitializeAsync(Define_LDH.Urls.RTDB);
-            
+#endif
             // Util_LDH.ConsoleLog(this, "[0단계 - 3] DataManager, BackendManager Instance가 생성될때까지 대기");
             // 3) DataManager, BackendManager Instance가 생성될때까지 대기
             phaseInit.Report(0.4f);
             Small("인증 상태 확인…");
 
             await UniTask.WaitUntil(() => DataManager.Instance != null && BackendManager.Instance != null);
+#if !TEST_WITHOUT_LOGIN
             var uid = BackendManager.Auth.CurrentUser.UserId;
             // Util_LDH.ConsoleLog(this, $"[0단계 - 4] UID 가져오기 : {uid}");
-
+#endif
             
             //Util_LDH.ConsoleLog(this, "[0단계 - 5] DataBase Binding");
             phaseInit.Report(0.7f);
@@ -89,15 +91,15 @@ namespace LDH_Game
 #if TEST_WITHOUT_LOGIN
 #else
             var userRepo = new RealTimeUserDataRepository(FirebaseBootstrap.Rtdb, FirebaseBootstrap.Root);
-#endif
             var itemRepo = new FirestoreItemRepository(FirebaseBootstrap.Firestore);
+#endif
+   
             
 #if TEST_WITHOUT_LOGIN                 
 #else
             DataManager.Instance.BindUserDataRepository(userRepo,uid);
-#endif
             DataManager.Instance.BindItemRepository(itemRepo);
-            
+#endif
             phaseInit.Complete();
             Util_LDH.ConsoleLog(this, "[0단계] 완료");
             
