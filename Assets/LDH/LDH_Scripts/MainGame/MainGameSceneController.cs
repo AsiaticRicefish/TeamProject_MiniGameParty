@@ -51,6 +51,8 @@ namespace LDH_MainGame
             {
                 _uiLoading.ApplyTheme(loadingTheme);
             }
+            _uiLoading.SetProgress(0f);
+            
             // 3. 테마 없을 때 -> 적용안함.
             Manager.UI.ShowPopupUI(_uiLoading).Forget();
 

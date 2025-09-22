@@ -49,42 +49,47 @@ namespace LDH_MainGame
             TotalRound = totalRound;
             _pv = pv;
         }
-        
-        
+
+
         public MainState Get() => _state;
+
         public MainState ReadOrDefault()
         {
             var s = _pc.GetRoomProps(RoomProps.State, MainState.Init.ToString());
             return System.Enum.TryParse(s, out MainState m) ? m : MainState.Init;
         }
+
         public bool Changed(MainState next) => next != _state;
         public void Set(MainState next) => _state = next;
 
         #region Coroutine
-        
+
         public IEnumerator Co_Picking()
         {
             MainGameManager.Instance.OnPicking?.Invoke();
+            
+            _uiBinder.CloseScorePanel();
             
             yield return new UnityEngine.WaitForSeconds(1.5f);
 
             if (_isMaster())
             {
                 // 직전에 뽑은 미니게임은 다음에는 뽑지 않도록 함(단, 레지스트리에 1개만 있다면 동일한 미니게임 뽑도록 처리)
-                _currentMini = _registry.PickRandomGame(info => _registry.Count==1 || info.id != _currentMini?.id);
-                _pc.SetRoomProps(new Dictionary<string, object> {
-                    { RoomProps.MiniGameId, _currentMini.id },
-                    { RoomProps.State, MainState.Ready.ToString() }
+                _currentMini = _registry.PickRandomGame(info => _registry.Count == 1 || info.id != _currentMini?.id);
+                _pc.SetRoomProps(new Dictionary<string, object>
+                {
+                    { RoomProps.MiniGameId, _currentMini.id }, { RoomProps.State, MainState.Ready.ToString() }
                 });
             }
 
-            MainGameManager.Instance.OnPicked?.Invoke();;
+            MainGameManager.Instance.OnPicked?.Invoke();
+            ;
         }
 
         public IEnumerator Co_Ready()
         {
             yield return new UnityEngine.WaitForSeconds(0.3f);
-            
+
             MainGameManager.Instance.OnWaitAllReady?.Invoke();
 
             string id = _pc.GetRoomProps(RoomProps.MiniGameId, "");
@@ -95,7 +100,6 @@ namespace LDH_MainGame
 
         public IEnumerator Co_LoadingMini()
         {
-         
             if (_currentMini == null)
             {
                 if (_isMaster())
@@ -106,35 +110,60 @@ namespace LDH_MainGame
             //UI 비활성화
             _uiBinder.SetActiveDebugUI(false);
             yield return _uiBinder.CloseReadyPanel().ToCoroutine();
-            
-            
+
+
             // Additive Load
             yield return MainGameManager.Instance.Loader.LoadAdditive(_sceneName(_currentMini), null);
-            
+
             MainGameManager.Instance.OnLoadingMiniGame?.Invoke();
-            
         }
 
         public IEnumerator Co_PlayingMini()
         {
             // 미니게임 종료는 외부에서 State=ApplyingResult로 전환한다고 가정
-            MainGame_PropertiesController.SetLocalReady(false);
-            MainGame_PropertiesController.SetLocalDone(false);
+            _pc.SetLocalReady(false);
+            _pc.SetLocalMiniGameDone(false);
             yield break;
+        }
+
+        public IEnumerator Co_UnloadingMini()
+        {
+            // 1) 미니게임 종료 연출
+            // todo: 게임 종료 UI 띄우기
+            yield return new WaitForSeconds(0.8f);
+
+            // 2) 결과 집계 중 오버레이
+            _uiBinder.ShowLoadingForResult();
+
+            // 3) 미니게임 씬 언로드
+            yield return MainGameManager.Instance.Loader.UnloadAdditive();
+
+
+            // 4) 필요한 변수 초기화 및 UI 활성화
+            PhotonViewSync.Instance.Clear();
+            _uiBinder.SetActiveDebugUI(true);
+
+            //5) 언로드 플래그 켜기
+            // 각자 자기 Done = true
+            _pc.SetLocalMiniGameDone(true);
+
+            yield return null;
+
+            //6) 모두 완료됐으면 마스터가 다음 스테이트로 알아서 전환함
         }
 
         public IEnumerator Co_ApplyingResult()
         {
-            Debug.Log($"[MainGameStateMachine] local done : {MainGame_PropertiesController.GetDone(PhotonNetwork.LocalPlayer)}");
-            yield return MainGameManager.Instance.Loader.UnloadAdditive();
+            // 1) 모두 로딩창 닫기
+            _uiBinder.SetLoadingProgress(1f);
+            yield return new WaitForSeconds(0.8f);
+            _uiBinder.CloseLoadingForResult();
 
-            //photon view sync 변수 초기화
-            PhotonViewSync.Instance.Clear();
+            // 2) 마스터는 점수 계산 + 브로드 캐스트
+            if(_isMaster())        
+                MainGameManager.Instance.ApplyAndBroadcastScoreForCurrentRound();
             
-            _uiBinder.SetActiveDebugUI(true);
             
-            // 각자 자기 Done = true
-            MainGame_PropertiesController.SetLocalDone(true);
             MainGameManager.Instance.OnEndMiniGame?.Invoke();
         }
 
@@ -144,27 +173,37 @@ namespace LDH_MainGame
             yield return new UnityEngine.WaitForSeconds(3f);
             // LeaveRoom은 MainGameManager에서 호출 (씬 전환 담당)
         }
-        
+
         #endregion
-        
-        
+
+
         // ---- Done 종합 판정 → 라운드 증가/전이 ----
         public void CheckAllPlayerDone()
         {
             if (!_isMaster()) return;
-           
+
             Debug.Log("모두 완료됐는지 체크 (PlayerProps 기반)");
             if (!_pc.AllPlayersDone()) return;
 
+            _pc.SetRoomProps(RoomProps.State, MainState.ApplyingResult.ToString());
+        }
+
+        public void CheckNextState()
+        {
+            if (!_isMaster()) return;
+            Debug.Log("모두 결과창 확인이 완료됐는지 체크 (PlayerProps 기반)");
+            if (!_pc.AllPlayersResultDone()) return;
+            
             int currentRound = _pc.GetRoomProps(RoomProps.Round, 1);
-            bool isEnd    = (currentRound+1) > TotalRound;
+            bool isEnd = (currentRound + 1) > TotalRound;
             var nextState = isEnd ? MainState.End : MainState.Picking;
             int nextRound = isEnd ? currentRound : currentRound + 1;
-            
-            _pc.SetRoomProps(new Dictionary<string, object> {
-                { RoomProps.Round,      nextRound },
-                { RoomProps.MiniGameId, ""        },
-                { RoomProps.State,      nextState.ToString() }
+
+            _pc.SetRoomProps(new Dictionary<string, object>
+            {
+                { RoomProps.Round, nextRound },
+                { RoomProps.MiniGameId, "" },
+                { RoomProps.State, nextState.ToString() }
             });
         }
     }

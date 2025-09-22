@@ -24,19 +24,22 @@ public class GamePlayer
     public bool IsReady { get; private set; }       // 현재 플레이어 게임 입장 준비 상태
     public bool IsTurn { get; private set; }        // 현재 플레이어의 턴 여부
     #endregion
-
-    public bool WinThisMiniGame { get; set; }       // 미니게임에서 승리 여부
-
-    public int BoardPosition { get; set; }          // 현재 보드에서의 위치 (0부터 시작, 0은 시작점)
-
+    
     #region 미니게임 관련 데이터
     public JengaPlayerData JengaData { get; set; }
     public ShootingPlayerData ShootingData { get; set; }
     #endregion
 
+    #region 점수 / 랭킹
+    public int Score { get; set; }               // 누적 점수
+    public int LastMiniGameRank { get; set; }    // 최근 라운드(미니게임) 랭크
+    public int TotalRank { get; set; }           // 누적 점수 기준 종합 등수(동순위 반영)
+    public bool WonThisRound { get; set; }   // 이번 라운드 +1 여부
+
+    #endregion
+    
 
     // 전체 게임에서 이긴 횟수 (이건 순위 정렬이나 추후에 랭크에 사용하는 경우 사용)
-    public int WinCount { get; set; }
 
     public void Init(string id, string nickname)
     {
@@ -45,10 +48,11 @@ public class GamePlayer
 
         IsReady = false;
         IsTurn = false;
-
-        WinCount = 0;
-        BoardPosition = 0;
-        WinThisMiniGame = false;
+        
+        Score = 0;
+        LastMiniGameRank = 0;
+        TotalRank = 0;
+        WonThisRound = false;
 
         JengaData = new JengaPlayerData(); // 미니게임 데이터 초기화
         ShootingData = new();

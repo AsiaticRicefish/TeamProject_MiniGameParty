@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using DesignPattern;
@@ -8,6 +9,7 @@ using LDH_Util;
 using Managers;
 using Photon.Pun;
 using Photon.Realtime;
+using Unity.VisualScripting;
 using UnityEngine;
 using static LDH_Util.Define_LDH;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
@@ -18,22 +20,20 @@ namespace LDH_MainGame
     public class MainGameManager : PunSingleton<MainGameManager>, IGameComponent
     {
         [Header("Mini Games")] public MiniGameRegistry registry;
-        [Header("Config")] [SerializeField] private int totalRound = 3;
+        [Header("Config")] 
+        [SerializeField] private int totalRound = 3;
+        [SerializeField] private int baseReward = 10;   // n (원하면 인스펙터에서 조정)
+        
         public int TotalRound => totalRound;
 
-        //Controllers
+        //------- Controllers -----------//
         public MainGame_PropertiesController PropertiesCtrl;
         public MainGame_UIBinder UI;
         public MainGame_StateMachine FSM;
         public MiniGameLoader Loader;
-
-        // Local
-        private bool _isLeavingRoom = false;
-        private int _localSlot = -1;
-        private Coroutine _stateRoutine;
         
         
-        //Events
+        //--------- Events ------------//
         public Action OnGameStart;
         public Action<int> OnRoundChanged;
         public Action OnPicking;
@@ -42,9 +42,16 @@ namespace LDH_MainGame
         public Action OnLoadingMiniGame;
         public Action OnEndMiniGame;
         public Action OnEndGame;
-
-
+        
+        
+        //------ Local variables --------//
         private bool IsMaster => PhotonNetwork.IsMasterClient;
+        // flag
+        private bool _isLeavingRoom = false;
+        private bool _finalRewardsDistributed = false;  // 중복 방지
+        
+        private int _localSlot = -1;
+        private Coroutine _stateRoutine;
 
 
         protected override void OnAwake()
@@ -52,6 +59,9 @@ namespace LDH_MainGame
             PhotonNetwork.AutomaticallySyncScene = false;
             MainGameSceneController.Instance.Register(gameObject);
             
+            
+            //변수 초기화
+            InitPlayerScores();
             
             
             base.OnAwake();
@@ -89,6 +99,14 @@ namespace LDH_MainGame
             Manager.Player.EnsureAllPhotonPlayersRegistered();
         }
 
+        private void InitPlayerScores()
+        {
+            foreach (var kv in PlayerManager.Instance.Players)
+            {
+                kv.Value.Score = 0;
+            }
+        }
+
         public void StartGame()
         {
             UI.SetDebugUI();
@@ -114,19 +132,40 @@ namespace LDH_MainGame
             OnRoundChanged?.Invoke(1);
         }
 
+        #region MiniGame이 사용하는 API
+        
         public void NotifyMiniGameStart()
         {
             if (PhotonNetwork.IsMasterClient)
                 PropertiesCtrl.SetRoomProps(RoomProps.State, MainState.PlayingMiniGame.ToString());
         }
-
+        
         public void NotifyMiniGameFinish()
         {
-            if (PhotonNetwork.IsMasterClient)
-            {
-                PropertiesCtrl.SetRoomProps(RoomProps.State, MainState.ApplyingResult.ToString());
-            }
+            if (!PhotonNetwork.IsMasterClient) return;
+            
+            PropertiesCtrl.SetRoomProps(RoomProps.State, MainState.UnloadingMiniGame.ToString());
+
         }
+        
+        /// <summary>
+        /// GameResultData에 미니게임 결과를 저장
+        /// 모든 클라이언트에서 호출 가능
+        /// </summary>
+        /// <param name="rankings"></param>
+        public void ReportMiniGameResult(Dictionary<string, int> rankings)
+        {
+            if (rankings == null || rankings.Count == 0) return;
+            
+            int round = PropertiesCtrl.GetRoomProps(Define_LDH.RoomProps.Round, 1);
+            string gameId = PropertiesCtrl.GetRoomProps(Define_LDH.RoomProps.MiniGameId, ""); // or registry로 표시명 변환
+            string gameName = registry.GetGameName(gameId);
+            GameResultData.SetRoundResult(round, gameId, gameName, rankings);
+            
+        }
+
+        #endregion
+    
 
 
         #region Photon callbacks
@@ -146,11 +185,6 @@ namespace LDH_MainGame
 
         public override void OnPlayerPropertiesUpdate(Player target, Hashtable changedProps)
         {
-            if (target.IsLocal && changedProps.ContainsKey(PlayerProps.InGameDone))
-            {
-                Debug.Log($"[PlayerProps chagned] my done : {changedProps[PlayerProps.InGameDone]}");
-            }
-            
             // UI Ready 표시 갱신: PlayerProps 기반으로 계산해서 UI에만 전달
             int readyMask = PropertiesCtrl.BuildReadyMaskFromPlayers();
             UI.UpdateReady(readyMask);
@@ -164,9 +198,14 @@ namespace LDH_MainGame
                     PropertiesCtrl.SetRoomProps(RoomProps.State, MainState.LoadingMiniGame.ToString());
                 }
 
-                if (changedProps.ContainsKey(PlayerProps.InGameDone) && FSM.Get() == MainState.ApplyingResult)
+                if (changedProps.ContainsKey(PlayerProps.InGameDone) && FSM.Get() == MainState.UnloadingMiniGame)
                 {
                     FSM.CheckAllPlayerDone();
+                }
+
+                if (changedProps.ContainsKey(PlayerProps.InGameResultDone) && FSM.Get() == MainState.ApplyingResult)
+                {
+                    FSM.CheckNextState();
                 }
             }
         }
@@ -203,7 +242,7 @@ namespace LDH_MainGame
             if (newMasterClient.IsLocal)
             {
                 Debug.Log("[MainGameManager] 새롭게 마스터가 된 클라이언트의 슬롯 인덱스를 갱신합니다. : 0번 슬롯으로");
-                MainGame_PropertiesController.SetSlotIndex(0);
+                PropertiesCtrl.SetSlotIndex(0);
                 _localSlot = 0;
             }
 
@@ -246,7 +285,7 @@ namespace LDH_MainGame
             switch (nextState)
             {
                 case MainState.Picking:
-                    MainGame_PropertiesController.ClearLocalInGameProperties();
+                    PropertiesCtrl.ClearLocalInGameProperties();
                     _stateRoutine = StartCoroutine(FSM.Co_Picking());
                     break;
                 case MainState.Ready:
@@ -257,6 +296,9 @@ namespace LDH_MainGame
                     break;
                 case MainState.PlayingMiniGame:
                     _stateRoutine = StartCoroutine(FSM.Co_PlayingMini());
+                    break;
+                case MainState.UnloadingMiniGame:
+                    _stateRoutine = StartCoroutine(FSM.Co_UnloadingMini());
                     break;
                 case MainState.ApplyingResult:
                     _stateRoutine = StartCoroutine(FSM.Co_ApplyingResult());
@@ -277,7 +319,7 @@ namespace LDH_MainGame
                 await FSM.Co_End().ToUniTask(cancellationToken: ct);
             
             await Manager.UI.CloseAllPopupUI();
-            UI.ShowLoading();
+            UI.ShowLoadingToLobby();
             
             // 병렬 실행
             var unloadTask = Loader.UnloadAdditive().ToUniTask(cancellationToken: ct);
@@ -293,6 +335,112 @@ namespace LDH_MainGame
 
         #endregion
 
+
+        #region Score
+        
+        /// <summary>
+        /// (마스터 전용) 현재 라운드 결과를 소비하고 Top1(동점 포함) +1 후, 스코어보드를 전원에게 브로드캐스트
+        /// </summary>
+        public void ApplyAndBroadcastScoreForCurrentRound()
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+
+            // 1) 라운드 정보 가져오기
+            int round = PropertiesCtrl.GetRoomProps(RoomProps.Round, 1);
+            Debug.Log($"<color=green> 1. round 정보 가져오기 : {round}</color>");
+            
+            
+            
+            // 2) 라운드 결과 가져오기
+            if (!GameResultData.TryConsumeRound(round, out var gameName, out var rankings))
+            {
+                Debug.LogError("Error! Can't Consume Round Result");
+                return;
+            }
+
+            // 2-1) 라운드 승자만 가져오기
+            Debug.Log($"<color=green> 2. 라운드 승자 가져오기 </color>");
+            HashSet<string> roundWinners = new();
+            var winners = GameResultData.GetTop1FromRound(round); // 공동 1등 포함
+            foreach (var uid in winners)
+            {
+                roundWinners.Add(uid);
+                Debug.Log($"<color=green> 2. 라운드 승자 : {uid}</color>");
+   
+            }
+            
+            // 3) 미니게임 랭크를 기준으로 정렬
+            //진행한 미니게임의 랭킹을 기준으로 1등부터 순서대로 UI에 보여주기 위해 랭킹 순서로 정렬
+            // 2) 표시 순서(미니게임 랭크 asc)
+            Debug.Log($"<color=green> 3. 미니게임 랭크 기준으로 정렬</color>");
+            var order = (rankings != null && rankings.Count > 0)
+                ? rankings.OrderBy(kv => kv.Value).ThenBy(kv => kv.Key).Select(kv => kv.Key).ToList()
+                : PlayerManager.Instance.Players.Keys.OrderBy(uid => uid).ToList();
+           
+            
+            //----- 점수 반영 -----//
+            // 최신 점수 계산
+            Debug.Log($"<color=green> 4. 최신 점수 계산</color>");
+            var newScoreMap = new Dictionary<string, int>(order.Count);
+            foreach (var uid in order)
+            {
+                var cur = PlayerManager.Instance.Players.TryGetValue(uid, out var gp) ? gp.Score : 0;
+                newScoreMap[uid] = cur + (roundWinners.Contains(uid) ? 1 : 0);
+            }
+            
+            // 전체 등수 계산
+            Debug.Log($"<color=green> 5. 전체 등수 계산</color>");
+
+            var totalRankMap = Util_LDH.CalcTotalRank(newScoreMap);
+            
+            
+            //------- 직렬화하여 보내기
+            Debug.Log($"<color=green> 6. 직렬화해서 보내기</color>");
+            BroadcastScoreJson(round, gameName, order, rankings, newScoreMap, totalRankMap, roundWinners);
+        }
+
+        private void BroadcastScoreJson(
+            int round, string gameName,
+            List<string> orderUids,
+            Dictionary<string,int> rankings,
+            Dictionary<string,int> newScoreMap,
+            Dictionary<string,int> totalRankMap,
+            HashSet<string> roundWinnerSet)
+        {
+            var payload = new ScoreboardPayload {
+                round = round,
+                gameName = gameName,
+                players = orderUids.Select(uid => new PlayerEntryDto() {
+                    playerId       = uid,
+                    nickname       = PlayerManager.Instance.GetPlayer(uid).Nickname,
+                    score          = newScoreMap[uid],
+                    lastMiniGameRank = rankings != null && rankings.TryGetValue(uid, out var r) ? r : int.MaxValue,
+                    totalRank      = totalRankMap.TryGetValue(uid, out var tr) ? tr : 0,
+                    wonThisRound   = roundWinnerSet.Contains(uid)
+                }).ToArray()
+            };
+
+            Debug.Log($"<color=green> BroadcastScoreJson - 직렬화해서 rpc로 다 보냅니다.</color>");
+
+            string json = JsonUtility.ToJson(payload);
+            Debug.Log($"<color=green>sending data : {json}</color>");
+            photonView.RPC(nameof(RPC_ShowScoreboardJson), RpcTarget.All, json);
+        }
+        
+        
+        public void DistributeFinalRewards()
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+            if (_finalRewardsDistributed) return;
+            _finalRewardsDistributed = true;
+            
+            // 1) 최종 순위(점수 내림차순) 산출
+          //  var ordered = _scores.OrderByDescending(kv => kv.Value).ThenBy(kv => kv.Key).ToList();
+            
+        }
+
+
+        #endregion
 
         #region UI Interaction
 
@@ -312,11 +460,12 @@ namespace LDH_MainGame
                        && PhotonNetwork.LocalPlayer.CustomProperties.TryGetValue(PlayerProps.InGameReady, out var v)
                        && v is bool b && b;
 
-            MainGame_PropertiesController.SetLocalReady(!now);
+            PropertiesCtrl.SetLocalReady(!now);
         }
 
         #endregion
-
+        
+        
         #region RPC
 
         [PunRPC]
@@ -325,44 +474,89 @@ namespace LDH_MainGame
             OnPicked?.Invoke();
         }
 
+        [PunRPC]
+        private void RPC_ShowScoreboardJson(string json)
+        {
+            Debug.Log($"<color=green> RPC 호출 </color>");
+            Debug.Log($"<color=green> receiving data : {json} </color>");
+
+            var payload = JsonUtility.FromJson<ScoreboardPayload>(json);
+            if (payload == null || payload.players == null) return;
+            Debug.Log($"<color=green> json 변환 성공 </color>");
+
+            // 1) 전원 플래그 초기화
+            foreach (var kv in PlayerManager.Instance.Players)
+                kv.Value.WonThisRound = false;
+            
+            // 2) PlayerManager 반영
+            foreach (var p in payload.players)
+            {
+                if (!PlayerManager.Instance.Players.TryGetValue(p.playerId, out var gp))
+                {
+                    Debug.LogError("Player가 PlayerManager에 등록되지 않아서 오류 발생");
+                    return;
+                }
+                gp.Score          = p.score;
+                gp.WonThisRound   = p.wonThisRound;
+                gp.LastMiniGameRank = p.lastMiniGameRank;  // 필요 시 GamePlayer에 필드 이미 있음
+                gp.TotalRank        = p.totalRank;
+            }
+            
+            
+            Debug.Log($"<color=green> 점수 패널 활성화 합니다. </color>");
+            
+            // 3) UI 렌더 (표시 순서 = payload.players 순서)
+            var orderedPlayers = payload.players
+                .Select(p => PlayerManager.Instance.Players.TryGetValue(p.playerId, out var gp) ? gp : null)
+                .Where(gp => gp != null)
+                .ToArray();
+            
+            UniTask.Void(async () =>
+            {
+                try
+                {
+                    await UI.BuildScorePanel(payload.round, payload.gameName, orderedPlayers);
+                    PropertiesCtrl.SetLocalResultDone(true);
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError(e);
+                    PropertiesCtrl.SetLocalResultDone(true); // 실패해도 안전하게 True 올림
+                }
+            });
+        }
+
+
+        [PunRPC]
+        private void RPC_ShowFinalRewards(string[] orderedUids, int[] orderedScores,
+            string[] rewardUids, int[] rewardVals,
+            int topScore)
+        {
+            
+        }
+        
         #endregion
-
-
-        // private void ApplyMiniResult(MiniGameResult result)
-        // {
-        //     foreach (var kv in result.playerScore)
-        //     {
-        //         int actor = kv.Key;
-        //         int score = kv.Value;
-        //
-        //         var uid = PhotonNetwork.PlayerList
-        //             .FirstOrDefault(p => p.ActorNumber == actor)?
-        //             .CustomProperties?["uid"] as string;
-        //
-        //         if (!string.IsNullOrEmpty(uid))
-        //             PlayerManager.Instance.GetPlayer(uid)?.ApplyMiniScore(score);
-        //     }
-        // }
-
-
-        // private bool TryConsumeMiniResult(out MiniGameResult result)
-        // {
-        //     // result = default;
-        //     // var json = GetRoomProperty<string>(RoomProps.MiniGameResult, null);
-        //     // if (string.IsNullOrEmpty(json)) return false;
-        //     //
-        //     // try
-        //     // {
-        //     //     result = JsonUtility.FromJson<MiniGameResult>(json);
-        //     // }
-        //     //
-        //     // catch (Exception e)
-        //     // {
-        //     //     Util_LDH.ConsoleLogWarning(this, $"MiniGameResult parse failed: {e}");
-        //     //     return false;
-        //     // }
-        //     return true;
-        // }
-        //
+        
     }
+
+
+    #region DTO
+    [System.Serializable]
+    public class PlayerEntryDto {
+        public string playerId;       // Firebase UID
+        public string nickname;       // Photon 닉네임
+        public int score;             // 누적 점수(이번 라운드 반영 후)
+        public int lastMiniGameRank;  // 최근 라운드 랭크
+        public int totalRank;         // 누적 등수(동순위)
+        public bool wonThisRound;     // 이번 라운드 +1 여부
+    }
+    [System.Serializable]
+    public class ScoreboardPayload {
+        public int round;
+        public string gameName;
+        public PlayerEntryDto[] players; // 표시 순서대로
+    }
+
+
+    #endregion
 }

@@ -72,6 +72,7 @@ MonoBehaviour:
   isPersistent: 1
   registry: {fileID: 7080885224738973986}
   totalRound: 5
+  baseReward: 10
   Loader: {fileID: 7419730619517185691}
 --- !u!1 &4163732838003876761
 GameObject:
@@ -118,7 +119,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   miniGameInfos:
-  - {fileID: 11400000, guid: e5c3ca65badd048ce85110929773f7f4, type: 2}
   - {fileID: 11400000, guid: 8e89eeac3d14f4a27b58566cacc7064d, type: 2}
 --- !u!1 &7513625712956064270
 GameObject:

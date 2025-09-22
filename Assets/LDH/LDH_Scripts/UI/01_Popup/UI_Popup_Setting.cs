@@ -12,14 +12,10 @@ namespace LDH_UI
     {
         [SerializeField] private Button closeButton;
 
-        [Header("User Info")] 
-        [SerializeField]
-        private TextMeshProUGUI linkAccount;
-        [SerializeField]
-        private TextMeshProUGUI uid;
-        [SerializeField]
-        private TextMeshProUGUI nickname;
-        
+        [Header("User Info")] [SerializeField] private TextMeshProUGUI linkAccount;
+        [SerializeField] private TextMeshProUGUI uid;
+        [SerializeField] private TextMeshProUGUI nickname;
+
         protected override void Init()
         {
             base.Init();
@@ -35,12 +31,15 @@ namespace LDH_UI
         private void OnEnable()
         {
             //계정 정보 반영하기
-          
+#if TEST_WITHOUT_LOGIN
+            uid.text = PhotonNetwork.LocalPlayer.UserId;
+#else
             uid.text = Manager.Data.UID.Trim();
+#endif
+            
             nickname.text = PhotonNetwork.LocalPlayer.NickName.Trim();
 
             // todo: 저장된 볼륨 값 가져오기
-            
         }
 
 

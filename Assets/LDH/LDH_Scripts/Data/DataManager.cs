@@ -52,6 +52,10 @@ namespace Data
         {
             isPersistent = true;
             base.OnAwake();
+            
+            //네크워크 접속 후에 플레이어 프로퍼티에 customizing data를 넣어주어야함.
+            NetworkManager.Instance.ConnectedToMaster += InitCustomDataToPhotonServer;
+
         }
         
         public void BindUserDataRepository(RealTimeUserDataRepository repo, string uid)
@@ -372,6 +376,12 @@ namespace Data
                 if (!string.IsNullOrWhiteSpace(it.Id))
                     dict[it.Id] = it;
             return dict;
+        }
+
+        private void InitCustomDataToPhotonServer()
+        {
+            OnCustomizationChanged?.Invoke(Custom);
+            NetworkManager.Instance.ConnectedToMaster -= InitCustomDataToPhotonServer;
         }
 
         #endregion

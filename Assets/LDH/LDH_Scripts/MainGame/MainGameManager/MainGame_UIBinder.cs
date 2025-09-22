@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using LDH_UI;
 using LDH_Util;
@@ -20,6 +21,7 @@ namespace LDH_MainGame
         private MainGameDebugPanel _debugUI;
         private UI_Popup_PrivateRoom _readyPanel;
         private UI_GameInfo _gameInfo;
+        private UI_Popup_GameResult _resultPanel;
 
         private List<UI_Screen> _mainGameScreenUIs;
         private UI_Popup_QuitGame _quitPopup;
@@ -39,6 +41,8 @@ namespace LDH_MainGame
         }
 
 
+        #region Debug Panel
+        
         public void SetDebugUI()
         {
             _debugUI = Manager.UI.CreateScreenUI<MainGameDebugPanel>();
@@ -53,6 +57,11 @@ namespace LDH_MainGame
             else
                 Manager.UI.CloseScreenUI(_debugUI, false).Forget();
         }
+        
+
+        #endregion
+
+        #region Ready Panel
 
         public void BuildReadyPanel(MiniGameInfo mini, Player[] players, bool isMaster, out int localSlot)
         {
@@ -105,20 +114,11 @@ namespace LDH_MainGame
         }
 
 
-        public async UniTask CloseAllScreenUI()
-        {
-            List<UniTask> tasks = new List<UniTask>();
-            
-            foreach (UI_Screen screenUI in _mainGameScreenUIs)
-            {
-                tasks.Add(Manager.UI.CloseScreenUI(screenUI, true));
-            }
-            
-            await UniTask.WhenAll(tasks);
-        }
-
+        #endregion
         
-        public void ShowLoading()
+        #region Loading / 결과 집계중 Loading
+
+        public void ShowLoadingToLobby()
         {
             // 로딩창 설정
             _loadingUI = Manager.UI.CreatePopupUI<UI_Loading>();
@@ -141,12 +141,54 @@ namespace LDH_MainGame
             
             // 로딩창 띄우기
             Manager.UI.ShowPopupUI(_loadingUI).Forget();
+        }
+
+        public void ShowLoadingForResult()
+        {
+            _loadingUI = Manager.UI.CreatePopupUI<UI_Loading>();
+            UI_LoadingTheme theme = Resources.Load<UI_LoadingTheme>(loadingThemePath);
+            _loadingUI.ApplyTheme(theme);
+            _loadingUI.SetTitle("라운드 종료");
+            _loadingUI.SetBigDescription("결과 집계 중...");
+            _loadingUI.SetSmallDescription("점수와 순위를 확인하는 중입니다.\n잠시만 기다려 주세요.");
             
+            // 로딩창 띄우기
+            Manager.UI.ShowPopupUI(_loadingUI).Forget();
+        }
+
+        public void CloseLoadingForResult()
+        {
+            if (_loadingUI == null)
+            {
+                Debug.LogError("Loading UI is null!!!");
+                return;
+            }
             
+            _loadingUI.RequestClose();
         }
         
         public void SetLoadingProgress(float percent) => _loadingUI?.SetProgress(percent);
-        
+
+
+        #endregion
+
+        #region Score Panel
+
+        public async UniTask BuildScorePanel(int round, string gameName, GamePlayer[] players)
+        {
+            _resultPanel = Manager.UI.CreatePopupUI<UI_Popup_GameResult>();
+            await  _resultPanel.SetData(round, gameName, players);
+            await Manager.UI.ShowPopupUI(_resultPanel);
+        }
+
+        public void CloseScorePanel()
+        {
+            if(_resultPanel == null) return;
+            Manager.UI.ClosePopupUI(_resultPanel).Forget();
+            _resultPanel = null;
+        }
+
+        #endregion
 
         #region 게임 강제 종료 팝업
 
@@ -162,6 +204,24 @@ namespace LDH_MainGame
             if (_quitPopup == null) return;
             Manager.UI.ClosePopupUI(_quitPopup).Forget();
             _quitPopup = null;
+        }
+        
+
+        #endregion
+
+
+        #region Close 
+        
+        public async UniTask CloseAllScreenUI()
+        {
+            List<UniTask> tasks = new List<UniTask>();
+            
+            foreach (UI_Screen screenUI in _mainGameScreenUIs)
+            {
+                tasks.Add(Manager.UI.CloseScreenUI(screenUI, true));
+            }
+            
+            await UniTask.WhenAll(tasks);
         }
 
         #endregion

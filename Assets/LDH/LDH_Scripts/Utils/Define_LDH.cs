@@ -92,8 +92,18 @@ namespace LDH_Util
         #endregion
         
         #region Main Game
-        
-        public enum MainState {Init, Picking, Ready, LoadingMiniGame, PlayingMiniGame, ApplyingResult, End }
+
+        public enum MainState
+        {
+            Init, 
+            Picking, 
+            Ready, 
+            LoadingMiniGame, 
+            PlayingMiniGame, 
+            UnloadingMiniGame,
+            ApplyingResult, 
+            End
+        }
 
         public static partial class RoomProps
         {
@@ -109,6 +119,8 @@ namespace LDH_Util
         {
             public const string InGameReady = "inGameReady";
             public const string InGameDone = "inGameDone";
+            public const string InGameResultDone = "inGameResultDone"; // 결과 연출 완료
+
         }
         
         #endregion

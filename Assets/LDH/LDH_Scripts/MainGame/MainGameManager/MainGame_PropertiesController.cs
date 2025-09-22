@@ -24,7 +24,7 @@ namespace LDH_MainGame
 
         
         // --- 변경 가능한지 조건 체크
-        private bool CanSet() => _inRoom() && _isJoined() && _notLeaving();
+        private  bool CanSet() => _inRoom() && _isJoined() && _notLeaving();
 
         
         // ---  Set Properties / Get Properties
@@ -55,6 +55,7 @@ namespace LDH_MainGame
 
         public static int GetSlotIndex(Player p)
         {
+            
             if (p == null) return -1;
             if (p.CustomProperties != null &&
                 p.CustomProperties.TryGetValue(PP.SlotIndex, out var v) &&
@@ -70,32 +71,50 @@ namespace LDH_MainGame
                    v is bool b && b;
         }
 
-        public static bool GetDone(Player p)
+        public static bool GetMiniGameDone(Player p)
         {
             return p != null &&
                    p.CustomProperties != null &&
                    p.CustomProperties.TryGetValue(PP.InGameDone, out var v) &&
                    v is bool b && b;
         }
-
-        public static void SetSlotIndex(int newSlotIndex)
+        
+        public static bool GetResultDone(Player p)
         {
+            return p != null &&
+                   p.CustomProperties != null &&
+                   p.CustomProperties.TryGetValue(PP.InGameResultDone, out var v) &&
+                   v is bool b && b;
+        }
+
+        public void SetSlotIndex(int newSlotIndex)
+        {
+            if (!CanSet()) return;
             PhotonNetwork.LocalPlayer.SetCustomProperties(new Hashtable { { PP.SlotIndex, newSlotIndex } });
         }
 
-        public static void SetLocalReady(bool ready)
+        public void SetLocalReady(bool ready)
         {
+            if (!CanSet()) return;
             PhotonNetwork.LocalPlayer?.SetCustomProperties(new Hashtable { { PP.InGameReady, ready } });
         }
 
-        public static void SetLocalDone(bool done)
+        public void SetLocalMiniGameDone(bool done)
         {
+            if (!CanSet()) return;
             PhotonNetwork.LocalPlayer?.SetCustomProperties(new Hashtable { { PP.InGameDone, done } });
         }
-
-        public static void ClearLocalInGameProperties()
+        
+        public void SetLocalResultDone(bool done)
         {
-            var ht = new Hashtable { { PP.InGameReady, false }, { PP.InGameDone, false } };
+            if (!CanSet()) return;
+            PhotonNetwork.LocalPlayer?.SetCustomProperties(new Hashtable { { PP.InGameResultDone, done } });
+        }
+
+        public void ClearLocalInGameProperties()
+        {
+            if (!CanSet()) return;
+            var ht = new Hashtable { { PP.InGameReady, false }, { PP.InGameDone, false }, {PP.InGameResultDone, false }};
             PhotonNetwork.LocalPlayer?.SetCustomProperties(ht);
         }
         
@@ -128,11 +147,28 @@ namespace LDH_MainGame
                 int slot = GetSlotIndex(p);
                 if (slot < 0) continue;
                 present |= (1 << slot);
-                if (GetDone(p)) done |= (1 << slot);
+                if (GetMiniGameDone(p)) done |= (1 << slot);
             }
             return present != 0 && (done & present) == present;
         }
         
+        public bool AllPlayersResultDone()
+        {
+            var players = PhotonNetwork.PlayerList;
+            if (players == null || players.Length == 0) return false;
+
+            int present = 0;
+            int done    = 0;
+            foreach (var p in players)
+            {
+                int slot = GetSlotIndex(p);
+                if (slot < 0) continue;
+                present |= (1 << slot);
+                if (GetResultDone(p)) done |= (1 << slot);
+            }
+            return present != 0 && (done & present) == present;
+        }
+
         
         /// <summary>
         /// UI용 편의 함수: 현재 PlayerProps 기반 Ready 비트마스크 생성
