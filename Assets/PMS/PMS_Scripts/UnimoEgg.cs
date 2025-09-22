@@ -137,14 +137,19 @@ public class UnimoEgg : MonoBehaviourPun
 
     private void OnCollisionEnter(Collision collision)
     {
-        if(collision.gameObject.CompareTag("UnimoEgg"))
+        ContactPoint contact = collision.contacts[0];
+        Vector3 hitPosition = contact.point;
+        playerEffectController.Play(ParticleIDs.SH_UnimoCollisionEffect, hitPosition, Quaternion.identity);
+
+
+        /*if (collision.gameObject.CompareTag("UnimoEgg"))
         {
             ContactPoint contact = collision.contacts[0];
             Vector3 hitPosition = contact.point;
             Vector3 hitNormal = contact.normal;
 
-            playerEffectController.Play(EffectType.Collision, hitPosition, Quaternion.identity);
-        }
+            playerEffectController.Play(ParticleIDs.SH_UnimoCollisionEffect, hitPosition, Quaternion.identity);
+        }*/
     }
 
     //떨어졌을때

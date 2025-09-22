@@ -46,8 +46,10 @@ MonoBehaviour:
   m_GroupAssets:
   - {fileID: 11400000, guid: 5fccbc31442274493ac6f16e5687f6b9, type: 2}
   - {fileID: 11400000, guid: 86f15fd145e6745f6b1b6055836a813f, type: 2}
+  - {fileID: 11400000, guid: 3f37e16251235e84dad36358233d4053, type: 2}
   - {fileID: 11400000, guid: da02b2f145e151c4489fe26b546ea6ed, type: 2}
   - {fileID: 11400000, guid: 466617cd8ed6e4c9fadf194639b081a1, type: 2}
+  - {fileID: 11400000, guid: 9fc8afe4261d74344b423eb713d97050, type: 2}
   - {fileID: 11400000, guid: 50ecc3c23fbb7e944994ad1d4a053c19, type: 2}
   - {fileID: 11400000, guid: aa7d9b149dfd96048843149b878eaa5b, type: 2}
   - {fileID: 11400000, guid: 5ef6ea55b29e7400ab3c02c8bb421c5d, type: 2}
@@ -96,6 +98,7 @@ MonoBehaviour:
     - default
     - catalog:character
     - catalog:equip
+    - catalog:currency
     - Sound
     - Effect
   m_SchemaTemplates: []

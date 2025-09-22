@@ -340,8 +340,7 @@ public class GuestLoginUI : MonoBehaviour
         try
         {
 #if TEST_WITHOUT_LOGIN
-            Managers.Manager.Network.SetTestNicknameAndID(nick);
-            PhotonNetwork.ConnectUsingSettings();
+            GuestLoginManager.Instance.ApplyPhotonIdentityAndConnect($"Player-{nick}", nick);
 #else
             mgr.LoginAsGuestWithNickname(nick);
 #endif

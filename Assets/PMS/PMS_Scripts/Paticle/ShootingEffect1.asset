@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: ShootingEffect1
   m_EditorClassIdentifier: 
   id: WindlinesSpeedy
-  addressableKey: 
+  addressableKey: Particles/ShootingGame/WindlinesSpeedy
   initialPoolSize: 10
   duration: 2

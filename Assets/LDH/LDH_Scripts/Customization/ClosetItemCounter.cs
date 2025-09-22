@@ -1,4 +1,5 @@
 using System.Linq;
+using Data;
 using LDH_Util;
 using Managers;
 using TMPro;
@@ -9,7 +10,7 @@ namespace Customization
     public class ClosetItemCounter : MonoBehaviour
     {
         [SerializeField] private TMP_Text countText;
-        [SerializeField] private string countForamt = "{0} <#c5c8d0>/ {1}";
+        [SerializeField] private string countFormat = "{0} <#c5c8d0>/ {1}";
 
         private string _ownedCount;
         private string _totalCount;
@@ -17,14 +18,14 @@ namespace Customization
         public void SetCounter(string id)
         {
 
-            if (id.Equals(Define_LDH.ClosetCategory.Character.ToString()))
+            if (id.Equals(Define_LDH.ItemType.Character.ToString()))
             {
-                _ownedCount = Manager.Custom.OwnedCharacters.Count.ToString();
+                _ownedCount = DataManager.Instance.Custom.OwnedCharacters.Count.ToString();
                 _totalCount = CatalogProvider.Characters.Count.ToString();
             }
-            else if (id.Equals(Define_LDH.ClosetCategory.Equip.ToString()))
+            else if (id.Equals(Define_LDH.ItemType.Equip.ToString()))
             {
-                _ownedCount = Manager.Custom.OwnedEquips.Count().ToString();
+                _ownedCount = DataManager.Instance.Custom.OwnedEquips.Count().ToString();
                 _totalCount = CatalogProvider.Equips.Count().ToString();
             }
             else
@@ -33,7 +34,7 @@ namespace Customization
                 _totalCount = "0";
             }
             
-            countText.text = string.Format(countForamt, _ownedCount, _totalCount );
+            countText.text = string.Format(countFormat, _ownedCount, _totalCount );
         }
         
         

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using DesignPattern;
+using LDH_UI;
 using LDH_Util;
 using Managers;
 using Photon.Pun;
@@ -30,8 +31,8 @@ namespace LDH_MainGame
         private bool _isLeavingRoom = false;
         private int _localSlot = -1;
         private Coroutine _stateRoutine;
-
-
+        
+        
         //Events
         public Action OnGameStart;
         public Action<int> OnRoundChanged;
@@ -50,6 +51,9 @@ namespace LDH_MainGame
         {
             PhotonNetwork.AutomaticallySyncScene = false;
             MainGameSceneController.Instance.Register(gameObject);
+            
+            
+            
             base.OnAwake();
         }
 
@@ -88,7 +92,6 @@ namespace LDH_MainGame
         public void StartGame()
         {
             UI.SetDebugUI();
-            
             
             // 필수 서비스 준비 확인
             if (PropertiesCtrl == null || FSM == null || UI == null)
@@ -269,18 +272,21 @@ namespace LDH_MainGame
         public async UniTask EndGameAsync(bool force = false, CancellationToken ct = default)
         {
             _isLeavingRoom = true;
-
+            
             if (!force)
                 await FSM.Co_End().ToUniTask(cancellationToken: ct);
-
+            
+            await Manager.UI.CloseAllPopupUI();
+            UI.ShowLoading();
+            
             // 병렬 실행
             var unloadTask = Loader.UnloadAdditive().ToUniTask(cancellationToken: ct);
-            var closeAllTask = Manager.UI.CloseAllPopupUI(); // 내부는 순차 닫기 유지
             var closeAllScreenUITask = UI.CloseAllScreenUI();
-            await UniTask.WhenAll(unloadTask, closeAllTask, closeAllScreenUITask);
+            await UniTask.WhenAll(unloadTask,closeAllScreenUITask);
             await UniTask.Yield(PlayerLoopTiming.LastPostLateUpdate, ct);
 
             Debug.Log("[MainGameManager] After close all popup ui, leave room");
+            UI.SetLoadingProgress(0.4f);
 
             PhotonNetwork.LeaveRoom();
         }
