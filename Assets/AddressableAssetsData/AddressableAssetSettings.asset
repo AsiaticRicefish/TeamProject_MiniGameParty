@@ -15,7 +15,7 @@ MonoBehaviour:
   m_DefaultGroup: 8dc196d36c902c4439b304ad961ef94d
   m_currentHash:
     serializedVersion: 2
-    Hash: f61703bb34c1bc327c7921d4c0d8f526
+    Hash: 9c2f8351cc13553bda15f80a90e4e4f4
   m_OptimizeCatalogSize: 0
   m_BuildRemoteCatalog: 0
   m_BundleLocalCatalog: 0
@@ -98,6 +98,8 @@ MonoBehaviour:
     - catalog:character
     - catalog:equip
     - catalog:currency
+    - Sound
+    - Effect
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: d81bc7557919e14458ac8c6441537685, type: 2}

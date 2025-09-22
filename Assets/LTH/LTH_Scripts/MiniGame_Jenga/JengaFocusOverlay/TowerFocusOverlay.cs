@@ -400,6 +400,8 @@ public class TowerFocusOverlay : MonoBehaviour
 
     private void OnOk()
     {
+        SoundManager.Instance?.PlaySFX("Click");
+
         if (selected == null || !selected.IsCurrentlySelected) return;
 
         // 2차 클릭(타이밍 시작) 대행 → 여기서 OnAnyBlockTimingStart가 발행되어 타이밍 UI가 뜸
