@@ -76,7 +76,7 @@ namespace LDH_Game
 #if UNITY_EDITOR          
             Firestore.Settings.PersistenceEnabled = false;
 #else
-            fsSettings.PersistenceEnabled = fsPersistence;
+            Firestore.Settings.PersistenceEnabled = fsPersistence;
 #endif
             Debug.Log("[FirebaseBootstrap] RTDB & Firestore ready.");
 
