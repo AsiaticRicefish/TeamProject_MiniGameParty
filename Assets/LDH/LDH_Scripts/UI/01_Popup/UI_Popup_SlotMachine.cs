@@ -4,6 +4,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using LDH_MainGame;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.UI;
@@ -12,13 +13,17 @@ namespace LDH_UI
 {
     public class UI_Popup_SlotMachine : UI_Popup
     {
+        [Header("Transform")]
         [SerializeField] private RectTransform title;
         [SerializeField] private RectTransform subTitle;
 
         [SerializeField] private RectTransform slotMachine;
         [SerializeField] private Transform handle;
+        
+        [Header("UI Components")]
         [SerializeField] private UI_SlotMachine_Row slotRow;
-
+        [SerializeField] private TMP_Text titleText;
+        
         [Header("CanvasGroup")] [SerializeField]
         private CanvasGroup tCg;
 
@@ -32,13 +37,15 @@ namespace LDH_UI
         [SerializeField] private float dropTimeDown = 0.28f; // 쿵 떨어지는 구간
         [SerializeField] private float dropTimeUp = 0.18f; // 살짝 되튀기
         [SerializeField] private float dropOvershoot = 28f; // 되튀기 픽셀
-        [SerializeField] private float handleDownDeg = 25f; // 레버 회전 각도
+        [SerializeField] private float handleDownDeg = 40f; // 레버 회전 각도
 
         private int _targetIndex;
+        private Vector3 _originHandleRot;
 
-        public async UniTask SetData(List<MiniGameInfo> candidates, int targetIndex)
+        public async UniTask SetData(List<string> candidates, int targetIndex, int currentRound)
         {
             _targetIndex = targetIndex;
+            titleText.text = $"{currentRound}라운드";
             await slotRow.SetCandidates(candidates);
         }
 
@@ -53,7 +60,7 @@ namespace LDH_UI
             var t0 = title.anchoredPosition;
             var s0 = subTitle.anchoredPosition;
             var sm0 = slotMachine.anchoredPosition;
-
+            
             title.anchoredPosition = t0 + new Vector2(0, -30f);
             subTitle.anchoredPosition = s0 + new Vector2(0, -30f);
             slotMachine.anchoredPosition = sm0 + new Vector2(0, 180f);
@@ -85,6 +92,7 @@ namespace LDH_UI
             // 2) 슬롯 머신 등장 연출 : 위에서 쿵 떨어지는 효과
             var tw3 = DOTween.Sequence()
                 .Append(slotMachine.DOAnchorPosY(sm0.y + dropOvershoot, dropTimeDown).SetEase(Ease.OutCubic))
+                .Join(smCg.DOFade(1f, dropTimeDown))
                 .Append(slotMachine.DOAnchorPosY(sm0.y, dropTimeUp).SetEase(Ease.InCubic)).SetLink(gameObject);
             
             await tw3.AsyncWaitForCompletion();
@@ -95,8 +103,11 @@ namespace LDH_UI
         // 슬롯 작동 
         public async UniTask PullHandle(CancellationToken ct = default)
         {
+            _originHandleRot = handle.transform.rotation.eulerAngles;
+            var targetRot = new Vector3(_originHandleRot.x, _originHandleRot.y, handleDownDeg);
+            
             var down = handle
-                .DOLocalRotate(new Vector3(0, 0, -handleDownDeg), 0.08f)
+                .DOLocalRotate(targetRot, 0.08f)
                 .SetEase(Ease.OutCubic)
                 .SetLink(gameObject);
             await down.AsyncWaitForCompletion();
@@ -104,7 +115,7 @@ namespace LDH_UI
             slotRow.StartRotating(_targetIndex);
 
             var up = handle
-                .DOLocalRotate(Vector3.zero, 0.12f)
+                .DOLocalRotate(_originHandleRot, 0.12f)
                 .SetEase(Ease.OutCubic)
                 .SetLink(gameObject);
             await up.AsyncWaitForCompletion();

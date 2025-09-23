@@ -134,25 +134,24 @@ namespace LDH_UI
                 scoreIcon.SetActive(true);
 
                 var t = scoreIcon.transform;
-                t.localScale = Vector3.one;
+                t.localScale = Vector3.one * 0.6f;
 
 
                 // 아이콘 펄스 애니메이션 완료까지 대기
-                return t.DOScale(2f, pulseDuration * 0.5f)
-                    .SetEase(Ease.OutBack)
-                    .SetLoops(2, LoopType.Yoyo) // ⬅️ 요요
+                return t.DOScale(1f, pulseDuration)
+                    .SetEase(Ease.InOutCubic)
                     .SetUpdate(true)
                     .ToUniTask(cancellationToken: ct)
                     .ContinueWith(
                         () =>
                         {
-                            if (outline)
-                                outline.enabled = false;
+                            // if (outline)
+                            //     outline.enabled = false;
                             t.localScale = Vector3.one; // 마무리 보정
                         });
             }
 
-            if (outline) outline.enabled = false;
+            // if (outline) outline.enabled = false;
             return UniTask.CompletedTask;
         }
 

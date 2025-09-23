@@ -147,9 +147,11 @@ namespace LDH_MainGame
                 PropertiesCtrl.SetRoomProps(RoomProps.State, MainState.PlayingMiniGame.ToString());
         }
 
-        public void NotifyMiniGameFinish()
+        public async void NotifyMiniGameFinish()
         {
             if (!PhotonNetwork.IsMasterClient) return;
+            photonView.RPC(nameof(RPC_ShowEndGame), RpcTarget.AllViaServer);
+            await UniTask.Delay(TimeSpan.FromSeconds(2.8f));
             PropertiesCtrl.SetRoomProps(RoomProps.State, MainState.UnloadingMiniGame.ToString());
         }
 
@@ -207,6 +209,8 @@ namespace LDH_MainGame
                         FSM.CheckAllPlayerUnloadingDone();
                     else if(FSM.Get() == MainState.Intro)
                         FSM.CheckAllPlayerIntroDone();
+                    else if (FSM.Get() == MainState.Picking)
+                        FSM.CheckAllPlayerPickingDone();
                 }
 
                 if (changedProps.ContainsKey(PlayerProps.InGameResultDone) && FSM.Get() == MainState.ApplyingResult)
@@ -303,6 +307,7 @@ namespace LDH_MainGame
                     _stateRoutine = StartCoroutine(FSM.Co_Picking());
                     break;
                 case MainState.Ready:
+                    UI.CloseSlotMachine().Forget();
                     _stateRoutine = StartCoroutine(FSM.Co_Ready());
                     break;
                 case MainState.LoadingMiniGame:
@@ -556,6 +561,64 @@ namespace LDH_MainGame
                     Debug.LogError(e);
                 }
             });
+        }
+
+
+        [PunRPC]
+        public void RPC_BuildSlotMachine(string[] candidateIds, int targetIndex)
+        {
+            var list = candidateIds.ToList();
+            
+            UniTask.Void(async () =>
+            {
+                try
+                {
+                    await UI.BuildSlotMachine(list, targetIndex, PropertiesCtrl.GetRoomProps(RoomProps.Round, 1));
+                    Debug.Log($"<color=green> Is master? {IsMaster} / 마스터가 아니면 끝, 마스터면 handle pull하는 rpc 호출</color>");
+                    if (IsMaster)
+                    {
+                        await UniTask.Delay(TimeSpan.FromSeconds(2f));
+                        photonView.RPC(nameof(RPC_PullSlotHandle), RpcTarget.All);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError(e);
+                }
+            });
+            
+           
+        }
+
+        [PunRPC]
+        public void RPC_PullSlotHandle()
+        {
+            Debug.Log($"<color=green> 핸들을 당깁니다. </color>");
+
+            UniTask.Void(async () =>
+            {
+                try
+                {
+                    // 슬롯 돌리고 멈출 때까지 기다림
+                    await UI.PullHandle();
+                    await UniTask.Delay(TimeSpan.FromSeconds(2f));
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError(e);
+                }
+                finally
+                {
+                    // 연출 끝났음을 알리기
+                    PropertiesCtrl.SetLocalDone(true);
+                }
+            });
+        }
+
+        [PunRPC]
+        public void RPC_ShowEndGame()
+        {
+            UI.ShowGameEnd().Forget();
         }
 
         #endregion

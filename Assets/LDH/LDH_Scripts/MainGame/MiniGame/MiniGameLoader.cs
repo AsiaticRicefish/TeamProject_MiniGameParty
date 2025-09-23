@@ -38,7 +38,10 @@ namespace LDH_MainGame
 
             //카메라만 나중에 비활성
             yield return StartCoroutine(Disable<Camera>(_mainScene));
-          
+            // 캔버스 비활성화
+            yield return StartCoroutine(Disable<Canvas>(_mainScene));
+            
+            
             Debug.Log($"[MiniGameLoader] _hasMiniScene = _loadedMiniScene.IsValid() = {_hasMiniScene}");
             if (_hasMiniScene)
             {

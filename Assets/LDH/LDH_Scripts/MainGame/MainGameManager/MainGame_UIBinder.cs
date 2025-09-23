@@ -31,6 +31,7 @@ namespace LDH_MainGame
         private UI_Popup_GameResult _resultPanel;
         private UI_Popup_Reward _rewardPanel;
         private UI_Popup_QuitGame _quitPopup;
+        private UI_Popup_GameEnd _gameEndPopup;
         
         // const variable
         private const string loadingThemePath = "Data/Lobby_Theme";
@@ -65,10 +66,10 @@ namespace LDH_MainGame
 
         #region SlotMachine
 
-        public async UniTask BuildSlotMachine(List<MiniGameInfo> candidates, int targetIndex)
+        public async UniTask BuildSlotMachine(List<string> candidates, int targetIndex, int currentRound)
         {
             _pickingUI = Manager.UI.CreatePopupUI<UI_Popup_SlotMachine>();
-            await _pickingUI.SetData(candidates, targetIndex);
+            await _pickingUI.SetData(candidates, targetIndex, currentRound);
             await Manager.UI.ShowPopupUI(_pickingUI);
 
         }
@@ -79,7 +80,12 @@ namespace LDH_MainGame
             await Manager.UI.ClosePopupUI(_pickingUI);
             _pickingUI = null;
         }
-
+        
+        public async UniTask PullHandle()
+        {
+            if(_pickingUI==null) return;
+            await _pickingUI.PullHandle();
+        }
 
         #endregion
         
@@ -191,6 +197,19 @@ namespace LDH_MainGame
         
         public void SetLoadingProgress(float percent) => _loadingUI?.SetProgress(percent);
 
+
+        #endregion
+
+        #region Game End
+
+        public async UniTask ShowGameEnd()
+        {
+            _gameEndPopup = Manager.UI.CreatePopupUI<UI_Popup_GameEnd>();
+            await Manager.UI.ShowPopupUI(_gameEndPopup);
+            await UniTask.Delay(TimeSpan.FromSeconds(1.8f));
+            await Manager.UI.ClosePopupUI(_gameEndPopup);
+            _gameEndPopup = null;
+        }
 
         #endregion
 

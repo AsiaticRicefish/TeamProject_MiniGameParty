@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using LDH_Util;
+using Managers;
 using Photon.Pun;
 using UnityEngine;
 using static LDH_Util.Define_LDH;
@@ -68,7 +69,7 @@ namespace LDH_MainGame
         { 
            yield return _uiBinder.BuildIntroScreen(PhotonNetwork.PlayerList).ToCoroutine();
 
-           yield return new WaitForSeconds(3f);
+           yield return new WaitForSeconds(1.5f);
            
            _pc.SetLocalDone(true);
             yield return null;
@@ -78,17 +79,30 @@ namespace LDH_MainGame
         {
             // 스코어 패널 닫기
             _uiBinder.CloseScorePanel();
-            
             yield return new UnityEngine.WaitForSeconds(2f);
+            
+            //done flag 초기화
+            _pc.SetLocalDone(false);
 
             if (_isMaster())
             {
+                //전체 게임 리스트
+                var candidates = _registry.MiniGameInfos;
+                
                 // 직전에 뽑은 미니게임은 다음에는 뽑지 않도록 함(단, 레지스트리에 1개만 있다면 동일한 미니게임 뽑도록 처리)
                 _currentMini = _registry.PickRandomGame(info => _registry.Count == 1 || info.id != _currentMini?.id);
-                _pc.SetRoomProps(new Dictionary<string, object>
-                {
-                    { RoomProps.MiniGameId, _currentMini.id }, { RoomProps.State, MainState.Ready.ToString() }
-                });
+                
+                // 선택된 미니게임의 인덱스
+                int targetIndex = candidates.FindIndex( info => _currentMini.id == info.id);
+                
+                // 후보 id 배열
+                string[] candidateIds = new string[candidates.Count];
+                for (int i = 0; i < candidates.Count; i++) candidateIds[i] = candidates[i].id;
+                
+                
+                Debug.Log("<color=green>[MiniGame_FSM] 슬롯 머신 팝업 생성 rpc를 보냅니다.</color>");
+                MainGameManager.Instance.photonView.RPC(
+                    nameof(MainGameManager.Instance.RPC_BuildSlotMachine), RpcTarget.All, candidateIds, targetIndex);
             }
 
             MainGameManager.Instance.OnPicked?.Invoke();
@@ -97,6 +111,8 @@ namespace LDH_MainGame
 
         public IEnumerator Co_Ready()
         {
+            //done flag 초기화
+            _pc.SetLocalDone(false);
             yield return new UnityEngine.WaitForSeconds(0.3f);
 
             MainGameManager.Instance.OnWaitAllReady?.Invoke();
@@ -117,7 +133,6 @@ namespace LDH_MainGame
             }
 
             //UI 비활성화
-            _uiBinder.SetActiveDebugUI(false);
             yield return _uiBinder.CloseReadyPanel().ToCoroutine();
 
 
@@ -138,7 +153,6 @@ namespace LDH_MainGame
         public IEnumerator Co_UnloadingMini()
         {
             // 1) 미니게임 종료 연출
-            // todo: 게임 종료 UI 띄우기
             yield return new WaitForSeconds(0.8f);
 
             // 2) 결과 집계 중 오버레이
@@ -150,7 +164,6 @@ namespace LDH_MainGame
 
             // 4) 필요한 변수 초기화 및 UI 활성화
             PhotonViewSync.Instance.Clear();
-            _uiBinder.SetActiveDebugUI(true);
 
             //5) 언로드 플래그 켜기
             // 각자 자기 Done = true
@@ -199,6 +212,20 @@ namespace LDH_MainGame
             _pc.SetRoomProps(RoomProps.State, MainState.Picking.ToString());
         }
 
+
+        public async void CheckAllPlayerPickingDone()
+        {
+            if (!_isMaster()) return;
+            Debug.Log("모두 완료됐는지 체크 (PlayerProps 기반)");
+            if (!_pc.AllPlayersDone()) return;
+
+            await UniTask.Delay(TimeSpan.FromSeconds(1.5f));
+            _pc.SetRoomProps(new Dictionary<string, object>
+            {
+                { RoomProps.MiniGameId, _currentMini.id }, { RoomProps.State, MainState.Ready.ToString() }
+            });
+
+        }
         
         
         public void CheckAllPlayerUnloadingDone()
