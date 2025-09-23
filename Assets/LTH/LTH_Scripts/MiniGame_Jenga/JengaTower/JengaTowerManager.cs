@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Cysharp.Threading.Tasks;
 using DesignPattern;
 using InputBlocker;
 using Photon.Pun;
@@ -69,6 +70,13 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
     // 개별 타워별로 구독한 델리게이트를 보관(해제용)
     private readonly HashSet<int> _mutedActors = new();
     private readonly Dictionary<int, (Action on, Action off)> _towerMuteHandlers = new();
+
+    // 루프형 붕괴 먼지 파티클 제어
+    private readonly Dictionary<int, Action> _stopDustByActor = new();
+
+    // 중복 구독 방지를 위한 델리게이트 보관(해제용)
+    private readonly Dictionary<int, (Action on, Action off)> _dustHandlers = new();
+
     public bool IsArenaMuted(int ownerActorNumber) => _mutedActors.Contains(ownerActorNumber);
 
     private bool _isCreatingProxies = false;
@@ -253,6 +261,48 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
         tower.CollapseStarted += on;
         tower.CollapseFinished += off;
         _towerMuteHandlers[actorNumber] = (on, off);
+
+        // 이전 붕괴 먼지 핸들러가 있다면 해제 & 정지 신호
+        if (_dustHandlers.TryGetValue(actorNumber, out var oldDust))
+        {
+            tower.CollapseStarted -= oldDust.on;
+            tower.CollapseFinished -= oldDust.off;
+
+            if (_stopDustByActor.TryGetValue(actorNumber, out var oldStop))
+            {
+                oldStop?.Invoke();
+                _stopDustByActor.Remove(actorNumber);
+            }
+            _dustHandlers.Remove(actorNumber);
+        }
+
+        // 붕괴 시작/끝에 루프 파티클 연동
+        Action dustOn = () =>
+        {
+            bool stop = false;
+            _stopDustByActor[actorNumber] = () => stop = true;
+
+            var t = tower.transform;
+            var pos = t.position + Vector3.up * 0.2f;
+
+            ParticleManager.Instance
+                .PlayUntilAsync("ConstructBuilding01", pos, Quaternion.identity, () => stop)
+                .Forget();
+        };
+
+        Action dustOff = () =>
+        {
+            if (_stopDustByActor.TryGetValue(actorNumber, out var stop))
+            {
+                stop?.Invoke();
+                _stopDustByActor.Remove(actorNumber);
+            }
+        };
+
+        tower.CollapseStarted += dustOn;
+        tower.CollapseFinished += dustOff;
+        _dustHandlers[actorNumber] = (dustOn, dustOff);
+
 
         if (actorNumber == PhotonNetwork.LocalPlayer.ActorNumber)
         {
@@ -739,6 +789,14 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
         {
             CleanupAllProxies();
         }
+
+        foreach (var kv in _stopDustByActor)
+        {
+            kv.Value?.Invoke();
+        }
+        _stopDustByActor.Clear();
+
+        _dustHandlers.Clear();
 
         base.OnDestroy();
     }
