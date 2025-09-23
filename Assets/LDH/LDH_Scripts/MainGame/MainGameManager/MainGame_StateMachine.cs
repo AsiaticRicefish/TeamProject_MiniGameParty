@@ -23,7 +23,7 @@ namespace LDH_MainGame
         private readonly System.Func<bool> _isEnd;
         private readonly PhotonView _pv; // 주입받은 PhotonView (현재는 사용 안 함)
         
-        private Define_LDH.MainState _state = Define_LDH.MainState.Intro;
+        private Define_LDH.MainState _state = Define_LDH.MainState.None;
         private MiniGameInfo _currentMini;
 
         public MainGame_StateMachine(
@@ -67,7 +67,8 @@ namespace LDH_MainGame
         public IEnumerator Co_Intro()
         { 
            yield return _uiBinder.BuildIntroScreen(PhotonNetwork.PlayerList).ToCoroutine();
-           yield return null;
+
+           yield return new WaitForSeconds(3f);
            
            _pc.SetLocalDone(true);
             yield return null;

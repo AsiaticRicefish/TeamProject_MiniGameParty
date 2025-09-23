@@ -71,6 +71,13 @@ namespace LDH_MainGame
             await Manager.UI.ShowScreenUI(_introScreen);
         }
 
+        public async UniTask CloseIntroScreen()
+        {
+            if (_introScreen == null) return;
+            await Manager.UI.CloseScreenUI(_introScreen, true);
+            _introScreen = null;
+        }
+        
         #endregion
 
         #region Ready Panel

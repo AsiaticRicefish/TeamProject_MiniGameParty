@@ -95,6 +95,7 @@ namespace LDH_Util
 
         public enum MainState
         {
+            None,
             Intro, 
             Picking, 
             Ready, 

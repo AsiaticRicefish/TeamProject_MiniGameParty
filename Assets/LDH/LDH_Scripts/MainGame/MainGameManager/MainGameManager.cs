@@ -125,7 +125,7 @@ namespace LDH_MainGame
                 return; // 또는 Initialize() 호출 후 재시도 로직을 넣어도 됨
             }
 
-            Util_LDH.ConsoleLog(this, "게임을 시작합니다. (Enter 'Picking' State)");
+            Util_LDH.ConsoleLog(this, "게임을 시작합니다. (Enter 'Intro' State)");
             OnGameStart?.Invoke();
 
             if (IsMaster)
@@ -133,7 +133,7 @@ namespace LDH_MainGame
                     {
                         { RoomProps.Round, 1 },
                         { RoomProps.MiniGameId, "" },
-                        { RoomProps.State, MainState.Picking.ToString() }
+                        { RoomProps.State, MainState.Intro.ToString() }
                     }
                 );
             OnRoundChanged?.Invoke(1);
@@ -281,6 +281,7 @@ namespace LDH_MainGame
         /// </summary>
         private void SwitchState(MainState nextState)
         {
+            Debug.Log($"{nextState.ToString()}으로 상태 변경");
             if (_stateRoutine != null)
             {
                 StopCoroutine(_stateRoutine);
@@ -298,6 +299,7 @@ namespace LDH_MainGame
                 case MainState.Picking:
                     PropertiesCtrl.ClearLocalInGameProperties();
                     ResetRoundWinnerFlag();
+                    UI.CloseIntroScreen().Forget();
                     _stateRoutine = StartCoroutine(FSM.Co_Picking());
                     break;
                 case MainState.Ready:
