@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using InputBlocker;
 using LDH_UI;
 using Managers;
 using UnityEngine;
@@ -19,9 +20,10 @@ public class OpenGameSettingPopupButton : MonoBehaviour
 
     private async UniTask OnClickAsync()
     {
-        if (!button || !button.interactable) return;
+        // 입력 차단
+        if (InputManager.Instance != null && InputManager.Instance.IsBlocked(InputType.UI)) return;
 
-       // SoundManager.Instance?.PlaySFX("Click");
+        if (!button || !button.interactable) return;
 
         button.interactable = false;
 
