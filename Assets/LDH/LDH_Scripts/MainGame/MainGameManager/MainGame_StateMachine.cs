@@ -20,10 +20,10 @@ namespace LDH_MainGame
         private readonly System.Func<MiniGameInfo, string> _sceneName;
         private readonly System.Func<IEnumerator, Coroutine> _start;
         private readonly System.Action<Coroutine> _stop;
+        private readonly System.Func<bool> _isEnd;
         private readonly PhotonView _pv; // 주입받은 PhotonView (현재는 사용 안 함)
-
-        public int TotalRound { get; }
-        private Define_LDH.MainState _state = Define_LDH.MainState.Init;
+        
+        private Define_LDH.MainState _state = Define_LDH.MainState.Intro;
         private MiniGameInfo _currentMini;
 
         public MainGame_StateMachine(
@@ -34,7 +34,7 @@ namespace LDH_MainGame
             System.Func<MiniGameInfo, string> sceneName,
             System.Func<IEnumerator, Coroutine> startCoroutine,
             System.Action<Coroutine> stopCoroutine,
-            int totalRound,
+            System.Func<bool> isEnd,
             PhotonView pv)
         {
             _pc = pc;
@@ -46,7 +46,7 @@ namespace LDH_MainGame
             _sceneName = sceneName;
             _start = startCoroutine;
             _stop = stopCoroutine;
-            TotalRound = totalRound;
+            _isEnd = isEnd;
             _pv = pv;
         }
 
@@ -55,8 +55,8 @@ namespace LDH_MainGame
 
         public MainState ReadOrDefault()
         {
-            var s = _pc.GetRoomProps(RoomProps.State, MainState.Init.ToString());
-            return System.Enum.TryParse(s, out MainState m) ? m : MainState.Init;
+            var s = _pc.GetRoomProps(RoomProps.State, MainState.Intro.ToString());
+            return System.Enum.TryParse(s, out MainState m) ? m : MainState.Intro;
         }
 
         public bool Changed(MainState next) => next != _state;
@@ -64,10 +64,20 @@ namespace LDH_MainGame
 
         #region Coroutine
 
+        public IEnumerator Co_Intro()
+        { 
+           yield return _uiBinder.BuildIntroScreen(PhotonNetwork.PlayerList).ToCoroutine();
+           yield return null;
+           
+           _pc.SetLocalDone(true);
+            yield return null;
+        }
+
         public IEnumerator Co_Picking()
         {
             MainGameManager.Instance.OnPicking?.Invoke();
             
+            // 스코어 패널 닫기
             _uiBinder.CloseScorePanel();
             
             yield return new UnityEngine.WaitForSeconds(1.5f);
@@ -122,7 +132,7 @@ namespace LDH_MainGame
         {
             // 미니게임 종료는 외부에서 State=ApplyingResult로 전환한다고 가정
             _pc.SetLocalReady(false);
-            _pc.SetLocalMiniGameDone(false);
+            _pc.SetLocalDone(false);
             yield break;
         }
 
@@ -145,7 +155,7 @@ namespace LDH_MainGame
 
             //5) 언로드 플래그 켜기
             // 각자 자기 Done = true
-            _pc.SetLocalMiniGameDone(true);
+            _pc.SetLocalDone(true);
 
             yield return null;
 
@@ -163,22 +173,36 @@ namespace LDH_MainGame
             if(_isMaster())        
                 MainGameManager.Instance.ApplyAndBroadcastScoreForCurrentRound();
             
-            
             MainGameManager.Instance.OnEndMiniGame?.Invoke();
         }
 
         public IEnumerator Co_End()
         {
+            if(_isMaster())        
+                MainGameManager.Instance.DistributeFinalRewards();
+            
             MainGameManager.Instance.OnEndGame?.Invoke();
             yield return new UnityEngine.WaitForSeconds(3f);
-            // LeaveRoom은 MainGameManager에서 호출 (씬 전환 담당)
         }
 
         #endregion
 
 
         // ---- Done 종합 판정 → 라운드 증가/전이 ----
-        public void CheckAllPlayerDone()
+        
+        public void CheckAllPlayerIntroDone()
+        {
+            if (!_isMaster()) return;
+
+            Debug.Log("모두 완료됐는지 체크 (PlayerProps 기반)");
+            if (!_pc.AllPlayersDone()) return;
+
+            _pc.SetRoomProps(RoomProps.State, MainState.Picking.ToString());
+        }
+
+        
+        
+        public void CheckAllPlayerUnloadingDone()
         {
             if (!_isMaster()) return;
 
@@ -195,10 +219,9 @@ namespace LDH_MainGame
             if (!_pc.AllPlayersResultDone()) return;
             
             int currentRound = _pc.GetRoomProps(RoomProps.Round, 1);
-            bool isEnd = (currentRound + 1) > TotalRound;
+            bool isEnd = _isEnd();
             var nextState = isEnd ? MainState.End : MainState.Picking;
             int nextRound = isEnd ? currentRound : currentRound + 1;
-
             _pc.SetRoomProps(new Dictionary<string, object>
             {
                 { RoomProps.Round, nextRound },

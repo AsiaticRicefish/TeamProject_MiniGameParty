@@ -95,7 +95,7 @@ namespace LDH_Util
 
         public enum MainState
         {
-            Init, 
+            Intro, 
             Picking, 
             Ready, 
             LoadingMiniGame, 
@@ -121,6 +121,13 @@ namespace LDH_Util
             public const string InGameDone = "inGameDone";
             public const string InGameResultDone = "inGameResultDone"; // 결과 연출 완료
 
+        }
+
+        public static partial class DefaultData
+        {
+            public const CurrencyType DefaultRewardCurrency = CurrencyType.Currency1;
+            public const int DefaultReward = 250;
+            public const int DefaultPointReward = 10;
         }
         
         #endregion
@@ -164,13 +171,6 @@ namespace LDH_Util
         
         #endregion
 
-        #region Data
-
-        public enum TxAbortReason { None, NotEnoughCurrency }
-
-
-        #endregion
-        
         
         
         #region Setting

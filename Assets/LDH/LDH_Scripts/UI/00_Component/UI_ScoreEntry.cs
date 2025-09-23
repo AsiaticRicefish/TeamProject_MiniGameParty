@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Customization;
 using Cysharp.Threading.Tasks;
+using Data;
 using DG.Tweening;
 using LDH_Util;
 using TMPro;
@@ -16,6 +17,8 @@ namespace LDH_UI
         [Header("Canvas Group")] [SerializeField]
         private CanvasGroup cg;
 
+        [SerializeField] private CanvasGroup rewardCg;
+
         [Header("UI Component")] [SerializeField]
         private Image profileImage;
 
@@ -26,11 +29,15 @@ namespace LDH_UI
         [SerializeField] private GameObject scoreImagePrefab;
         [SerializeField] private Outline outline;
 
+        // reward
+        [SerializeField] private Image currencyImage;
+        [SerializeField] private TMP_Text rewardText;
+
         [Header("Anim")] [SerializeField] private float appearDuration = 0.25f;
         [SerializeField] private float pulseDuration = 1f;
 
         private readonly List<GameObject> _scoreIcons = new();
-
+        private int _totalReward;
 
         private void Awake()
         {
@@ -40,11 +47,13 @@ namespace LDH_UI
             // 초기 상태(투명/살짝 축소) — PlayAppearAsync에서 사용
             cg.alpha = 0f;
             transform.localScale = Vector3.one * 0.9f;
+            rewardCg.alpha = 0f;
         }
 
 
         public async UniTask SetData(string nickName, int miniRank, int totalRank, string profileId, int totalScore,
-            bool winner)
+            bool winner, Define_LDH.CurrencyType rewardCurrency = Define_LDH.DefaultData.DefaultRewardCurrency,
+            int reward = 0)
         {
             // 프로필
             Sprite profile = await CustomizationManager.Instance.GetIconAsync(profileId);
@@ -66,13 +75,22 @@ namespace LDH_UI
                     totalRankText.color = Color.white;
             }
 
-
             // 전체 스코어
             if (scoreImageParent != null && scoreImagePrefab != null)
             {
                 BuildScoreIcons(totalScore, winner);
             }
+
+            // 보상
+            if (currencyImage && CatalogProvider.TryGetCurrency(rewardCurrency, out var meta))
+            {
+                currencyImage.sprite = meta.icon;
+            }
+
+            if (rewardText) rewardText.text = "+ 0";
+            _totalReward = reward;
         }
+
 
         private void BuildScoreIcons(int count, bool winner)
         {
@@ -92,23 +110,6 @@ namespace LDH_UI
         }
 
         public void HideMiniGameRank() => miniGameRankText.enabled = false;
-
-        public void ShowTotalRank()
-        {
-            totalRankText.alpha = 0f;
-            totalRankText.enabled = true;
-
-            // 애니메이션 시작 전 셋팅
-            var rt = totalRankText.rectTransform;
-            Vector2 targetPos = totalRankText.rectTransform.anchoredPosition;
-            Vector2 startPos = new Vector2(targetPos.x - 130, targetPos.y);
-            rt.anchoredPosition = startPos;
-
-
-            var seq = DOTween.Sequence()
-                .Join(totalRankText.DOFade(1f, 0.5f))
-                .Join(rt.DOAnchorPos(targetPos, 0.5f)).SetEase(Ease.OutBack);
-        }
 
 
         #region Animation
@@ -150,11 +151,63 @@ namespace LDH_UI
                             t.localScale = Vector3.one; // 마무리 보정
                         });
             }
-            
+
             if (outline) outline.enabled = false;
             return UniTask.CompletedTask;
         }
-        
+
+
+        public void ShowTotalRank()
+        {
+            totalRankText.alpha = 0f;
+            totalRankText.enabled = true;
+
+            // 애니메이션 시작 전 셋팅
+            var rt = totalRankText.rectTransform;
+            Vector2 targetPos = totalRankText.rectTransform.anchoredPosition;
+            Vector2 startPos = new Vector2(targetPos.x - 130, targetPos.y);
+            rt.anchoredPosition = startPos;
+
+
+            var seq = DOTween.Sequence()
+                .Join(totalRankText.DOFade(1f, 0.5f))
+                .Join(rt.DOAnchorPos(targetPos, 0.5f)).SetEase(Ease.OutBack);
+        }
+
+        public async UniTask ShowReward(CancellationToken ct, float duration = 0.8f)
+        {
+            rewardCg.alpha = 0f;
+            float fadeT = 0f;
+            const float fadeDur = 0.2f;
+            while (fadeT < fadeDur)
+            {
+                fadeT += Time.deltaTime;
+                rewardCg.alpha = Mathf.Clamp01(fadeT / fadeDur);
+                await UniTask.Yield(PlayerLoopTiming.Update);
+            }
+
+            rewardCg.alpha = 1f;
+
+            float t = 0f;
+            int last = -1;
+            while (t < duration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / duration);
+                float eased = 1f - Mathf.Pow(1f - p, 2f); // EaseOutQuad
+
+                int value = Mathf.RoundToInt(Mathf.Lerp(0, _totalReward, eased));
+                if (value != last)
+                {
+                    rewardText.text = $"+ {value}";
+                    last = value;
+                }
+
+                await UniTask.Yield(PlayerLoopTiming.Update);
+            }
+
+            rewardText.text = $"+ {_totalReward}";
+        }
 
         #endregion
     }

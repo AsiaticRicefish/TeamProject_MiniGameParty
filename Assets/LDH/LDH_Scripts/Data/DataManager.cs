@@ -179,6 +179,11 @@ namespace Data
             return true;
         }
 
+        public void UpdateCurrencyAsync()
+        {
+            
+        }
+
 
 
         #endregion

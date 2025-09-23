@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using LDH_UI;
+using LDH_UI.Screen_MainGame;
 using LDH_Util;
 using LDH.LDH_Scripts.Test;
 using Managers;
 using Network;
+using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
 
@@ -18,38 +20,36 @@ namespace LDH_MainGame
         private readonly Action<int> _setLocalSlot;
         private readonly Action<int> _onClickReady;
         
+        // screen ui
         private MainGameDebugPanel _debugUI;
+        private UI_Screen_Introduce _introScreen;
+        
+        // popup
+        private UI_Loading _loadingUI;
         private UI_Popup_PrivateRoom _readyPanel;
         private UI_GameInfo _gameInfo;
         private UI_Popup_GameResult _resultPanel;
-
-        private List<UI_Screen> _mainGameScreenUIs;
+        private UI_Popup_Reward _rewardPanel;
         private UI_Popup_QuitGame _quitPopup;
-
-        private UI_Loading _loadingUI;
+        
+        // const variable
         private const string loadingThemePath = "Data/Lobby_Theme";
-
-
-        // 생성자
+        
         // 생성자
         public MainGame_UIBinder(MiniGameRegistry registry, Action<int> setLocalSlot, Action<int> onClickReady)
         {
             _registry = registry;
             _setLocalSlot = setLocalSlot;
             _onClickReady = onClickReady;
-            _mainGameScreenUIs = new List<UI_Screen>();
         }
-
 
         #region Debug Panel
         
         public void SetDebugUI()
         {
             _debugUI = Manager.UI.CreateScreenUI<MainGameDebugPanel>();
-            _mainGameScreenUIs.Add(_debugUI);
             SetActiveDebugUI(true);
         }
-
         public void SetActiveDebugUI(bool active)
         {
             if (active)
@@ -58,6 +58,18 @@ namespace LDH_MainGame
                 Manager.UI.CloseScreenUI(_debugUI, false).Forget();
         }
         
+        #endregion
+
+        #region Intro UI
+
+        public async UniTask BuildIntroScreen(Player[] players)
+        {
+            _introScreen = Manager.UI.CreateScreenUI<UI_Screen_Introduce>();
+            
+            await _introScreen.SetData(players);
+
+            await Manager.UI.ShowScreenUI(_introScreen);
+        }
 
         #endregion
 
@@ -172,7 +184,7 @@ namespace LDH_MainGame
 
         #endregion
 
-        #region Score Panel
+        #region Score Panel / Result Panel / Reward Panel
 
         public async UniTask BuildScorePanel(int round, string gameName, GamePlayer[] players)
         {
@@ -180,12 +192,27 @@ namespace LDH_MainGame
             await  _resultPanel.SetData(round, gameName, players);
             await Manager.UI.ShowPopupUI(_resultPanel);
         }
-
+        
         public void CloseScorePanel()
         {
             if(_resultPanel == null) return;
             Manager.UI.ClosePopupUI(_resultPanel).Forget();
             _resultPanel = null;
+        }
+
+        
+        public async UniTask BuildFinalRewardPanel(GamePlayer[] players)
+        {
+            _resultPanel = Manager.UI.CreatePopupUI<UI_Popup_FinalGameResult>();
+            await  _resultPanel.GetComponent<UI_Popup_FinalGameResult>().SetData(players);
+            await Manager.UI.ShowPopupUI(_resultPanel);
+        }
+
+        public async UniTask ShowRewardPopup(GamePlayer localPlayer)
+        {
+            _rewardPanel = Manager.UI.CreatePopupUI<UI_Popup_Reward>();
+            await _rewardPanel.SetData(localPlayer);
+            await Manager.UI.ShowPopupUI(_rewardPanel);
         }
 
         #endregion
@@ -208,22 +235,6 @@ namespace LDH_MainGame
         
 
         #endregion
-
-
-        #region Close 
         
-        public async UniTask CloseAllScreenUI()
-        {
-            List<UniTask> tasks = new List<UniTask>();
-            
-            foreach (UI_Screen screenUI in _mainGameScreenUIs)
-            {
-                tasks.Add(Manager.UI.CloseScreenUI(screenUI, true));
-            }
-            
-            await UniTask.WhenAll(tasks);
-        }
-
-        #endregion
     }
 }

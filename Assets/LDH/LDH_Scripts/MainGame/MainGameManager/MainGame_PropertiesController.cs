@@ -71,7 +71,7 @@ namespace LDH_MainGame
                    v is bool b && b;
         }
 
-        public static bool GetMiniGameDone(Player p)
+        public static bool GetDone(Player p)
         {
             return p != null &&
                    p.CustomProperties != null &&
@@ -99,7 +99,7 @@ namespace LDH_MainGame
             PhotonNetwork.LocalPlayer?.SetCustomProperties(new Hashtable { { PP.InGameReady, ready } });
         }
 
-        public void SetLocalMiniGameDone(bool done)
+        public void SetLocalDone(bool done)
         {
             if (!CanSet()) return;
             PhotonNetwork.LocalPlayer?.SetCustomProperties(new Hashtable { { PP.InGameDone, done } });
@@ -147,7 +147,7 @@ namespace LDH_MainGame
                 int slot = GetSlotIndex(p);
                 if (slot < 0) continue;
                 present |= (1 << slot);
-                if (GetMiniGameDone(p)) done |= (1 << slot);
+                if (GetDone(p)) done |= (1 << slot);
             }
             return present != 0 && (done & present) == present;
         }

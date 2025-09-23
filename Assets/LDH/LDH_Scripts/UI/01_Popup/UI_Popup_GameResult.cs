@@ -13,23 +13,23 @@ namespace LDH_UI
 {
     public class UI_Popup_GameResult : UI_Popup
     {
-        [SerializeField] private TMP_Text title;
-        [SerializeField] private TMP_Text subTitle;
-        [SerializeField] private UI_ScoreEntry scoreEntryPrefab;
-        [SerializeField] private Transform scoreEntryContent;
+        [SerializeField] protected TMP_Text title;
+        [SerializeField] protected TMP_Text subTitle;
+        [SerializeField] protected UI_ScoreEntry scoreEntryPrefab;
+        [SerializeField] protected Transform scoreEntryContent;
 
 
         [Header("Timings")] 
-        private float startDelay = 0.3f;
-        private float appearStagger = 0.3f; // 항목 등장 간격
-        private float afterAppearDelay = 1f; // 전부 등장 완료 후 대기
-        private float afterAwardDelay = 0.8f; // +1 연출 후 대기
-        private float rankRevealStagger = 0.5f; // 전체등수 공개 간격
-        private float endDelay = 2f;
+        protected float startDelay = 0.3f;
+        protected float appearStagger = 0.3f; // 항목 등장 간격
+        protected float afterAppearDelay = 1f; // 전부 등장 완료 후 대기
+        protected float afterAwardDelay = 0.8f; // +1 연출 후 대기
+        protected float rankRevealStagger = 0.5f; // 전체등수 공개 간격
+        protected float endDelay = 2f;
 
 
-        private GamePlayer[] _playerResults;
-        private List<UI_ScoreEntry> _scoreEntries = new();
+        protected GamePlayer[] _playerResults;
+        protected List<UI_ScoreEntry> _scoreEntries = new();
 
         
         public async UniTask SetData(int round, string gameName, GamePlayer[] players)
@@ -60,10 +60,7 @@ namespace LDH_UI
                         break;
                     }
                 }
-
-                // var player = PhotonNetwork.CurrentRoom.Players.Values.FirstOrDefault(p => p.UserId.Equals(gp.PlayerId));
-
-                Debug.Log($"player is null? {player == null}");
+                
                 if (player == null)
                 {
                     Debug.LogWarning("player is null");

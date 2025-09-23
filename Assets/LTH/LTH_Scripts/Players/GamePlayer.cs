@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using LDH_Util;
 using UnityEngine;
+using static LDH_Util.Define_LDH;
 
 /// <summary>
 /// 각 플레이어의 게임 내 상태(UID, 닉네임, 턴, 위치, 승리 여부 등)를 저장하고 관리
@@ -30,12 +32,17 @@ public class GamePlayer
     public ShootingPlayerData ShootingData { get; set; }
     #endregion
 
-    #region 점수 / 랭킹
+    #region 점수 / 랭킹 / 최종 보상
     public int Score { get; set; }               // 누적 점수
     public int LastMiniGameRank { get; set; }    // 최근 라운드(미니게임) 랭크
     public int TotalRank { get; set; }           // 누적 점수 기준 종합 등수(동순위 반영)
     public bool WonThisRound { get; set; }   // 이번 라운드 +1 여부
-
+    
+    
+    // 1등 : 2 * default reward + score * default point reward
+    // 나머지 : default reward + score * default point reward
+    public int Reward => (TotalRank == 1 ? 2 : 1 * DefaultData.DefaultReward) +
+                         (this.Score * DefaultData.DefaultPointReward);
     #endregion
     
 
