@@ -21,11 +21,11 @@ namespace LDH_MainGame
         private readonly Action<int> _onClickReady;
         
         // screen ui
-        private MainGameDebugPanel _debugUI;
         private UI_Screen_Introduce _introScreen;
         
         // popup
         private UI_Loading _loadingUI;
+        private UI_Popup_SlotMachine _pickingUI;
         private UI_Popup_PrivateRoom _readyPanel;
         private UI_GameInfo _gameInfo;
         private UI_Popup_GameResult _resultPanel;
@@ -42,23 +42,6 @@ namespace LDH_MainGame
             _setLocalSlot = setLocalSlot;
             _onClickReady = onClickReady;
         }
-
-        #region Debug Panel
-        
-        public void SetDebugUI()
-        {
-            _debugUI = Manager.UI.CreateScreenUI<MainGameDebugPanel>();
-            SetActiveDebugUI(true);
-        }
-        public void SetActiveDebugUI(bool active)
-        {
-            if (active)
-                Manager.UI.ShowScreenUI(_debugUI).Forget();
-            else
-                Manager.UI.CloseScreenUI(_debugUI, false).Forget();
-        }
-        
-        #endregion
 
         #region Intro UI
 
@@ -80,6 +63,26 @@ namespace LDH_MainGame
         
         #endregion
 
+        #region SlotMachine
+
+        public async UniTask BuildSlotMachine(List<MiniGameInfo> candidates, int targetIndex)
+        {
+            _pickingUI = Manager.UI.CreatePopupUI<UI_Popup_SlotMachine>();
+            await _pickingUI.SetData(candidates, targetIndex);
+            await Manager.UI.ShowPopupUI(_pickingUI);
+
+        }
+        
+        public async UniTask CloseSlotMachine()
+        {
+            if (_pickingUI== null) return;
+            await Manager.UI.ClosePopupUI(_pickingUI);
+            _pickingUI = null;
+        }
+
+
+        #endregion
+        
         #region Ready Panel
 
         public void BuildReadyPanel(MiniGameInfo mini, Player[] players, bool isMaster, out int localSlot)

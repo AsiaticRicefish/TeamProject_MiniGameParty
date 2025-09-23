@@ -76,12 +76,10 @@ namespace LDH_MainGame
 
         public IEnumerator Co_Picking()
         {
-            MainGameManager.Instance.OnPicking?.Invoke();
-            
             // 스코어 패널 닫기
             _uiBinder.CloseScorePanel();
             
-            yield return new UnityEngine.WaitForSeconds(1.5f);
+            yield return new UnityEngine.WaitForSeconds(2f);
 
             if (_isMaster())
             {
@@ -94,7 +92,7 @@ namespace LDH_MainGame
             }
 
             MainGameManager.Instance.OnPicked?.Invoke();
-            ;
+            
         }
 
         public IEnumerator Co_Ready()

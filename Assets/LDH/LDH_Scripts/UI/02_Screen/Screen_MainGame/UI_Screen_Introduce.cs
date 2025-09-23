@@ -113,7 +113,6 @@ namespace LDH_UI.Screen_MainGame
                 // 시작 위치 설정
                 // 시작 위치: 0/2는 +X에서, 1/3은 -X에서
                 moveDistance = rt.rect.width; // 필요시 고정값 사용 권장
-                Debug.Log(moveDistance);
                 float fromX = (panelIndex == 0 || panelIndex == 2) ? +moveDistance : -moveDistance;
                 rt.anchoredPosition = _targetPosCache[panelIndex] + new Vector2(fromX, 0f);
                 
