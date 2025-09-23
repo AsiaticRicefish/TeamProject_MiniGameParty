@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16e882dba42855d41b248d3300c2d923, type: 3}
   m_Name: Jenga_Theme
   m_EditorClassIdentifier: 
-  gameTitle: "\uC138\uC5B4\uB77C \uC720\uB2C8\uBAA8!"
+  gameTitle: "\uC820\uAC00\uC2A4\uD0C0!"
   bigDescription: "\uC0C1\uB300\uBCF4\uB2E4 \uBE60\uB974\uAC8C \uC820\uAC00\uB97C
     \n\uC81C\uAC70\uD558\uC790!"
   smallDescription: "\uC81C\uAC70\uD560 \uC820\uAC00\uB97C \uC120\uD0DD\uD558\uC5EC

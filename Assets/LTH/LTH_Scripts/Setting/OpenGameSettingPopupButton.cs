@@ -21,7 +21,7 @@ public class OpenGameSettingPopupButton : MonoBehaviour
     {
         if (!button || !button.interactable) return;
 
-        SoundManager.Instance?.PlaySFX("Click");
+       // SoundManager.Instance?.PlaySFX("Click");
 
         button.interactable = false;
 
