@@ -169,7 +169,7 @@ namespace ShootingScene
         }
 
         #region 타이머 관련 호출 함수
-        public void StartTimer(double duration, bool isLocal, double lead = 0.3)
+        public void StartTimer(double duration, bool isLocal, double lead = 0.1)
         {
             double startAt,endAt;
 

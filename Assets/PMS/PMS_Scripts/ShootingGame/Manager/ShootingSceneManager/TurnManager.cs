@@ -10,6 +10,7 @@ using Managers;
 using Photon.Pun;
 using Photon.Realtime;
 using ShootingScene.ShootingGame;
+using PMS_Util;
 
 namespace ShootingScene
 {
@@ -198,6 +199,7 @@ namespace ShootingScene
                 var localInput = newEgg.GetComponent<LocalPlayerInput>();
                 if (localInput != null)
                 {
+                    SoundManager.Instance.PlaySFX(Define_PMS.SoundKeys.MyTurnSFX);
                     yield return ShootingUIManager.Instance.PlayMyTurnUI();
 
                     localInput.EnableInput(); // 해당 유니모 Input 활성화 시킴
@@ -212,7 +214,7 @@ namespace ShootingScene
 
 
             #region 카메라 관련
-            /*if (isMyTurn)       
+            if (isMyTurn)       
             {
                 ShootingCameraManager.Instance.SwipePosInit();
                 ShootingScene.PlayerInputManager.Instance.EnableInput();
@@ -226,7 +228,7 @@ namespace ShootingScene
                 ShootingScene.PlayerInputManager.Instance.EnableCameraControl();
                 ShootingScene.PlayerInputManager.Instance.EnableCameraPosition();
                 Debug.Log("난 인풋 비활성화");
-            }*/
+            }
             #endregion 
 
 

@@ -28,7 +28,11 @@ public class UnimoEgg : MonoBehaviourPun
     [SerializeField] private bool isCameraFollowing;
     [SerializeField] private bool hasCrossedStartLine;
 
+    [Header("충돌 관련 변수")]
+    [SerializeField] public LayerMask targetLayers;
+
     public string ShooterUid; // 누가 던졌는지 저장
+    
     
     private void Awake()
     {
@@ -70,13 +74,13 @@ public class UnimoEgg : MonoBehaviourPun
         if (!photonView.IsMine) return;
 
         ShootingScene.PlayerInputManager.Instance.DisableInput();
-        ShootingCameraManager.Instance.StartFollowTarget(gameObject);
+        //ShootingCameraManager.Instance.StartFollowTarget(gameObject);
         // 자기 화면에서 AddForce 적용
         isLaunched = true;
         //ApplyForce(dir);
-        WindHelper.AddForceWithWind(rb, dir);
+        dir = WindHelper.AddForceWithWind(rb, dir);
         // 다른 클라이언트에도 RPC 전송
-        photonView.RPC("RPC_Shot", RpcTarget.Others, dir);
+        photonView.RPC("RPC_Shot", RpcTarget.All, dir);
         isCameraFollowing = true;
         // 발사 후 멈출 때까지 감시 시작
         //StartCoroutine(WaitForStop());
@@ -97,7 +101,7 @@ public class UnimoEgg : MonoBehaviourPun
         }
 
         yield return new WaitForSeconds(1.0f);
-        ShootingCameraManager.Instance.StopFollowTarget(); //돌아가는 부분
+        //ShootingCameraManager.Instance.StopFollowTarget(); //돌아가는 부분
 
         // 내가 던진 알일 때만 마스터에게 턴 종료 요청
         if (photonView.IsMine && !turnEnded)
@@ -131,25 +135,36 @@ public class UnimoEgg : MonoBehaviourPun
     [PunRPC]
     private void RPC_Shot(Vector3 dir)
     {
-        //ApplyForce(dir);
-        WindHelper.AddForceWithWind(rb, dir);
+        StartCoroutine(Wait(dir));
+        SoundManager.Instance.PlaySFX(PMS_Util.Define_PMS.SoundKeys.UnimoShootingSFX);
+    }
+
+    private IEnumerator Wait(Vector3 dir)
+    {
+        rb.AddForce(dir, ForceMode.Impulse);
+        yield return new WaitForFixedUpdate();
+        playerEffectController.ShotEffectPlay(ParticleIDs.SH_UnimoShot, transform.position, Quaternion.identity,() => SafeCondition(gameObject));
+    }
+
+    bool SafeCondition(GameObject egg)
+    {
+        if (egg == null) return true;              // 파괴되면 즉시 종료
+        if (rb == null) return true;
+        return rb.velocity.sqrMagnitude < stopSpeed * 10;
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        ContactPoint contact = collision.contacts[0];
-        Vector3 hitPosition = contact.point;
-        playerEffectController.Play(ParticleIDs.SH_UnimoCollisionEffect, hitPosition, Quaternion.identity);
-
-
-        /*if (collision.gameObject.CompareTag("UnimoEgg"))
+        if (collision.gameObject.CompareTag("UnimoEgg"))
         {
             ContactPoint contact = collision.contacts[0];
             Vector3 hitPosition = contact.point;
             Vector3 hitNormal = contact.normal;
 
-            playerEffectController.Play(ParticleIDs.SH_UnimoCollisionEffect, hitPosition, Quaternion.identity);
-        }*/
+            playerEffectController.CollisionEffectPlay(ParticleIDs.SH_UnimoCollisionEffect, hitPosition, Quaternion.identity);
+
+            SoundManager.Instance.PlaySFX(PMS_Util.Define_PMS.SoundKeys.UninmoCollisionSFX);
+        }
     }
 
     //떨어졌을때
@@ -167,7 +182,7 @@ public class UnimoEgg : MonoBehaviourPun
         if (other.CompareTag("PlayGround") && isLaunched)
         {
             isLaunched = false; // 바깥으로 나가며 턴 종료 → 발사 상태 해제
-            ShootingCameraManager.Instance.StopFollowTarget();
+            //ShootingCameraManager.Instance.StopFollowTarget();
             TurnManager.Instance.photonView.RPC(("RequestTurnEnd"), RpcTarget.MasterClient);
 
         }
@@ -183,7 +198,7 @@ public class UnimoEgg : MonoBehaviourPun
         if(isCameraFollowing)       //카메라가 연출중이니깐
         {
             Debug.Log("[UnimoEgg] - 유니모를 잃어버려서 카메라가 원위치로 돌아가는중");
-            ShootingCameraManager.Instance?.StopFollowTarget();
+            //ShootingCameraManager.Instance?.StopFollowTarget();
         }
     }
 }

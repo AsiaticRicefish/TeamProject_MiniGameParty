@@ -10,9 +10,6 @@ public class LocalPlayerInput : MonoBehaviourPun
     [SerializeField] private PlayerInputUIController uiController;
 
     public Transform player;
-    //public DirectionUIArrow arrow;
-    //public GameObject arrowRangeImage;
-    //public ChargeController charger;
     public Camera mainCam;
 
     private float stepStartTime = 0;

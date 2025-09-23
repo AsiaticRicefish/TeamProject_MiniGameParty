@@ -9,11 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 41c56d056abdcae4fb2281df5bcf6c24, type: 3}
-  m_Name: SceneSoundMappingConfig
+  m_Script: {fileID: 11500000, guid: 5834b5087d578d24c926ce20cd31e6d6, type: 3}
+  m_Name: Shooting_ContentUpdateGroupSchema
   m_EditorClassIdentifier: 
-  sceneMappings:
-  - sceneName: MiniGameJengaScene
-    gameType: 3
-  - sceneName: PMS_ShootingTestScene
-    gameType: 5
+  m_Group: {fileID: 11400000, guid: efe7352dfeb4fcb4bade622b861f5da0, type: 2}
+  m_StaticContent: 0

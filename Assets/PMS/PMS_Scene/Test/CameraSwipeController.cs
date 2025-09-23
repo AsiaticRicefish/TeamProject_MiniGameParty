@@ -26,7 +26,7 @@ public class CameraSwipeController : MonoBehaviour,IGameComponent
     {
         //z축 범위 지정
         minZ = transform.position.z;
-        maxZ = finishLine.transform.position.z;
+        maxZ = finishLine.transform.position.z - 10.0f;
     }
     
     #region Public API

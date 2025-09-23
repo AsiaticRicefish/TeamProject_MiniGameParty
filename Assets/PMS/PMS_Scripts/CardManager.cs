@@ -10,6 +10,7 @@ using ShootingScene;
 using ShootingScene.ShootingGame;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
 using Random = System.Random;
+using PMS_Util;
 
 /// <summary>
 /// 카드 선택 로비 전체 제어(Master 권위).
@@ -236,6 +237,7 @@ public class CardManager : PunSingleton<CardManager>
     [PunRPC]
     private void RPC_RevealAll(int[] deckValues, int[] ownersFromMaster, double t0, float revealSec)
     {
+        SoundManager.Instance.PlaySFX(Define_PMS.SoundKeys.CardFlipSFX);
         _deckValues = deckValues;
         _owners = ownersFromMaster;
 
