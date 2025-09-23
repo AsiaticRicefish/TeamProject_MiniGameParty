@@ -78,9 +78,9 @@ public class UnimoEgg : MonoBehaviourPun
         // 자기 화면에서 AddForce 적용
         isLaunched = true;
         //ApplyForce(dir);
-        WindHelper.AddForceWithWind(rb, dir);
+        dir = WindHelper.AddForceWithWind(rb, dir);
         // 다른 클라이언트에도 RPC 전송
-        photonView.RPC("RPC_Shot", RpcTarget.Others, dir);
+        photonView.RPC("RPC_Shot", RpcTarget.All, dir);
         isCameraFollowing = true;
         // 발사 후 멈출 때까지 감시 시작
         //StartCoroutine(WaitForStop());
@@ -135,8 +135,15 @@ public class UnimoEgg : MonoBehaviourPun
     [PunRPC]
     private void RPC_Shot(Vector3 dir)
     {
-        //ApplyForce(dir);
-        WindHelper.AddForceWithWind(rb, dir);
+        StartCoroutine(Wait(dir));
+        SoundManager.Instance.PlaySFX(PMS_Util.Define_PMS.SoundKeys.UnimoShootingSFX);
+    }
+
+    private IEnumerator Wait(Vector3 dir)
+    {
+        rb.AddForce(dir, ForceMode.Impulse);
+        yield return new WaitForFixedUpdate();
+        playerEffectController.ShotEffectPlay(ParticleIDs.SH_UnimoShot, transform.position, Quaternion.identity, () => rb.velocity.magnitude < stopSpeed * 10);
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -147,7 +154,9 @@ public class UnimoEgg : MonoBehaviourPun
             Vector3 hitPosition = contact.point;
             Vector3 hitNormal = contact.normal;
 
-            playerEffectController.Play(ParticleIDs.SH_UnimoCollisionEffect, hitPosition, Quaternion.identity);
+            playerEffectController.CollisionEffectPlay(ParticleIDs.SH_UnimoCollisionEffect, hitPosition, Quaternion.identity);
+
+            SoundManager.Instance.PlaySFX(PMS_Util.Define_PMS.SoundKeys.UninmoCollisionSFX);
         }
     }
 

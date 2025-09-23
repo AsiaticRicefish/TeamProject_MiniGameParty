@@ -9,6 +9,7 @@ using ShootingScene;
 using ShootingScene.ShootingGame;
 using LDH_UI;
 using Managers;
+using PMS_Util;
 
 [RequireComponent(typeof(PhotonView))]
 [DisallowMultipleComponent]
@@ -145,6 +146,10 @@ public class ShootingSceneController : BaseGameSceneController
                 Manager.UI.ClosePopupUI(_uiLoading).Forget();
                 _uiLoading = null;
             }
+
+            //BGM 스타트
+            SoundManager.Instance.PlayBGM(Define_PMS.SoundKeys.ShootingBGM);
+
             //모든 Scene Controller의 작업 처리 완료를 알림
             //TaskSyncManager.Instance.SetTaskDone(ShootingGamePlayerPropertyKeys.TaskType.Initialized);
 

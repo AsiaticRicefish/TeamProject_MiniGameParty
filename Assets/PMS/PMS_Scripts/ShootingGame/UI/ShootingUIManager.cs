@@ -6,6 +6,7 @@ using DesignPattern;
 using LDH_UI;
 using Managers;
 using Photon.Pun;
+using PMS_Util;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -75,6 +76,8 @@ namespace ShootingScene.ShootingGame
             }
             // 시간 업데이트
             timerUI.SetTimerText(remaining.ToString());
+
+            SoundManager.Instance.PlaySFX(Define_PMS.SoundKeys.CountDownSFX);
         }
 
         private void OnTimerEnd()

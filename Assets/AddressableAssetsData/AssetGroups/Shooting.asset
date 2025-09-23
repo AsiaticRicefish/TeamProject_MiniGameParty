@@ -45,8 +45,7 @@ MonoBehaviour:
   - m_GUID: 5878d2c9be1575f46abe36ee1b2064f1
     m_Address: Assets/Imports/Shooting1.1.0/Sounds/321.wav
     m_ReadOnly: 0
-    m_SerializedLabels:
-    - Sound
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a8f66ebd5b712bd40b6306c76aa7b849
     m_Address: Assets/Imports/Shooting1.1.0/Sounds/Shooting.wav

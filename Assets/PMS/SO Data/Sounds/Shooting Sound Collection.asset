@@ -19,38 +19,8 @@ MonoBehaviour:
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
-    defaultVolume: 0.8
+    defaultVolume: 0.7
     isLoop: 1
-    preloadOnStart: 0
-    keepInMemory: 0
-  - soundName: GameEndBGM
-    audioClip:
-      m_AssetGUID: 4ffbc3d1c8a2f8a47878224574f22971
-      m_SubObjectName: 
-      m_SubObjectType: 
-      m_EditorAssetChanged: 0
-    defaultVolume: 1
-    isLoop: 0
-    preloadOnStart: 0
-    keepInMemory: 0
-  - soundName: GameWinBGM
-    audioClip:
-      m_AssetGUID: 4a2fbed884fe3d545a94480ae632456d
-      m_SubObjectName: 
-      m_SubObjectType: 
-      m_EditorAssetChanged: 0
-    defaultVolume: 1
-    isLoop: 0
-    preloadOnStart: 0
-    keepInMemory: 0
-  - soundName: GameLoseBGM
-    audioClip:
-      m_AssetGUID: 4e688ead4b5db88458f7df613cd3ecf0
-      m_SubObjectName: 
-      m_SubObjectType: 
-      m_EditorAssetChanged: 1
-    defaultVolume: 1
-    isLoop: 0
     preloadOnStart: 0
     keepInMemory: 0
   sfxSounds:
@@ -60,7 +30,7 @@ MonoBehaviour:
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
-    defaultVolume: 1
+    defaultVolume: 0.7
     isLoop: 0
     preloadOnStart: 0
     keepInMemory: 0
@@ -70,7 +40,7 @@ MonoBehaviour:
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 1
-    defaultVolume: 1
+    defaultVolume: 0.7
     isLoop: 0
     preloadOnStart: 0
     keepInMemory: 0
@@ -80,7 +50,7 @@ MonoBehaviour:
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 1
-    defaultVolume: 1
+    defaultVolume: 0.7
     isLoop: 0
     preloadOnStart: 0
     keepInMemory: 0
@@ -90,7 +60,7 @@ MonoBehaviour:
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
-    defaultVolume: 1
+    defaultVolume: 0.7
     isLoop: 0
     preloadOnStart: 0
     keepInMemory: 0
@@ -100,17 +70,47 @@ MonoBehaviour:
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
-    defaultVolume: 1
+    defaultVolume: 0.7
     isLoop: 0
     preloadOnStart: 0
     keepInMemory: 0
-  - soundName: Shooting_Crush
+  - soundName: UninmoCollisionSFX
     audioClip:
       m_AssetGUID: fc8806c80e23bf54bbef8616db876b3a
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 1
-    defaultVolume: 1
+    defaultVolume: 0.7
+    isLoop: 0
+    preloadOnStart: 0
+    keepInMemory: 0
+  - soundName: GameWinnerSFX
+    audioClip:
+      m_AssetGUID: 4a2fbed884fe3d545a94480ae632456d
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    defaultVolume: 0.7
+    isLoop: 0
+    preloadOnStart: 0
+    keepInMemory: 0
+  - soundName: GameLoseSFX
+    audioClip:
+      m_AssetGUID: 4e688ead4b5db88458f7df613cd3ecf0
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    defaultVolume: 0.7
+    isLoop: 0
+    preloadOnStart: 0
+    keepInMemory: 0
+  - soundName: GameEndSFX
+    audioClip:
+      m_AssetGUID: 4ffbc3d1c8a2f8a47878224574f22971
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    defaultVolume: 0.7
     isLoop: 0
     preloadOnStart: 0
     keepInMemory: 0
