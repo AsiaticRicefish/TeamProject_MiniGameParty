@@ -27,6 +27,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 792db11eb670f5d4cb772091c74e90ae
+    m_Address: Assets/Imports/JengaAsset/JengaSound/Jenga Breake1.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7b83c050d997ad64d811a5827e05fc98
     m_Address: Assets/Imports/Shrimple3D LowPoly Pack/UsePrefabs/Jenga_Tower.prefab
     m_ReadOnly: 0

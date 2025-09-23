@@ -42,6 +42,8 @@ namespace RhythmGame
         int minPoint = 15;
         int maxPoint = 45;
         Dictionary<int, int> _verdictSumByActor = new();
+        public string SpawnMsg { get; private set; }
+        int myLane = -1;
 
         //BPM 관련
 
@@ -67,6 +69,8 @@ namespace RhythmGame
         {
             if (_isSpawning) return;
             if (!_isInit) return;
+
+            LaneManager.Instance.GetLane(PhotonNetwork.LocalPlayer.ActorNumber, out myLane);
 
             _isSpawning = true;
 
@@ -146,6 +150,8 @@ namespace RhythmGame
                 for (int i = 0; i < 5; i++) types.Add(NoteType.Continue);
                 Utils.Shuffle(types); // "랜덤하게" 조건 충족
 
+                SpawnMsg = GetSpawnScore(lane, types);
+
                 double windowStart = _gameStartTime;
                 double windowEnd = _gameStartTime + 30.0; // 30초
                 Schedule(windowStart, windowEnd, lane, types); //15개만 비트에 분배
@@ -172,9 +178,10 @@ namespace RhythmGame
 
                     int bonus = (actorNum > 0) ? GetVerdictBonus(actorNum) : 0; // [-10, +15]
                     int budget = Mathf.Clamp(basePoint + bonus, minPoint, maxPoint); // 15~45
-
                     var types = TypesByBudget(budget);   // budget≥35면 Fake 1~4 포함
                     Utils.Shuffle(types);
+
+                    SpawnMsg = GetSpawnScore(lane, budget, types);
 
                     double start = nextCycleStart;
                     double end = nextCycleStart + cycle;
@@ -184,6 +191,25 @@ namespace RhythmGame
                 nextCycleStart += cycle;
                 yield return null;
             }
+        }
+
+        //스폰 사이클 디버깅용
+        public string GetSpawnScore(int lane, int budget, List<NoteType> types)
+        {
+            string str = string.Join(", ", types);
+            string msg = $"{lane}st Lane,  Budget : {budget}, Notes = {str}";
+            Debug.Log($"<color=red>{msg}</color>");
+
+            return msg;
+        }
+        //스폰 디버깅용
+        public string GetSpawnScore(int lane, List<NoteType> types)
+        {
+            string str = string.Join(", ", types);
+            string msg = $"{lane}st Lane, Notes = {str}";
+            Debug.Log($"<color=red>{msg}</color>");
+
+            return msg;
         }
 
         //  types.Count개를 균등 샘플링해서 스폰
