@@ -64,7 +64,12 @@ namespace RhythmGame
 
         int _songIndex = -1;
 
-        //TODO 김승태 : IGameComponent 인터페이스 구현
+        protected override void OnDestroy()
+        {
+            // 사운드 전체 정리
+            SoundManager.Instance.StopAllSounds();
+        }
+
 
         public void Initialize()
         {
@@ -89,25 +94,38 @@ namespace RhythmGame
         public void StartGame()
         {
             if (!PhotonNetwork.IsMasterClient) return;
+            StartCoroutine(IE_StartGame());
+        }
 
+        private IEnumerator IE_StartGame()
+        {
             // 플레이어 자리 배정
             LaneManager.Instance.SetLane();
 
-            // 스폰 시작
-            // NoteSpawner.Instance.photonView.RPC(nameof(NoteSpawner.RPC_StartSpawn), RpcTarget.All);
-
             double startTime = PhotonNetwork.Time + countDown;
-            double endTime = startTime + gameTime;
 
+            // 곡 선택
+            int songIndex = UnityEngine.Random.Range(1, 4);
+            _songIndex = songIndex;
+
+            string songName = $"RhythmBgm{songIndex}";
+
+            //  곡 길이 비동기 조회
+            var lengthTask = SoundManager.Instance.GetMusicLengthAsync(songName, gameTime);
+            while (!lengthTask.IsCompleted) yield return null;
+
+            float musicLength = Mathf.Max(0.01f, lengthTask.Result);
+
+            double stopSpawnTime = startTime + Math.Max(0.0, musicLength);
+
+            double endTime = startTime + musicLength + delayTime;
+
+            // 스폰 초기화
             NoteSpawner.Instance.photonView.RPC(nameof(NoteSpawner.RPC_InitStart), RpcTarget.All, startTime);
 
-            //곡 선택
-            int songIndex = UnityEngine.Random.Range(1, 4);
-            Debug.LogError($"index : {songIndex}");
-
-            //게임 설정관련
             photonView.RPC(nameof(PRC_StartGameTIme), RpcTarget.All, startTime, endTime, songIndex);
-            // photonView.RPC(nameof(GameStartSettings), RpcTarget.All);
+
+            photonView.RPC(nameof(RPC_ScheduleStopSpawn), RpcTarget.All, stopSpawnTime);
         }
 
         [PunRPC]
@@ -144,6 +162,20 @@ namespace RhythmGame
             EndGame();
         }
 
+        [PunRPC]
+        void RPC_ScheduleStopSpawn(double stopSpawnTime)
+        {
+            StartCoroutine(IE_WaitStopSpawn(stopSpawnTime));
+        }
+
+        IEnumerator IE_WaitStopSpawn(double stopSpawnTime)
+        {
+            while (PhotonNetwork.Time < stopSpawnTime) yield return null;
+
+            NoteSpawner.Instance.StopSpawn();
+            SoundManager.Instance.StopBGM();
+            SoundManager.Instance.StopAllSounds();
+        }
 
         [PunRPC]
         public void GameStartSettings()
@@ -153,6 +185,8 @@ namespace RhythmGame
             IsGameStart = true;
 
             SoundManager.Instance.PlayBGM($"RhythmBgm{_songIndex}");
+
+
             OnGameStart?.Invoke();
         }
 
@@ -167,8 +201,7 @@ namespace RhythmGame
             IsGameStart = false;
             IsGameOver = true;
 
-            NoteSpawner.Instance.StopSpawn();
-            SoundManager.Instance.StopBGM();
+
 
             //게임 종료 이벤트 호출
             OnGameOver?.Invoke();

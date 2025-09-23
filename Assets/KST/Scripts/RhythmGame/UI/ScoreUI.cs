@@ -11,7 +11,7 @@ namespace RhythmGame
         //UI
         ScoreManager _sm;
         [SerializeField] TMP_Text scoreText;
-        [SerializeField] TMP_Text _heatscoreText;
+        // [SerializeField] TMP_Text _heatscoreText;
         [SerializeField] Slider _heatSlider;
 
         //콤보
@@ -28,7 +28,7 @@ namespace RhythmGame
         void OnDisable()
         {
             _sm.OnScoreChanged -= OnScoreValueChanged;
-            _sm.OnOverHeatScoreChanaged -= OnOverHeatValueChanged;
+            // _sm.OnOverHeatScoreChanaged -= OnOverHeatValueChanged;
         }
 
         //초기화 순서 문제 발생 방지를 위해 딜레이 구독
@@ -40,7 +40,7 @@ namespace RhythmGame
             _sm = ScoreManager.Instance;
 
             scoreText.text = $"indivisual score : {_sm.Score}";
-            _heatscoreText.text = $"OverHeat Score : {_sm.HeatScore}";
+            // _heatscoreText.text = $"OverHeat Score : {_sm.HeatScore}";
             _heatSlider.value = _sm.HeatScore;
             _verdictText.text = "";
             _comboText.text = "";
@@ -48,7 +48,7 @@ namespace RhythmGame
 
             //이벤트 구독
             _sm.OnScoreChanged += OnScoreValueChanged;
-            _sm.OnOverHeatScoreChanaged += OnOverHeatValueChanged;
+            // _sm.OnOverHeatScoreChanaged += OnOverHeatValueChanged;
             _sm.OnVerdict += OnVerdict;
         }
 
@@ -57,11 +57,11 @@ namespace RhythmGame
             scoreText.text = $"indivisual score : {value}";
         }
 
-        void OnOverHeatValueChanged(int value)
-        {
-            _heatscoreText.text = $"OverHeat Score : {value}";
-            _heatSlider.value = value;
-        }
+        // void OnOverHeatValueChanged(int value)
+        // {
+        //     _heatscoreText.text = $"OverHeat Score : {value}";
+        //     _heatSlider.value = value;
+        // }
         /// <summary>
         /// 
         /// </summary>

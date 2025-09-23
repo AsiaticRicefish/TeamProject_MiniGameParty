@@ -643,7 +643,7 @@ public class SoundManager : CombinedSingleton<SoundManager>
     #region 내부 유틸: SFX 보이스/크로스페이드
     private AudioSource AcquireSfxVoice()
     {
-        
+
         for (int i = 0; i < _sfxPool.Count; i++)
         {
             int idx = (_sfxCursor + i) % _sfxPool.Count;
@@ -653,7 +653,7 @@ public class SoundManager : CombinedSingleton<SoundManager>
                 return _sfxPool[idx];
             }
         }
-        
+
         var steal = _sfxPool[_sfxCursor];
         _sfxCursor = (_sfxCursor + 1) % _sfxPool.Count;
         return steal;
@@ -665,7 +665,7 @@ public class SoundManager : CombinedSingleton<SoundManager>
         _bgmCts = new CancellationTokenSource();
         var ct = _bgmCts.Token;
 
-        
+
         _bgmIdle.clip = clip;
         _bgmIdle.loop = loop;
 
@@ -704,4 +704,35 @@ public class SoundManager : CombinedSingleton<SoundManager>
     }
 
     #endregion
+
+    public async Task<float> GetMusicLengthAsync(string soundName, float fallbackSeconds = 180f)
+    {
+        try
+        {
+            if (_currentSettings?.soundCollection == null)
+                return fallbackSeconds;
+
+            // BGM 데이터 찾기
+            var soundData = _currentSettings.soundCollection.GetBGM(soundName);
+            if (soundData == null)
+                return fallbackSeconds;
+
+            // 로드된 경우
+            if (_loadedClips.TryGetValue(soundData.soundName, out var cached) && cached != null)
+                return Mathf.Max(0.01f, cached.length);
+
+            // 로드해서 길이 얻기
+            var clip = await LoadAudioClipAsync(soundData);
+            
+            if (clip == null)
+                return fallbackSeconds;
+
+            return Mathf.Max(0.01f, clip.length);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError(ex.Message);
+            return fallbackSeconds;
+        }
+    }
 }
