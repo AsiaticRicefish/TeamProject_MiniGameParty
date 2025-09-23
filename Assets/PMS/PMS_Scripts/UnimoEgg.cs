@@ -143,7 +143,14 @@ public class UnimoEgg : MonoBehaviourPun
     {
         rb.AddForce(dir, ForceMode.Impulse);
         yield return new WaitForFixedUpdate();
-        playerEffectController.ShotEffectPlay(ParticleIDs.SH_UnimoShot, transform.position, Quaternion.identity, () => rb.velocity.magnitude < stopSpeed * 10);
+        playerEffectController.ShotEffectPlay(ParticleIDs.SH_UnimoShot, transform.position, Quaternion.identity,() => SafeCondition(gameObject));
+    }
+
+    bool SafeCondition(GameObject egg)
+    {
+        if (egg == null) return true;              // 파괴되면 즉시 종료
+        if (rb == null) return true;
+        return rb.velocity.sqrMagnitude < stopSpeed * 10;
     }
 
     private void OnCollisionEnter(Collision collision)

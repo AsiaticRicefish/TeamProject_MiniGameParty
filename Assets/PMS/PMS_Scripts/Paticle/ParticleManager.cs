@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using System;
+using Unity.VisualScripting;
 
 //게임 끝날때 까지 사용할 매니저
 public class ParticleManager : CombinedSingleton<ParticleManager> //추후 SingleTon or PunSingleton으로 변경
@@ -170,10 +171,56 @@ public class ParticleManager : CombinedSingleton<ParticleManager> //추후 Singl
 
         ps.Play();
 
-        await UniTask.WaitUntil(condition, cancellationToken: this.GetCancellationTokenOnDestroy());
+        try
+        {
+            await UniTask.WaitUntil(() =>
+            {
+                try
+                {
+                    if (condition == null) return true;
+                    return condition();
+                }
+                catch (MissingReferenceException)
+                {
+                    // 참조가 파괴에러 
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogWarning($"PlayUntilAsync condition threw: {ex}");
+                    return true;
+                }
+            }, cancellationToken: this.GetCancellationTokenOnDestroy());
+        }
+        finally
+        {
+            /*ps.transform.SetParent(originalParent);
+            pools[id].Release(ps);*/
+            // ps가 이미 파괴되었는지 확인
+            if (ps == null || ps == (UnityEngine.Object)null)
+            {
+                Debug.LogWarning("[PlayUntilAsync] ps was already destroyed - skip restore/release");
+            }
 
-        ps.transform.SetParent(originalParent);
-        pools[id].Release(ps);
+            // 안전하게 복원/반환 시도
+            try
+            {
+                ps.transform.SetParent(originalParent);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"Failed to restore parent: {ex}");
+            }
+
+            try
+            {
+                pools[id].Release(ps);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"Failed to release ps: {ex}");
+            }
+        }      
     }
 
     // 씬 언로드 시 호출: 풀·핸들 릴리즈
