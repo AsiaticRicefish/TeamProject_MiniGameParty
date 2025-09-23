@@ -17,15 +17,51 @@ MonoBehaviour:
     m_SerializedData: []
   m_GUID: 9daea83c8bba73f488fe35d0b0c16d84
   m_SerializeEntries:
+  - m_GUID: 04b6ac0bc607c0749839d9f25cb17500
+    m_Address: Assets/Imports/JengaAsset/JengaSound/TimingSound.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1acd6bffe313fb24680de2aebd1845de
     m_Address: Assets/Imports/Shrimple3D LowPoly Pack/UsePrefabs/Jenga_Block.prefab
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1fe034a2fb8193a4b952770e78c7b716
+    m_Address: Assets/Imports/JengaAsset/JengaSound/Jenga_Fail.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2a58013cac7e06045af0ece130e973de
+    m_Address: Assets/Imports/JengaAsset/JengaSound/GameFinished.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3e245e4a3b1d9a146a90a4201f1c7668
+    m_Address: Assets/Imports/JengaAsset/JengaSound/Defeat.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 471088445f741e64c82f447ba7849c30
+    m_Address: Jenga_Success
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Effect
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 637fa8e41abec614c98e530ec2fcc2fb
     m_Address: RowPrefab
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 73aa60451d569294b859b805b3bbcd35
+    m_Address: Assets/Imports/JengaAsset/JengaSound/Jenga_Success.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 792db11eb670f5d4cb772091c74e90ae
     m_Address: Assets/Imports/JengaAsset/JengaSound/Jenga Breake1.wav
@@ -43,6 +79,30 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Effect
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cead1d994f8ba0d4695dbed31d963bdb
+    m_Address: Assets/Imports/JengaAsset/JengaSound/Jenga_BGM.mp3
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e71c9194cdf55144eac0a2aa6c007f64
+    m_Address: Assets/Imports/JengaAsset/JengaSound/Victory.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ec27d344b6a6fcb46a48725a643b2ad1
+    m_Address: Assets/Imports/JengaAsset/JengaSound/CountDownSound.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f57d995a9a4ae9d41af01a629e3a67a3
+    m_Address: Assets/Imports/JengaAsset/JengaSound/ClickSound.mp3
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
     FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: efc2531fbc716f7409d27168060779e5, type: 2}
