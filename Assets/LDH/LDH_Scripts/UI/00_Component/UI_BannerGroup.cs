@@ -9,7 +9,7 @@ using UnityEditor.ShaderGraph;
 
 namespace LDH_UI
 {
-    public class UI_BannerGroup : MonoBehaviour, IPointerClickHandler,IPointerUpHandler, IPointerDownHandler
+    public class UI_BannerGroup : MonoBehaviour,IPointerUpHandler, IPointerDownHandler
     {
         [Header("데이터 & 프리팹")]
         [SerializeField] private BannerGroupData groupData;       // BannerData 리스트
