@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: -2621797398405278423}
   - component: {fileID: -1353870247722273129}
   - component: {fileID: -7566601843377880580}
+  - component: {fileID: 7411262195276897298}
   m_Layer: 0
   m_Name: '@Manager'
   m_TagString: Untagged
@@ -86,8 +87,7 @@ MonoBehaviour:
   _bgmList: []
   _rhythmList: []
   _gameSfxList: []
-  _uiSfxList:
-  - {fileID: 8300000, guid: 2cab97601cdd94654b1d0fc487601469, type: 3}
+  _uiSfxList: []
   audioMixer: {fileID: 24100000, guid: eba9e5d0d1f1fab4ea6c116f2f25bfd0, type: 2}
   bgmMixerGroup: {fileID: 44504754267785944, guid: eba9e5d0d1f1fab4ea6c116f2f25bfd0,
     type: 2}
@@ -99,8 +99,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 9381c5ddb975ab7459eb992cd7369312, type: 2}
   - {fileID: 11400000, guid: a7dc0ee4d9bb4d2419e317b62174883b, type: 2}
   - {fileID: 11400000, guid: 9630081833c04f849a8e30288083fd2e, type: 2}
-  - {fileID: 11400000, guid: 8024544eee1594fa68c412d65b86c3c4, type: 2}
-  - {fileID: 11400000, guid: bee09325fb49a4202bf435c09dc098c7, type: 2}
   sceneMappingConfig: {fileID: 11400000, guid: 5f345a74cd81c684684e972398d13743, type: 2}
   currentGameType: 0
   defaultBgmFade: 0.5
@@ -134,11 +132,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   isPersistent: 1
   ParticlePoolRegister_Transform: {fileID: 5845888735509695037}
-  particles:
-  - {fileID: 11400000, guid: 16ec8d8f5b0d6844ea14579ba65740ca, type: 2}
-  - {fileID: 11400000, guid: 6f3006a9b43f65b449683824c4dcbdd5, type: 2}
-  - {fileID: 11400000, guid: ba36dae31a5f1f14690bafebb363e2b1, type: 2}
-  - {fileID: 11400000, guid: 3ccca32a4e31d6948af074659e253300, type: 2}
+  particles: []
+--- !u!114 &7411262195276897298
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1005027553336937955}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b3098b4caebd33468630872821e9772, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isPersistent: 1
+  sheetURL: https://docs.google.com/spreadsheets/d/1Zu13He97PYobSaHt1cAOWcnJRZZgHqzdqZghzdyuHlI/export?format=csv&gid=730171835
+  refreshInterval: 300
+  loadOnStart: 1
 --- !u!1 &1379040109739422052
 GameObject:
   m_ObjectHideFlags: 0
