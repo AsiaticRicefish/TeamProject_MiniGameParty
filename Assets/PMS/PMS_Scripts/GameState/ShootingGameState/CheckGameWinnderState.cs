@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
 using ShootingScene;
+using PMS_Util;
+
 public class CheckGameWinnderState : ShootingGameState
 {
+    public override SH_GameStateType GameStateType => SH_GameStateType.CheckGameWinner;
     public override void Enter() 
     {       
         Debug.Log("[CheckGameWinnderState] - CheckGameWinnderState Enter");

@@ -11,8 +11,6 @@ namespace ShootingScene
     [RequireComponent(typeof(PhotonView))]
     public class ShootingNetworkManager : PunSingleton<ShootingNetworkManager>, IGameComponent
     {
-        LDH_MainGame.MainGameManager d;
-
         private string turnObserverId;
         private string SceneChangeObserverId;
 

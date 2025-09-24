@@ -9,6 +9,7 @@ using LDH_MainGame;
 using ShootingScene.ShootingGame;
 using Photon.Realtime;
 using ShootingScene;
+using PMS_Util;
 
 [RequireComponent(typeof(PhotonView))]
 [DisallowMultipleComponent]
@@ -96,6 +97,11 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
         currentState.Enter();
     }
 
+    public SH_GameStateType GetCurrentState()
+    {
+        return currentState.GameStateType;
+    }
+
     public void OnGameStart()
     {
         if (JengaNetworkManager.Instance == null)
@@ -143,7 +149,7 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
         //UnimoEgg[] activeEggs = GameObject.FindObjectsOfType<UnimoEgg>();
         UnimoEgg[] allEggs = EggManager.Instance.viewIdToEgg.Values.ToArray();
 
-        Debug.Log($"[GameManager] - 활성화 된 알 개수 : {allEggs.Length}");
+        Debug.Log($"[GameManager] - 모든 UnimoEgg의 개수 : {allEggs.Length}");
 
         // 2. 활성화된 알만 거리 기준 오름차순 정렬
         var sortedEggs = allEggs
@@ -206,11 +212,10 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
         // 0. 리스트 초기화
         unimoRankingList.Clear();
 
-        // 1. 현재 맵에 있는 모든 알 다 찾기
-        //UnimoEgg[] activeEggs = GameObject.FindObjectsOfType<UnimoEgg>();
+        // 1. 현재 맵에 있는 모든 알 찾기
         UnimoEgg[] allEggs = EggManager.Instance.viewIdToEgg.Values.ToArray();
 
-        Debug.Log($"[GameManager] - 활성화 된 알 개수 : {allEggs.Length}");
+        Debug.Log($"[GameManager] - 모든 UnimoEgg의 개수 : {allEggs.Length}");
 
         // 2. 활성화된 알만 거리 기준 오름차순 정렬
         var sortedEggs = allEggs
