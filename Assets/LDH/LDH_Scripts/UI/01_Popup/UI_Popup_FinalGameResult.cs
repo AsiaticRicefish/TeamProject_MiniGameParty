@@ -73,16 +73,19 @@ namespace LDH_UI
                 p.CustomProperties.TryGetValue(uidKey, out var v) &&
                 v is string uid &&
                 uid == winnerUid);
-
+            
             if (winnerPlayer == null)
             {
                 Debug.LogError("Winner is null");
                 return;
             }
+
+            bool isWinner = winnerPlayer.IsLocal;
+            
             string winnerCharID = winnerPlayer.CustomProperties[PlayerProps.GetPlayerInfoKey(PlayerProps.PlayerInfoKey.CharacterId)].ToString();
             string winnerEquipID = winnerPlayer.CustomProperties[PlayerProps.GetPlayerInfoKey(PlayerProps.PlayerInfoKey.EquipId)].ToString();
             
-            await winnerUI.SetData(winnerNickname, new UnimoCombo(winnerCharID, winnerEquipID));
+            await winnerUI.SetData(winnerNickname, new UnimoCombo(winnerCharID, winnerEquipID), isWinner );
             await Manager.UI.ShowPopupUI(winnerUI);
             await UniTask.Delay(System.TimeSpan.FromSeconds(afterWinnerDelay), cancellationToken: ct);  // 2초
             await Manager.UI.ClosePopupUI(winnerUI);

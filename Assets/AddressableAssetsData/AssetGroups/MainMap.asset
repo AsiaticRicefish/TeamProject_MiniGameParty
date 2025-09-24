@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: MainMap
+  m_EditorClassIdentifier: 
+  m_GroupName: MainMap
+  m_Data:
+    m_SerializedData: []
+  m_GUID: 9cb65a99cee064bcb9b1c9594d856b97
+  m_SerializeEntries:
+  - m_GUID: 16142cde93ae440f393c710c405ffa82
+    m_Address: Assets/Imports/MainMap/Main_MiniGameEnd.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1e51c1d1d54a8464083188053b1ce0c9
+    m_Address: Assets/Imports/MainMap/Main_ReadyClick.mp3
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5abc3a12646b5443fb15d500cda5b888
+    m_Address: Assets/Imports/MainMap/Main_MiniGamePicked.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 77afdce237e154b5ab9ebec1a5918801
+    m_Address: Assets/Imports/MainMap/Main_Reward.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7b2ea14c4d5e249369ba021ab7b17af1
+    m_Address: Assets/Imports/MainMap/Main_Roullet.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aa5e65afe5588425daa892937e86aab9
+    m_Address: Assets/Imports/MainMap/Main_Winner.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: abb38e2b8bfe34308918b1047bf93787
+    m_Address: Assets/Imports/MainMap/Main_MatchEnd.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c7a82edc245bf49dd9174e625d7a9f87
+    m_Address: Assets/Imports/MainMap/Main_Loser.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c8edfbaef26834a13ba0d3364bbd7232
+    m_Address: Assets/Imports/MainMap/Main_Coin.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e51bb5f3a1bd94ca9b2e19b34f8cabe8
+    m_Address: Assets/Imports/MainMap/Main_Picking.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: efc2531fbc716f7409d27168060779e5, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: ac6d83ccaa0474a299b3dba331a24d7a, type: 2}
+    - {fileID: 11400000, guid: 135a6f627c72645b497f4f5e9a89ec7b, type: 2}

@@ -178,7 +178,7 @@ namespace LDH_Game
 #if TEST_WITHOUT_LOGIN
             if (SceneManager.GetActiveScene().name == Manager.Network.LobbySceneName)
             {
-                _loadingUI.AutoCloseAfter(1f, this.destroyCancellationToken).Forget();
+                _loadingUI.AutoCloseAfter(0.5f, this.destroyCancellationToken).Forget();
             }
 
 #endif
@@ -203,7 +203,7 @@ namespace LDH_Game
             {
                 Small("잠시 후 로비로 진입합니다!");
                 _loadingUI.SetProgress(1f);
-                _loadingUI.AutoCloseAfter(1f, this.destroyCancellationToken).Forget();
+                _loadingUI.AutoCloseAfter(0.5f, this.destroyCancellationToken).Forget();
             };
         }
 

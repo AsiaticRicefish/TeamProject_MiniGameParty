@@ -28,9 +28,13 @@ namespace LDH_UI
         protected float endDelay = 2f;
 
 
+
+        
+        
         protected GamePlayer[] _playerResults;
         protected List<UI_ScoreEntry> _scoreEntries = new();
 
+        
         
         public async UniTask SetData(int round, string gameName, GamePlayer[] players)
         {

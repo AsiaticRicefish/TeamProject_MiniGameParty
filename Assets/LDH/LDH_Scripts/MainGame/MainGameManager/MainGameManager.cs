@@ -234,6 +234,11 @@ namespace LDH_MainGame
             {
                 //누구든 나갔을 때 
                 UI.ShowQuitPopup();
+                if (_stateRoutine != null)
+                {
+                    StopCoroutine(_stateRoutine);
+                    _stateRoutine = null;
+                }
             }
             
             // 2) 마스터 클라이언트이고, 메인 게임 상태가 ready(모든 플레이어의 ready를 기다리고 있는 상태)라면 재조정

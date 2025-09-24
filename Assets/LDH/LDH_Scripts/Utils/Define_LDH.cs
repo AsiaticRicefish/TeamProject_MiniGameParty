@@ -223,9 +223,32 @@ namespace LDH_Util
 
             public const string RTDB = "https://unimo-56ebc-default-rtdb.asia-southeast1.firebasedatabase.app/";
         }
-
-      
+        
         #endregion
+
+        #region Sound
+
+        public enum BgmKey
+        {
+            Lobby_BGM,
+        }
+
+        public enum SfxKey
+        {
+            Lobby_Matching,
+            Main_Coin,
+            Main_Picking,
+            Main_Roullet,
+            Main_MiniGamePicked,
+            Main_ReadyClick,
+            Main_MiniGameEnd,
+            Main_MatchEnd,
+            Main_Loser,
+            Main_Winner,
+            Main_Reward,
+        }
+        #endregion
+        
         
     }
 
