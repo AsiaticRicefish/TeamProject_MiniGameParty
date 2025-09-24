@@ -53,7 +53,7 @@ namespace LDH_UI
             catch (OperationCanceledException)
             {
                 // 토큰 취소로 인한 정상 종료
-                Debug.Log("토큰 취소!");
+                // Debug.Log("토큰 취소!");
             }
         }
 
@@ -66,7 +66,7 @@ namespace LDH_UI
 
         private void Restart()
         {
-            Debug.Log(" 계속 호출 되나 확인?");
+            // Debug.Log(" 계속 호출 되나 확인?");
             if(cts != null)
                 CancelTask();
 

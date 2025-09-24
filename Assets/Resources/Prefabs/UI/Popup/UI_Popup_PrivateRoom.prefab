@@ -37,7 +37,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0.000061035156, y: -70.504974}
+  m_AnchoredPosition: {x: 0, y: -70.505005}
   m_SizeDelta: {x: 0.00012207031, y: 141.01001}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &46171727601590947
@@ -2118,11 +2118,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Player Panel 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 5310981763422313923, guid: 2ce93786e842c48a595f1a9e5fd52a9a,
-        type: 3}
-      propertyPath: m_fontSize
-      value: 18
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -59,7 +59,6 @@ namespace LDH_Game
             Manager.UI.ShowPopupUI(_loadingUI).Forget();
             
             // ========== [0단계] ========== 
-            Big("초기화 중");
             Small("초기화 준비…");
             // Util_LDH.ConsoleLog(this, "[0단계 - 1] 파괴되지 않도록 dont destroy처리");
             // 1) 작업이 완료되지 않았는데 씬이 전환되는 경우 파괴되지 않도록 하기 위해 dont destroy 처리
@@ -105,8 +104,6 @@ namespace LDH_Game
             
             
             //============= [1단계] ==================
-          
-            Big("리소스 및 데이터 로딩 중");
 
             // 1) Addressable 초기화
             Small("리소스 시스템 초기화…");
@@ -167,7 +164,6 @@ namespace LDH_Game
             
             //============= [2단계] ==================
 
-            Big("세션 진입 준비");
             // 5) 커스터마이징 매니저에서 DataManager에 저장된 데이터를 가져와 커스템 데이터를 셋팅해준다.
             Small("아바타 설정 적용…");
             await Manager.Custom.InitAsync();
@@ -213,8 +209,6 @@ namespace LDH_Game
             }
                
         }
-        
-        void Big(string s)   => _loadingUI?.SetBigDescription(s);
         void Small(string s) => _loadingUI?.SetSmallDescription(s);
 
     }

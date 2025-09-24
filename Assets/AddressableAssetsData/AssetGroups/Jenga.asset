@@ -46,12 +46,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Sound
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 471088445f741e64c82f447ba7849c30
-    m_Address: Jenga_Success
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Effect
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 637fa8e41abec614c98e530ec2fcc2fb
     m_Address: RowPrefab
     m_ReadOnly: 0

@@ -1,4 +1,5 @@
 using System;
+using Customization;
 using Photon.Pun;
 using Photon.Realtime;
 using TMPro;
@@ -19,6 +20,7 @@ namespace LDH_UI
         [Header("UI Component")] [SerializeField]
         private Button inviteButton; // 프로필 버튼
 
+        [SerializeField] private Image profileContainer;
         [SerializeField] private Image profileImage; // 프로필 이미지지
         [SerializeField] private TextMeshProUGUI nickNameText;
         [SerializeField] private Button readyButton; // 준비 버튼
@@ -61,15 +63,15 @@ namespace LDH_UI
             SetOccupied(false); // 빈 슬롯으로 처리
             SetReadyButtonInteractable(false);
             SetReadyVisual(false);
-            SetInviteActive(canInvite);
+            SetInviteActive(false);           //초대 기능 삭제
             SetMasterIcon(false);
             ClearPlayerInfo();
         }
 
-        public void ApplyPlayer(bool isReady, bool isLocalPlayer, bool isMasterClient, string playerNickName)
+        public void ApplyPlayer(bool isReady, bool isLocalPlayer, bool isMasterClient, string playerNickName, string profileId)
         {
             SetOccupied(true);
-            ApplyPlayerInfo(playerNickName);
+            ApplyPlayerInfo(playerNickName, profileId);
             SetReadyButtonInteractable(isLocalPlayer);
             SetReadyVisual(isReady);
             SetInviteActive(false);
@@ -87,19 +89,26 @@ namespace LDH_UI
         {
             IsOccupied = occupied;
             profileImage.enabled = occupied;
+            profileContainer.enabled = occupied;
             inviteButton.image.color = occupied ? occupiedTheme.backgroundColor : emptyTheme.backgroundColor;
             inviteButton.image.sprite = occupied ? occupiedTheme.buttonImage : emptyTheme.buttonImage;
         }
 
-        public void ApplyPlayerInfo(string playerNickname)
+        public async void ApplyPlayerInfo(string playerNickname, string profileId)
         {
-            //todo: 프로필 이미지 설정
+            var s = await CustomizationManager.Instance.GetIconAsync(profileId);
+
+            // UI 변경은 반드시 메인 스레드에서
+            await Cysharp.Threading.Tasks.UniTask.SwitchToMainThread();
+            profileImage.sprite = s;
             nickNameText.text = playerNickname;
+            
         }
 
         public void ClearPlayerInfo()
         {
             nickNameText.text = "";
+            profileImage.sprite = null;
         }
 
         public void SetMasterIcon(bool isMaster)

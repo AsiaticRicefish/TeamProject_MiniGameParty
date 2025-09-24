@@ -83,14 +83,14 @@ namespace Customization
 
         private async void Start()
         {
-            Debug.Log("[ClosetController] Wait until managers are initialized");
+//            Debug.Log("[ClosetController] Wait until managers are initialized");
             var token = this.GetCancellationTokenOnDestroy();
             await UniTask.WaitUntil(() => CatalogProvider.IsReady, cancellationToken: token);
             await UniTask.WaitUntil(() => Manager.Custom != null && Manager.Custom.IsReady, cancellationToken: token);
 
             await PrebuildAllAsync();
 
-            Debug.Log("[ClosetController] Apply Initial Selection");
+//            Debug.Log("[ClosetController] Apply Initial Selection");
             _stagedCombo = Manager.Custom.GetEquippedLocal();
             ApplyInitialSelection(_stagedCombo);
         }
@@ -112,7 +112,7 @@ namespace Customization
             if (_built) return;
             _built = true;
 
-            Debug.Log("[ClosetController] start prebuild");
+//            Debug.Log("[ClosetController] start prebuild");
 
             // 1) 정의(Definition) 목록
             var allCharacters = CatalogProvider.CharactersSorted;
@@ -225,7 +225,7 @@ namespace Customization
             SetActiveGroup(equipmentCanvasGroup, true);
 
 
-            Debug.Log("[ClosetController] prebuild complete");
+//            Debug.Log("[ClosetController] prebuild complete");
         }
 
         #region Toggle Build
@@ -290,9 +290,9 @@ namespace Customization
 
         private async UniTask ChangeCharacter(string id)
         {
-            Debug.Log($"======= ChangeCharacter 시작 =======");
+//            Debug.Log($"======= ChangeCharacter 시작 =======");
 
-            Debug.Log($"[Closet] Change Character → {id}");
+//            Debug.Log($"[Closet] Change Character → {id}");
 
             //입력 막기
 
@@ -304,9 +304,9 @@ namespace Customization
 
         private async UniTask ChangeEquip(string id)
         {
-            Debug.Log($"======= ChangeEquip 시작 =======");
+//            Debug.Log($"======= ChangeEquip 시작 =======");
 
-            Debug.Log($"[Closet] Change Equip → {id}");
+//            Debug.Log($"[Closet] Change Equip → {id}");
 
             await Manager.Custom.ApplyToAvatarAsync(avatarStruct, equipId: id);
             Debug.Log("Apply가 완료되었습니다.");
