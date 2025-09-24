@@ -13,10 +13,9 @@ MonoBehaviour:
   m_Name: MainGame_Theme
   m_EditorClassIdentifier: 
   gameTitle: "\uBA54\uC778 \uAC8C\uC784 \uC785\uC7A5 \uC911"
-  bigDescription: "\uCC38\uAC00\uC790 \uD655\uC778 \uBC0F \uAC8C\uC784 \uC124\uC815
-    \uC9C4\uD589 \uC911..."
-  smallDescription: "\uBA3C\uC800 2\uB77C\uC6B4\uB4DC\uB97C \uC774\uAE30\uBA74 \uC2B9\uB9AC!
-    (3\uC804 2\uC120\uC2B9\uC81C)"
+  bigDescription: 
+  smallDescription: "\uAFB8\uC900\uD55C \uD50C\uB808\uC774\uB97C \uD1B5\uD574 \uB2E4\uC591\uD55C
+    \uC720\uB2C8\uBAA8\uB97C \uD68D\uB4DD\uD574\uBCF4\uC138\uC694!"
   titlePanelColor: {r: 0, g: 0, b: 0, a: 1}
   backgroundPanelColor: {r: 1, g: 1, b: 1, a: 1}
   descriptionPanelColor: {r: 1, g: 1, b: 1, a: 1}

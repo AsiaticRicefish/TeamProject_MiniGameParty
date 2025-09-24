@@ -270,7 +270,7 @@ namespace LDH_UI
 
             // 최상단으로 Push
             _popupStack.Push(popup);
-            Debug.Log($"[UIManager] : {popup.name}을 스택에 추가, 현재 스택 개수 : {_popupStack.Count}");
+            //Debug.Log($"[UIManager] : {popup.name}을 스택에 추가, 현재 스택 개수 : {_popupStack.Count}");
             
 
             await popup.ShowAsync();
@@ -302,7 +302,7 @@ namespace LDH_UI
             //2) 닫기
             try
             {
-                Debug.Log($"{popup.name} 닫기 호출 (pop-first)");
+                // Debug.Log($"{popup.name} 닫기 호출 (pop-first)");
                 await popup.CloseAsync(); // 애니메이션(비동기) 대기
             }
             catch (Exception e)
@@ -339,7 +339,7 @@ namespace LDH_UI
 
             // 최상단 팝업 Pop 후 제거
             UI_Popup top = _popupStack.Peek();
-            Debug.Log($"top : {top.name}");
+            // Debug.Log($"top : {top.name}");
             await ClosePopupUI(top, destroy);
         }
 

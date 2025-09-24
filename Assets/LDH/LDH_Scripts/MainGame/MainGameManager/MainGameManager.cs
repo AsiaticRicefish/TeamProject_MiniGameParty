@@ -288,7 +288,7 @@ namespace LDH_MainGame
         /// </summary>
         private void SwitchState(MainState nextState)
         {
-            Debug.Log($"{nextState.ToString()}으로 상태 변경");
+            // Debug.Log($"{nextState.ToString()}으로 상태 변경");
             if (_stateRoutine != null)
             {
                 StopCoroutine(_stateRoutine);
@@ -581,7 +581,7 @@ namespace LDH_MainGame
                 try
                 {
                     await UI.BuildSlotMachine(list, targetIndex, PropertiesCtrl.GetRoomProps(RoomProps.Round, 1));
-                    Debug.Log($"<color=green> Is master? {IsMaster} / 마스터가 아니면 끝, 마스터면 handle pull하는 rpc 호출</color>");
+                    // Debug.Log($"<color=green> Is master? {IsMaster} / 마스터가 아니면 끝, 마스터면 handle pull하는 rpc 호출</color>");
                     if (IsMaster)
                     {
                         await UniTask.Delay(TimeSpan.FromSeconds(2f));

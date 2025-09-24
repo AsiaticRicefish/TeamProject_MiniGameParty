@@ -93,7 +93,7 @@ namespace LDH_UI.Screen_MainGame
             for (int i = 0; i < playerCount; i++)
             {
                 int panelIndex = _activeOrder[i];
-                Debug.Log($"panel index = {panelIndex}");
+                // Debug.Log($"panel index = {panelIndex}");
                 var ui = playerUis[panelIndex];
                 var rt = ui.playerInfoTransform;
            

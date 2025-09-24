@@ -114,7 +114,7 @@ namespace LDH_UI
             
             rowListRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, _totalHeight);
             rowListRect.anchoredPosition = Vector2.zero; // 맨 위에서 시작 (0번째 아이템이 보이게)
-            Debug.Log($"cell height : {_cellHeight}, total height : {_totalHeight}");
+            // Debug.Log($"cell height : {_cellHeight}, total height : {_totalHeight}");
             
             
             _rawY = 0f;                                                 // 원시 y도 0으로 초기화
@@ -215,7 +215,7 @@ namespace LDH_UI
            rowStopped  = true;                                         // 멈춤 플래그 true
            _spinTween = null;                                          // 트윈 참조 해제
            
-           Debug.Log($"멈춘 인덱스 == 타겟 인덱스여야 한다. : {finalIndex} == {target}");
+           // Debug.Log($"멈춘 인덱스 == 타겟 인덱스여야 한다. : {finalIndex} == {target}");
             
         }
         

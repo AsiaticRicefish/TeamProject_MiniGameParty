@@ -47,31 +47,8 @@ namespace LDH_UI
                 var uiEntry = Instantiate(scoreEntryPrefab, scoreEntryContent);
                 uiEntry.transform.SetSiblingIndex(i);
 
-                Debug.Log(gp.PlayerId);
-
-                Player player = null;
-                foreach (Player p in PhotonNetwork.CurrentRoom.Players.Values)
-                {
-                    if (p.CustomProperties.TryGetValue(
-                            Define_LDH.PlayerProps.GetPlayerInfoKey(Define_LDH.PlayerProps.PlayerInfoKey.Uid),
-                            out object value) && value is string playerUid && playerUid.Equals(gp.PlayerId))
-                    {
-                        player = p;
-                        break;
-                    }
-                }
+                string profileId = Util_LDH.GetCurrentRoomPlayerProfileId(gp.PlayerId);
                 
-                if (player == null)
-                {
-                    Debug.LogWarning("player is null");
-                    return;
-                }
-
-                string profileId = player
-                    .CustomProperties[
-                        Define_LDH.PlayerProps.GetPlayerInfoKey(Define_LDH.PlayerProps.PlayerInfoKey.CharacterId)]
-                    .ToString();
-
                 await uiEntry.SetData(gp.Nickname, gp.LastMiniGameRank, gp.TotalRank, profileId, gp.Score, gp.WonThisRound);
                 _scoreEntries.Add(uiEntry);
             }

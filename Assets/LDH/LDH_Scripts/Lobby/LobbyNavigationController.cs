@@ -70,7 +70,7 @@ namespace LDH_Lobby
                 _camDict.Add(lobbyCam.cameraID, lobbyCam);
             }
 
-            Debug.Log($"[LobbyCameraController] 등록된 카메라 개수 : {_camDict.Count} ");
+//            Debug.Log($"[LobbyCameraController] 등록된 카메라 개수 : {_camDict.Count} ");
         }
 
         private void RegisterMenus()
@@ -144,7 +144,7 @@ namespace LDH_Lobby
 
         private void SetVCamPriority(string id)
         {
-            Debug.Log($"id : {id}");
+//            Debug.Log($"id : {id}");
 
             foreach (var (camId, cam) in _camDict)
             {

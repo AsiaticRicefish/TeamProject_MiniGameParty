@@ -131,7 +131,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   isPersistent: 1
   ParticlePoolRegister_Transform: {fileID: 5845888735509695037}
-  particles: []
+  particles:
+  - {fileID: 11400000, guid: 16ec8d8f5b0d6844ea14579ba65740ca, type: 2}
+  - {fileID: 11400000, guid: 6f3006a9b43f65b449683824c4dcbdd5, type: 2}
+  - {fileID: 11400000, guid: ba36dae31a5f1f14690bafebb363e2b1, type: 2}
+  - {fileID: 11400000, guid: 3ccca32a4e31d6948af074659e253300, type: 2}
 --- !u!1 &1379040109739422052
 GameObject:
   m_ObjectHideFlags: 0

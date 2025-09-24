@@ -72,9 +72,9 @@ namespace LDH_UI
             }
         }
 
-        public void SetPlayerPanel(int slotIdx, bool isReady, bool isLocal, bool isMaster, string playerNickname)
+        public void SetPlayerPanel(int slotIdx, bool isReady, bool isLocal, bool isMaster, string playerNickname, string profileId)
         {
-            this[slotIdx].ApplyPlayer(isReady, isLocal, isMaster, playerNickname);
+            this[slotIdx].ApplyPlayer(isReady, isLocal, isMaster, playerNickname, profileId);
         }
 
 

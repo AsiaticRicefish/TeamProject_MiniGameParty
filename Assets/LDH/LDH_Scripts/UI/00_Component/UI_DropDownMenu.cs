@@ -107,5 +107,11 @@ namespace LDH_UI
             var popup = Manager.UI.CreatePopupUI<UI_Popup>(uiPopup.name);
             Manager.UI.ShowPopupUI(popup).Forget();
         }
+        
+        public void ShowPreparingToast()
+        {
+            Manager.UI.EnqueueToast("준비 중입니다.");
+            
+        }
     }
 }
