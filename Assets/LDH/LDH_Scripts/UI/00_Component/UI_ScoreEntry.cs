@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Customization;
 using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks.Triggers;
 using Data;
 using DG.Tweening;
 using LDH_Util;
@@ -177,7 +178,7 @@ namespace LDH_UI
 
         public async UniTask ShowReward(CancellationToken ct, float duration = 0.8f)
         {
-            Debug.Log($"<color=yellow>{_totalReward}</color>");
+            // Debug.Log($"<color=yellow>{_totalReward}</color>");
             
             rewardCg.alpha = 0f;
             rewardText.text = "+ 0";
