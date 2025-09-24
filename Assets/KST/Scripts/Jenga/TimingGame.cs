@@ -165,15 +165,16 @@ public class TimingGame : MonoBehaviour
 
         var z = new Vector3[4];
         _successZone.GetWorldCorners(z);
-        float start = z[0].x;      // left
-        float end = z[3].x;      // right
+        float start = z[0].x;   // left
+        float end   = z[3].x;   // right
         float center = 0.5f * (start + end);
-        float half = 0.5f * (end - start);
+        float half   = 0.5f * (end - start);
 
         bool inside = (start <= handleCenterX) && (handleCenterX <= end);
         if (!inside) return (false, 0f);
 
         float acc = 1f - Mathf.Clamp01(Mathf.Abs(handleCenterX - center) / half);
+
         return (true, acc);
     }
 
@@ -182,7 +183,7 @@ public class TimingGame : MonoBehaviour
     /// </summary>
     /// <param name="isSuccess">성공 여부</param>
     /// <param name="accuracy">정확도 </param>
-    void GameEnd(bool isSuccess, float accuracy)
+   void GameEnd(bool isSuccess, float accuracy)
     {
         if (!_isRun) return;
         _isRun = false;

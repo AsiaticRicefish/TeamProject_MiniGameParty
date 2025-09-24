@@ -61,8 +61,8 @@ public class UI_Popup_GameSetting : UI_Popup
             float bgm = Mathf.Clamp01(sm.bgmSoundVolume);
             float sfx = Mathf.Clamp01(sm.sfxSoundVolume);
 
-            if (bgmSlider) bgmSlider.value = bgm;
-            if (sfxSlider) sfxSlider.value = sfx;
+            if (bgmSlider) bgmSlider.SetValueWithoutNotify(bgm);
+            if (sfxSlider) sfxSlider.SetValueWithoutNotify(sfx);
         }
 
         _wiring = false;
@@ -78,5 +78,10 @@ public class UI_Popup_GameSetting : UI_Popup
     {
         if (_wiring) return;
         SoundManager.Instance?.SetSFXSoundVolume(v);
+    }
+
+    private void OnDisable()
+    {
+        PlayerPrefs.Save();
     }
 }

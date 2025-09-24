@@ -43,12 +43,12 @@ namespace RhythmGame
 
             note.Status = NoteStatus.None;
 
-            //속임수 블럭의 경우 미스처리 금지.
-            if (note.Type == NoteType.Fake)
-            {
-                ScoreManager.Instance.RequestMissFake(note.NoteId);
-                return;
-            }
+            // //속임수 블럭의 경우 미스처리 금지.
+            // if (note.Type == NoteType.Fake)
+            // {
+            //     ScoreManager.Instance.RequestMissFake(note.NoteId);
+            //     return;
+            // }
 
             if (!TryGetLane(out int myLane)) return;
             //내 레인이 아닐경우 금지

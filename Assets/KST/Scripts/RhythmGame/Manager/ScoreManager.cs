@@ -149,32 +149,40 @@ namespace RhythmGame
             // LaneManager.Instance.LaneByNoteId.Remove(noteId);
             NoteSpawner.Instance.DestroyNote(noteId, isCanInteract);
 
-            // 득점 및 과열 처리
-            if (isCanInteract)
+            // 득점 처리
+
+            // 상호작용 불가능한 상태일 경우
+            if (!isCanInteract)
+            {
+                GameManager.Instance.MissBlock(info.Sender, type);
+                return;
+            }
+            //상호작용 가능할 때
+            if (type == NoteType.Fake)
+            {
+                GameManager.Instance.GoodHitScore(type, info.Sender);
+            }
+            //속임수 노트가 아닐 경우
+            else
             {
                 GameManager.Instance.GoodHitScore(type, info.Sender);
                 if (SoundManager.Instance != null)
                     SoundManager.Instance.PlaySFX
                     (type == NoteType.Continue ? "Continue" : "Touch");
-
-                return;
-                
             }
-            GameManager.Instance.MissBlock(info.Sender);
-            // SoundManager.Instance.PlaySFX_GAME(SfX_Game.SFX_Rhythm_Miss);
         }
 
-        public void RequestMiss()
+        public void RequestMiss(NoteType noteType)
         {
-            photonView.RPC(nameof(RPC_RequestMiss), RpcTarget.MasterClient);
+            photonView.RPC(nameof(RPC_RequestMiss), RpcTarget.MasterClient, noteType);
         }
 
         [PunRPC]
-        void RPC_RequestMiss(PhotonMessageInfo info)
+        void RPC_RequestMiss(NoteType type, PhotonMessageInfo info)
         {
             if (!PhotonNetwork.IsMasterClient) return;
             // GameManager.Instance.OverHeatCheck();
-            GameManager.Instance.MissBlock(info.Sender);
+            GameManager.Instance.MissBlock(info.Sender, type);
         }
 
         /// <summary>
@@ -190,8 +198,14 @@ namespace RhythmGame
             if (!LaneManager.Instance.GetLane(actorNum, out int actorLane)) return;
             //해당 액터의 레인과 노트 레인 일치 확인
             if (noteLane != actorLane) return;
+            if (!NoteSpawner.Instance.TryGetNote(noteId, out var note)) return;
+            var type = note.Type;
 
-            MissToAll(actorNum);
+            var player = PhotonNetwork.CurrentRoom?.GetPlayer(actorNum);
+            if(player!=null)
+                GameManager.Instance.MissBlock(player, type);
+
+            MissToAll(actorNum,type);
 
             //노트 파괴()
             NoteSpawner.Instance.DestroyNote(noteId, false);
@@ -206,17 +220,18 @@ namespace RhythmGame
         /// 모두에게 해당 노트가 miss 됐다는 것을 전파
         /// </summary>
         [PunRPC]
-        void RPC_MissToAll(int actorNum)
+        void RPC_MissToAll(int actorNum, NoteType type)
         {
             if (PhotonNetwork.LocalPlayer.ActorNumber == actorNum)
             {
-                VerdictMiss();
+                VerdictMiss(type);
+                // GameManager.Instance.MissBlock(PhotonNetwork.LocalPlayer, type);
             }
         }
 
-        void MissToAll(int actorNum)
+        void MissToAll(int actorNum, NoteType type)
         {
-            photonView.RPC(nameof(RPC_MissToAll), RpcTarget.All, actorNum);
+            photonView.RPC(nameof(RPC_MissToAll), RpcTarget.All, actorNum, type);
         }
 
         /// <summary>
@@ -283,8 +298,11 @@ namespace RhythmGame
         /// 미스 처리
         /// </summary>
         /// <returns></returns>
-        public Verdict VerdictMiss()
+        public Verdict VerdictMiss(NoteType type)
         {
+            if (type == NoteType.Fake)
+                return ApplyVerdict(Verdict.Perfect);
+
             return ApplyVerdict(Verdict.Miss);
         }
 
