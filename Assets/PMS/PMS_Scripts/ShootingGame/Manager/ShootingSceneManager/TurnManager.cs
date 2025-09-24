@@ -341,7 +341,7 @@ namespace ShootingScene
 
         #region PunCallback
 
-        public override void OnPlayerLeftRoom(Player otherPlayer)
+        /*public override void OnPlayerLeftRoom(Player otherPlayer)
         {
             //현재 게임 상태를 가져온다(룸 프로퍼티)
             var stateValue = RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.State);
@@ -384,10 +384,10 @@ namespace ShootingScene
                     Debug.Log("[TurnManager] 플레이어의 uid 프로퍼티를 찾을 수 없습니다.");
                 }
             }
-        }
+        }*/
 
 
-        public override void OnMasterClientSwitched(Player newMasterClient)
+        /*public override void OnMasterClientSwitched(Player newMasterClient)
         {
             if (!newMasterClient.IsLocal) return;
             
@@ -405,7 +405,7 @@ namespace ShootingScene
             {
                 currentStateValue.Equals("TurnCheckState");
             }
-        }
+        }*/
         
         #endregion
         

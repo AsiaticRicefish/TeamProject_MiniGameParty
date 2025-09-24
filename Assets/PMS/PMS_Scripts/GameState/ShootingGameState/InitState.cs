@@ -6,7 +6,7 @@ using PMS_Util;
 
 public class InitState : ShootingGameState
 {
-    public override SH_GameStateType GameStateType => SH_GameStateType.InitState;
+    public override SH_GameStateType GameStateType => SH_GameStateType.Init;
 
     public override void Enter()
     {
