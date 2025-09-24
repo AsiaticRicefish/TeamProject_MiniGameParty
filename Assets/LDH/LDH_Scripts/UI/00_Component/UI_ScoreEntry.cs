@@ -86,8 +86,8 @@ namespace LDH_UI
             {
                 currencyImage.sprite = meta.icon;
             }
+            if (rewardText) rewardText.text =  $"+ {reward :N0}";
 
-            if (rewardText) rewardText.text = "+ 0";
             _totalReward = reward;
         }
 
@@ -120,7 +120,8 @@ namespace LDH_UI
             var seq = DOTween.Sequence()
                 .AppendInterval(delay)
                 .Append(cg.DOFade(1f, appearDuration))
-                .Join(transform.DOScale(1f, appearDuration).SetEase(Ease.OutBack));
+                .Join(transform.DOScale(1f, appearDuration).SetEase(Ease.OutBack))
+                .SetUpdate(true);
 
             return seq.ToUniTask(cancellationToken: ct);
         }
@@ -170,42 +171,35 @@ namespace LDH_UI
 
             var seq = DOTween.Sequence()
                 .Join(totalRankText.DOFade(1f, 0.5f))
-                .Join(rt.DOAnchorPos(targetPos, 0.5f)).SetEase(Ease.OutBack);
+                .Join(rt.DOAnchorPos(targetPos, 0.5f)).SetEase(Ease.OutBack)
+                .SetUpdate(true);
         }
 
         public async UniTask ShowReward(CancellationToken ct, float duration = 0.8f)
         {
+            Debug.Log($"<color=yellow>{_totalReward}</color>");
+            
             rewardCg.alpha = 0f;
-            float fadeT = 0f;
-            const float fadeDur = 0.2f;
-            while (fadeT < fadeDur)
-            {
-                fadeT += Time.deltaTime;
-                rewardCg.alpha = Mathf.Clamp01(fadeT / fadeDur);
-                await UniTask.Yield(PlayerLoopTiming.Update);
-            }
+            rewardText.text = "+ 0";
+            
+            
+            var fadeTw = rewardCg.DOFade(1f, 0.2f).SetUpdate(true);
+            await fadeTw.AsyncWaitForCompletion();
+            
+            int from = 0;
+            int to   = Mathf.Max(0, _totalReward);
 
-            rewardCg.alpha = 1f;
-
-            float t = 0f;
-            int last = -1;
-            while (t < duration)
-            {
-                t += Time.deltaTime;
-                float p = Mathf.Clamp01(t / duration);
-                float eased = 1f - Mathf.Pow(1f - p, 2f); // EaseOutQuad
-
-                int value = Mathf.RoundToInt(Mathf.Lerp(0, _totalReward, eased));
-                if (value != last)
+            var numTw = DOVirtual.Int(from, to, duration, v =>
                 {
-                    rewardText.text = $"+ {value}";
-                    last = value;
-                }
+                    rewardText.text = $"+ {v}";
+                })
+                .SetEase(Ease.OutQuad)   // 같은 이징
+                .SetUpdate(true);        // 타임스케일 무시하고 진행(필요 없으면 제거)
 
-                await UniTask.Yield(PlayerLoopTiming.Update);
-            }
+            await numTw.AsyncWaitForCompletion();
+            
+            rewardText.text = $"+ {to}";
 
-            rewardText.text = $"+ {_totalReward}";
         }
 
         #endregion

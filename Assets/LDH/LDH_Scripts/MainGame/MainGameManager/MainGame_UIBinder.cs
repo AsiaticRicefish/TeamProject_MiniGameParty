@@ -202,9 +202,12 @@ namespace LDH_MainGame
 
         #region Game End
 
-        public async UniTask ShowGameEnd()
+        public async UniTask ShowGameEnd(bool isMainEnd = false)
         {
             _gameEndPopup = Manager.UI.CreatePopupUI<UI_Popup_GameEnd>();
+            if(isMainEnd)
+                _gameEndPopup.SetData("매치 종료");
+            
             await Manager.UI.ShowPopupUI(_gameEndPopup);
             await UniTask.Delay(TimeSpan.FromSeconds(1.8f));
             await Manager.UI.ClosePopupUI(_gameEndPopup);

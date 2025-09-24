@@ -906,7 +906,7 @@ MonoBehaviour:
   fadeTime: 0.1
   avatarStruct: {fileID: 7468012076252529733}
   userNickName: {fileID: 8760505842890197118}
-  unimoClip: {fileID: 7400000, guid: 4c00c466b978ba940b7b807f6d783130, type: 2}
+  unimoClip: {fileID: 7400000, guid: eb1bf34f73b2c12478ceb1ddb7fa155b, type: 2}
   equipClip: {fileID: 7400000, guid: 55a32113ce5620d4bb929973c98d5ca8, type: 2}
 --- !u!1 &4304716357066269838
 GameObject:

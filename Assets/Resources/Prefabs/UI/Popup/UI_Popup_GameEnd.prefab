@@ -272,6 +272,7 @@ MonoBehaviour:
   blocksRaycasts: 1
   fadeTime: 0.1
   textRect: {fileID: 1808337475557736459}
+  text: {fileID: 7855403820361949332}
   xOffset: -160
   duration: 0.35
 --- !u!225 &6857421069722020799

@@ -230,9 +230,12 @@ namespace LDH_MainGame
             var room = PhotonNetwork.CurrentRoom;
             if (room == null) return; // 방이 없다면 패스
 
-            //누구든 나갔을 때 
-            UI.ShowQuitPopup();
-
+            if (FSM.Get() != MainState.End)
+            {
+                //누구든 나갔을 때 
+                UI.ShowQuitPopup();
+            }
+            
             // 2) 마스터 클라이언트이고, 메인 게임 상태가 ready(모든 플레이어의 ready를 기다리고 있는 상태)라면 재조정
             if (!IsMaster) return;
             if (FSM.Get() != MainState.Ready) return;
@@ -540,6 +543,9 @@ namespace LDH_MainGame
         [PunRPC]
         private void RPC_ShowFinalRewards(string[] ordered)
         {
+            //라운드 승자 플래그 초기화
+            ResetRoundWinnerFlag();
+            
             //정렬된 uid 리스트를 기준으로 ui 렌더 표시 순서 결정
             var orderedPlayers = new GamePlayer[ordered.Length];
 
@@ -553,6 +559,7 @@ namespace LDH_MainGame
             {
                 try
                 {
+                    await UI.ShowGameEnd(true);
                     await UI.BuildFinalRewardPanel(orderedPlayers);
                     await UI.ShowRewardPopup(PlayerManager.Instance.GetPlayer(PhotonNetwork.LocalPlayer.UserId));
                 }

@@ -1,6 +1,7 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using TMPro;
 using UnityEngine;
 
 namespace LDH_UI
@@ -8,10 +9,17 @@ namespace LDH_UI
     public class UI_Popup_GameEnd : UI_Popup
     {
         [SerializeField] private RectTransform textRect;
+        [SerializeField] private TMP_Text text;
         [SerializeField] private int xOffset;
         [SerializeField] private float duration = 0.35f;
         
         private Vector2 originAnchorPos;
+
+        public void SetData(string textData)
+        {
+            text.text = textData;
+        }
+        
         
         protected override async UniTask OnShowAsync(CancellationToken ct)
         {

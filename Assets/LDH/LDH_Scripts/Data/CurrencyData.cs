@@ -40,6 +40,14 @@ namespace Data
                 ? RealTimeUserDataRepository.ReadTime(time)
                 : 0;
         }
+
+        public CurrencyData(CurrencyData data)
+        {
+            currency1 = data.currency1;
+            currency2 = data.currency2;
+            currency3 = data.currency3;
+            updatedAt = data.updatedAt;
+        }
         
         public static CurrencyData CreateDefault()
         {

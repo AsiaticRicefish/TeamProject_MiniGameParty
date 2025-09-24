@@ -54,7 +54,7 @@ MonoBehaviour:
     m_Top: 0
     m_Bottom: 0
   m_ChildAlignment: 0
-  m_Spacing: 120
+  m_Spacing: 140
   m_ChildForceExpandWidth: 1
   m_ChildForceExpandHeight: 0
   m_ChildControlWidth: 1
@@ -593,8 +593,3 @@ MonoBehaviour:
   scoreEntryPrefab: {fileID: 4105719652083736053, guid: 52806d7fa5df74aff8566ab9f3867ef1,
     type: 3}
   scoreEntryContent: {fileID: 6653954701571132535}
-  appearStagger: 0.12
-  afterAppearDelay: 0.35
-  afterAwardDelay: 0.5
-  rankRevealStagger: 0.15
-  delay: 10

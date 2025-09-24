@@ -41,7 +41,7 @@ public class GamePlayer
     
     // 1등 : 2 * default reward + score * default point reward
     // 나머지 : default reward + score * default point reward
-    public int Reward => (TotalRank == 1 ? 2 : 1 * DefaultData.DefaultReward) +
+    public int Reward => ((TotalRank == 1 ? 2 : 1) * DefaultData.DefaultReward) +
                          (this.Score * DefaultData.DefaultPointReward);
     #endregion
     

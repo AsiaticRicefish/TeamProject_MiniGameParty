@@ -16,7 +16,7 @@ namespace LDH_UI
 {
     public class UI_Popup_FinalGameResult : UI_Popup_GameResult
     {
-        private float afterWinnerDelay = 2f;
+        private float afterWinnerDelay = 3.5f;
 
         protected override void Init()
         {
@@ -65,7 +65,7 @@ namespace LDH_UI
                     .ToString();
 
                 await uiEntry.SetData(gp.Nickname, gp.LastMiniGameRank, gp.TotalRank, profileId, gp.Score,
-                    gp.WonThisRound);
+                    gp.WonThisRound, Define_LDH.DefaultData.DefaultRewardCurrency, gp.Reward);
                 _scoreEntries.Add(uiEntry);
             }
         }
