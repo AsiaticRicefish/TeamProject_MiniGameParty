@@ -2774,6 +2774,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ea57cd1e7de4b11a4dd38dbe6a4ae7c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &998426700 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6610228756036827116, guid: 80169b7ffbed145c5ac7b5409b87cda0,
+    type: 3}
+  m_PrefabInstance: {fileID: 2709028680834184967}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9085046f02f69544eb97fd06b6048fe2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1034145423
 GameObject:
   m_ObjectHideFlags: 0
@@ -3992,7 +4004,19 @@ MonoBehaviour:
         m_Calls: []
     onHidden:
       m_PersistentCalls:
-        m_Calls: []
+        m_Calls:
+        - m_Target: {fileID: 998426700}
+          m_TargetAssemblyTypeName: UnityEngine.UI.Toggle, UnityEngine.UI
+          m_MethodName: set_isOn
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
   - id: Shop
     uiObject: {fileID: 578793671}
     onShown:
