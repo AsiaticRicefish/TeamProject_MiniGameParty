@@ -756,10 +756,30 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 75157648}
     m_Modifications:
+    - target: {fileID: 4005888629693451622, guid: cf3cc35964ca9454982372dd983d39b5,
+        type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4246895526515586108, guid: cf3cc35964ca9454982372dd983d39b5,
+        type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5469648193770635147, guid: cf3cc35964ca9454982372dd983d39b5,
         type: 3}
       propertyPath: m_Name
       value: UI_Loading
+      objectReference: {fileID: 0}
+    - target: {fileID: 5559920174878413919, guid: cf3cc35964ca9454982372dd983d39b5,
+        type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6829475777950885057, guid: cf3cc35964ca9454982372dd983d39b5,
+        type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7082463117757107208, guid: cf3cc35964ca9454982372dd983d39b5,
         type: 3}
@@ -844,7 +864,7 @@ PrefabInstance:
     - target: {fileID: 7082463117757107208, guid: cf3cc35964ca9454982372dd983d39b5,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -0.00012207031
+      value: -0.00048828125
       objectReference: {fileID: 0}
     - target: {fileID: 7082463117757107208, guid: cf3cc35964ca9454982372dd983d39b5,
         type: 3}
@@ -859,6 +879,16 @@ PrefabInstance:
     - target: {fileID: 7082463117757107208, guid: cf3cc35964ca9454982372dd983d39b5,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8271133499733577761, guid: cf3cc35964ca9454982372dd983d39b5,
+        type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8618365225255588247, guid: cf3cc35964ca9454982372dd983d39b5,
+        type: 3}
+      propertyPath: m_SizeDelta.y
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []

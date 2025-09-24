@@ -11,6 +11,9 @@ GameObject:
   - component: {fileID: 604056280655868369}
   - component: {fileID: 7246177200287667240}
   - component: {fileID: 800709719120635535}
+  - component: {fileID: -2621797398405278423}
+  - component: {fileID: -1353870247722273129}
+  - component: {fileID: -7566601843377880580}
   m_Layer: 0
   m_Name: '@Manager'
   m_TagString: Untagged
@@ -33,6 +36,7 @@ Transform:
   m_Children:
   - {fileID: 4031691767248806508}
   - {fileID: 6561803264738523195}
+  - {fileID: 5845888735509695037}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &7246177200287667240
@@ -66,6 +70,68 @@ MonoBehaviour:
   isPersistent: 1
   charPoolRegistry_Transform: {fileID: 4031691767248806508}
   equipPoolRegistry_Transform: {fileID: 6561803264738523195}
+--- !u!114 &-2621797398405278423
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1005027553336937955}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6923f52efbb86ac41a9313853aa83f54, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isPersistent: 1
+  _bgmList: []
+  _rhythmList: []
+  _gameSfxList: []
+  _uiSfxList: []
+  audioMixer: {fileID: 24100000, guid: eba9e5d0d1f1fab4ea6c116f2f25bfd0, type: 2}
+  bgmMixerGroup: {fileID: 44504754267785944, guid: eba9e5d0d1f1fab4ea6c116f2f25bfd0,
+    type: 2}
+  sfxMixerGroup: {fileID: -8341177989497949001, guid: eba9e5d0d1f1fab4ea6c116f2f25bfd0,
+    type: 2}
+  _bgmAudioSource: {fileID: 0}
+  _sfxAudioSource: {fileID: 0}
+  allGameSettings:
+  - {fileID: 11400000, guid: 9381c5ddb975ab7459eb992cd7369312, type: 2}
+  - {fileID: 11400000, guid: a7dc0ee4d9bb4d2419e317b62174883b, type: 2}
+  - {fileID: 11400000, guid: 9630081833c04f849a8e30288083fd2e, type: 2}
+  sceneMappingConfig: {fileID: 11400000, guid: 5f345a74cd81c684684e972398d13743, type: 2}
+  currentGameType: 0
+  defaultBgmFade: 0.5
+  sfxVoices: 8
+--- !u!114 &-1353870247722273129
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1005027553336937955}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da6bdad2dc7063b489f182fda62fe6c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  configs:
+  - {fileID: 11400000, guid: a27cd74cbd48afb4dab788119a2fa959, type: 2}
+  - {fileID: 11400000, guid: 3d054e9f8a708a04785d294fa171c2e0, type: 2}
+--- !u!114 &-7566601843377880580
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1005027553336937955}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a90389a77be37346a0c11ea1d39a424, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isPersistent: 1
+  ParticlePoolRegister_Transform: {fileID: 5845888735509695037}
+  particles: []
 --- !u!1 &1379040109739422052
 GameObject:
   m_ObjectHideFlags: 0
@@ -120,6 +186,37 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6147527225639422065}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 604056280655868369}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &7582317351472420240
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5845888735509695037}
+  m_Layer: 0
+  m_Name: Particle Pool
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5845888735509695037
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7582317351472420240}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}

@@ -28,6 +28,7 @@ namespace Managers
         public static DataManager Data => DataManager.Instance;             // Data
         public static PurchaseManager Purchase => PurchaseManager.Instance;     //Purchase
         
+        public static ParticleManager Particle => ParticleManager.Instance;     // Particle
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         public static void Initialize()
@@ -44,6 +45,7 @@ namespace Managers
             manager.AddComponent<UIManager>();
             manager.AddComponent<CameraManager>();
             manager.AddComponent<PurchaseManager>();
+
 
             SceneManager.sceneLoaded += OnSceneLoaded;
             

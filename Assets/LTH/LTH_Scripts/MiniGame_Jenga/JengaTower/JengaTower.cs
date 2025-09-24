@@ -413,6 +413,8 @@ public class JengaTower : MonoBehaviour
 
     private IEnumerator CollapseAnimation()
     {
+        SoundManager.Instance?.PlaySFX("JengaBreak");
+
         // 붕괴 방향을 랜덤하게 결정 (8방향 중 하나)
         Vector3[] collapseDirections = {
         Vector3.forward,

@@ -1,31 +1,23 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Managers;
+using Cysharp.Threading.Tasks;
+using static UnityEngine.ParticleSystem;
+using UnityEngine.UIElements;
 
 public enum EffectType { Dash, Collision }
 public class PlayerEffectController : MonoBehaviour
 {
-    [SerializeField] private float defaultLifetime = 2f;
-
-    [SerializeField] private GameObject dashEffect;
-    [SerializeField] private GameObject collisionEffect;
-
-    public void Play(EffectType effectType, Vector3 position, Quaternion rotation)
+    public void CollisionEffectPlay(string particleID, Vector3 position, Quaternion rotation)
     {
-        GameObject effect = null;
+        Manager.Particle.PlayAsync(particleID, position, rotation).Forget();
+    }
 
-        switch (effectType)
-        {
-            case EffectType.Dash:
-                rotation = Quaternion.Euler(0, 90, 0); // Y축 기준 90도 회전
-                effect = Instantiate(dashEffect, position, rotation);
-                break;
-            case EffectType.Collision:
-                effect = Instantiate(collisionEffect, position, rotation);
-                break;
-        }
-
-        if (effect != null)
-            Destroy(effect, defaultLifetime); // 자동 제거
+    public void ShotEffectPlay(string particleID, Vector3 position, Quaternion rotation, Func<bool> condition)
+    {
+        rotation = Quaternion.Euler(0, 90, 0); // Y축 기준 90도 회전
+        Manager.Particle.PlayUntilAsync(particleID, position, rotation,condition,transform).Forget();
     }
 }

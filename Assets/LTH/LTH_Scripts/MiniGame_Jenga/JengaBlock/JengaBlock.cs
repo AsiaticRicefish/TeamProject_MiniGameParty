@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using InputBlocker;
 using MiniGameJenga;
 using Photon.Pun;
@@ -141,6 +142,10 @@ public class JengaBlock : MonoBehaviour, IPointerClickHandler
             {
                 _isSelected = true; 
                 Highlight(true);
+
+                // 클릭 사운드
+                SoundManager.Instance.PlaySFX("Click");
+
                 OnAnyBlockSelected?.Invoke(this);
             }
             else
@@ -161,6 +166,8 @@ public class JengaBlock : MonoBehaviour, IPointerClickHandler
             {
                 _isSelected = true; 
                 Highlight(true);
+                // 클릭 사운드
+                SoundManager.Instance.PlaySFX("Click");
                 OnAnyBlockSelected?.Invoke(this);
             }
             else
@@ -194,6 +201,8 @@ public class JengaBlock : MonoBehaviour, IPointerClickHandler
 
                 _isSelected = true;
                 Highlight(true);
+                // 클릭 사운드
+                SoundManager.Instance.PlaySFX("Click");
                 OnAnyBlockSelected?.Invoke(this);
             }
             else
@@ -279,6 +288,11 @@ public class JengaBlock : MonoBehaviour, IPointerClickHandler
 
     private IEnumerator RemoveAnimationSuccess()
     {
+        // 성공 파티클: 블록 위치에서 1회
+        ParticleManager.Instance
+            .PlayAsync("StarExplosionOrange", transform.position, Quaternion.identity)
+            .Forget();
+
         // 임시: 간단하게 바로 사라지기
         yield return new WaitForSeconds(0.1f);
         gameObject.SetActive(false);

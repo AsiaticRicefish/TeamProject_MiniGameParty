@@ -59,8 +59,11 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
     public Action<string> OnPlayerFinished;                 // 플레이어가 게임 완료
     public Action<Dictionary<string, int>> OnGameFinished;  // 최종 순위
     public Action<Dictionary<string, int>> OnRankingsUpdated; // 실시간 순위 갱신 이벤트
+    public Action OnPlayerDataUpdated;  // 플레이어 데이터 갱신 이벤트
 
     private Dictionary<string, JengaPlayerData> players = new(); // UID를 key로 가지는 플레이어 데이터
+    public IReadOnlyDictionary<string, JengaPlayerData> Players => players;
+
     private Dictionary<string, int> playerScores = new();        // 플레이어별 점수
     private Dictionary<string, bool> playerFinished = new();     // 플레이어별 게임 완료 여부
     public Dictionary<string, int> GetCurrentRanks() => CalculateRankings();
@@ -227,18 +230,6 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         // 2) 전체에 전파
         Debug.Log("[JengaGameManager] Step 2: BroadcastGameState(Playing)");
         JengaNetworkManager.Instance.BroadcastGameState(JengaGameState.Playing);
-
-        //    // 3) 타이머는 카운트다운이 완전히 끝난 후에만 시작
-        //    Debug.Log("[JengaGameManager] Step 3: StartCoroutine(GameTimer)");
-        //    if (!useCountdown && PhotonNetwork.IsMasterClient)
-        //    {
-        //        var props = new Hashtable
-        //{
-        //    { JengaRoomProps.KEY_START_TIME, PhotonNetwork.Time },
-        //    { JengaRoomProps.KEY_DURATION,   (double)gameTime }
-        //};
-        //        PhotonNetwork.CurrentRoom.SetCustomProperties(props);
-        //    }
     }
 
     #region 카운트다운 관련
@@ -259,7 +250,6 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
     {
         if (!PhotonNetwork.IsMasterClient) return;
         if (currentState == JengaGameState.Finished) return;
-
 
         if (useCountdown)
         {
@@ -298,6 +288,12 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
 
         // 모든 클라이언트에게 카운트다운 완료 알림
         JengaNetworkManager.Instance?.BroadcastCountdownComplete();
+
+        // 게임 시작 BGM을 모든 클라이언트에 브로드캐스트
+        if (PhotonNetwork.IsMasterClient)
+        {
+            JengaNetworkManager.Instance?.BroadcastBGMChange("JengaBGM");
+        }
 
         ApplyGameStateChange(JengaGameState.Playing);
         JengaNetworkManager.Instance?.BroadcastGameState(JengaGameState.Playing);
@@ -377,6 +373,8 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
                 break;
 
             case JengaGameState.Finished:
+                SoundManager.Instance.StopBGM();
+
                 // 게임 종료: 젠가 상호작용 차단
                 if (_endGameLock == null && InputManager.Instance != null)
                     _endGameLock = InputManager.Instance.Acquire(
@@ -438,6 +436,7 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         {
             var ranks = GetCurrentRanks();
             JengaNetworkManager.Instance?.BroadcastRankSnapshot(ranks);
+            JengaNetworkManager.Instance?.BroadcastPlayerDataSnapshot();
         }
     }
 
@@ -474,6 +473,13 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         remainingTime = 0f;
         OnTimeUpdated?.Invoke(remainingTime);
 
+        // 게임 종료 사운드 추가
+        SoundManager.Instance.PlayBGM("Finished");
+        if (PhotonNetwork.IsMasterClient)
+        {
+            JengaNetworkManager.Instance?.BroadcastBGMChange("Finished");
+        }
+
         // 2) 상태 전환 (ApplyGameStateChange 내부에서 KEY_STATE를 룸 프로퍼티로 기록)
         ApplyGameStateChange(JengaGameState.Finished);
 
@@ -509,6 +515,7 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
     {
         _lastRankSnapshot = new Dictionary<string, int>(ranks);
         OnRankingsUpdated?.Invoke(ranks);
+        OnPlayerDataUpdated?.Invoke();
     }
 
     private Dictionary<string, int> CalculateRankings()
@@ -545,7 +552,7 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
     private void SendResultToMainGame(Dictionary<string, int> rankings)
     {
         // 메인 게임에 결과 전달 ("Jenga"라는 키로 결과 저장)
-        MainGameManager.Instance.ReportMiniGameResult(rankings);
+        //MainGameManager.Instance.ReportMiniGameResult(rankings);
 
         // 메인 게임의 PlayerManager를 통한 순위 업데이트
         foreach (var pair in rankings)
@@ -650,11 +657,13 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
     public float GetRemainingTime() => remainingTime;
     public string GetFormattedTime()
     {
-        // 반올림으로 더 정확한 시간 표시
         int totalSeconds = Mathf.RoundToInt(remainingTime);
-        int minutes = totalSeconds / 60;
-        int seconds = totalSeconds % 60;
-        return $"{minutes}:{seconds:00}";
+        return totalSeconds.ToString();
+        //// 반올림으로 더 정확한 시간 표시
+        //int totalSeconds = Mathf.RoundToInt(remainingTime);
+        //int minutes = totalSeconds / 60;
+        //int seconds = totalSeconds % 60;
+        //return $"{minutes}:{seconds:00}";
     }
 
     private Vector3 GetPlayerTowerPosition(string playerId)
@@ -731,6 +740,12 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
         }
 
         CheckAllPlayersFinished();
+
+        // 플레이어 데이터 동기화 추가
+        if (PhotonNetwork.IsMasterClient)
+        {
+            JengaNetworkManager.Instance?.BroadcastPlayerDataSnapshot();
+        }
     }
 
     /// <summary>
@@ -821,6 +836,9 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
     protected override void OnDestroy()
     {
         Debug.Log("[JengaGameManager] OnDestroy - cleaning up resources");
+
+        // 사운드 전체 정리
+        SoundManager.Instance?.StopAllSounds();
 
         // 1. 이벤트 해제 (메모리 누수 방지)
         OnTimeUpdated = null;

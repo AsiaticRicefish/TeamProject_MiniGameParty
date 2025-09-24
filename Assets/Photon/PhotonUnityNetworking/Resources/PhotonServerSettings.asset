@@ -132,6 +132,8 @@ MonoBehaviour:
   - RPC_RequesetLaneMiss
   - RPC_RequestMissFake
   - RPC_VerdictDelta
+  - RPC_SyncPlayerData
+  - RPC_ChangeBGM
   - RPC_ShowFinalRewards
   - RPC_ShowScoreboard
   - RPC_ShowScoreboardJson

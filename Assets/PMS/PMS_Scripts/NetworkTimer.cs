@@ -21,6 +21,12 @@ public class NetworkTimer
 
     public void OnStartTimer(double startAt, double endAt)
     {
+        if (endAt <= startAt)
+        {
+            Debug.LogError("endAt must be greater than startAt");
+            return;
+        }
+
         this.startAt = startAt;
         this.endAt = endAt;
         StartTimer().Forget();
@@ -94,7 +100,7 @@ public class NetworkTimer
             // 종료 시간까지 매 프레임 체크
             while (PhotonNetwork.Time < endAt && !token.IsCancellationRequested)
             {
-                int remaining = Mathf.RoundToInt((float)(endAt - PhotonNetwork.Time)); //내림 처리
+                int remaining = Mathf.CeilToInt((float)(endAt - PhotonNetwork.Time)); 
                 remaining = Mathf.Max(1, remaining); // 최소 1초 이상
                 if (remaining != lastTick)
                 {
