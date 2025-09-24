@@ -15,7 +15,7 @@ MonoBehaviour:
   styles:
   - toastType: 0
     icon: {fileID: 21300000, guid: 6618835e7f01f47939c40be0a3cdc1a3, type: 3}
-    backgroundColor: {r: 0.43529412, g: 0.08235294, b: 0.07450981, a: 1}
+    backgroundColor: {r: 0.6792453, g: 0.14327393, b: 0.13136347, a: 1}
     textColor: {r: 1, g: 1, b: 1, a: 1}
     sfx: {fileID: 0}
   - toastType: 1
@@ -25,11 +25,11 @@ MonoBehaviour:
     sfx: {fileID: 0}
   - toastType: 2
     icon: {fileID: 21300000, guid: 2823f9ce8b7384cd7b7b368c7e10e0a4, type: 3}
-    backgroundColor: {r: 0.8, g: 0.38039216, b: 0.14117648, a: 1}
+    backgroundColor: {r: 0.9245283, g: 0.44957057, b: 0.17880027, a: 1}
     textColor: {r: 1, g: 1, b: 1, a: 1}
     sfx: {fileID: 0}
   - toastType: 3
     icon: {fileID: 21300000, guid: 3aeebe36e764444ebb55400153ec2331, type: 3}
-    backgroundColor: {r: 0.11921501, g: 0.5377358, b: 0.34170347, a: 1}
+    backgroundColor: {r: 0.06541474, g: 0.6603774, b: 0.38235748, a: 1}
     textColor: {r: 1, g: 1, b: 1, a: 1}
     sfx: {fileID: 0}
