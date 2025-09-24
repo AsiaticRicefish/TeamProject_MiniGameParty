@@ -35,6 +35,8 @@ namespace LDH_UI
                 cg.alpha = Mathf.Clamp01(t / fadeTime);
                 await UniTask.Yield(ct);
             }
+
+            cg.alpha = 1f;
         }
         
         protected override async UniTask OnCloseAsync(CancellationToken ct)
@@ -47,6 +49,8 @@ namespace LDH_UI
                 cg.alpha = 1f - Mathf.Clamp01(t / fadeTime);
                 await UniTask.Yield(ct);
             }
+
+            cg.alpha = 0f;
         }
     }
 }

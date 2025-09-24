@@ -199,25 +199,39 @@ namespace Customization
 
             // 1) 이미 캐시에 있으면 바로 반환
             if (_iconCache.TryGetValue(characterId, out var cached))
+            {
+                Debug.Log("<color=yellow> 이미 캐시에 있어서 바로 반환</color>");
                 return cached;
+            }
 
             // 2) 이미 로드되어 있으면(같은 AssetReference) 재사용
             if (def.iconRef.Asset != null)
             {
                 // 이미 로드되어서 메모리에 있는 실제 오브젝트가 존재한다면
+                Debug.Log("<color=yellow>이미 로드되어서 메모리에 있는 실제 오브젝트가 존재</color>");
+
                 var sp = def.iconRef.Asset as Sprite;
                 _iconCache[characterId] = sp;
                 return sp;
             }
 
-            if (def.iconRef.OperationHandle.IsValid())
+            if (def.iconRef.OperationHandle.IsValid()) // 메모리에 로드를 담당했던 핸들이 유효함
             {
-                var sp = def.iconRef.OperationHandle.Result as Sprite; // 메모리에 로드를 담당했던 핸들이 유효하
+                Debug.Log("<color=yellow>핸들이 유효해서 해당 핸들로 결과 가져오기</color>");
+                var h = def.iconRef.OperationHandle;
+                if (!h.IsDone)
+                {
+                    Debug.Log("<color=yellow>핸들 작업이 완료될때까지 대기</color>");
+                    await h.Task;
+                }
+                var res = h.Result;
+                var sp = res as Sprite; 
                 _iconCache[characterId] = sp;
                 return sp;
             }
 
             // 3) 처음 로드하는 경우: 핸들 저장
+            Debug.Log("<color=yellow>처음 로드하는 경우 핸들 저장 후 결과 반환</color>");
             var handle = def.iconRef.LoadAssetAsync<Sprite>();
             var sprite = await handle.Task;
             _iconHandles[characterId] = handle;
@@ -233,7 +247,6 @@ namespace Customization
                 _iconCache?.Clear();
                 return;
             }
-            //      Debug.Log("[CustomizationManager] 모든 아이콘 handle을 release 합니다.");
 
             // 1) 캐싱된 스프라이트만 비움(여기엔 Addressables 핸들이 없으므로 단순 클리어)
             _iconCache?.Clear();
@@ -267,6 +280,8 @@ namespace Customization
             }
 
             Resources.UnloadUnusedAssets();
+            Debug.Log("[CustomizationManager] 모든 아이콘 handle을 release 했습니다..");
+
         }
 
         //모든 풀 레지스트리 dispose

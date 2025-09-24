@@ -46,10 +46,8 @@ namespace LDH_UI
 
                 var uiEntry = Instantiate(scoreEntryPrefab, scoreEntryContent);
                 uiEntry.transform.SetSiblingIndex(i);
-
-                string profileId = Util_LDH.GetCurrentRoomPlayerProfileId(gp.PlayerId);
                 
-                await uiEntry.SetData(gp.Nickname, gp.LastMiniGameRank, gp.TotalRank, profileId, gp.Score, gp.WonThisRound);
+                await uiEntry.SetData(gp.Nickname, gp.LastMiniGameRank, gp.TotalRank, gp.CharacterId, gp.Score, gp.WonThisRound);
                 _scoreEntries.Add(uiEntry);
             }
         }

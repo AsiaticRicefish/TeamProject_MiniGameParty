@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
+using Customization;
 using Photon.Pun;
 using Photon.Realtime;
 using Unity.VisualScripting;
@@ -390,9 +391,11 @@ namespace LDH_Util
             PhotonNetwork.LocalPlayer.SetCustomProperties(clearProperties);
         }
         
-        public static string GetCurrentRoomPlayerProfileId(string uid)
+        public static UnimoCombo GetCurrentRoomPlayerUnimoCombo(string uid)
         {
-            if (!PhotonNetwork.IsConnectedAndReady || !PhotonNetwork.InRoom) return null;
+            if (!PhotonNetwork.IsConnectedAndReady || !PhotonNetwork.InRoom)                 
+                return new UnimoCombo(Define_LDH.DefaultData.DefaultCharacter, Define_LDH.DefaultData.DefaultEquip);
+
             Player player = null;
             foreach (Player p in PhotonNetwork.CurrentRoom.Players.Values)
             {
@@ -407,15 +410,19 @@ namespace LDH_Util
             if (player == null)
             {
                 Debug.LogWarning("player is null. Return Default Character ID");
-                return Define_LDH.DefaultData.DefaultCharacter;
+                return new UnimoCombo(Define_LDH.DefaultData.DefaultCharacter, Define_LDH.DefaultData.DefaultEquip);
             }
             
-            string profileId = player
+            string charId = player
                 .CustomProperties[
                     Define_LDH.PlayerProps.GetPlayerInfoKey(Define_LDH.PlayerProps.PlayerInfoKey.CharacterId)]
                 .ToString();
+            string equipId =  player
+                .CustomProperties[
+                    Define_LDH.PlayerProps.GetPlayerInfoKey(Define_LDH.PlayerProps.PlayerInfoKey.EquipId)]
+                .ToString();
 
-            return profileId;
+            return new UnimoCombo(charId, equipId);
         }
 
         #endregion

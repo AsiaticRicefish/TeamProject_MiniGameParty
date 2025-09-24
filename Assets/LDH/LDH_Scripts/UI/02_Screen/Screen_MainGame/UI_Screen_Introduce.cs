@@ -102,6 +102,7 @@ namespace LDH_UI.Screen_MainGame
 
                 
                 ui.nickname.text = players[i].NickName;
+                
                 string profileKey = Define_LDH.PlayerProps.GetPlayerInfoKey(Define_LDH.PlayerProps.PlayerInfoKey.CharacterId);
                 if (players[i].CustomProperties.TryGetValue(profileKey, out var v) == true && v is string profileId)
                     ui.profileImage.sprite = await CustomizationManager.Instance.GetIconAsync(profileId);
