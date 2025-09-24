@@ -404,7 +404,7 @@ namespace Customization
             catch(Exception e)
             {
                 Debug.LogException(e);
-                Manager.UI.EnqueueToast("가격 계산 중 오류가 발생했습니다. 나중에 시도해주세요.");
+                Manager.UI.EnqueueToast(ToastType.Error,"가격 계산 중 오류가 발생했습니다. 나중에 시도해주세요.");
             }
         }
         private async void ApplyClicked()
@@ -422,12 +422,12 @@ namespace Customization
             if (ok)
             {
                 Debug.Log($"[Closet] Success saving staged combo");
-                Manager.UI.EnqueueToast("적용되었습니다.");
+                Manager.UI.EnqueueToast(ToastType.Check,"적용되었습니다.");
             }
             else
             {
                 Debug.LogWarning("[Closet] Save failed. Keeping staged preview but not updating saved.");
-                Manager.UI.EnqueueToast("적용에 실패했습니다.");
+                Manager.UI.EnqueueToast(ToastType.Error,"적용에 실패했습니다.");
             }
 
             _applying = false;

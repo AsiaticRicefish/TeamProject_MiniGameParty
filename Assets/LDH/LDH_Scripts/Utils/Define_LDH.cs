@@ -38,6 +38,15 @@ namespace LDH_Util
             Bottom,
             Default,
         }
+        
+        public enum ToastType
+        {
+            Error,
+            Help,
+            Notify,
+            Check,
+        }
+
 
         #endregion
 

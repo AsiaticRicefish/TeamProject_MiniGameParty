@@ -68,7 +68,7 @@ namespace LDH_UI
             if (result)
             {
                 claimed = true;
-                Manager.UI.EnqueueToast($"보상 {reward} 수령 완료!");
+                Manager.UI.EnqueueToast(Define_LDH.ToastType.Check,$"보상 {reward} 수령 완료!");
                 await UniTask.Delay(TimeSpan.FromSeconds(1.5f));
                 MainGameManager.Instance?.EndGameAsync(false).Forget();
             }
