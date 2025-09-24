@@ -92,8 +92,19 @@ namespace LDH_Util
         #endregion
         
         #region Main Game
-        
-        public enum MainState {Init, Picking, Ready, LoadingMiniGame, PlayingMiniGame, ApplyingResult, End }
+
+        public enum MainState
+        {
+            None,
+            Intro, 
+            Picking, 
+            Ready, 
+            LoadingMiniGame, 
+            PlayingMiniGame, 
+            UnloadingMiniGame,
+            ApplyingResult, 
+            End
+        }
 
         public static partial class RoomProps
         {
@@ -109,6 +120,15 @@ namespace LDH_Util
         {
             public const string InGameReady = "inGameReady";
             public const string InGameDone = "inGameDone";
+            public const string InGameResultDone = "inGameResultDone"; // 결과 연출 완료
+
+        }
+
+        public static partial class DefaultData
+        {
+            public const CurrencyType DefaultRewardCurrency = CurrencyType.Currency1;
+            public const int DefaultReward = 250;
+            public const int DefaultPointReward = 10;
         }
         
         #endregion
@@ -152,13 +172,6 @@ namespace LDH_Util
         
         #endregion
 
-        #region Data
-
-        public enum TxAbortReason { None, NotEnoughCurrency }
-
-
-        #endregion
-        
         
         
         #region Setting

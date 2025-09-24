@@ -43,11 +43,14 @@ namespace LDH_UI
         private void OnEnable()
         {
             //계정 정보 반영하기
-          
+#if TEST_WITHOUT_LOGIN
+            uid.text = PhotonNetwork.LocalPlayer.UserId;
+#else
             uid.text = Manager.Data.UID.Trim();
+#endif
+            
             nickname.text = PhotonNetwork.LocalPlayer.NickName.Trim();
-
-            // todo: 저장된 볼륨 값 가져오기
+            
             // 팝업 열릴 때마다 최신값으로 동기화
             SyncFromManagerToUI();
 

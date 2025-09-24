@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using Photon.Pun;
 using Unity.VisualScripting;
@@ -185,7 +186,43 @@ namespace LDH_Util
                 return clampMax;
             }
         }
+
+        public static string GetRankFormat(int rank)
+        {
+            return rank switch
+            {
+                1 => "1st",
+                2 => "2nd",
+                3 => "3rd",
+                _ => rank.ToString().Trim() + "th"
+            };
+        }
         
+        public static Dictionary<string, int> CalcTotalRank(Dictionary<string, int> totalScores)
+        {
+            Dictionary<string, int> totalRank = new(totalScores.Count);
+
+            int i = 0; // 현재 인덱스
+            int rank = 0;
+            int prevScore = int.MinValue;
+
+            // 전체 점수를 내림차순 정렬
+            foreach (var kvPair in totalScores.OrderByDescending(x => x.Value).ThenBy(x => x.Key))
+            {
+                i++; // 현재 인덱스(1부터 계산)
+                if (kvPair.Value != prevScore)
+                {
+                    // 이전 점수와 다른 점수 = 현재 인덱스가 새로운 등수
+                    rank = i;
+                    prevScore = kvPair.Value;
+                }
+
+                totalRank[kvPair.Key] = rank;
+            }
+
+            return totalRank;
+        }
+
         #endregion
         
         #region RectTransform Control

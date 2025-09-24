@@ -134,6 +134,12 @@ MonoBehaviour:
   - RPC_VerdictDelta
   - RPC_SyncPlayerData
   - RPC_ChangeBGM
+  - RPC_ShowFinalRewards
+  - RPC_ShowScoreboard
+  - RPC_ShowScoreboardJson
+  - RPC_BuildSlotMachine
+  - RPC_PullSlotHandle
+  - RPC_ShowEndGame
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1
