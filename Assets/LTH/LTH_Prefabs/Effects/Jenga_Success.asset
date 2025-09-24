@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Jenga_Success
   m_EditorClassIdentifier: 
   id: StarExplosionOrange
-  addressableKey: Jenga_Success
+  addressableKey: Particles/ShootingGame/StarExplosionOrage
   initialPoolSize: 10
   duration: 2

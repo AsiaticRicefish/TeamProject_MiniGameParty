@@ -314,7 +314,6 @@ public class SoundManager : CombinedSingleton<SoundManager>
         }
 
         PlayerPrefs.SetFloat("BGMVolume", volume);
-        PlayerPrefs.Save();
     }
 
     public void SetSFXSoundVolume(float volume)
@@ -343,7 +342,6 @@ public class SoundManager : CombinedSingleton<SoundManager>
         }
 
         PlayerPrefs.SetFloat("SFXVolume", volume);
-        PlayerPrefs.Save();
     }
 
     #endregion
@@ -621,6 +619,9 @@ public class SoundManager : CombinedSingleton<SoundManager>
         {
             Debug.LogWarning("SceneSoundMappingConfig가 설정되지 않았습니다.");
         }
+
+        SetBGMSoundVolume(bgmSoundVolume);
+        SetSFXSoundVolume(sfxSoundVolume);
     }
 
     private void OnSceneUnloaded(Scene scene)

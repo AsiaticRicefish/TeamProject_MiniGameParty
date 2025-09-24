@@ -140,6 +140,8 @@ MonoBehaviour:
   - RPC_BuildSlotMachine
   - RPC_PullSlotHandle
   - RPC_ShowEndGame
+  - RPC_ReceiveScore
+  - RPC_ScheduleStopSpawn
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1
