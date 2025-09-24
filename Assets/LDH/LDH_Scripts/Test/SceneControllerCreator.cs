@@ -13,11 +13,6 @@ namespace LDH.LDH_Scripts.Test
             StartCoroutine(CreateMainGameSceneController());
         }
 
-        private void Start()
-        {
-            
-        }
-
         private IEnumerator CreateMainGameSceneController()
         {
             yield return null;
@@ -25,7 +20,8 @@ namespace LDH.LDH_Scripts.Test
             {
                 PhotonNetwork.InstantiateRoomObject(path, Vector3.zero, Quaternion.identity);
             }
-
+            
+            Destroy(gameObject);
            
         }
     }

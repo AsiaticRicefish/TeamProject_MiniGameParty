@@ -12,6 +12,7 @@ namespace LDH_MainGame
 
         private Dictionary<string, MiniGameInfo> _infoMap;
         public int Count => miniGameInfos?.Count ?? 0;
+        public List<MiniGameInfo> MiniGameInfos => miniGameInfos;
 
         private void Awake()
         {

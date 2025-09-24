@@ -562,7 +562,7 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
             if (player != null)
             {
                 // gamePlayer.WinThisMiniGame = (1등인지 여부) 설정
-                player.WinThisMiniGame = pair.Value == 1;
+                //player.WinThisMiniGame = pair.Value == 1;
             }
         }
 
@@ -855,7 +855,7 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
                 if (player != null)
                 {
                     player.JengaData = null;
-                    player.WinThisMiniGame = false;
+                   // player.WinThisMiniGame = false;
                 }
             }
         }

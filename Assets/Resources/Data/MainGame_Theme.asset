@@ -12,9 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16e882dba42855d41b248d3300c2d923, type: 3}
   m_Name: MainGame_Theme
   m_EditorClassIdentifier: 
-  gameTitle: "\uAE30\uD68D\uD300\uC774 \uC815\uD574\uC8FC\uC138\uC694"
-  bigDescription: "\uAE30\uD68D\uD300\uC774 \uC815\uD574\uC8FC\uC138\uC694"
-  smallDescription: "\uAE30\uD68D\uD300\uC774 \uC815\uD574\uC8FC\uC138\uC694"
+  gameTitle: "\uBA54\uC778 \uAC8C\uC784 \uC785\uC7A5 \uC911"
+  bigDescription: "\uCC38\uAC00\uC790 \uD655\uC778 \uBC0F \uAC8C\uC784 \uC124\uC815
+    \uC9C4\uD589 \uC911..."
+  smallDescription: "\uBA3C\uC800 2\uB77C\uC6B4\uB4DC\uB97C \uC774\uAE30\uBA74 \uC2B9\uB9AC!
+    (3\uC804 2\uC120\uC2B9\uC81C)"
   titlePanelColor: {r: 0, g: 0, b: 0, a: 1}
   backgroundPanelColor: {r: 1, g: 1, b: 1, a: 1}
   descriptionPanelColor: {r: 1, g: 1, b: 1, a: 1}
