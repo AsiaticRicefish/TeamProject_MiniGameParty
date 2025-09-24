@@ -24,10 +24,14 @@ public class GameEndState : ShootingGameState
         //플레이어 인풋 매니저 구독 해제 처리
         PlayerInputManager.Instance.Cleanup();
 
+        //사운드 정리
+        SoundManager.Instance.StopAllSounds();
+
         if (PhotonNetwork.IsMasterClient)
         {          
             ShootingNetworkManager.Instance.ClearShootingGameRoomProperties();
             ShootingGameManager.Instance.EndGame();
         }
+        
     }
 }
