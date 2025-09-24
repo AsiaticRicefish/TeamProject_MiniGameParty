@@ -214,32 +214,46 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
     {
         if (!PhotonNetwork.IsMasterClient) return;
 
-        UnimoEgg[] unimoEggList = GameObject.FindObjectsOfType<UnimoEgg>();
+        // 0. 리스트 초기화
+        unimoRankingList.Clear();
 
-        UnimoEgg winnerUnimo = null;
-        float minDistanceSqr = float.MaxValue;
+        // 1. 현재 맵에 있는 모든 알 다 찾기
+        //UnimoEgg[] activeEggs = GameObject.FindObjectsOfType<UnimoEgg>();
+        UnimoEgg[] allEggs = EggManager.Instance.viewIdToEgg.Values.ToArray();
 
-        foreach(var unimoEgg in unimoEggList)
+        Debug.Log($"[GameManager] - 활성화 된 알 개수 : {allEggs.Length}");
+
+        // 2. 활성화된 알만 거리 기준 오름차순 정렬
+        var sortedEggs = allEggs
+            .Where(e => e.gameObject.activeInHierarchy) // 비활성화된 알 제외
+            .OrderBy(e => Mathf.Abs(e.transform.position.z - finishLine.transform.position.z))
+            .ToList();
+
+        // 3. shooterUid로 그룹바이를 하고 그중에서 제일 첫번째꺼를 ShooterUID
+        var rankedUids = sortedEggs
+            .GroupBy(e => e.ShooterUid)
+            .Select(g => g.First().ShooterUid)
+            .ToList();
+
+        // 5. 랭킹 리스트 구성: 먼저 쏜 유저들 → 나머지 유저들
+        foreach (var uid in rankedUids)
+            unimoRankingList.Add(uid);
+
+        foreach (var uid in PlayerManager.Instance.Players.Keys)
         {
-            Vector3 worldDir = finishLine.transform.position - unimoEgg.transform.position;
-            worldDir.y = 0f; // 높이 무시
-
-            Vector2 flatDir = new Vector2(worldDir.x, worldDir.z);
-            float distSqr = flatDir.sqrMagnitude;
-
-            if (distSqr < minDistanceSqr)
-            {
-                minDistanceSqr = distSqr;
-                winnerUnimo = unimoEgg;
-                     
-            }
+            if (!unimoRankingList.Contains(uid))
+                unimoRankingList.Add(uid); // 알이 없거나 비활성화된 유저도 포함
         }
-        if (winnerUnimo != null)
-            Debug.Log($"[ShootingGameManager] - 우승자 {winnerUnimo.ShooterUid}");
 
-        //return winnerUnimo.ShooterUid;
-        
-        //EndGame();
+        // 5. UID별 등수 매핑
+        Dictionary<string, int> rankings = new Dictionary<string, int>();
+        for (int i = 0; i < unimoRankingList.Count; i++)
+        {
+            rankings[unimoRankingList[i]] = i + 1; // 1등부터 시작
+        }
+
+        // 6. 결과 보고
+        MainGameManager.Instance.ReportMiniGameResult(rankings);
     }
 
     public void EndGame()
