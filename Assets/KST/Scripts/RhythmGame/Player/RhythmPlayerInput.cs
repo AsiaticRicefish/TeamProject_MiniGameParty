@@ -40,7 +40,7 @@ namespace RhythmGame
             }
             else
             {
-                ScoreManager.Instance.RequestMiss();
+                ScoreManager.Instance.RequestMiss(NoteType.Continue);
                 _isDone = true;
                 InitHold();
             }
@@ -120,7 +120,7 @@ namespace RhythmGame
                     ScoreManager.Instance.RequestHit(_holdTarget.NoteId, true, NoteType.Continue);
                 }
                 else
-                    ScoreManager.Instance.RequestMiss();
+                    ScoreManager.Instance.RequestMiss(NoteType.Continue);
 
                 InitHold();
                 _noteToTap.Clear();
@@ -131,6 +131,7 @@ namespace RhythmGame
             if (_noteToTap.Count > 0)
             {
                 bool anyHit = false;
+                NoteType? missType = null;
                 foreach (var t in _noteToTap)
                 {
 
@@ -140,6 +141,9 @@ namespace RhythmGame
 
                     if (t.Type == NoteType.Continue) continue;
 
+                    if (missType == null)
+                        missType = t.Type;
+
                     bool isCan = t.Status == NoteStatus.CanInteract && IsInVerdictBar(t);
 
                     if (isCan)
@@ -148,25 +152,19 @@ namespace RhythmGame
                         NoteSpawner.Instance.ClientLocalHit(t.NoteId);
                         ScoreManager.Instance.RequestHit(t.NoteId, true, t.Type);
                         anyHit = true;
-
                     }
-                    // else
-                    // {
-                    //     ScoreManager.Instance.RequestMiss();
-                    //     ScoreManager.Instance.VerdictMiss();
-                    // }
                 }
-                if (!anyHit)
+                if (!anyHit && missType.HasValue)
                 {
-                    ScoreManager.Instance.RequestMiss();
-                    ScoreManager.Instance.VerdictMiss();
+                    ScoreManager.Instance.RequestMiss(missType.Value);
+                    ScoreManager.Instance.VerdictMiss(missType.Value);
                 }
                 _noteToTap.Clear();
             }
             else
             {
-                ScoreManager.Instance.RequestMiss();
-                ScoreManager.Instance.VerdictMiss();
+                ScoreManager.Instance.RequestMiss(NoteType.Touch);
+                ScoreManager.Instance.VerdictMiss(NoteType.Touch);
             }
 
         }
