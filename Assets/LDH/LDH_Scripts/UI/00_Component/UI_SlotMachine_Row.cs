@@ -18,7 +18,6 @@ namespace LDH_UI
         [Header("Visual")]
         [SerializeField] private TMP_FontAsset font;
         [SerializeField] private int fontSize = 64;
-        [SerializeField] private Color fontColor = Color.white;
 
         [Header("Spin Params")]
         [SerializeField] private int   minVisualCount = 7;     // 화면상 최소 칸 수(자연스러운 회전용
@@ -39,6 +38,9 @@ namespace LDH_UI
         
         
         private readonly List<string> _ids = new();
+        private readonly Dictionary<string, Color> _colorMap = new(); // key -> color 캐시
+        private readonly HashSet<Color> _colorSet = new();
+
         private float _cellHeight; // 한 칸(한 항목)의 높이 = 뷰포트 높이
         private float _totalHeight; // 컨테이너 총 높이 = cellHeight * count
         private float _rawY;                                            // "원시 y" 값: 누적 이동량(랩핑 전 값, 계속 커져도 OK)
@@ -92,6 +94,11 @@ namespace LDH_UI
 
                 rt.SetParent(rowListRect, false);
                 rt.SetAsLastSibling();
+                
+                // 색상 결정
+                string colorKey = gameId;
+                var fontColor = ResolveColor(colorKey);
+
 
                 // 텍스트 표기
                 tmp.font = font;
@@ -270,6 +277,27 @@ namespace LDH_UI
 
             }
             
+        }
+
+
+        private Color ResolveColor(string key)
+        {
+            if (string.IsNullOrEmpty(key)) return Color.white;
+           
+            if (_colorMap.TryGetValue(key, out var c)) return c;
+            
+            // 안정적인 인덱스: 해시 → 0..N-1
+            int idx = Mathf.Abs(key.GetHashCode()) % Define_LDH.ColorBlindPalette.Length;
+            c =  Define_LDH.ColorBlindPalette[idx];
+
+            while (!_colorSet.Add(c))
+            {
+                idx = (idx + 1) % Define_LDH.ColorBlindPalette.Length;
+                c =Define_LDH.ColorBlindPalette[idx];
+            }
+            
+            _colorMap[key] = c;
+            return c;
         }
         
     }

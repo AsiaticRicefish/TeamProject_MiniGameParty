@@ -47,6 +47,16 @@ namespace LDH_Util
             Check,
         }
 
+        public static readonly Color32[] ColorBlindPalette = new[]
+        {
+            new Color32(228, 81,  91,255), 
+            new Color32(229, 118,  0,255), // vermillion
+            new Color32(  0,158,115,255), // bluish green
+            new Color32(  0,114,178,255), // blue
+            new Color32(155, 78,  234,255), 
+            new Color32(  0,  0,  0,255), // black
+        };
+
 
         #endregion
 
