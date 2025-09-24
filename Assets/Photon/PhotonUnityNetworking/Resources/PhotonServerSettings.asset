@@ -134,6 +134,12 @@ MonoBehaviour:
   - RPC_VerdictDelta
   - RPC_SyncPlayerData
   - RPC_ChangeBGM
+  - RPC_RequestNextTurn
+  - RPC_ReceiveScore
+  - RPC_ScheduleStopSpawn
+  - RPC_EndTurn
+  - RPC_RequestEndTurn
+  - RPC_RequestPassTurn
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

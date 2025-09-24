@@ -24,6 +24,7 @@ namespace KYG
         [SerializeField] private Transform  cardParent;   // 카드를 놓을 Grid/HorizontalLayout
         [SerializeField] private GameObject cardUICanvas; // 전체 카드 선택 UI 루트
         [SerializeField] private KYG.CardUI cardPrefab;
+        [SerializeField] private GameObject meteorTapMiniGame; // MeteorTapMiniGame 루트 (분리)
 
         private const string KEY_DECK_VALUES = "deckValues";
         private const string KEY_CARD_OWNERS = "cardOwners";
@@ -31,6 +32,11 @@ namespace KYG
         private const string KEY_TURN_ORDER  = "turnOrder";
         private const string KEY_REVEAL_T0   = "revealT0";
         private const string KEY_REVEAL_SEC  = "revealSec";
+        
+        private static CardManager _instance;
+        
+        [Tooltip("이 씬에서는 DDoL을 사용하지 않습니다.")]
+        public bool dontUseDDOLInThisScene = true;
 
         private enum LobbyState : byte { Picking = 0, Revealing = 1, Done = 2 }
 
@@ -53,6 +59,28 @@ namespace KYG
         private void Start()
         {
             StartCoroutine(InitRoutine());
+        }
+        
+        void Awake()
+        {
+            if (_instance != null && _instance != this)
+            {
+                // 부트스트랩이 중복 생성했을 때 즉시 제거
+                Destroy(gameObject);
+                return;
+            }
+            _instance = this;
+
+            // 메테오 씬에서는 절대 DontDestroyOnLoad 하지 않음 (중복 방지)
+            if (!dontUseDDOLInThisScene)
+            {
+                DontDestroyOnLoad(gameObject);
+            }
+        }
+        
+        void OnDestroy()
+        {
+            if (_instance == this) _instance = null;
         }
 
         private IEnumerator InitRoutine()
@@ -362,35 +390,20 @@ namespace KYG
             photonView.RPC(nameof(RPC_OnTurnOrderReady), RpcTarget.AllBuffered, order);
             Debug.Log($"[CardManager] >>> RPC_OnTurnOrderReady sent order=[{string.Join(",", order)}]");
         }
+        
+        public void OnTurnChangedLocal(int currentActor, bool isMine)
+        {
+            // 예: 내 슬롯 배너/히라이트만 로컬에서 토글
+            // var myIndex = ... 캐시해둔 값 사용 가능
+            // playerCardRoots[myIndex].GetComponent<CardUI>()?.OnTurnChanged(isMine);
+
+            // 공용 전환 배너가 필요하면 ‘모두 잠깐’ 표시하고, MY TURN은 isMine일 때만 표시
+        }
 
         [PunRPC]
         private void RPC_CloseCardUI()
         {
-            // 카드 UI 비활성
-            if (_cards != null)
-            {
-                foreach (var c in _cards) if (c) c.gameObject.SetActive(false);
-            }
-            if (cardParent)  cardParent.gameObject.SetActive(false);
-            if (cardUICanvas) cardUICanvas.SetActive(false);
-        }
-
-        [PunRPC]
-        private void RPC_OnTurnOrderReady(int[] actorOrder)
-        {
-            if (actorOrder == null || actorOrder.Length == 0) return;
-
-            // 1) 내 턴 인덱스 계산(1-based로 저장)
-            int myActor = PhotonNetwork.LocalPlayer.ActorNumber;
-            int myTurnIndex0 = Array.IndexOf(actorOrder, myActor);
-            int myTurnIndex1 = (myTurnIndex0 >= 0 ? myTurnIndex0 + 1 : -1);
-
-            PhotonNetwork.LocalPlayer.SetCustomProperties(
-                new Hashtable { { "turnIndex", myTurnIndex1 } });
-
-            Debug.Log($"[CardManager] 내 turnIndex={myTurnIndex1}");
-
-            // 2) 카드 UI 닫기(중복호출 안전)
+            // 카드 UI만 끄기
             if (_cards != null)
             {
                 foreach (var c in _cards) if (c) c.gameObject.SetActive(false);
@@ -398,10 +411,44 @@ namespace KYG
             if (cardParent)   cardParent.gameObject.SetActive(false);
             if (cardUICanvas) cardUICanvas.SetActive(false);
 
-            // 3) 마스터만 첫 턴 시작 (코디 완료 & 미니게임 활성까지 대기)
+            // MeteorTapMiniGameRoot는 건드리지 않음!
+        }
+
+        [PunRPC]
+        private void RPC_OnTurnOrderReady(int[] actorOrder)
+        {
+            if (actorOrder == null || actorOrder.Length == 0) return;
+
+            int myActor = PhotonNetwork.LocalPlayer.ActorNumber;
+            int myTurnIndex0 = Array.IndexOf(actorOrder, myActor);
+            int myTurnIndex1 = (myTurnIndex0 >= 0 ? myTurnIndex0 + 1 : -1);
+
+            PhotonNetwork.LocalPlayer.SetCustomProperties(
+                new Hashtable { { "turnIndex", myTurnIndex1 } });
+
+            var prm = FindObjectOfType<KYG.PlayerRootManager>(true);
+            if (prm != null)
+            {
+                prm.ApplyActorOrder(actorOrder);   // 매핑 적용 + 즉시 가시화
+                prm.DebugDump("OrderReady");       // 로그로 검증
+            }
+            
+            Debug.Log($"[CardManager] 내 turnIndex={myTurnIndex1}");
+
+            // 카드 UI만 닫기
+            if (_cards != null)
+            {
+                foreach (var c in _cards) if (c) c.gameObject.SetActive(false);
+            }
+            if (cardParent)   cardParent.gameObject.SetActive(false);
+            if (cardUICanvas) cardUICanvas.SetActive(false);
+
+            // MeteorTapMiniGameRoot는 여기서도 건드리지 않음
+
             if (PhotonNetwork.IsMasterClient)
                 StartCoroutine(CoStartFirstTurn());
         }
+    
 
         private IEnumerator CoStartFirstTurn()
         {
@@ -413,6 +460,30 @@ namespace KYG
                    !LDH_MainGame.PhotonViewSync.Instance.SyncCompleted)
             {
                 yield return null;
+            }
+            
+            float waitTimeout = 3f;              // 필요시 2~5초 사이 조정
+            float waited = 0f;
+            bool AllHaveTurnIndex()
+            {
+                var list = PhotonNetwork.PlayerList;
+                if (list == null || list.Length == 0) return false;
+                foreach (var p in list)
+                {
+                    if (p == null || p.CustomProperties == null) return false;
+                    if (!p.CustomProperties.ContainsKey("turnIndex")) return false;
+                }
+                return true;
+            }
+
+            while (!AllHaveTurnIndex() && waited < waitTimeout)
+            {
+                waited += Time.deltaTime;
+                yield return null;
+            }
+            if (!AllHaveTurnIndex())
+            {
+                Debug.LogWarning("[CardManager] turnIndex sync timeout → continue anyway (fallback)");
             }
 
             // (중요) 미니게임 오브젝트가 "활성" 상태일 때까지 대기
