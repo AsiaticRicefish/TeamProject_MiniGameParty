@@ -8,6 +8,7 @@ using DesignPattern;
 using LDH_MainGame;
 using ShootingScene.ShootingGame;
 using Photon.Realtime;
+using ShootingScene;
 
 [RequireComponent(typeof(PhotonView))]
 [DisallowMultipleComponent]
@@ -110,18 +111,6 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
 
         Debug.Log("[ShootingGameManager] - 슈팅 게임 시작!");
         //난 타이머가 없어도 된다. 
-    }
-
-    [PunRPC]
-    private void InputOn()
-    {
-        OnGameStarted?.Invoke();
-    }
-
-    [PunRPC]
-    private void InputOff()
-    {
-        OnGameEnded?.Invoke();
     }
 
     public void ChangeStateByName(string stateName)
@@ -274,16 +263,6 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
                 Debug.Log($"[ShootingGameManager - RPC_ChangeState] - {stateName}에 해당되는 상태가 존재 하지 않습니다"); break;
         }
     }*/
-
-    public void Timer()
-    {
-        
-    }
-
-    private void ResetTimer()
-    {
-        
-    }
 
     //나간 플레이어의 닉네임을 저장하는 곳
     //private List<string> leftUserNickName = new List<string>();

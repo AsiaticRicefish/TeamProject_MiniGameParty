@@ -6,7 +6,6 @@ using ShootingScene;
 
 public class CardSelectState : ShootingGameState
 {
-    private bool flag = true;
     public override void Enter()
     {
         Debug.Log("[ShootingGameState] - CardSelectState Enter");
@@ -14,7 +13,6 @@ public class CardSelectState : ShootingGameState
         {
 
             CardManager.Instance.BuildAndBroadcastDeck();
-            //StartAutoCardSelect();
         }
         else
         {
@@ -33,10 +31,7 @@ public class CardSelectState : ShootingGameState
         Debug.Log("[ShootingGameState] - CardSelectState Exit");
         //카드 선택이 다된 시점
         ShootingNetworkManager.Instance.ShootingGameTurnAndRoundRoomPropertiesReigster();
-        if (PhotonNetwork.IsMasterClient)
-        {
-            ShootingGameManager.Instance.photonView.RPC("InputOn", RpcTarget.All);
-        }
+
         ShootingScene.ShootingGame.ShootingUIManager.Instance.StartRanking();
     }
 }
