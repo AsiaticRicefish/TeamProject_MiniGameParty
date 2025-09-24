@@ -33,9 +33,9 @@ namespace RhythmGame
 
         //게임 규칙
         // [SerializeField] int hitScore = 100; //적중 시 점수
-        [SerializeField] int missScore = -5; // 미스 시 감점 점수
-        [SerializeField] int overHeatPoint = 5; // 미스 시 과열 증가
-        [SerializeField] int frozenPoint = 5; // 적중 시 과열 감소
+        int missScore = -1; // 미스 시 감점 점수
+        // [SerializeField] int overHeatPoint = 5; // 미스 시 과열 증가
+        // [SerializeField] int frozenPoint = 5; // 적중 시 과열 감소
         [SerializeField] int overHeatMaxValue = 100; // 임계치
 
         //과열 관리
@@ -201,6 +201,12 @@ namespace RhythmGame
             IsGameStart = false;
             IsGameOver = true;
 
+            if (PhotonNetwork.IsMasterClient)
+            {
+                var rankings = CalculateRanks();
+                BroadcastRankSnapshot(rankings);
+                SendResultToMainGame(rankings);
+            }
 
 
             //게임 종료 이벤트 호출
@@ -241,17 +247,17 @@ namespace RhythmGame
             switch (type)
             {
                 case NoteType.Fake:
-                    score = 4;
+                    score = -1;
                     // OverHeatCheck();
                     break;
 
                 case NoteType.Touch:
-                    score = 1;
+                    score = 17;
                     // FrozenHeat();
                     break;
 
                 case NoteType.Continue:
-                    score = 2;
+                    score = 31;
                     // FrozenHeat();
                     break;
             }
@@ -259,20 +265,20 @@ namespace RhythmGame
             return score;
         }
 
-        public void FrozenHeat()
-        {
-            if (!PhotonNetwork.IsMasterClient) return;
+        // public void FrozenHeat()
+        // {
+        //     if (!PhotonNetwork.IsMasterClient) return;
 
-            // 과열 변수 값 감소
-            overHeatValue = Mathf.Max(0, overHeatValue - frozenPoint);
+        //     // 과열 변수 값 감소
+        //     overHeatValue = Mathf.Max(0, overHeatValue - frozenPoint);
 
-            //과열 값 반영
-            ScoreManager.Instance.photonView.RPC(
-                nameof(ScoreManager.SetOverheat), RpcTarget.All, overHeatValue
-                );
+        //     //과열 값 반영
+        //     ScoreManager.Instance.photonView.RPC(
+        //         nameof(ScoreManager.SetOverheat), RpcTarget.All, overHeatValue
+        //         );
 
 
-        }
+        // }
 
         /// <summary>
         /// 과열 증가 로직
@@ -304,46 +310,20 @@ namespace RhythmGame
         /// <summary>
         /// 미스 시 개인점수 차감
         /// </summary>
-        public void MissBlock(Player actor)
+        public void MissBlock(Player actor, NoteType type)
         {
-            //개인 점수 차감
-            ScoreManager.Instance.photonView.
-            RPC(nameof(ScoreManager.MinusScore), RpcTarget.All, actor.ActorNumber, missScore);
+            if (type == NoteType.Fake)
+            {
+                ScoreManager.Instance.photonView.
+                                RPC(nameof(ScoreManager.AddScore), RpcTarget.All, actor.ActorNumber, 9);
+            }
+            else
+            {
+                //개인 점수 차감
+                ScoreManager.Instance.photonView.
+                RPC(nameof(ScoreManager.MinusScore), RpcTarget.All, actor.ActorNumber, missScore);
+            }
         }
-        [PunRPC]
-        public void DuringOverHeat()
-        {
-            Debug.Log("과열 발생");
-            IsOverHeat = true;
-        }
-        [PunRPC]
-        public void AfterOverHeat()
-        {
-            Debug.Log("과열 종료");
-            IsOverHeat = false;
-        }
-
-        // /// <summary>
-        // /// 과열 시 코루틴 실행. n초 뒤 과열 초기화 
-        // /// </summary>
-        // IEnumerator IE_OverHeating()
-        // {
-        //     //과열 시
-        //     photonView.RPC(nameof(DuringOverHeat), RpcTarget.All);
-        //     PlayerStunAnim(overHeatingTime);
-
-        //     yield return new WaitForSeconds(overHeatingTime);
-        //     //과열 시간 종료 후 로직
-
-        //     photonView.RPC(nameof(AfterOverHeat), RpcTarget.All);
-
-        //     overHeatValue = 0; //과열점수 리셋
-        //     Debug.Log($"과열 점수 초기화 {overHeatValue}");
-
-        //     ScoreManager.Instance.photonView.RPC(
-        //         nameof(ScoreManager.SetOverheat), RpcTarget.All, overHeatValue
-        //         );
-        // }
 
         public int LaneCapacity => playerPoints?.Length ?? 0;
 
@@ -400,33 +380,6 @@ namespace RhythmGame
             //위치, 회전
             return new Pose(pos, rot);
         }
-
-        // //플레이어 스턴
-        // public void PlayerStunAnim(float time)
-        // {
-        //     if (!PhotonNetwork.IsMasterClient) return;
-
-        //     foreach (var player in PhotonNetwork.PlayerList)
-        //     {
-        //         photonView.RPC(nameof(RPC_Stun), RpcTarget.All, player.ActorNumber, time);
-        //     }
-        // }
-
-        // [PunRPC]
-        // void RPC_Stun(int actorNum, float time)
-        // {
-        //     if (!PlayerController.AvatarByActor.TryGetValue(actorNum, out var avatar)) return;
-
-        //     if (avatar.TryGetComponent<PlayerAnimController>(out var anim))
-        //     {
-        //         Debug.Log("anim 있음");
-        //         anim.PlayeStunAnim(time);
-        //     }
-        //     else
-        //     {
-        //         Debug.LogWarning($"actorNum {actorNum}의 아바타에서 PlayerAnimController를 찾지 못함");
-        //     }
-        // }
 
         private void InitializePlayers()
         {
@@ -536,10 +489,9 @@ namespace RhythmGame
             if (players.TryGetValue(uid, out var rp)) rp.score = total;
 
             // 랭킹 계산/브로드캐스트
-            CalculateAndBroadcastRanks();
+            BroadcastRanks();
         }
-
-        private void CalculateAndBroadcastRanks()
+        private Dictionary<string, int> CalculateRanks()
         {
             // players 기준으로 빠진 UID는 0점으로 취급
             foreach (var uid in players.Keys)
@@ -555,9 +507,18 @@ namespace RhythmGame
             for (int i = 0; i < ordered.Count; i++)
                 ranks[ordered[i].Key] = i + 1;
 
+            return ranks;
+        }
+
+        private void BroadcastRanks()
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+
+            var ranks = CalculateRanks();
+
             BroadcastRankSnapshot(ranks);
-            OnRankingsUpdated?.Invoke(ranks);
-            _lastRankSnapshot = new Dictionary<string, int>(ranks);
+            // OnRankingsUpdated?.Invoke(ranks);
+            // _lastRankSnapshot = new Dictionary<string, int>(ranks);
         }
 
         public void BroadcastRankSnapshot(Dictionary<string, int> uidToRank)
@@ -568,7 +529,8 @@ namespace RhythmGame
             var vals = uidToRank.Values.ToArray();
 
             // 1) RPC 전파
-            photonView.RPC(nameof(RPC_SyncRanks), RpcTarget.All, uids, vals);
+            photonView.RPC(nameof(RPC_SyncRanks), RpcTarget.Others, uids, vals);
+            RPC_SyncRanks(uids, vals);
 
             // 2) 룸 프로퍼티 저장(레이트 조인 대비)
             var table = new Hashtable
@@ -615,6 +577,24 @@ namespace RhythmGame
             ranks = null;
             return false;
         }
+
+        /// <summary>
+        /// 메인 게임에 최종 승패 정보를 반영
+        /// (PlayerManager의 Player.WinThisMiniGame 플래그를 세팅)
+        /// </summary>
+        private void SendResultToMainGame(Dictionary<string, int> rankings)
+        {
+            MainGameManager.Instance.ReportMiniGameResult(rankings);
+            // foreach (var pair in rankings)
+            // {
+            //     var player = PlayerManager.Instance.GetPlayer(pair.Key);
+            //     if (player != null)
+            //     {
+            //         // player.WinThisMiniGame = (pair.Value == 1); // 1등이면 승리
+            //     }
+            // }
+        }
+
 
     }
 }
