@@ -6,6 +6,7 @@ using System.Collections;
 using KYG.Framework; // ← 인터페이스 네임스페이스
 using DesignPattern;
 using LDH.LDH_Scripts.Network;
+using KYG;
 
 namespace KYG
 {
@@ -422,7 +423,7 @@ namespace KYG
         {
             // ✅ 구버전 호출 호환용: 방/라운드/인원 기반 결정적 엔딩수 산출
             int sharedEndingCount = ComputeCompatEnding(roundIndex, alivePlayerCount);
-            InitTurnWithEnding(isMine, roundIndex, alivePlayerCount, sharedEndingCount);
+            //InitTurnWithEnding(isMine, roundIndex, alivePlayerCount, sharedEndingCount);
         }
 
         private int ComputeCompatEnding(int roundIndex, int alivePlayers)
@@ -481,7 +482,7 @@ namespace KYG
                 yield return new WaitForSeconds(afterDelay);
                 if (!endedThisTurn && currentTap < currentEndingCount)
                 {
-                    KYG.TurnManager.Instance?.RequestNextTurnFromLocal(); // ← 내부에서 LocalMiniGameBoot.NextLocalTurn() 호출
+                    //KYG.TurnManager.Instance?.RequestNextTurnFromLocal(); // ← 내부에서 LocalMiniGameBoot.NextLocalTurn() 호출
                 }
             }
         }
@@ -646,21 +647,20 @@ private void HandleEliminationAndAdvance()
     // 현재 턴의 플레이어 탈락 처리(온라인=마스터 / 오프라인=로컬 폴백)
     if (IsAuthoritative())
     {
-        int actor = (KYG.TurnManager.Instance != null)
-            ? KYG.TurnManager.Instance.GetCurrentTurnActor()
-            : -1;
+        //int actor = (KYG.TurnManager.Instance != null)
+            //? KYG.TurnManager.Instance.GetCurrentTurnActor() : -1;
 
         // 온라인: 매니저에 위임
         if (KYG.ShootingGameManager.Instance != null && Photon.Pun.PhotonNetwork.IsConnectedAndReady)
         {
-            KYG.ShootingGameManager.Instance.Eliminate(actor);
+            //KYG.ShootingGameManager.Instance.Eliminate(actor);
 
             // 탈락 반영
             var prm = UnityEngine.Object.FindObjectOfType<KYG.PlayerRootManager>(true);
             if (prm && prm.enabled) prm.RefreshVisibility_AllExceptEliminated();
 
-            if (!KYG.ShootingGameManager.Instance.IsGameOver())
-                KYG.TurnManager.Instance?.RequestNextTurnFromLocal();
+            //if (!KYG.ShootingGameManager.Instance.IsGameOver())
+                //KYG.TurnManager.Instance?.RequestNextTurnFromLocal();
         }
     }
 }

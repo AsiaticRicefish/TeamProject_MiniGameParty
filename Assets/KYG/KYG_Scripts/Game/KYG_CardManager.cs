@@ -498,7 +498,7 @@ namespace KYG
 
             // 이제 안전: 턴 세팅 후 시작
             KYG.TurnManager.Instance.SetupTurn();
-            KYG.TurnManager.Instance.StartFirstTurn();
+            //KYG.TurnManager.Instance.StartFirstTurn();
         }
         #endregion
 

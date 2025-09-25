@@ -166,7 +166,7 @@ namespace KYG
             int ending = sharedEndingCount;
 
             // 각 클라의 MeteorMiniGame에 전달
-            var minis = Object.FindObjectsOfType<MeteorMiniGame>(true);
+            var minis = Object.FindObjectsOfType<MeteorTapMiniGame>(true);
             foreach (var mm in minis)
             {
                 int my = PhotonNetwork.LocalPlayer.ActorNumber;
