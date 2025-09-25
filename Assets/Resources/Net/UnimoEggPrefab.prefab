@@ -213,6 +213,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   characterRoot: {fileID: 8069142830057370441}
   equipRoot: {fileID: 2788847542378213145}
+  forceAnimationIdleOnChange: 0
 --- !u!1 &1098164584026161378
 GameObject:
   m_ObjectHideFlags: 0
