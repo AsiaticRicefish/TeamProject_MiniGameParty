@@ -41,6 +41,10 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
 
     protected override void OnAwake()
     {
+        if(currentState == null)
+        {
+            ChangeStateByName("InitState");
+        }
         base.isPersistent = false;          //슈팅 게임 안에서만 존재 
     }
 

@@ -156,7 +156,7 @@ public class UnimoEgg : MonoBehaviourPun
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.CompareTag("UnimoEgg") && ShootingGameManager.Instance.GetCurrentState() == SH_GameStateType.GamePlay)
+        if (collision.gameObject.CompareTag("UnimoEgg") && ShootingGameManager.Instance?.GetCurrentState() == SH_GameStateType.GamePlay)
         {
             ContactPoint contact = collision.contacts[0];
             Vector3 hitPosition = contact.point;
