@@ -188,7 +188,7 @@ namespace Customization
                         if (!isOn) return;
                         _stagedCombo.characterId = id;
                         ChangeCharacter(id).Forget();
-                        UpdateApplyButton();
+                        UpdateApplyAndResetButton();
                         UpdatePurchaseButton();
                     });
             }
@@ -212,7 +212,7 @@ namespace Customization
                         if (!isOn) return;
                         _stagedCombo.equipId = id;
                         ChangeEquip(id).Forget();
-                        UpdateApplyButton();
+                        UpdateApplyAndResetButton();
                         UpdatePurchaseButton();
                     });
             }
@@ -344,13 +344,14 @@ namespace Customization
 
         #region Control
 
-        private void UpdateApplyButton()
+        private void UpdateApplyAndResetButton()
         {
             if (_stagedCombo.characterId == null || _stagedCombo.equipId == null) return;
             
             bool valid = Data.HasCharacter(_stagedCombo.characterId) && Data.HasEquip(_stagedCombo.equipId);
             bool modified = Manager.Custom.IsModified(_stagedCombo);
             applyButton.interactable = !_applying && modified && valid;
+            resetButton.interactable = !_applying && modified;
         }
 
         private void UpdatePurchaseButton()
@@ -404,7 +405,7 @@ namespace Customization
             catch(Exception e)
             {
                 Debug.LogException(e);
-                Manager.UI.EnqueueToast("가격 계산 중 오류가 발생했습니다. 나중에 시도해주세요.");
+                Manager.UI.EnqueueToast(ToastType.Error,"가격 계산 중 오류가 발생했습니다. 나중에 시도해주세요.");
             }
         }
         private async void ApplyClicked()
@@ -422,16 +423,16 @@ namespace Customization
             if (ok)
             {
                 Debug.Log($"[Closet] Success saving staged combo");
-                Manager.UI.EnqueueToast("적용되었습니다.");
+                Manager.UI.EnqueueToast(ToastType.Check,"적용되었습니다.");
             }
             else
             {
                 Debug.LogWarning("[Closet] Save failed. Keeping staged preview but not updating saved.");
-                Manager.UI.EnqueueToast("적용에 실패했습니다.");
+                Manager.UI.EnqueueToast(ToastType.Error,"적용에 실패했습니다.");
             }
 
             _applying = false;
-            UpdateApplyButton();
+            UpdateApplyAndResetButton();
             UpdatePurchaseButton();
         }
 
@@ -439,7 +440,7 @@ namespace Customization
         {
             _stagedCombo = Manager.Custom.GetEquippedLocal();
             ApplyInitialSelection(_stagedCombo);
-            UpdateApplyButton();
+            UpdateApplyAndResetButton();
             UpdatePurchaseButton();
         }
 
@@ -457,7 +458,7 @@ namespace Customization
             }
 
             // 버튼 상태 갱신
-            UpdateApplyButton();
+            UpdateApplyAndResetButton();
             UpdatePurchaseButton();
         }
         

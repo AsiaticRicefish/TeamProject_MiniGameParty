@@ -232,7 +232,7 @@ namespace Network
             // Debug.LogWarning($"[PrivateMatchController] 비공개 룸 입장 실패");
             string toastMsg = Define_LDH.JoinErrorMessage(returnCode, message);
             Debug.LogWarning(toastMsg);
-            Manager.UI.EnqueueToast(toastMsg);
+            Manager.UI.EnqueueToast(ToastType.Error,toastMsg);
             
             UnsubscribeNetwork();
             

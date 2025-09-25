@@ -186,7 +186,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 375, y: -530.27246}
+  m_AnchoredPosition: {x: 375, y: -718.27246}
   m_SizeDelta: {x: 750, y: 0}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &8362311424729416922
@@ -353,6 +353,7 @@ MonoBehaviour:
   rewardText: {fileID: 7792103838841158265}
   okButton: {fileID: 3669255716840381272}
   adsButton: {fileID: 8109485702475170298}
+  sfxKey: 10
 --- !u!1 &4544735160620611168
 GameObject:
   m_ObjectHideFlags: 0
@@ -369,6 +370,7 @@ GameObject:
   - component: {fileID: 4675795199487749489}
   - component: {fileID: 8109485702475170298}
   - component: {fileID: 1229138007818927092}
+  - component: {fileID: 4720050843757720393}
   m_Layer: 0
   m_Name: Button_Ads
   m_TagString: Untagged
@@ -554,6 +556,24 @@ MonoBehaviour:
   m_EffectColor: {r: 0, g: 0, b: 0, a: 0.101960786}
   m_EffectDistance: {x: 0, y: -8}
   m_UseGraphicAlpha: 1
+--- !u!114 &4720050843757720393
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4544735160620611168}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0bde7ffac2943d98d0b7d5e05bc4ad9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playOnlyWhenInteractable: 1
+  buttonClickSfx: 0
+  toggleOnSfx: 0
+  toggleOffSfx: 0
+  playToggleOnSfx: 1
+  playToggleOffSfx: 0
 --- !u!1 &5399442868004142759
 GameObject:
   m_ObjectHideFlags: 0
@@ -915,6 +935,7 @@ GameObject:
   - component: {fileID: 3840620729668715548}
   - component: {fileID: 3669255716840381272}
   - component: {fileID: 1750457037088046935}
+  - component: {fileID: 6966328954078515852}
   m_Layer: 0
   m_Name: Button_OK
   m_TagString: Untagged
@@ -1099,6 +1120,24 @@ MonoBehaviour:
   m_EffectColor: {r: 0, g: 0, b: 0, a: 0.101960786}
   m_EffectDistance: {x: 0, y: -8}
   m_UseGraphicAlpha: 1
+--- !u!114 &6966328954078515852
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7497545579559288564}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0bde7ffac2943d98d0b7d5e05bc4ad9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playOnlyWhenInteractable: 1
+  buttonClickSfx: 0
+  toggleOnSfx: 0
+  toggleOffSfx: 0
+  playToggleOnSfx: 1
+  playToggleOffSfx: 0
 --- !u!1 &7599542458762769182
 GameObject:
   m_ObjectHideFlags: 0
@@ -1384,7 +1423,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 214.905, y: -50}
-  m_SizeDelta: {x: 0, y: 50}
+  m_SizeDelta: {x: 199.81, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6029931648901460213
 CanvasRenderer:

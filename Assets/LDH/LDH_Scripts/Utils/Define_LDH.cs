@@ -38,6 +38,25 @@ namespace LDH_Util
             Bottom,
             Default,
         }
+        
+        public enum ToastType
+        {
+            Error,
+            Help,
+            Notify,
+            Check,
+        }
+
+        public static readonly Color32[] ColorBlindPalette = new[]
+        {
+            new Color32(228, 81,  91,255), 
+            new Color32(229, 118,  0,255), // vermillion
+            new Color32(  0,158,115,255), // bluish green
+            new Color32(  0,114,178,255), // blue
+            new Color32(155, 78,  234,255), 
+            new Color32(  0,  0,  0,255), // black
+        };
+
 
         #endregion
 
@@ -214,9 +233,32 @@ namespace LDH_Util
 
             public const string RTDB = "https://unimo-56ebc-default-rtdb.asia-southeast1.firebasedatabase.app/";
         }
-
-      
+        
         #endregion
+
+        #region Sound
+
+        public enum BgmKey
+        {
+            Lobby_BGM,
+        }
+
+        public enum SfxKey
+        {
+            Lobby_Matching,
+            Main_Coin,
+            Main_Picking,
+            Main_Roullet,
+            Main_MiniGamePicked,
+            Main_ReadyClick,
+            Main_MiniGameEnd,
+            Main_MatchEnd,
+            Main_Loser,
+            Main_Winner,
+            Main_Reward,
+        }
+        #endregion
+        
         
     }
 

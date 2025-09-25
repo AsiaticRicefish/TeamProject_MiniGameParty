@@ -1,5 +1,6 @@
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using LDH_Util;
 using Managers;
 using UnityEngine;
 using UnityEngine.UI;
@@ -110,7 +111,7 @@ namespace LDH_UI
         
         public void ShowPreparingToast()
         {
-            Manager.UI.EnqueueToast("준비 중입니다.");
+            Manager.UI.EnqueueToast(Define_LDH.ToastType.Notify, "준비 중입니다.");
             
         }
     }

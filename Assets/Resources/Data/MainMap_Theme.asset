@@ -10,10 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 16e882dba42855d41b248d3300c2d923, type: 3}
-  m_Name: MainGame_Theme
+  m_Name: MainMap_Theme
   m_EditorClassIdentifier: 
+  themeType: 0
+  themeName: MainMap
   gameTitle: "\uBA54\uC778 \uAC8C\uC784 \uC785\uC7A5 \uC911"
-  bigDescription: 
   smallDescription: "\uAFB8\uC900\uD55C \uD50C\uB808\uC774\uB97C \uD1B5\uD574 \uB2E4\uC591\uD55C
     \uC720\uB2C8\uBAA8\uB97C \uD68D\uB4DD\uD574\uBCF4\uC138\uC694!"
   titlePanelColor: {r: 0, g: 0, b: 0, a: 1}
@@ -22,3 +23,5 @@ MonoBehaviour:
   unimoPrefabs:
   - {fileID: 3380019038747022192, guid: 658f3813a0c86d341878bb3628d1b24f, type: 3}
   - {fileID: 3380019038747022192, guid: f61a8b3cfcc1fb7479287411ec8fb801, type: 3}
+  useGoogleSheetsText: 1
+  sheetCategory: Default

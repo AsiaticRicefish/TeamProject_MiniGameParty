@@ -56,7 +56,6 @@ public class JengaSceneController : BaseGameSceneController
         {
             // 기본 텍스트라도 설정
             _uiLoading.SetTitle("JENGA GAME");
-            _uiLoading.SetBigDescription("준비 중...");
             _uiLoading.SetAllPanelColors(Color.black, Color.gray, Color.white);
         }
 
@@ -154,7 +153,6 @@ public class JengaSceneController : BaseGameSceneController
             if (_uiLoading)
             {
                 _uiLoading.SetProgress(1.0f);
-                _uiLoading.SetBigDescription("게임이 시작됩니다!");
             }
 
             // 로딩창 닫기

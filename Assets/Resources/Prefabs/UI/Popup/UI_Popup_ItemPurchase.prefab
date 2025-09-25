@@ -324,8 +324,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 490, y: -719.93945}
-  m_SizeDelta: {x: 980, y: 0}
+  m_AnchoredPosition: {x: 151, y: -719.93945}
+  m_SizeDelta: {x: 750, y: 0}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &7338449530878357972
 MonoBehaviour:
@@ -642,6 +642,7 @@ GameObject:
   - component: {fileID: 8848572873313810148}
   - component: {fileID: 6436211283682783077}
   - component: {fileID: 4315188759384552554}
+  - component: {fileID: 1461383775310766228}
   m_Layer: 0
   m_Name: Button_Cancel
   m_TagString: Untagged
@@ -666,8 +667,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 722.5, y: -69}
-  m_SizeDelta: {x: 415, y: 138}
+  m_AnchoredPosition: {x: 550, y: -69}
+  m_SizeDelta: {x: 300, y: 138}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2420236904167855327
 CanvasRenderer:
@@ -826,6 +827,24 @@ MonoBehaviour:
   m_EffectColor: {r: 0, g: 0, b: 0, a: 0.101960786}
   m_EffectDistance: {x: 0, y: -8}
   m_UseGraphicAlpha: 1
+--- !u!114 &1461383775310766228
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7056687636230199027}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0bde7ffac2943d98d0b7d5e05bc4ad9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playOnlyWhenInteractable: 1
+  buttonClickSfx: 0
+  toggleOnSfx: 0
+  toggleOffSfx: 0
+  playToggleOnSfx: 1
+  playToggleOffSfx: 0
 --- !u!1 &7764574594869797790
 GameObject:
   m_ObjectHideFlags: 0
@@ -838,6 +857,7 @@ GameObject:
   - component: {fileID: 4349557041623136807}
   - component: {fileID: 8613985836151840887}
   - component: {fileID: 877481548538014149}
+  - component: {fileID: 2173214921576010861}
   m_Layer: 0
   m_Name: Button_Close
   m_TagString: Untagged
@@ -947,6 +967,24 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &2173214921576010861
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7764574594869797790}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0bde7ffac2943d98d0b7d5e05bc4ad9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playOnlyWhenInteractable: 1
+  buttonClickSfx: 0
+  toggleOnSfx: 0
+  toggleOffSfx: 0
+  playToggleOnSfx: 1
+  playToggleOffSfx: 0
 --- !u!1 &7831050421297528762
 GameObject:
   m_ObjectHideFlags: 0
@@ -963,6 +1001,7 @@ GameObject:
   - component: {fileID: 7536423124919026688}
   - component: {fileID: 794797817593432378}
   - component: {fileID: 5964380791688061202}
+  - component: {fileID: 1075987242772387167}
   m_Layer: 0
   m_Name: Button_Ok
   m_TagString: Untagged
@@ -987,8 +1026,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 257.5, y: -69}
-  m_SizeDelta: {x: 415, y: 138}
+  m_AnchoredPosition: {x: 200, y: -69}
+  m_SizeDelta: {x: 300, y: 138}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2709641553771867057
 CanvasRenderer:
@@ -1147,6 +1186,24 @@ MonoBehaviour:
   m_EffectColor: {r: 0, g: 0, b: 0, a: 0.101960786}
   m_EffectDistance: {x: 0, y: -8}
   m_UseGraphicAlpha: 1
+--- !u!114 &1075987242772387167
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7831050421297528762}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0bde7ffac2943d98d0b7d5e05bc4ad9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playOnlyWhenInteractable: 1
+  buttonClickSfx: 0
+  toggleOnSfx: 0
+  toggleOffSfx: 0
+  playToggleOnSfx: 1
+  playToggleOffSfx: 0
 --- !u!1 &8062923797498983070
 GameObject:
   m_ObjectHideFlags: 0
@@ -1393,8 +1450,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 490, y: -331.93948}
-  m_SizeDelta: {x: 980, y: 0}
+  m_AnchoredPosition: {x: 151, y: -331.93948}
+  m_SizeDelta: {x: 302, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7598701046332124580
 CanvasRenderer:

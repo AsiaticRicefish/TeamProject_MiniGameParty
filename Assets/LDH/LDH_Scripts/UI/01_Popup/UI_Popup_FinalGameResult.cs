@@ -17,7 +17,7 @@ namespace LDH_UI
     public class UI_Popup_FinalGameResult : UI_Popup_GameResult
     {
         private float afterWinnerDelay = 3.5f;
-
+        private int myPanelIndex = -1;
         protected override void Init()
         {
             base.Init();
@@ -36,6 +36,9 @@ namespace LDH_UI
             {
                 GamePlayer gp = players[i];
 
+                if (gp.PlayerId.Equals(PhotonNetwork.LocalPlayer.UserId))
+                    myPanelIndex = i;
+                
                 var uiEntry = Instantiate(scoreEntryPrefab, scoreEntryContent);
                 uiEntry.transform.SetSiblingIndex(i);
                 
@@ -63,8 +66,7 @@ namespace LDH_UI
 
             // 2) 우승자 연출
             var winnerUI = Manager.UI.CreatePopupUI<UI_Popup_Winner>();
-
-
+            
             string uidKey = PlayerProps.GetPlayerInfoKey(PlayerProps.PlayerInfoKey.Uid);
             string winnerNickname = _playerResults[0].Nickname;
             string winnerUid = _playerResults[0].PlayerId;
@@ -73,16 +75,20 @@ namespace LDH_UI
                 p.CustomProperties.TryGetValue(uidKey, out var v) &&
                 v is string uid &&
                 uid == winnerUid);
-
+            
+            
             if (winnerPlayer == null)
             {
                 Debug.LogError("Winner is null");
                 return;
             }
+            
+            bool isWinner = winnerPlayer.IsLocal;
+            
             string winnerCharID = winnerPlayer.CustomProperties[PlayerProps.GetPlayerInfoKey(PlayerProps.PlayerInfoKey.CharacterId)].ToString();
             string winnerEquipID = winnerPlayer.CustomProperties[PlayerProps.GetPlayerInfoKey(PlayerProps.PlayerInfoKey.EquipId)].ToString();
             
-            await winnerUI.SetData(winnerNickname, new UnimoCombo(winnerCharID, winnerEquipID));
+            await winnerUI.SetData(winnerNickname, new UnimoCombo(winnerCharID, winnerEquipID), isWinner );
             await Manager.UI.ShowPopupUI(winnerUI);
             await UniTask.Delay(System.TimeSpan.FromSeconds(afterWinnerDelay), cancellationToken: ct);  // 2초
             await Manager.UI.ClosePopupUI(winnerUI);
@@ -92,7 +98,8 @@ namespace LDH_UI
             var rewardTasks = new System.Collections.Generic.List<UniTask>(_scoreEntries.Count);
             for (int i = 0; i < _scoreEntries.Count; i++)
             {
-                rewardTasks.Add(_scoreEntries[i].ShowReward(ct));
+                bool withSfx = (i == myPanelIndex);
+                rewardTasks.Add(_scoreEntries[i].ShowReward(ct, withSfx: withSfx));
             }
             await UniTask.WhenAll(rewardTasks);
             await UniTask.Delay(System.TimeSpan.FromSeconds(afterAwardDelay), cancellationToken: ct);  // 2초

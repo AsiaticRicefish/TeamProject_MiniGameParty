@@ -170,7 +170,7 @@ namespace LDH_MainGame
                     return;
                 
                 _loadingUI.SetProgress(1f);
-                _loadingUI.AutoCloseAfter(1.5f, _loadingUI.destroyCancellationToken).Forget();
+                _loadingUI.AutoCloseAfter(0.5f, _loadingUI.destroyCancellationToken).Forget();
             };
             
             // 로딩창 띄우기
@@ -211,7 +211,9 @@ namespace LDH_MainGame
         {
             _gameEndPopup = Manager.UI.CreatePopupUI<UI_Popup_GameEnd>();
             if(isMainEnd)
-                _gameEndPopup.SetData("매치 종료");
+                _gameEndPopup.SetMatchEnd();
+            else
+                _gameEndPopup.SetMiniGameEnd();
             
             await Manager.UI.ShowPopupUI(_gameEndPopup);
             await UniTask.Delay(TimeSpan.FromSeconds(1.8f));

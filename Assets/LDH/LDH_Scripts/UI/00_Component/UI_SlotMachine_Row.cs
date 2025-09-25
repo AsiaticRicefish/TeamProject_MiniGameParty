@@ -18,7 +18,6 @@ namespace LDH_UI
         [Header("Visual")]
         [SerializeField] private TMP_FontAsset font;
         [SerializeField] private int fontSize = 64;
-        [SerializeField] private Color fontColor = Color.white;
 
         [Header("Spin Params")]
         [SerializeField] private int   minVisualCount = 7;     // 화면상 최소 칸 수(자연스러운 회전용
@@ -26,20 +25,32 @@ namespace LDH_UI
         [SerializeField] private float decelRatio = 0.25f;     // 총 시간 중 감속 비율
         [SerializeField] private float minTotalTime = 0.9f;    // 전체 회전 최소 시간(짧아도 너무 빨라보이지 않게)
         [SerializeField] private float cellsPerSecondAtMax = 18f;
-        [SerializeField] private int   extraLapsMin = 1;
-        [SerializeField] private int   extraLapsMax = 2;
+        [SerializeField] private int   extraLapsMin = 2;
+        [SerializeField] private int   extraLapsMax = 3;
+        
+        [Header("Sound")] [SerializeField]
+        private Define_LDH.SfxKey pickedMiniSfx = Define_LDH.SfxKey.Main_MiniGamePicked;
+        private Define_LDH.SfxKey spinningRoulletSfx = Define_LDH.SfxKey.Main_Roullet;
+
         
         public bool   rowStopped { get; private set; } = true;
         public string stoppedSlot { get; private set; }
         
         
         private readonly List<string> _ids = new();
+        private readonly Dictionary<string, Color> _colorMap = new(); // key -> color 캐시
+        private readonly HashSet<Color> _colorSet = new();
+
         private float _cellHeight; // 한 칸(한 항목)의 높이 = 뷰포트 높이
         private float _totalHeight; // 컨테이너 총 높이 = cellHeight * count
         private float _rawY;                                            // "원시 y" 값: 누적 이동량(랩핑 전 값, 계속 커져도 OK)
         private Tween _spinTween;                                       // 현재 실행 중인 DOTween 트윈(취소/중복 방지용)
-
         
+        private int _lastTickCell = -1;
+        private float _lastTickTime = -999f;
+        private float _minTickInterval = 0.03f; // 너무 빠를 때 과도재생 방지
+
+
         /// <summary>
         /// 후보 게임들로 행 구성 (뷰포트=부모 RectTransform 높이를 각 칸 높이로 사용)
         /// </summary>
@@ -83,6 +94,11 @@ namespace LDH_UI
 
                 rt.SetParent(rowListRect, false);
                 rt.SetAsLastSibling();
+                
+                // 색상 결정
+                string colorKey = gameId;
+                var fontColor = ResolveColor(colorKey);
+
 
                 // 텍스트 표기
                 tmp.font = font;
@@ -135,6 +151,9 @@ namespace LDH_UI
             rowStopped = false;
             stoppedSlot = null;
             
+            // 틱 상태 리셋
+            _lastTickCell = -1;       
+            _lastTickTime = -999f;
             RotateAsync(forceTargetIndex).Forget();
         }
 
@@ -201,6 +220,9 @@ namespace LDH_UI
            seq.SetLink(gameObject);                                    // GameObject가 파괴되면 트윈도 같이 정리
            _spinTween = seq;                                           // 멤버에 보관(중복 방지/필요 시 Kill)
            await seq.AsyncWaitForCompletion();                         // 트윈 종료까지 대기(UniTask)
+            
+           // 미니게임 선택 완료 효과음
+           SoundManager.Instance.PlaySFX(pickedMiniSfx.ToString());
 
            // ---- 스냅(정확히 칸 경계에 딱 맞추기) ----
            float snapped = Mathf.Round(_rawY / _cellHeight) * _cellHeight; // 가장 가까운 칸 경계로 반올림
@@ -233,6 +255,49 @@ namespace LDH_UI
         {
             float wrapped = Wrap(rawY);                                 // 0~총높이로 랩핑
             rowListRect.anchoredPosition = new Vector2(0, -wrapped);    // anchored Y에 wrapped 적용 → “무한히 도는 연출”
+            
+            
+            //----- 칸 경계를 지날때 마다 소리가 나도록 ---- // 
+            // 현재 칸 인덱스
+            if (_ids.Count == 0 || _cellHeight <= 0f) return;
+            int cell = Mathf.FloorToInt(wrapped / _cellHeight);
+
+            if (cell != _lastTickCell)
+            {
+                // 과도재생 방지 (아주 고속 구간에서 too many ticks 방지)
+                float t = Time.unscaledTime;
+                if (t - _lastTickTime >= _minTickInterval)
+                {
+                    // 룰렛 도는 반복음 재생
+                    SoundManager.Instance.PlaySFX(spinningRoulletSfx.ToString());
+                    _lastTickTime = t;
+                }
+
+                _lastTickCell = cell;
+
+            }
+            
+        }
+
+
+        private Color ResolveColor(string key)
+        {
+            if (string.IsNullOrEmpty(key)) return Color.white;
+           
+            if (_colorMap.TryGetValue(key, out var c)) return c;
+            
+            // 안정적인 인덱스: 해시 → 0..N-1
+            int idx = Mathf.Abs(key.GetHashCode()) % Define_LDH.ColorBlindPalette.Length;
+            c =  Define_LDH.ColorBlindPalette[idx];
+
+            while (!_colorSet.Add(c))
+            {
+                idx = (idx + 1) % Define_LDH.ColorBlindPalette.Length;
+                c =Define_LDH.ColorBlindPalette[idx];
+            }
+            
+            _colorMap[key] = c;
+            return c;
         }
         
     }

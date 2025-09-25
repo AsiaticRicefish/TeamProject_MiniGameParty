@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using Data;
 using LDH_MainGame;
@@ -12,11 +13,14 @@ namespace LDH_UI
 {
     public class UI_Popup_Reward : UI_Popup
     {
+        [Header("UI")]
         [SerializeField] private Image currencyIcon;
         [SerializeField] private TMP_Text rewardText;
         [SerializeField] private Button okButton;
         [SerializeField] private Button adsButton;
 
+        [Header("Sound")] [SerializeField] private Define_LDH.SfxKey sfxKey = Define_LDH.SfxKey.Main_Reward;
+        
         private int reward;
         private Define_LDH.CurrencyType rewardType;
         private bool claimed;
@@ -68,7 +72,7 @@ namespace LDH_UI
             if (result)
             {
                 claimed = true;
-                Manager.UI.EnqueueToast($"보상 {reward} 수령 완료!");
+                Manager.UI.EnqueueToast(Define_LDH.ToastType.Check,$"보상 {reward} 수령 완료!");
                 await UniTask.Delay(TimeSpan.FromSeconds(1.5f));
                 MainGameManager.Instance?.EndGameAsync(false).Forget();
             }
@@ -77,6 +81,13 @@ namespace LDH_UI
                 claimed = false;
                 okButton.interactable = true;
             }
+        }
+
+
+        protected override async UniTask OnShowAsync(CancellationToken ct)
+        {
+            SoundManager.Instance.PlaySFX(sfxKey.ToString());
+            await base.OnShowAsync(ct);
         }
     }
 }

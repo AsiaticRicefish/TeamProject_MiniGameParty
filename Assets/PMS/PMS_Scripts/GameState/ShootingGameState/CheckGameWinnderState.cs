@@ -16,8 +16,6 @@ public class CheckGameWinnderState : ShootingGameState
 
         //BGM끄고 게임 종료 효과음 호출
         SoundManager.Instance.PauseBGM();
-        SoundManager.Instance.PlaySFX(Define_PMS.SoundKeys.GameEndSFX);
-
         if (PhotonNetwork.IsMasterClient)
         {       
             ShootingGameManager.Instance.CheckGameWinner();
