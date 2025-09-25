@@ -1030,12 +1030,6 @@ Transform:
   - {fileID: 1886387640}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!224 &524773421 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 1625441519580120348, guid: 8ce70e4a258712c4a80ae0e52cec3600,
-    type: 3}
-  m_PrefabInstance: {fileID: 813059208}
-  m_PrefabAsset: {fileID: 0}
 --- !u!114 &536221056
 MonoBehaviour:
   m_ObjectHideFlags: 0
