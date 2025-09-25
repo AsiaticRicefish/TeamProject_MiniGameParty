@@ -831,6 +831,7 @@ public class SoundManager : CombinedSingleton<SoundManager>
 
     public async Task<float> GetMusicLengthAsync(string soundName, float fallbackSeconds = 180f)
     {
+        
         try
         {
             if (_currentSettings?.soundCollection == null)

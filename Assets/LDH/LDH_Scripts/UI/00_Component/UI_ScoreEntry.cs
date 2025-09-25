@@ -38,8 +38,9 @@ namespace LDH_UI
         [SerializeField] private float pulseDuration = 1f;
 
 
-        [Header("Sound")] [SerializeField] private Define_LDH.SfxKey coinSfx = Define_LDH.SfxKey.Main_Coin;
-
+        [Header("Sound")] 
+        [SerializeField] private Define_LDH.SfxKey coinSfx = Define_LDH.SfxKey.Main_Coin;
+        private int _maxTicks = 20;
 
         private readonly List<GameObject> _scoreIcons = new();
         private int _totalReward;
@@ -181,10 +182,8 @@ namespace LDH_UI
                 .SetUpdate(true);
         }
 
-        public async UniTask ShowReward(CancellationToken ct, float duration = 0.8f)
+        public async UniTask ShowReward(CancellationToken ct, float duration = 0.8f, bool withSfx = false)
         {
-            // Debug.Log($"<color=yellow>{_totalReward}</color>");
-
             rewardCg.alpha = 0f;
             rewardText.text = "+ 0";
 
@@ -194,10 +193,20 @@ namespace LDH_UI
 
             int from = 0;
             int to = Mathf.Max(0, _totalReward);
+            
+            // tick 횟수 설정. 최대 tick을 제한하여 너무 소리가 많아지지 않도록 처리
+            // step만큼 오를 때마다 효과음 재생
+            int step = Mathf.Max(1, Mathf.CeilToInt((float)to / Mathf.Max(1, _maxTicks)));
+            int lastTickPlayedValue = -step; // 첫 틱 보장
 
             var numTw = DOVirtual.Int(from, to, duration, v =>
                 {
                     rewardText.text = $"+ {v}";
+                    if (withSfx && v - lastTickPlayedValue >= step)
+                    {
+                        lastTickPlayedValue = v;
+                        SoundManager.Instance?.PlaySFX(coinSfx.ToString());
+                    }
                 })
                 .SetEase(Ease.OutQuad) // 같은 이징
                 .SetUpdate(true); // 타임스케일 무시하고 진행(필요 없으면 제거)

@@ -819,4 +819,4 @@ MonoBehaviour:
   toggleOnSfx: 0
   toggleOffSfx: 0
   playToggleOnSfx: 1
-  playToggleOffSfx: 0
+  playToggleOffSfx: 1

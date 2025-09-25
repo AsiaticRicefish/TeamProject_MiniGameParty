@@ -188,7 +188,7 @@ namespace Customization
                         if (!isOn) return;
                         _stagedCombo.characterId = id;
                         ChangeCharacter(id).Forget();
-                        UpdateApplyButton();
+                        UpdateApplyAndResetButton();
                         UpdatePurchaseButton();
                     });
             }
@@ -212,7 +212,7 @@ namespace Customization
                         if (!isOn) return;
                         _stagedCombo.equipId = id;
                         ChangeEquip(id).Forget();
-                        UpdateApplyButton();
+                        UpdateApplyAndResetButton();
                         UpdatePurchaseButton();
                     });
             }
@@ -344,13 +344,14 @@ namespace Customization
 
         #region Control
 
-        private void UpdateApplyButton()
+        private void UpdateApplyAndResetButton()
         {
             if (_stagedCombo.characterId == null || _stagedCombo.equipId == null) return;
             
             bool valid = Data.HasCharacter(_stagedCombo.characterId) && Data.HasEquip(_stagedCombo.equipId);
             bool modified = Manager.Custom.IsModified(_stagedCombo);
             applyButton.interactable = !_applying && modified && valid;
+            resetButton.interactable = !_applying && modified;
         }
 
         private void UpdatePurchaseButton()
@@ -431,7 +432,7 @@ namespace Customization
             }
 
             _applying = false;
-            UpdateApplyButton();
+            UpdateApplyAndResetButton();
             UpdatePurchaseButton();
         }
 
@@ -439,7 +440,7 @@ namespace Customization
         {
             _stagedCombo = Manager.Custom.GetEquippedLocal();
             ApplyInitialSelection(_stagedCombo);
-            UpdateApplyButton();
+            UpdateApplyAndResetButton();
             UpdatePurchaseButton();
         }
 
@@ -457,7 +458,7 @@ namespace Customization
             }
 
             // 버튼 상태 갱신
-            UpdateApplyButton();
+            UpdateApplyAndResetButton();
             UpdatePurchaseButton();
         }
         

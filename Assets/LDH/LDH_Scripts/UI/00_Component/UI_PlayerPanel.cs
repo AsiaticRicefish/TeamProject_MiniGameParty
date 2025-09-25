@@ -52,8 +52,8 @@ namespace LDH_UI
             inviteButton.onClick.RemoveAllListeners();
             inviteButton.onClick.AddListener(() => InviteButtonClicked?.Invoke(SlotIndex));
 
-            readyButton.onClick.RemoveAllListeners();
-            readyButton.onClick.AddListener(() => ReadyClicked?.Invoke(SlotIndex));
+            readyButton.onClick.RemoveListener(OnClickReady);
+            readyButton.onClick.AddListener(OnClickReady);
         }
 
         
@@ -76,6 +76,11 @@ namespace LDH_UI
             SetReadyVisual(isReady);
             SetInviteActive(false);
             SetMasterIcon(isMasterClient);
+        }
+
+        private void OnClickReady()
+        {
+            ReadyClicked?.Invoke(SlotIndex);
         }
         
 

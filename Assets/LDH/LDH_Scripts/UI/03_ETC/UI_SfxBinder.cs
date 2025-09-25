@@ -1,25 +1,28 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace LDH_UI
 {
     [DisallowMultipleComponent]
-    public class UI_SfxBinder : MonoBehaviour
+    public class UI_SfxBinder : MonoBehaviour, IPointerDownHandler
     {
         [Header("Common")]
         [SerializeField] private bool playOnlyWhenInteractable = true;
 
         [Header("Button SFX")] 
-        [SerializeField] private SFX_UI buttonClickSfx = SFX_UI.SFX_BtnClick;
+        [SerializeField] private SFX_UI buttonClickSfx = SFX_UI.SFX_Btn1;
         [Header("Toggle SFX")] 
-        [SerializeField] private SFX_UI toggleOnSfx = SFX_UI.SFX_BtnClick;
-        [SerializeField] private SFX_UI toggleOffSfx = SFX_UI.SFX_BtnClick;
+        [SerializeField] private SFX_UI toggleOnSfx = SFX_UI.SFX_Btn1;
+        [SerializeField] private SFX_UI toggleOffSfx = SFX_UI.SFX_Btn1;
         [SerializeField] private bool playToggleOnSfx = true;
         [SerializeField] private bool playToggleOffSfx = false;
         
         
         private Button _button;
         private Toggle _toggle;
+        private bool _couldPlayAtDown;
+
 
         void Awake()
         {
@@ -28,7 +31,7 @@ namespace LDH_UI
         }
 
         
-        void OnEnable()
+        void Start()
         {
             if (_button != null)
                 _button.onClick.AddListener(OnButtonClick);
@@ -37,7 +40,7 @@ namespace LDH_UI
                 _toggle.onValueChanged.AddListener(OnToggleChanged);
         }
         
-        void OnDisable()
+        void OnDestroy()
         {
             if (_button != null)
                 _button.onClick.RemoveListener(OnButtonClick);
@@ -46,19 +49,29 @@ namespace LDH_UI
                 _toggle.onValueChanged.RemoveListener(OnToggleChanged);
         }
         
+        public void OnPointerDown(PointerEventData eventData)
+        {
+            _couldPlayAtDown = CanPlay();
+            Debug.Log(_couldPlayAtDown);
+        }
+        
         private void OnButtonClick()
         {
-            if (!CanPlay()) return;
-                SoundManager.Instance.PlaySFX_UI(buttonClickSfx);
+            if (!_couldPlayAtDown) return;
+            SoundManager.Instance.PlaySFX_UI(buttonClickSfx);
+
+            _couldPlayAtDown = false;
         }
 
         private void OnToggleChanged(bool isOn)
         {
-            if (!CanPlay()) return;
+            
+            if (!_couldPlayAtDown) return;
             var sfx = isOn ? toggleOnSfx : toggleOffSfx;
             bool canPlay = isOn ? playToggleOnSfx : playToggleOffSfx;
             if(canPlay)
                 SoundManager.Instance.PlaySFX_UI(sfx);
+            _couldPlayAtDown = false;
         }
         
         private bool CanPlay()
@@ -72,6 +85,15 @@ namespace LDH_UI
             return gameObject.activeInHierarchy;
         }
         
-        
+        void DumpInactiveChain()
+        {
+            var t = transform;
+            while (t != null)
+            {
+                if (!t.gameObject.activeSelf)
+                    Debug.LogWarning($"inactive: {t.name} (activeSelf=false)");
+                t = t.parent;
+            }
+        }
     }
 }

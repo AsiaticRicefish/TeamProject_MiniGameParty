@@ -94,6 +94,8 @@ MonoBehaviour:
   _uiSfxList:
   - key: 0
     clip: {fileID: 8300000, guid: 2cab97601cdd94654b1d0fc487601469, type: 3}
+  - key: 1
+    clip: {fileID: 8300000, guid: 89138ab3d47044009932d54f0a343883, type: 3}
   audioMixer: {fileID: 24100000, guid: eba9e5d0d1f1fab4ea6c116f2f25bfd0, type: 2}
   bgmMixerGroup: {fileID: 44504754267785944, guid: eba9e5d0d1f1fab4ea6c116f2f25bfd0,
     type: 2}

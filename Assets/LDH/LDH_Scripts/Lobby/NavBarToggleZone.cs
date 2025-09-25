@@ -8,11 +8,16 @@ namespace LDH_Lobby
     public class NavBarToggleZone : MonoBehaviour,  IPointerClickHandler
     {
         [SerializeField] private Toggle targetToggle;
-
+        [SerializeField] private SFX_UI clickSfx = SFX_UI.SFX_Btn1;
+        
         public void OnPointerClick(PointerEventData eventData)
         {
             if (!targetToggle) return;
-            if (!targetToggle.isOn) targetToggle.isOn = true;
+            if (!targetToggle.isOn)
+            {
+                SoundManager.Instance.PlaySFX_UI(clickSfx);
+                targetToggle.isOn = true;
+            }
         }
     }
 }
