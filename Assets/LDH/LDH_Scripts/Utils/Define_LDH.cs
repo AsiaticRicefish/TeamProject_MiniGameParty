@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Photon.Realtime;
 using UnityEngine;
 
 namespace LDH_Util
@@ -37,6 +38,25 @@ namespace LDH_Util
             Bottom,
             Default,
         }
+        
+        public enum ToastType
+        {
+            Error,
+            Help,
+            Notify,
+            Check,
+        }
+
+        public static readonly Color32[] ColorBlindPalette = new[]
+        {
+            new Color32(228, 81,  91,255), 
+            new Color32(229, 118,  0,255), // vermillion
+            new Color32(  0,158,115,255), // bluish green
+            new Color32(  0,114,178,255), // blue
+            new Color32(155, 78,  234,255), 
+            new Color32(  0,  0,  0,255), // black
+        };
+
 
         #endregion
 
@@ -89,6 +109,32 @@ namespace LDH_Util
             public const string SlotIndex = "slotIndex"; // 0~4까지의 숫자
         }
 
+        public static string JoinErrorMessage(short code, string serverMsg)
+        {
+            int ec = code; // int로 승격
+            
+            switch (ec)
+            {
+                case ErrorCode.GameFull:            // 32765
+                    return $"방이 가득 찼습니다.({code})";
+                case ErrorCode.GameClosed:          // 32764
+                    return $"방이 닫혀 있어 입장할 수 없습니다.({code})";
+                case ErrorCode.NoRandomMatchFound:  // 32760 (JoinRandom 전용)
+                    return $"입장 가능한 방이 없습니다.({code})";
+                case ErrorCode.GameIdAlreadyExists: // 32766 (Create 시)
+                    return $"같은 이름의 방이 이미 존재합니다.({code})";
+                // 재접속/재조인 관련 (있으면 케이스 추가)
+                case ErrorCode.JoinFailedPeerAlreadyJoined:       // 32750
+                    return $"이미 해당 방에 참여 중입니다.({code})";
+                case ErrorCode.JoinFailedWithRejoinerNotFound:    // 32748
+                    return $"재접속 시간이 만료되어 방을 찾지 못했습니다.({code})";
+                case ErrorCode.GameDoesNotExist:            // 32758  ★ 로그와 일치
+                    return $"해당 방을 찾을 수 없습니다.({code})";
+                default:
+                    return $"입장 실패 ({code}) {serverMsg}";
+            }
+        }
+        
         #endregion
         
         #region Main Game
@@ -187,9 +233,32 @@ namespace LDH_Util
 
             public const string RTDB = "https://unimo-56ebc-default-rtdb.asia-southeast1.firebasedatabase.app/";
         }
-
-      
+        
         #endregion
+
+        #region Sound
+
+        public enum BgmKey
+        {
+            Lobby_BGM,
+        }
+
+        public enum SfxKey
+        {
+            Lobby_Matching,
+            Main_Coin,
+            Main_Picking,
+            Main_Roullet,
+            Main_MiniGamePicked,
+            Main_ReadyClick,
+            Main_MiniGameEnd,
+            Main_MatchEnd,
+            Main_Loser,
+            Main_Winner,
+            Main_Reward,
+        }
+        #endregion
+        
         
     }
 

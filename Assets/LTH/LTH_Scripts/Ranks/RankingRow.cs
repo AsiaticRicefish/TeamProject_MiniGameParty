@@ -1,3 +1,7 @@
+using System;
+using System.Threading;
+using Customization;
+using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
@@ -14,7 +18,9 @@ public class RankingRow : MonoBehaviour
     [SerializeField] private Image bg;
     [SerializeField] private Image colorChip;
     [SerializeField] private CanvasGroup cg;
-
+    [SerializeField] private Image profileImage;
+    
+    
     [Header("First Place Icon")]
     [SerializeField] private Image trophyIcon;   // 트로피 아이콘
     [SerializeField] private float trophyFade = 0.15f;
@@ -54,6 +60,8 @@ public class RankingRow : MonoBehaviour
 
     bool UseBgAsChip => colorChip == null || colorChip == bg;
 
+    private string _profileId;
+    
     public int CurrentRank
     {
         get
@@ -99,6 +107,38 @@ public class RankingRow : MonoBehaviour
     {
         if (rankText) rankText.text = rank.ToString();
         if (bg && !UseBgAsChip) bg.color = normalColor;
+        
+    }
+
+    public async void SetProfile(string profileId)
+    {
+        // 프로필이 없거나 동일 키면 아이콘 로드 생략
+        if (!profileImage || string.IsNullOrEmpty(profileId) ||
+            string.Equals(profileId, _profileId, System.StringComparison.Ordinal))
+            return;
+        
+        _profileId = profileId;
+        Debug.Log($"<color=red>{profileId}</color>");
+     
+        
+        try
+        {
+            var sprite = await CustomizationManager.Instance.GetIconAsync(profileId);
+            Debug.Log( "sprite is null? " + (sprite==null));
+            // 메인 스레드에서 UI 변경하기
+            await UniTask.SwitchToMainThread();
+            
+            if (!this || !profileImage) return;
+            profileImage.sprite = sprite;
+            profileImage.enabled = true;
+            
+            Debug.Log($"profile image sprite = {profileImage.sprite.name}");
+
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"[RankingRow] Icon load failed ({profileId}): {e.Message}");
+        }
     }
 
     // === 실시간용: 이름은 그대로, 순위 숫자만 '플립' 후 셋 ===

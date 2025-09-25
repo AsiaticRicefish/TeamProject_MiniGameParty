@@ -763,8 +763,36 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1330773126853593739, guid: 781e76cf87ee34622a365677a99e99ea,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 9132782326687046630}
   m_SourcePrefab: {fileID: 100100000, guid: 781e76cf87ee34622a365677a99e99ea, type: 3}
+--- !u!1 &2749160530810769770 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1330773126853593739, guid: 781e76cf87ee34622a365677a99e99ea,
+    type: 3}
+  m_PrefabInstance: {fileID: 3769831696203946977}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &9132782326687046630
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2749160530810769770}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0bde7ffac2943d98d0b7d5e05bc4ad9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playOnlyWhenInteractable: 1
+  buttonClickSfx: 0
+  toggleOnSfx: 0
+  toggleOffSfx: 0
+  playToggleOnSfx: 1
+  playToggleOffSfx: 0
 --- !u!224 &5624954358833760973 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 8817762041393369388, guid: 781e76cf87ee34622a365677a99e99ea,
@@ -777,7 +805,7 @@ MonoBehaviour:
     type: 3}
   m_PrefabInstance: {fileID: 3769831696203946977}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 2749160530810769770}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}

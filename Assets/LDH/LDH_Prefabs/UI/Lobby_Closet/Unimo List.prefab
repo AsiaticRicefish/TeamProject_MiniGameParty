@@ -344,6 +344,7 @@ GameObject:
   - component: {fileID: 6144240726676846977}
   - component: {fileID: 2105246146845934657}
   - component: {fileID: 5642806635651280743}
+  - component: {fileID: 7638668292402889913}
   m_Layer: 0
   m_Name: Unimo List
   m_TagString: Untagged
@@ -478,3 +479,21 @@ MonoBehaviour:
   label: {fileID: 0}
   ownedColor: {r: 1, g: 1, b: 1, a: 1}
   lockColor: {r: 1, g: 1, b: 1, a: 0.5}
+--- !u!114 &7638668292402889913
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5923315007654994935}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0bde7ffac2943d98d0b7d5e05bc4ad9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playOnlyWhenInteractable: 1
+  buttonClickSfx: 0
+  toggleOnSfx: 0
+  toggleOffSfx: 0
+  playToggleOnSfx: 1
+  playToggleOffSfx: 0

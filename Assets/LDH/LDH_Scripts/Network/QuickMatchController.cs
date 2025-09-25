@@ -26,14 +26,18 @@ namespace Network
         [Header("UI")]
         [SerializeField] private Button quickMatchButton;
         
-        [Header("Config")]
-       
+        //----- config
         private UI_Popup_QuickMatch _popupQuickMatch;  // 상태/인원/타이머 표시용 팝업
         private CancellationTokenSource _cts; // 팝업 생명주기 + 컨트롤러 생명주기에 연동될 토큰
         
+        [Header("Flag")]
         public bool starting;  // 중복 시작 방지 플래그
         private bool _requesting; // 빠른 매칭 시작 버튼 중복 연타 방지 플래그
 
+        [Header("Sound")] [SerializeField]
+        private Define_LDH.SfxKey matchingSfx;
+
+        
         private void Start()
         {
             // 빠른 매칭 버튼 클릭 이벤트 바인딩
@@ -281,6 +285,7 @@ namespace Network
 
             if (string.Equals(Define_LDH.MatchState.Complete.ToString(), state))
             {
+                SoundManager.Instance.PlaySFX(matchingSfx.ToString());
                 _popupQuickMatch.SetStatus(true);
                 _popupQuickMatch.SetCancelable(false);
                 

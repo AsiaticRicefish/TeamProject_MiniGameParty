@@ -25,6 +25,10 @@ public class GamePlayer
     #region 플레이어 상태 정보
     public bool IsReady { get; private set; }       // 현재 플레이어 게임 입장 준비 상태
     public bool IsTurn { get; private set; }        // 현재 플레이어의 턴 여부
+
+    public string CharacterId { get; private set; }
+    public string EquipId { get; private set; }
+    
     #endregion
     
     #region 미니게임 관련 데이터
@@ -49,13 +53,16 @@ public class GamePlayer
 
     // 전체 게임에서 이긴 횟수 (이건 순위 정렬이나 추후에 랭크에 사용하는 경우 사용)
 
-    public void Init(string id, string nickname)
+    public void Init(string id, string nickname, string cId = "", string eId = "")
     {
         PlayerId = id;
         Nickname = nickname;
-
+        
         IsReady = false;
         IsTurn = false;
+
+        CharacterId = cId;
+        EquipId = eId;
         
         Score = 0;
         LastMiniGameRank = 0;

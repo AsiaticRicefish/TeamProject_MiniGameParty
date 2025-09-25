@@ -97,18 +97,18 @@ namespace LDH_MainGame
                 yield return WaitForSingletonReady(parType);
             }
             
-            Util_LDH.ConsoleLog(this, "메인 게임에 필요한 Manager들 생성 완료");
+            // Util_LDH.ConsoleLog(this, "메인 게임에 필요한 Manager들 생성 완료");
         }
 
         protected override IEnumerator InitializeSequentialManagers()
         {
-            Util_LDH.ConsoleLog(this, "SequenctialManager 초기화를 시작합니다.");
+            // Util_LDH.ConsoleLog(this, "SequenctialManager 초기화를 시작합니다.");
             yield return StartCoroutine(InitializeComponentsSafely(_sequential));
         }
 
         protected override IEnumerator InitializeParallelManagers()
         {
-            Util_LDH.ConsoleLog(this, "ParallelManager 초기화를 시작합니다.");
+            // Util_LDH.ConsoleLog(this, "ParallelManager 초기화를 시작합니다.");
             yield return StartCoroutine(InitializeCoroutineComponentsSafely(_parallel));
         }
 
@@ -120,7 +120,7 @@ namespace LDH_MainGame
             _uiLoading?.SetProgress(1f);
             
             // 모든 초기화가 완료되고 게임 시작을 알림
-            Util_LDH.ConsoleLog(this, "모든 초기화가 완료되었습니다. 게임을 시작합니다.");
+            // Util_LDH.ConsoleLog(this, "모든 초기화가 완료되었습니다. 게임을 시작합니다.");
 
             // 포톤뷰 싱크 플래그 끄기
             PhotonViewSync.Instance.Clear();
@@ -179,13 +179,13 @@ namespace LDH_MainGame
             _seqTypeMap.Clear();
             _parTypeMap.Clear();
             
-            Debug.Log($"initialize objects 개수 : {initializeObjects.Length}");
+            // Debug.Log($"initialize objects 개수 : {initializeObjects.Length}");
             foreach (var go in initializeObjects)
             {
                 Register(go);
             }
             
-            Util_LDH.ConsoleLog(this, "초기화 대상 리스트, 맵 세팅 완료");
+            // Util_LDH.ConsoleLog(this, "초기화 대상 리스트, 맵 세팅 완료");
             yield return null;
         }
         
@@ -213,10 +213,10 @@ namespace LDH_MainGame
                 photonView.RPC(nameof(RPC_AnnounceRoomObjects), RpcTarget.AllBuffered, ids.ToArray());
             }
             
-            Debug.Log("마스터가 viewid 뿌릴때까지 대기");
+            // Debug.Log("마스터가 viewid 뿌릴때까지 대기");
             // 1) 마스터가 뿌린 ViewID 목록을 받을 때까지 대기
             yield return new WaitUntil(() => spawnedViewIds != null && spawnedViewIds.Length == roomObjectPaths.Length);
-            Debug.Log("내 로컬에 뷰 아이디 생길때까지 대기");
+            // Debug.Log("내 로컬에 뷰 아이디 생길때까지 대기");
             // 2) 내 로컬에 해당 ViewID 들이 실제로 생길 때까지 대기
             yield return new WaitUntil(() =>
             {
@@ -231,7 +231,7 @@ namespace LDH_MainGame
                 }
                 return true;
             });
-            Debug.Log("완료 1프레임 대기 하고 메서드 종료");
+            // Debug.Log("완료 1프레임 대기 하고 메서드 종료");
             // 3) 컴포넌트 Awake/Start 보장 위해 한 프레임 더 쉼
             spawnedViewIds = null;
             yield return null;
@@ -247,7 +247,7 @@ namespace LDH_MainGame
 
         public void Register(GameObject go)
         {
-            Debug.Log("등록 시작");
+            // Debug.Log("등록 시작");
             var seqHashSet = new HashSet<object>();
             var parHashSet = new HashSet<object>();
 
@@ -256,14 +256,14 @@ namespace LDH_MainGame
             {
                 if (mb is IGameComponent seq && seqHashSet.Add(seq))
                 {
-                    Debug.Log("순차 대상 대상");
+                    // Debug.Log("순차 대상 대상");
                     _sequential.Add(seq);
                     _seqTypeMap[seq] = seq.GetType();
                 }
 
                 if (mb is ICoroutineGameComponent par && parHashSet.Add(par))
                 {
-                    Debug.Log($"병렬 대상 : {go.name}");
+                    // Debug.Log($"병렬 대상 : {go.name}");
                     _parallel.Add(par);
                     _parTypeMap[par] = par.GetType();
                 }

@@ -19,3 +19,7 @@ MonoBehaviour:
     gameType: 5
   - sceneName: Rhythm
     gameType: 4
+  - sceneName: LDH_LobbyScene
+    gameType: 1
+  - sceneName: LDH_MainMapScene
+    gameType: 2

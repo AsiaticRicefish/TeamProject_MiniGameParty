@@ -1,11 +1,40 @@
 using System.Collections;
 using System.Collections.Generic;
+using LDH_Util;
 using UnityEngine;
 
 namespace PMS_Util
 {
+    public enum SH_GameStateType
+    {
+        None,
+        Init,
+        CardSelect,
+        GamePlay,
+        TurnCheck,
+        CheckGameWinner,
+        GameEnd,
+        Pause
+    }
+
+    public static class GameStateName
+    {
+        public static string ToString(SH_GameStateType stateType) => stateType switch
+        {
+            SH_GameStateType.Init => "InitState",
+            SH_GameStateType.CardSelect => "CardSelectState",
+            SH_GameStateType.GamePlay => "GamePlayState",
+            SH_GameStateType.TurnCheck => "TurnCheckState",
+            SH_GameStateType.CheckGameWinner => "GameWinnerCheckState",
+            SH_GameStateType.GameEnd => "GameEndState",
+            SH_GameStateType.Pause => "PauseState",
+            _ => "Unknown"
+        };
+    }
+
     public class Define_PMS
     {
+
         public static class SoundKeys
         {
             //BGM
@@ -22,5 +51,29 @@ namespace PMS_Util
             public static readonly string GameLoseSFX = "GameLoseSFX";
             public static readonly string GameEndSFX = "GameEndSFX";
         }
+
+        /*
+        public enum SH_GameStateType
+        {
+            CardSelect,
+            GamePlay,
+            TurnCheck,
+            CheckGameWinner,
+            GameEnd
+        }
+
+        public static class GameStateName
+        {
+            public static string ToString(SH_GameStateType stateType) => stateType switch
+            {
+                SH_GameStateType.CardSelect => "CardSelectState",
+                SH_GameStateType.GamePlay => "GamePlayState",
+                SH_GameStateType.TurnCheck => "TurnCheckState",
+                SH_GameStateType.CheckGameWinner => "GameWinnerCheckState",
+                SH_GameStateType.GameEnd => "GameEndState",
+                _ => "Unknown"
+            };
+        }
+        */
     }
 }

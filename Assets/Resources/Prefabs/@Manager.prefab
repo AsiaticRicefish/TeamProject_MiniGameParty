@@ -86,8 +86,16 @@ MonoBehaviour:
   isPersistent: 1
   _bgmList: []
   _rhythmList: []
-  _gameSfxList: []
-  _uiSfxList: []
+  _gameSfxList:
+  - key: 8
+    clip: {fileID: 8300000, guid: 16142cde93ae440f393c710c405ffa82, type: 3}
+  - key: 9
+    clip: {fileID: 8300000, guid: abb38e2b8bfe34308918b1047bf93787, type: 3}
+  _uiSfxList:
+  - key: 0
+    clip: {fileID: 8300000, guid: 2cab97601cdd94654b1d0fc487601469, type: 3}
+  - key: 1
+    clip: {fileID: 8300000, guid: 89138ab3d47044009932d54f0a343883, type: 3}
   audioMixer: {fileID: 24100000, guid: eba9e5d0d1f1fab4ea6c116f2f25bfd0, type: 2}
   bgmMixerGroup: {fileID: 44504754267785944, guid: eba9e5d0d1f1fab4ea6c116f2f25bfd0,
     type: 2}
@@ -99,6 +107,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 9381c5ddb975ab7459eb992cd7369312, type: 2}
   - {fileID: 11400000, guid: a7dc0ee4d9bb4d2419e317b62174883b, type: 2}
   - {fileID: 11400000, guid: 9630081833c04f849a8e30288083fd2e, type: 2}
+  - {fileID: 11400000, guid: bee09325fb49a4202bf435c09dc098c7, type: 2}
+  - {fileID: 11400000, guid: 8024544eee1594fa68c412d65b86c3c4, type: 2}
   sceneMappingConfig: {fileID: 11400000, guid: 5f345a74cd81c684684e972398d13743, type: 2}
   currentGameType: 0
   defaultBgmFade: 0.5

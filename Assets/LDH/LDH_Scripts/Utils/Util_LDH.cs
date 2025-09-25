@@ -3,7 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
+using Customization;
 using Photon.Pun;
+using Photon.Realtime;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -142,11 +144,11 @@ namespace LDH_Util
             
             foreach (Transform child in parent)
             {
-                Debug.Log($"[Util] {child.gameObject.name}를 파괴합니다.");
+//                Debug.Log($"[Util] {child.gameObject.name}를 파괴합니다.");
                 Object.Destroy(child.gameObject);
             }
             
-            Debug.Log($"[Util] {childCount}개의 자식을 파괴했습니다.");
+//            Debug.Log($"[Util] {childCount}개의 자식을 파괴했습니다.");
         }
 
         public static long[] SumByCurrencyType(IEnumerable<(Define_LDH.CurrencyType type, long price)> priceInfo)
@@ -387,6 +389,40 @@ namespace LDH_Util
             }
 
             PhotonNetwork.LocalPlayer.SetCustomProperties(clearProperties);
+        }
+        
+        public static UnimoCombo GetCurrentRoomPlayerUnimoCombo(string uid)
+        {
+            if (!PhotonNetwork.IsConnectedAndReady || !PhotonNetwork.InRoom)                 
+                return new UnimoCombo(Define_LDH.DefaultData.DefaultCharacter, Define_LDH.DefaultData.DefaultEquip);
+
+            Player player = null;
+            foreach (Player p in PhotonNetwork.CurrentRoom.Players.Values)
+            {
+                if (p.CustomProperties.TryGetValue(
+                        Define_LDH.PlayerProps.GetPlayerInfoKey(Define_LDH.PlayerProps.PlayerInfoKey.Uid),
+                        out object value) && value is string playerUid && playerUid.Equals(uid))
+                {
+                    player = p;
+                    break;
+                }
+            }
+            if (player == null)
+            {
+                Debug.LogWarning("player is null. Return Default Character ID");
+                return new UnimoCombo(Define_LDH.DefaultData.DefaultCharacter, Define_LDH.DefaultData.DefaultEquip);
+            }
+            
+            string charId = player
+                .CustomProperties[
+                    Define_LDH.PlayerProps.GetPlayerInfoKey(Define_LDH.PlayerProps.PlayerInfoKey.CharacterId)]
+                .ToString();
+            string equipId =  player
+                .CustomProperties[
+                    Define_LDH.PlayerProps.GetPlayerInfoKey(Define_LDH.PlayerProps.PlayerInfoKey.EquipId)]
+                .ToString();
+
+            return new UnimoCombo(charId, equipId);
         }
 
         #endregion

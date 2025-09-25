@@ -81,7 +81,7 @@ namespace LDH_UI
                 }
             }
            
-            Manager.UI.EnqueueToast(result.Message);
+            Manager.UI.EnqueueToast(result.Success? Define_LDH.ToastType.Check: Define_LDH.ToastType.Error ,result.Message);
             
             //UI 닫기
             RequestClose();
