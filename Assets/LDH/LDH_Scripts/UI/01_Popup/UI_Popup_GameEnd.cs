@@ -17,14 +17,13 @@ namespace LDH_UI
 
         [Header("Text")] [SerializeField] private string miniGameEnd = "게임 종료";
         [SerializeField] private string matchEnd = "매치 종료";
-        
-        
-        [Header("Sound")] 
-        [SerializeField] private Define_LDH.SfxKey miniGameEndSfx = Define_LDH.SfxKey.Main_MiniGameEnd;
-        [SerializeField] private Define_LDH.SfxKey matchEndSfx = Define_LDH.SfxKey.Main_MatchEnd;
+
+
+        [Header("Sound")] [SerializeField] private SfX_Game miniGameEndSfx = SfX_Game.SFX_MiniGameEnd;
+        [SerializeField] private SfX_Game matchEndSfx = SfX_Game.SFX_MatchEnd;
         
         private Vector2 originAnchorPos;
-        private Define_LDH.SfxKey currentSfxType;
+        private SfX_Game currentSfxType;
 
         public void SetMiniGameEnd()
         {
@@ -44,7 +43,7 @@ namespace LDH_UI
             originAnchorPos = textRect.anchoredPosition;
             textRect.anchoredPosition = originAnchorPos + new Vector2(xOffset, 0f);
                
-            SoundManager.Instance.PlaySFX(currentSfxType.ToString());
+            SoundManager.Instance.PlaySFX_GAME(currentSfxType);
             
             cg.alpha = 1f;
 

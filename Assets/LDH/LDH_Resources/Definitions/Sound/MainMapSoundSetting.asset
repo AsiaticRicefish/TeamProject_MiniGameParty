@@ -18,5 +18,5 @@ MonoBehaviour:
   defaultBGM: 
   bgmVolumeMultiplier: 1
   sfxVolumeMultiplier: 1
-  autoUnloadOnSceneChange: 1
+  autoUnloadOnSceneChange: 0
   maxCachedClips: 15

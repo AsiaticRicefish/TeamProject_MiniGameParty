@@ -86,9 +86,14 @@ MonoBehaviour:
   isPersistent: 1
   _bgmList: []
   _rhythmList: []
-  _gameSfxList: []
+  _gameSfxList:
+  - key: 8
+    clip: {fileID: 8300000, guid: 16142cde93ae440f393c710c405ffa82, type: 3}
+  - key: 9
+    clip: {fileID: 8300000, guid: abb38e2b8bfe34308918b1047bf93787, type: 3}
   _uiSfxList:
-  - {fileID: 8300000, guid: 2cab97601cdd94654b1d0fc487601469, type: 3}
+  - key: 0
+    clip: {fileID: 8300000, guid: 2cab97601cdd94654b1d0fc487601469, type: 3}
   audioMixer: {fileID: 24100000, guid: eba9e5d0d1f1fab4ea6c116f2f25bfd0, type: 2}
   bgmMixerGroup: {fileID: 44504754267785944, guid: eba9e5d0d1f1fab4ea6c116f2f25bfd0,
     type: 2}

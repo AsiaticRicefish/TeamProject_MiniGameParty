@@ -8,25 +8,42 @@ using UnityEngine.Audio;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
 using System;
+using Cysharp.Threading.Tasks;
+
+[Serializable]
+public struct GameClipEntry
+{
+    public SfX_Game key;
+    public AudioClip clip;
+}
+[Serializable]
+public struct UIClipEntry
+{
+    public SFX_UI key;
+    public AudioClip clip;
+}
+
 
 public class SoundManager : CombinedSingleton<SoundManager>
 {
-    [Header("Legacy Audio Arrays (기존 방식)")]
+    [Header("Legacy Audio Arrays (기존 방식)")] 
     [SerializeField] AudioClip[] _bgmList;
     [SerializeField] AudioClip[] _rhythmList;
-    [SerializeField] AudioClip[] _gameSfxList;
-    [SerializeField] AudioClip[] _uiSfxList;
+    [SerializeField] List<GameClipEntry> _gameSfxList;
+    [SerializeField] List<UIClipEntry> _uiSfxList;
 
-    [Header("Audio Mixer")]
+    private Dictionary<string, AudioClip> _gameSfxMap, _uiSfxMap;
+    
+    [Header("Audio Mixer")] 
     [SerializeField] private AudioMixer audioMixer;
     [SerializeField] private AudioMixerGroup bgmMixerGroup;
     [SerializeField] private AudioMixerGroup sfxMixerGroup;
 
-    [Header("Audio Sources")]
+    [Header("Audio Sources")] 
     [SerializeField] AudioSource _bgmAudioSource; // A/B 구성
     [SerializeField] AudioSource _sfxAudioSource; // Pool
 
-    [Header("Addressable System")]
+    [Header("Addressable System")] 
     [SerializeField] private GameSoundSettings[] allGameSettings;
     [SerializeField] private SceneSoundMappingConfig sceneMappingConfig;
     [SerializeField] private GameType currentGameType = GameType.Title;
@@ -35,14 +52,21 @@ public class SoundManager : CombinedSingleton<SoundManager>
     private GameSoundSettings _currentSettings;
 
     #region Addressable 캐시 (내부 처리용)
+
     private Dictionary<string, AudioClip> _loadedClips = new Dictionary<string, AudioClip>();
-    private Dictionary<string, AsyncOperationHandle<AudioClip>> _loadingHandles = new Dictionary<string, AsyncOperationHandle<AudioClip>>();
+
+    private Dictionary<string, AsyncOperationHandle<AudioClip>> _loadingHandles =
+        new Dictionary<string, AsyncOperationHandle<AudioClip>>();
+
     private Dictionary<string, Task<AudioClip>> _loadingTasks = new Dictionary<string, Task<AudioClip>>();
+
     #endregion
 
     #region 메모리 관리
+
     private Dictionary<string, float> _clipLastUsedTime = new Dictionary<string, float>();
     private List<string> _keepInMemoryClips = new List<string>();
+
     #endregion
 
     // 볼륨
@@ -50,20 +74,24 @@ public class SoundManager : CombinedSingleton<SoundManager>
     public float sfxSoundVolume { get; private set; } = 1f;
 
     #region 최적화
+
     // BGM 크로스페이드용 A/B
-    [Header("BGM Crossfade")]
-    [SerializeField] private float defaultBgmFade = 0.5f;
+    [Header("BGM Crossfade")] [SerializeField]
+    private float defaultBgmFade = 0.5f;
+
     private AudioSource _bgmA, _bgmB;
     private AudioSource _bgmActive, _bgmIdle;
     private CancellationTokenSource _bgmCts; // BGM 전환 취소 토큰
 
     // SFX 풀
-    [Header("SFX Voices")]
-    [SerializeField, Range(1, 16)] private int sfxVoices = 8;
+    [Header("SFX Voices")] [SerializeField, Range(1, 16)]
+    private int sfxVoices = 8;
+
     private readonly List<AudioSource> _sfxPool = new();
     private int _sfxCursor = 0;
 
     private int _loadVersion = 0;
+
     #endregion
 
     protected override void Awake()
@@ -71,9 +99,14 @@ public class SoundManager : CombinedSingleton<SoundManager>
         base.Awake();
         InitializeAudioSources();
         LoadVolumeSettings();
+        BuildMaps();
 
         SceneManager.sceneLoaded += OnSceneLoaded;
         SceneManager.sceneUnloaded += OnSceneUnloaded;
+
+        //활성 씬 변경 감지
+        SceneManager.activeSceneChanged += OnActiveSceneChanged;
+
 
         // 타이틀 사운드로 초기화
         LoadGameSounds(GameType.Title);
@@ -84,6 +117,8 @@ public class SoundManager : CombinedSingleton<SoundManager>
         base.OnDestroy();
         SceneManager.sceneLoaded -= OnSceneLoaded;
         SceneManager.sceneUnloaded -= OnSceneUnloaded;
+        SceneManager.activeSceneChanged -= OnActiveSceneChanged;
+
 
         _bgmCts?.Cancel();
         _bgmCts?.Dispose();
@@ -102,6 +137,7 @@ public class SoundManager : CombinedSingleton<SoundManager>
             bgmObjA.transform.SetParent(transform);
             _bgmAudioSource = bgmObjA.AddComponent<AudioSource>();
         }
+
         _bgmA = _bgmAudioSource;
         _bgmA.playOnAwake = false;
         _bgmA.loop = true;
@@ -128,6 +164,7 @@ public class SoundManager : CombinedSingleton<SoundManager>
             sfxLegacy.transform.SetParent(transform);
             _sfxAudioSource = sfxLegacy.AddComponent<AudioSource>();
         }
+
         if (sfxMixerGroup) _sfxAudioSource.outputAudioMixerGroup = sfxMixerGroup;
 
         for (int i = 0; i < sfxVoices; i++)
@@ -148,7 +185,44 @@ public class SoundManager : CombinedSingleton<SoundManager>
         #endregion
     }
 
+    #region Build Map(Dictionary)
+
+    private void BuildMaps()
+    {
+        _gameSfxMap = BuildMap(_gameSfxList,
+            e => e.key.ToString(),
+            e => e.clip);
+
+        _uiSfxMap = BuildMap(_uiSfxList,
+            e => e.key.ToString(),
+            e => e.clip);
+    }
+    
+    private static Dictionary<string, AudioClip> BuildMap<T>(
+        IEnumerable<T> entries,
+        Func<T, string> keySelector,
+        Func<T, AudioClip> clipSelector)
+    {
+        var dict = new Dictionary<string, AudioClip>(StringComparer.Ordinal);
+        if (entries == null) return dict;
+
+        foreach (var e in entries)
+        {
+            var key = keySelector(e);
+            var clip = clipSelector(e);
+            if (string.IsNullOrEmpty(key) || clip == null) continue;
+
+            dict[key] = clip;
+        }
+        return dict;
+    }
+
+
+    #endregion
+    
+
     #region BGM
+
     public void PlayBGM(Bgms bgms)
     {
         if (_bgmList == null || (int)bgms >= _bgmList.Length) return;
@@ -185,19 +259,20 @@ public class SoundManager : CombinedSingleton<SoundManager>
     /// <param name="sfx">UI SFX 사운드</param>
     public void PlaySFX_UI(SFX_UI sfx)
     {
-        if (_uiSfxList == null || (int)sfx >= _uiSfxList.Length) return;
-        _sfxAudioSource.PlayOneShot(_uiSfxList[(int)sfx]);
+        if (_uiSfxList == null || !_uiSfxMap.TryGetValue(sfx.ToString(), out var clip)) return;
+        _sfxAudioSource.PlayOneShot(clip);
     }
 
     public void PlaySFX_GAME(SfX_Game sfx)
     {
-        if (_gameSfxList == null || (int)sfx >= _gameSfxList.Length) return;
-        _sfxAudioSource.PlayOneShot(_gameSfxList[(int)sfx]);
+        if (_uiSfxList == null || !_gameSfxMap.TryGetValue(sfx.ToString(), out var clip)) return;
+        _sfxAudioSource.PlayOneShot(clip);
     }
 
     #endregion
 
     #region 리듬게임 관련 로직
+
     public Bgm_RhythmGame RandomSelectBGM()
     {
         if (_rhythmList == null || _rhythmList.Length == 0) return 0;
@@ -205,10 +280,12 @@ public class SoundManager : CombinedSingleton<SoundManager>
         int index = UnityEngine.Random.Range(0, _rhythmList.Length);
         return (Bgm_RhythmGame)index;
     }
+
     #endregion
 
 
     #region Addressable으로 사운드 로딩
+
     /// <summary>
     /// 게임 사운드 로딩
     /// </summary>
@@ -258,6 +335,7 @@ public class SoundManager : CombinedSingleton<SoundManager>
 
     public void PauseBGM() => _bgmAudioSource.Pause();
     public void ResumeBGM() => _bgmAudioSource.UnPause();
+
     public void StopSFX(bool clearClip = true)
     {
         foreach (var s in _sfxPool)
@@ -284,6 +362,7 @@ public class SoundManager : CombinedSingleton<SoundManager>
 
 
     #region Volume Control
+
     private AudioMixer MixerForBGM => bgmMixerGroup ? bgmMixerGroup.audioMixer : audioMixer;
     private AudioMixer MixerForSFX => sfxMixerGroup ? sfxMixerGroup.audioMixer : audioMixer;
 
@@ -300,7 +379,7 @@ public class SoundManager : CombinedSingleton<SoundManager>
 
         else
         {
-            dbVolume = -80f;                        // 음소거
+            dbVolume = -80f; // 음소거
         }
 
         var mixer = MixerForBGM;
@@ -347,7 +426,8 @@ public class SoundManager : CombinedSingleton<SoundManager>
     #endregion
 
     #region 내부 Addressable 처리
-    private async void LoadGameSoundsAsync(GameType gameType)
+
+    private async UniTask LoadGameSoundsAsync(GameType gameType)
     {
         int myVersion = ++_loadVersion;
         try
@@ -432,7 +512,6 @@ public class SoundManager : CombinedSingleton<SoundManager>
             src.spatialBlend = 0f;
             src.pitch = 1f;
             src.PlayOneShot(clip, CalculateSFXVolume(soundData.defaultVolume));
-
         }
         catch (Exception ex)
         {
@@ -509,6 +588,7 @@ public class SoundManager : CombinedSingleton<SoundManager>
     #endregion
 
     #region Helper
+
     private void LoadVolumeSettings()
     {
         bgmSoundVolume = PlayerPrefs.GetFloat("BGMVolume", 1f);
@@ -529,6 +609,7 @@ public class SoundManager : CombinedSingleton<SoundManager>
         float gameMultiplier = _currentSettings?.sfxVolumeMultiplier ?? 1f;
         return sfxSoundVolume * gameMultiplier * defaultVolume;
     }
+
     #endregion
 
     #region 메모리 관리
@@ -598,6 +679,7 @@ public class SoundManager : CombinedSingleton<SoundManager>
         {
             UnloadAudioClip(clipName);
         }
+
         _loadedClips.Clear();
         _clipLastUsedTime.Clear();
         _loadingHandles.Clear();
@@ -634,17 +716,56 @@ public class SoundManager : CombinedSingleton<SoundManager>
                 if (!_keepInMemoryClips.Contains(clipName))
                     clipsToUnload.Add(clipName);
             }
+
             foreach (string clipName in clipsToUnload)
                 UnloadAudioClip(clipName);
         }
     }
 
+    // 활성 씬이 바뀌는 그 순간에 세팅 교체
+    private async void OnActiveSceneChanged(Scene oldScene, Scene newScene)
+    {
+        if (sceneMappingConfig == null)
+        {
+            Debug.LogWarning("SceneSoundMappingConfig가 설정되지 않았습니다.");
+            return;
+        }
+
+        var gt = sceneMappingConfig.GetGameTypeForScene(newScene.name);
+
+        if (currentGameType == gt && _currentSettings != null)
+        {
+            Debug.Log($"<color=yellow> current game type == gt : {currentGameType}</color>");
+            return;
+        }
+
+        Debug.Log($"<color=yellow> current game type != gt : {currentGameType}</color>");
+
+        GameSoundSettings settings = Array.Find(allGameSettings, s => s.gameType == gt);
+
+        if (settings == null)
+        {
+            Debug.LogWarning($"GameSoundSettings not found for {gt}");
+            return;
+        }
+
+        _currentSettings = settings;
+        currentGameType = gt;
+
+
+        // 믹서 재적용
+        SetBGMSoundVolume(bgmSoundVolume);
+        SetSFXSoundVolume(sfxSoundVolume);
+
+        Debug.Log($"[SoundManager] ActiveScene → '{newScene.name}', GameType → {gt}, GameSetting 변경 완료");
+    }
+
     #endregion
 
     #region 내부 유틸: SFX 보이스/크로스페이드
+
     private AudioSource AcquireSfxVoice()
     {
-
         for (int i = 0; i < _sfxPool.Count; i++)
         {
             int idx = (_sfxCursor + i) % _sfxPool.Count;
@@ -699,7 +820,9 @@ public class SoundManager : CombinedSingleton<SoundManager>
                 _bgmActive.volume = 1f;
                 _bgmIdle.volume = 1f;
 
-                var tmp = _bgmActive; _bgmActive = _bgmIdle; _bgmIdle = tmp;
+                var tmp = _bgmActive;
+                _bgmActive = _bgmIdle;
+                _bgmIdle = tmp;
             }
         }
     }
@@ -724,7 +847,7 @@ public class SoundManager : CombinedSingleton<SoundManager>
 
             // 로드해서 길이 얻기
             var clip = await LoadAudioClipAsync(soundData);
-            
+
             if (clip == null)
                 return fallbackSeconds;
 
