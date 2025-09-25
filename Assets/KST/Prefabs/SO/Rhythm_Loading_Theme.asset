@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Rhythm_Loading_Theme
   m_EditorClassIdentifier: 
   gameTitle: "\uC2A4\uD0C0 \uC774\uC2A4\uCF00\uC774\uD504"
-  bigDescription: "\uC2A4\uD0C0 \uC774\uC2A4\uCF00\uC774\uD504"
+  bigDescription: 
   smallDescription: "\uB178\uD2B8\uB97C \uCD5C\uB300\uD55C \uC815\uD655\uD558\uAC8C
     \uB9DE\uCDB0\uC11C 1\uB4F1\uC744 \uB178\uB824\uBCF4\uB3C4\uB85D\uD558\uC138\uC694!"
   titlePanelColor: {r: 0, g: 0, b: 0, a: 1}
