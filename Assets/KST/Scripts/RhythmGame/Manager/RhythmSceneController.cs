@@ -128,7 +128,7 @@ public class RhythmSceneController : BaseGameSceneController
             if (_uiLoading)
             {
                 _uiLoading.SetProgress(1.0f);
-                _uiLoading.SetBigDescription("READY!");
+                // _uiLoading.SetBigDescription("READY!");
             }
 
             // 로딩창 닫기
