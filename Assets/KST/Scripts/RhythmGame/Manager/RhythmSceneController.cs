@@ -42,7 +42,7 @@ public class RhythmSceneController : BaseGameSceneController
         {
             // 기본 텍스트라도 설정
             _uiLoading.SetTitle("RHYTHM GAME");
-            _uiLoading.SetBigDescription("준비 중...");
+            //_uiLoading.SetBigDescription("준비 중...");
             _uiLoading.SetAllPanelColors(Color.black, Color.gray, Color.white);
         }
 
@@ -128,7 +128,7 @@ public class RhythmSceneController : BaseGameSceneController
             if (_uiLoading)
             {
                 _uiLoading.SetProgress(1.0f);
-                _uiLoading.SetBigDescription("READY!");
+                //_uiLoading.SetBigDescription("READY!");
             }
 
             // 로딩창 닫기

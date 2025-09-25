@@ -60,7 +60,7 @@ namespace LDH_UI
             
             if (pages.Count > 0 && pages[defaultIndex].toggle != null)
             {
-                pages[defaultIndex].toggle.isOn = true; // SetActiveTab 호출 트리거
+                pages[defaultIndex].toggle.SetIsOnWithoutNotify(true);
             }
         }
 

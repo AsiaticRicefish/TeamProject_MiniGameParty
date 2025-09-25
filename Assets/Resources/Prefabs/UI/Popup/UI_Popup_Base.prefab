@@ -634,6 +634,7 @@ GameObject:
   - component: {fileID: 4016061148109874320}
   - component: {fileID: 6064830093822863786}
   - component: {fileID: 1002215893985018242}
+  - component: {fileID: 212167309750831744}
   m_Layer: 0
   m_Name: Button_Free
   m_TagString: Untagged
@@ -658,8 +659,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 217.76758, y: -69}
-  m_SizeDelta: {x: 335.53516, y: 138}
+  m_AnchoredPosition: {x: 200, y: -69}
+  m_SizeDelta: {x: 300, y: 138}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8842745378382351137
 CanvasRenderer:
@@ -818,6 +819,24 @@ MonoBehaviour:
   m_EffectColor: {r: 0, g: 0, b: 0, a: 0.101960786}
   m_EffectDistance: {x: 0, y: -8}
   m_UseGraphicAlpha: 1
+--- !u!114 &212167309750831744
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3711054530744164138}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0bde7ffac2943d98d0b7d5e05bc4ad9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playOnlyWhenInteractable: 1
+  buttonClickSfx: 0
+  toggleOnSfx: 0
+  toggleOffSfx: 0
+  playToggleOnSfx: 1
+  playToggleOffSfx: 0
 --- !u!1 &3813534883603284750
 GameObject:
   m_ObjectHideFlags: 0
@@ -830,6 +849,7 @@ GameObject:
   - component: {fileID: 7165668617978010295}
   - component: {fileID: 2929077861204820199}
   - component: {fileID: 5980879676347894101}
+  - component: {fileID: 6203605684557792308}
   m_Layer: 0
   m_Name: Button_Close
   m_TagString: Untagged
@@ -939,6 +959,24 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &6203605684557792308
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3813534883603284750}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0bde7ffac2943d98d0b7d5e05bc4ad9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playOnlyWhenInteractable: 1
+  buttonClickSfx: 0
+  toggleOnSfx: 0
+  toggleOffSfx: 0
+  playToggleOnSfx: 1
+  playToggleOffSfx: 0
 --- !u!1 &4479543076912747110
 GameObject:
   m_ObjectHideFlags: 0
@@ -1090,6 +1128,7 @@ GameObject:
   - component: {fileID: 2729560244383798900}
   - component: {fileID: 468144283267190773}
   - component: {fileID: 7264178523552568570}
+  - component: {fileID: 6139629467454745711}
   m_Layer: 0
   m_Name: Button_Price_Coin
   m_TagString: Untagged
@@ -1114,8 +1153,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 603.30273, y: -69}
-  m_SizeDelta: {x: 335.53516, y: 138}
+  m_AnchoredPosition: {x: 550, y: -69}
+  m_SizeDelta: {x: 300, y: 138}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &9131965328018371663
 CanvasRenderer:
@@ -1274,6 +1313,24 @@ MonoBehaviour:
   m_EffectColor: {r: 0, g: 0, b: 0, a: 0.101960786}
   m_EffectDistance: {x: 0, y: -8}
   m_UseGraphicAlpha: 1
+--- !u!114 &6139629467454745711
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4522544992201537123}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0bde7ffac2943d98d0b7d5e05bc4ad9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playOnlyWhenInteractable: 1
+  buttonClickSfx: 0
+  toggleOnSfx: 0
+  toggleOffSfx: 0
+  playToggleOnSfx: 1
+  playToggleOffSfx: 0
 --- !u!1 &5356960746000461490
 GameObject:
   m_ObjectHideFlags: 0

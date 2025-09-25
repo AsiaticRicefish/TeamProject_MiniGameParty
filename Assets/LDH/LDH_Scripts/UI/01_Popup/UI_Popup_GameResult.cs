@@ -28,9 +28,13 @@ namespace LDH_UI
         protected float endDelay = 2f;
 
 
+
+        
+        
         protected GamePlayer[] _playerResults;
         protected List<UI_ScoreEntry> _scoreEntries = new();
 
+        
         
         public async UniTask SetData(int round, string gameName, GamePlayer[] players)
         {
@@ -46,33 +50,8 @@ namespace LDH_UI
 
                 var uiEntry = Instantiate(scoreEntryPrefab, scoreEntryContent);
                 uiEntry.transform.SetSiblingIndex(i);
-
-                Debug.Log(gp.PlayerId);
-
-                Player player = null;
-                foreach (Player p in PhotonNetwork.CurrentRoom.Players.Values)
-                {
-                    if (p.CustomProperties.TryGetValue(
-                            Define_LDH.PlayerProps.GetPlayerInfoKey(Define_LDH.PlayerProps.PlayerInfoKey.Uid),
-                            out object value) && value is string playerUid && playerUid.Equals(gp.PlayerId))
-                    {
-                        player = p;
-                        break;
-                    }
-                }
                 
-                if (player == null)
-                {
-                    Debug.LogWarning("player is null");
-                    return;
-                }
-
-                string profileId = player
-                    .CustomProperties[
-                        Define_LDH.PlayerProps.GetPlayerInfoKey(Define_LDH.PlayerProps.PlayerInfoKey.CharacterId)]
-                    .ToString();
-
-                await uiEntry.SetData(gp.Nickname, gp.LastMiniGameRank, gp.TotalRank, profileId, gp.Score, gp.WonThisRound);
+                await uiEntry.SetData(gp.Nickname, gp.LastMiniGameRank, gp.TotalRank, gp.CharacterId, gp.Score, gp.WonThisRound);
                 _scoreEntries.Add(uiEntry);
             }
         }

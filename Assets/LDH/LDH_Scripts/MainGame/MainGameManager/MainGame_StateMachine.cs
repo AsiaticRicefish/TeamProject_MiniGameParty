@@ -100,7 +100,7 @@ namespace LDH_MainGame
                 for (int i = 0; i < candidates.Count; i++) candidateIds[i] = candidates[i].id;
                 
                 
-                Debug.Log("<color=green>[MiniGame_FSM] 슬롯 머신 팝업 생성 rpc를 보냅니다.</color>");
+                // Debug.Log("<color=green>[MiniGame_FSM] 슬롯 머신 팝업 생성 rpc를 보냅니다.</color>");
                 MainGameManager.Instance.photonView.RPC(
                     nameof(MainGameManager.Instance.RPC_BuildSlotMachine), RpcTarget.All, candidateIds, targetIndex);
             }

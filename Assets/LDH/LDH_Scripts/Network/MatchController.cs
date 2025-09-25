@@ -142,15 +142,14 @@ namespace Network
                 { { Define_LDH.RoomProps.MatchState, Define_LDH.MatchState.Complete.ToString() } });
 
 
-            StartCoroutine(StartGameWithDelay());
+            StartGameAsync().Forget();
         }
         
         /// 매칭 완료 연출 시간만큼 기다렸다가 씬 이동
-        private IEnumerator StartGameWithDelay()
+        private async UniTask StartGameAsync()
         {
             Debug.Log("[MatchController] 마스터 클라이언트에서 게임을 시작합니다.");
-            yield return new WaitForSeconds(startDelaySec);
-            
+            await UniTask.Delay(TimeSpan.FromSeconds(startDelaySec));
             
             // 안전 재검증(이탈 대비)
             var room = PhotonNetwork.CurrentRoom;

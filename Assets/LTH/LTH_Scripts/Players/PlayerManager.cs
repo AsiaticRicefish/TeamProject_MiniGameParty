@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Customization;
 using DesignPattern;
+using LDH_Util;
 using Photon.Pun;
 using UnityEngine;
 
@@ -28,9 +30,11 @@ public class PlayerManager : CombinedSingleton<PlayerManager>
         {
             // GameObject playerObj = new GameObject($"GamePlayer_{nickname}");
             // var gamePlayer = playerObj.AddComponent<GamePlayer>();
+            
             GamePlayer gamePlayer = new GamePlayer();
-            gamePlayer.Init(id, nickname);
-
+            UnimoCombo unimoCombo = Util_LDH.GetCurrentRoomPlayerUnimoCombo(id);
+            
+            gamePlayer.Init(id, nickname, unimoCombo.characterId, unimoCombo.equipId);
             players.Add(id, gamePlayer);
             // gamePlayers.Add(gamePlayer.PlayerId);
             Debug.Log($"[PlayerManager] Registered new player: {id} ({nickname})");

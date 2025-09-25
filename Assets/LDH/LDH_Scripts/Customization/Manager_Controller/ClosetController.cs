@@ -83,14 +83,14 @@ namespace Customization
 
         private async void Start()
         {
-            Debug.Log("[ClosetController] Wait until managers are initialized");
+//            Debug.Log("[ClosetController] Wait until managers are initialized");
             var token = this.GetCancellationTokenOnDestroy();
             await UniTask.WaitUntil(() => CatalogProvider.IsReady, cancellationToken: token);
             await UniTask.WaitUntil(() => Manager.Custom != null && Manager.Custom.IsReady, cancellationToken: token);
 
             await PrebuildAllAsync();
 
-            Debug.Log("[ClosetController] Apply Initial Selection");
+//            Debug.Log("[ClosetController] Apply Initial Selection");
             _stagedCombo = Manager.Custom.GetEquippedLocal();
             ApplyInitialSelection(_stagedCombo);
         }
@@ -112,7 +112,7 @@ namespace Customization
             if (_built) return;
             _built = true;
 
-            Debug.Log("[ClosetController] start prebuild");
+//            Debug.Log("[ClosetController] start prebuild");
 
             // 1) 정의(Definition) 목록
             var allCharacters = CatalogProvider.CharactersSorted;
@@ -188,7 +188,7 @@ namespace Customization
                         if (!isOn) return;
                         _stagedCombo.characterId = id;
                         ChangeCharacter(id).Forget();
-                        UpdateApplyButton();
+                        UpdateApplyAndResetButton();
                         UpdatePurchaseButton();
                     });
             }
@@ -212,7 +212,7 @@ namespace Customization
                         if (!isOn) return;
                         _stagedCombo.equipId = id;
                         ChangeEquip(id).Forget();
-                        UpdateApplyButton();
+                        UpdateApplyAndResetButton();
                         UpdatePurchaseButton();
                     });
             }
@@ -225,7 +225,7 @@ namespace Customization
             SetActiveGroup(equipmentCanvasGroup, true);
 
 
-            Debug.Log("[ClosetController] prebuild complete");
+//            Debug.Log("[ClosetController] prebuild complete");
         }
 
         #region Toggle Build
@@ -290,9 +290,9 @@ namespace Customization
 
         private async UniTask ChangeCharacter(string id)
         {
-            Debug.Log($"======= ChangeCharacter 시작 =======");
+//            Debug.Log($"======= ChangeCharacter 시작 =======");
 
-            Debug.Log($"[Closet] Change Character → {id}");
+//            Debug.Log($"[Closet] Change Character → {id}");
 
             //입력 막기
 
@@ -304,9 +304,9 @@ namespace Customization
 
         private async UniTask ChangeEquip(string id)
         {
-            Debug.Log($"======= ChangeEquip 시작 =======");
+//            Debug.Log($"======= ChangeEquip 시작 =======");
 
-            Debug.Log($"[Closet] Change Equip → {id}");
+//            Debug.Log($"[Closet] Change Equip → {id}");
 
             await Manager.Custom.ApplyToAvatarAsync(avatarStruct, equipId: id);
             Debug.Log("Apply가 완료되었습니다.");
@@ -344,13 +344,14 @@ namespace Customization
 
         #region Control
 
-        private void UpdateApplyButton()
+        private void UpdateApplyAndResetButton()
         {
             if (_stagedCombo.characterId == null || _stagedCombo.equipId == null) return;
             
             bool valid = Data.HasCharacter(_stagedCombo.characterId) && Data.HasEquip(_stagedCombo.equipId);
             bool modified = Manager.Custom.IsModified(_stagedCombo);
             applyButton.interactable = !_applying && modified && valid;
+            resetButton.interactable = !_applying && modified;
         }
 
         private void UpdatePurchaseButton()
@@ -404,7 +405,7 @@ namespace Customization
             catch(Exception e)
             {
                 Debug.LogException(e);
-                Manager.UI.EnqueueToast("가격 계산 중 오류가 발생했습니다. 나중에 시도해주세요.");
+                Manager.UI.EnqueueToast(ToastType.Error,"가격 계산 중 오류가 발생했습니다. 나중에 시도해주세요.");
             }
         }
         private async void ApplyClicked()
@@ -422,16 +423,16 @@ namespace Customization
             if (ok)
             {
                 Debug.Log($"[Closet] Success saving staged combo");
-                Manager.UI.EnqueueToast("적용되었습니다.");
+                Manager.UI.EnqueueToast(ToastType.Check,"적용되었습니다.");
             }
             else
             {
                 Debug.LogWarning("[Closet] Save failed. Keeping staged preview but not updating saved.");
-                Manager.UI.EnqueueToast("적용에 실패했습니다.");
+                Manager.UI.EnqueueToast(ToastType.Error,"적용에 실패했습니다.");
             }
 
             _applying = false;
-            UpdateApplyButton();
+            UpdateApplyAndResetButton();
             UpdatePurchaseButton();
         }
 
@@ -439,7 +440,7 @@ namespace Customization
         {
             _stagedCombo = Manager.Custom.GetEquippedLocal();
             ApplyInitialSelection(_stagedCombo);
-            UpdateApplyButton();
+            UpdateApplyAndResetButton();
             UpdatePurchaseButton();
         }
 
@@ -457,7 +458,7 @@ namespace Customization
             }
 
             // 버튼 상태 갱신
-            UpdateApplyButton();
+            UpdateApplyAndResetButton();
             UpdatePurchaseButton();
         }
         

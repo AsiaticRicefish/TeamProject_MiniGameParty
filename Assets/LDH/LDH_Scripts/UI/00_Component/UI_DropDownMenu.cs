@@ -1,5 +1,6 @@
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using LDH_Util;
 using Managers;
 using UnityEngine;
 using UnityEngine.UI;
@@ -106,6 +107,12 @@ namespace LDH_UI
             
             var popup = Manager.UI.CreatePopupUI<UI_Popup>(uiPopup.name);
             Manager.UI.ShowPopupUI(popup).Forget();
+        }
+        
+        public void ShowPreparingToast()
+        {
+            Manager.UI.EnqueueToast(Define_LDH.ToastType.Notify, "준비 중입니다.");
+            
         }
     }
 }
