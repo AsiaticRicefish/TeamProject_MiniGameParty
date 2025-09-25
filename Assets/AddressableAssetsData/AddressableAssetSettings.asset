@@ -15,7 +15,7 @@ MonoBehaviour:
   m_DefaultGroup: 8dc196d36c902c4439b304ad961ef94d
   m_currentHash:
     serializedVersion: 2
-    Hash: 2cc814d4db7ee127b9112f0adf9421fe
+    Hash: 7274bc236531a275a49d55d705d920f7
   m_OptimizeCatalogSize: 0
   m_BuildRemoteCatalog: 0
   m_BundleLocalCatalog: 0
@@ -45,12 +45,15 @@ MonoBehaviour:
   m_overridePlayerVersion: '[UnityEditor.PlayerSettings.bundleVersion]'
   m_GroupAssets:
   - {fileID: 11400000, guid: 5fccbc31442274493ac6f16e5687f6b9, type: 2}
+  - {fileID: 11400000, guid: c22353d5e5ddd45e9821066e2fc6710b, type: 2}
   - {fileID: 11400000, guid: 86f15fd145e6745f6b1b6055836a813f, type: 2}
   - {fileID: 11400000, guid: efe7352dfeb4fcb4bade622b861f5da0, type: 2}
   - {fileID: 11400000, guid: 3f37e16251235e84dad36358233d4053, type: 2}
   - {fileID: 11400000, guid: da02b2f145e151c4489fe26b546ea6ed, type: 2}
   - {fileID: 11400000, guid: 466617cd8ed6e4c9fadf194639b081a1, type: 2}
+  - {fileID: 11400000, guid: f77a27542397542129c18e54ed2e6d75, type: 2}
   - {fileID: 11400000, guid: 9fc8afe4261d74344b423eb713d97050, type: 2}
+  - {fileID: 11400000, guid: b13d222192eea4e7ba3c60d13f429573, type: 2}
   - {fileID: 11400000, guid: 50ecc3c23fbb7e944994ad1d4a053c19, type: 2}
   - {fileID: 11400000, guid: aa7d9b149dfd96048843149b878eaa5b, type: 2}
   - {fileID: 11400000, guid: 5ef6ea55b29e7400ab3c02c8bb421c5d, type: 2}
@@ -102,6 +105,7 @@ MonoBehaviour:
     - catalog:currency
     - Sound
     - Effect
+    - ui:toastStyle
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: d81bc7557919e14458ac8c6441537685, type: 2}
