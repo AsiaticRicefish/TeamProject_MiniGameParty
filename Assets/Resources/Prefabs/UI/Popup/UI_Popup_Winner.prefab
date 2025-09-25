@@ -908,6 +908,8 @@ MonoBehaviour:
   userNickName: {fileID: 8760505842890197118}
   unimoClip: {fileID: 7400000, guid: eb1bf34f73b2c12478ceb1ddb7fa155b, type: 2}
   equipClip: {fileID: 7400000, guid: 55a32113ce5620d4bb929973c98d5ca8, type: 2}
+  winnerSfxKey: 9
+  loserSfxKey: 8
 --- !u!1 &4304716357066269838
 GameObject:
   m_ObjectHideFlags: 0
@@ -993,7 +995,6 @@ GameObject:
   m_Component:
   - component: {fileID: 7446520280489811634}
   - component: {fileID: 5382767618071636198}
-  - component: {fileID: 8826382493814881838}
   - component: {fileID: 8833911380841019829}
   m_Layer: 6
   m_Name: UnimoCamera
@@ -1068,14 +1069,6 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!81 &8826382493814881838
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5479939673547711394}
-  m_Enabled: 1
 --- !u!114 &8833911380841019829
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -133,8 +133,9 @@ namespace Customization
             //기존 캐릭터를 풀에 반납
 //            Debug.Log("[CustomizationManager] 유니모가 변경되었는지를 확인합니다.");
 
-            if (!string.IsNullOrEmpty(characterId) && avatarStruct.CurrentCharacterId != targetChar &&
-                CatalogProvider.TryGetCharacter(characterId, out var cDef))
+            if (!string.IsNullOrEmpty(targetChar) &&
+                avatarStruct.CurrentCharacterId != targetChar &&
+                CatalogProvider.TryGetCharacter(targetChar, out var cDef))
             {
 //                Debug.Log("[CustomizationManager] 유니모가 변경됨");
                 if (avatarStruct.CurrentCharacter && !string.IsNullOrEmpty(avatarStruct.CurrentCharacterId))
@@ -163,10 +164,12 @@ namespace Customization
 
         public async UniTask ApplyEquipToAvatarAsync(AvatarStruct avatarStruct, string equipId)
         {
-            var targetMount = equipId ?? customData.equipId;
+            var targetEquip = equipId ?? customData.equipId;
 //            Debug.Log("[CustomizationManager] 엔진이 변경되었는지를 확인합니다.");
-            if (!string.IsNullOrEmpty(equipId) && avatarStruct.CurrentEquipId != equipId &&
-                CatalogProvider.TryGetEquip(equipId, out var eDef))
+           
+            if (!string.IsNullOrEmpty(targetEquip) &&
+                avatarStruct.CurrentEquipId != targetEquip &&
+                CatalogProvider.TryGetEquip(targetEquip, out var eDef))
             {
                 if (avatarStruct.CurrentEquip && !string.IsNullOrEmpty(avatarStruct.CurrentEquipId))
                 {
@@ -224,8 +227,9 @@ namespace Customization
                     Debug.Log("<color=yellow>핸들 작업이 완료될때까지 대기</color>");
                     await h.Task;
                 }
+
                 var res = h.Result;
-                var sp = res as Sprite; 
+                var sp = res as Sprite;
                 _iconCache[characterId] = sp;
                 return sp;
             }
@@ -281,7 +285,6 @@ namespace Customization
 
             Resources.UnloadUnusedAssets();
             Debug.Log("[CustomizationManager] 모든 아이콘 handle을 release 했습니다..");
-
         }
 
         //모든 풀 레지스트리 dispose

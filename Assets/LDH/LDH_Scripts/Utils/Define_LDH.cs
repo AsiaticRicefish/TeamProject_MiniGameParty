@@ -115,20 +115,23 @@ namespace LDH_Util
             
             switch (ec)
             {
-                case ErrorCode.GameFull:            // 32765
-                    return $"방이 가득 찼습니다.({code})";
-                case ErrorCode.GameClosed:          // 32764
-                    return $"방이 닫혀 있어 입장할 수 없습니다.({code})";
-                case ErrorCode.NoRandomMatchFound:  // 32760 (JoinRandom 전용)
-                    return $"입장 가능한 방이 없습니다.({code})";
-                case ErrorCode.GameIdAlreadyExists: // 32766 (Create 시)
-                    return $"같은 이름의 방이 이미 존재합니다.({code})";
-                // 재접속/재조인 관련 (있으면 케이스 추가)
-                case ErrorCode.JoinFailedPeerAlreadyJoined:       // 32750
+                case ErrorCode.GameFull: return $"방이 가득 찼습니다.({code})";
+                case ErrorCode.GameClosed: return $"방이 닫혀 있어 입장할 수 없습니다.({code})";
+                case ErrorCode.NoRandomMatchFound: return $"입장 가능한 방이 없습니다.({code})";
+                case ErrorCode.GameIdAlreadyExists: return $"같은 이름의 방이 이미 존재합니다.({code})";
+
+                case ErrorCode.JoinFailedPeerAlreadyJoined:            // 32750
                     return $"이미 해당 방에 참여 중입니다.({code})";
-                case ErrorCode.JoinFailedWithRejoinerNotFound:    // 32748
+                case ErrorCode.JoinFailedFoundInactiveJoiner:          // 32749
+                    return $"이전 참가 기록이 남아 있습니다(비활성). 재접속을 시도하세요.({code})";
+                case ErrorCode.JoinFailedWithRejoinerNotFound:         // 32748
                     return $"재접속 시간이 만료되어 방을 찾지 못했습니다.({code})";
-                case ErrorCode.GameDoesNotExist:            // 32758  ★ 로그와 일치
+                case ErrorCode.JoinFailedFoundExcludedUserId:          // 32747
+                    return $"이 사용자 ID는 이 방에서 제외되었습니다.({code})";
+                case ErrorCode.JoinFailedFoundActiveJoiner:            // 32746  ⬅︎ 추가
+                    return $"같은 사용자 ID가 이미 방에 접속 중입니다. 재접속 모드로 시도하세요.({code})";
+
+                case ErrorCode.GameDoesNotExist:                       // 32758
                     return $"해당 방을 찾을 수 없습니다.({code})";
                 default:
                     return $"입장 실패 ({code}) {serverMsg}";
@@ -173,7 +176,7 @@ namespace LDH_Util
         public static partial class DefaultData
         {
             public const CurrencyType DefaultRewardCurrency = CurrencyType.Currency1;
-            public const int DefaultReward = 250;
+            public const int DefaultReward = 50;
             public const int DefaultPointReward = 10;
         }
         
@@ -241,6 +244,8 @@ namespace LDH_Util
         public enum BgmKey
         {
             Lobby_BGM,
+            Main_Win_Bgm,
+            Main_MiniGameResult_Bgm,
         }
 
         public enum SfxKey
@@ -256,6 +261,8 @@ namespace LDH_Util
             Main_Loser,
             Main_Winner,
             Main_Reward,
+            Main_ShowWinner,
+            Main_PlayerBanner,
         }
         #endregion
         

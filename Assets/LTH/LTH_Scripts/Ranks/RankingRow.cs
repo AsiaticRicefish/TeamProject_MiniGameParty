@@ -117,9 +117,7 @@ public class RankingRow : MonoBehaviour
             string.Equals(profileId, _profileId, System.StringComparison.Ordinal))
             return;
         
-        _profileId = profileId;
-        Debug.Log($"<color=red>{profileId}</color>");
-     
+        _profileId = profileId; 
         
         try
         {

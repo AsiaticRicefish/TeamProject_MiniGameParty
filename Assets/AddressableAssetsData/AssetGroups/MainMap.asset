@@ -17,6 +17,12 @@ MonoBehaviour:
     m_SerializedData: []
   m_GUID: 9cb65a99cee064bcb9b1c9594d856b97
   m_SerializeEntries:
+  - m_GUID: 0db492534c6cd47888e8480c23ac0b72
+    m_Address: Assets/Imports/MainMap/Main_winnerShow.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 16142cde93ae440f393c710c405ffa82
     m_Address: Assets/Imports/MainMap/Main_MiniGameEnd.wav
     m_ReadOnly: 0
@@ -29,8 +35,20 @@ MonoBehaviour:
     m_SerializedLabels:
     - Sound
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 44a1ebde7995e4e9cbbd85bfa5b59dde
+    m_Address: Assets/Imports/MainMap/Main_win_bgm.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5abc3a12646b5443fb15d500cda5b888
     m_Address: Assets/Imports/MainMap/Main_MiniGamePicked.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 70f63596800584c5c8f1b62c4f536fec
+    m_Address: Assets/Imports/MainMap/Main_PlayerBanner.wav
     m_ReadOnly: 0
     m_SerializedLabels:
     - Sound
@@ -43,6 +61,12 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7b2ea14c4d5e249369ba021ab7b17af1
     m_Address: Assets/Imports/MainMap/Main_Roullet.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 898068ac82f794b57a0986e074e510c8
+    m_Address: Assets/Imports/MainMap/Main_MiniGameResult_BGM.wav
     m_ReadOnly: 0
     m_SerializedLabels:
     - Sound

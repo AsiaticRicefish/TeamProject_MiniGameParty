@@ -26,6 +26,8 @@ namespace LDH_UI
         private Define_LDH.SfxKey winnerSfxKey = Define_LDH.SfxKey.Main_Winner;
         [SerializeField]
         private Define_LDH.SfxKey loserSfxKey = Define_LDH.SfxKey.Main_Loser;
+        private Define_LDH.BgmKey winnerBgmKey = Define_LDH.BgmKey.Main_Win_Bgm;
+        
         
         private Animator UnimoAnimator => avatarStruct.CurrentCharacter?.GetComponent<Animator>();
         private Animator EquipAnimator => avatarStruct.CurrentEquip?.GetComponent<Animator>();
@@ -49,6 +51,7 @@ namespace LDH_UI
         public async UniTask SetData(string nickname, UnimoCombo combo, bool isWinner)
         {
             userNickName.text = nickname;
+            Debug.Log($"<color=blue>winner combo : {combo.characterId}, {combo.equipId}</color>");
             await CustomizationManager.Instance.ApplyToAvatarAsync(avatarStruct, combo);
             
             //아바타 애니메이션 설정
@@ -91,6 +94,8 @@ namespace LDH_UI
         {
             SoundManager.Instance.PlaySFX( _isWinner? winnerSfxKey.ToString() : loserSfxKey.ToString());
             await base.OnShowAsync(ct);
+            await UniTask.Delay(TimeSpan.FromSeconds(0.5f));
+            SoundManager.Instance.PlayBGM(winnerBgmKey.ToString());
         }
     }
 }
