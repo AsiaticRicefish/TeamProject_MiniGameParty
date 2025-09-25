@@ -23,6 +23,10 @@ namespace LDH_MainGame
         
         [SerializeField] private GameObject[] initializeObjects;
 
+        [Header("Loading Theme")]
+        [SerializeField] private UI_LoadingTheme loadingTheme; // 테마
+        
+        
         private readonly List<IGameComponent> _sequential = new();
         private readonly List<ICoroutineGameComponent> _parallel = new();
         private readonly Dictionary<IGameComponent, Type> _seqTypeMap = new(); // 선택
@@ -38,9 +42,18 @@ namespace LDH_MainGame
         protected override void Awake()
         {
             base.Awake();
-            
-            //todo: 로딩 패널 켜는 시점 옮기기(로비 씬에서 켜기)
+
+            // 1. 로딩창 생성
             _uiLoading = Manager.UI.CreatePopupUI<UI_Loading>();
+
+            // 2. 테마 적용 (있는 경우)
+            if (loadingTheme)
+            {
+                _uiLoading.ApplyTheme(loadingTheme);
+            }
+            _uiLoading.SetProgress(0f);
+            
+            // 3. 테마 없을 때 -> 적용안함.
             Manager.UI.ShowPopupUI(_uiLoading).Forget();
 
             if (Instance == null)
@@ -48,14 +61,8 @@ namespace LDH_MainGame
             
             _sequential.Clear();
             _parallel.Clear();
-
-            // if (PhotonNetwork.IsMasterClient)
-            // {
-            //     PhotonNetwork.InstantiateRoomObject(photonViewSyncPrefabPath, Vector3.zero, Quaternion.identity);
-            // }
             
         }
-        
         
         /// <summary>
         /// - 메인 게임 씬 UI 활성화 or 배치
@@ -67,25 +74,29 @@ namespace LDH_MainGame
         {
             //플레이어 UID가 있는지 확인 (임시 메서드)
             yield return WaitForAllPlayerUids(5f);
-
+            _uiLoading?.SetProgress(0.2f); 
+            
             //룸 오브젝트 - 메인 게임 매니저 생성
             yield return StartCoroutine(CreateRoomObjects(new[] { mainGameManagerPrefabPath }));
-
+            _uiLoading?.SetProgress(0.4f);
+            
             //타입 체크 및 type list 초기화
             yield return StartCoroutine(SetInitializeList());
-
+            _uiLoading?.SetProgress(0.6f);
+            
             // 초기화가 필요한 대상(매니저 등 initializeTargets에 있는 요소들)이 생성될 때까지 대기  
             foreach (var seqType in _seqTypeMap.Values)
             {
                 //초반에 배열에 있는 타입들을 찾아서 initializeTypes에 추가해두었으므로 이 타입을 넘긴다.
                 yield return WaitForSingletonReady(seqType);
             }
+            _uiLoading?.SetProgress(0.7f);
 
             foreach (var parType in _parTypeMap.Values)
             {
                 yield return WaitForSingletonReady(parType);
             }
-
+            
             Util_LDH.ConsoleLog(this, "메인 게임에 필요한 Manager들 생성 완료");
         }
 
@@ -101,8 +112,13 @@ namespace LDH_MainGame
             yield return StartCoroutine(InitializeCoroutineComponentsSafely(_parallel));
         }
 
-        protected override void NotifyGameStart()
+        protected override async void NotifyGameStart()
         {
+            await UniTask.Delay(TimeSpan.FromSeconds(1f));
+            _uiLoading?.SetProgress(0.9f);
+            await UniTask.Delay(TimeSpan.FromSeconds(0.5f));
+            _uiLoading?.SetProgress(1f);
+            
             // 모든 초기화가 완료되고 게임 시작을 알림
             Util_LDH.ConsoleLog(this, "모든 초기화가 완료되었습니다. 게임을 시작합니다.");
 
@@ -110,7 +126,7 @@ namespace LDH_MainGame
             PhotonViewSync.Instance.Clear();
             
             // 로딩 패널을 꺼주기
-            Manager.UI.CloseTopPopupUI();
+            await Manager.UI.CloseTopPopupUI();
 
             //메인 게임 매니저가 게임을 시작
             MainGameManager.Instance.StartGame();

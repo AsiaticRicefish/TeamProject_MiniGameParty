@@ -15,7 +15,7 @@ MonoBehaviour:
   m_DefaultGroup: 8dc196d36c902c4439b304ad961ef94d
   m_currentHash:
     serializedVersion: 2
-    Hash: 9c2f8351cc13553bda15f80a90e4e4f4
+    Hash: 2cc814d4db7ee127b9112f0adf9421fe
   m_OptimizeCatalogSize: 0
   m_BuildRemoteCatalog: 0
   m_BundleLocalCatalog: 0
@@ -46,12 +46,16 @@ MonoBehaviour:
   m_GroupAssets:
   - {fileID: 11400000, guid: 5fccbc31442274493ac6f16e5687f6b9, type: 2}
   - {fileID: 11400000, guid: 86f15fd145e6745f6b1b6055836a813f, type: 2}
+  - {fileID: 11400000, guid: efe7352dfeb4fcb4bade622b861f5da0, type: 2}
+  - {fileID: 11400000, guid: 3f37e16251235e84dad36358233d4053, type: 2}
   - {fileID: 11400000, guid: da02b2f145e151c4489fe26b546ea6ed, type: 2}
   - {fileID: 11400000, guid: 466617cd8ed6e4c9fadf194639b081a1, type: 2}
+  - {fileID: 11400000, guid: 9fc8afe4261d74344b423eb713d97050, type: 2}
   - {fileID: 11400000, guid: 50ecc3c23fbb7e944994ad1d4a053c19, type: 2}
   - {fileID: 11400000, guid: aa7d9b149dfd96048843149b878eaa5b, type: 2}
   - {fileID: 11400000, guid: 5ef6ea55b29e7400ab3c02c8bb421c5d, type: 2}
   - {fileID: 11400000, guid: 87ed1bc4d3854431ba12aa34ebca49a7, type: 2}
+  - {fileID: 11400000, guid: ec1980f8ac3bf4b438979c4b389b45f4, type: 2}
   m_BuildSettings:
     m_CompileScriptsInVirtualMode: 0
     m_CleanupStreamingAssetsAfterBuilds: 1
@@ -95,6 +99,7 @@ MonoBehaviour:
     - default
     - catalog:character
     - catalog:equip
+    - catalog:currency
     - Sound
     - Effect
   m_SchemaTemplates: []

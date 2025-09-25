@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using Photon.Pun;
 using Unity.VisualScripting;
@@ -127,15 +128,7 @@ namespace LDH_Util
             Debug.LogWarning($"[{type.GetType().Name}] {message}");
         }
 
-        public static float GetRandomFloat2dp(int seed, float min, float max)
-        {
-            var rng  = new System.Random(seed);
-            double value = rng.NextDouble();
-            float f  = min + (float)value * (max - min);
-            
-            return Mathf.Round(f * 100f) * 0.01f;
-
-        }
+        
         
         //모든 자식 파괴
         public static void RemoveAllChildren(Transform parent)
@@ -155,8 +148,81 @@ namespace LDH_Util
             
             Debug.Log($"[Util] {childCount}개의 자식을 파괴했습니다.");
         }
+
+        public static long[] SumByCurrencyType(IEnumerable<(Define_LDH.CurrencyType type, long price)> priceInfo)
+        {
+            int currencyCount = Enum.GetValues(typeof(Define_LDH.CurrencyType)).Length;
+
+            var totals = new long[currencyCount];
+            foreach (var (t, p) in priceInfo)
+            {
+                if (p <= 0) continue;
+                int index = (int)t;
+                long next = totals[index] + p;
+                if (next < totals[index]) next = long.MaxValue;      // overflow guard
+                totals[index] = next;
+            }
+
+            for(int i=0; i<totals.Length; i++)
+            {
+                Debug.Log($"<color=green> currency type {i} total price : {totals[i]}</color>");
+            }
+            return totals;
+        }
+
+        public static long SafeAdd(long a, long b, long clampMax)
+        {
+            try
+            {
+                checked
+                {
+                    long s = a + b;
+                    if (s > clampMax) return clampMax;
+                    return s;
+                }
+            }
+            catch (OverflowException)
+            {
+                return clampMax;
+            }
+        }
+
+        public static string GetRankFormat(int rank)
+        {
+            return rank switch
+            {
+                1 => "1st",
+                2 => "2nd",
+                3 => "3rd",
+                _ => rank.ToString().Trim() + "th"
+            };
+        }
         
-        
+        public static Dictionary<string, int> CalcTotalRank(Dictionary<string, int> totalScores)
+        {
+            Dictionary<string, int> totalRank = new(totalScores.Count);
+
+            int i = 0; // 현재 인덱스
+            int rank = 0;
+            int prevScore = int.MinValue;
+
+            // 전체 점수를 내림차순 정렬
+            foreach (var kvPair in totalScores.OrderByDescending(x => x.Value).ThenBy(x => x.Key))
+            {
+                i++; // 현재 인덱스(1부터 계산)
+                if (kvPair.Value != prevScore)
+                {
+                    // 이전 점수와 다른 점수 = 현재 인덱스가 새로운 등수
+                    rank = i;
+                    prevScore = kvPair.Value;
+                }
+
+                totalRank[kvPair.Key] = rank;
+            }
+
+            return totalRank;
+        }
+
         #endregion
         
         #region RectTransform Control

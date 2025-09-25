@@ -284,56 +284,64 @@ public class SoundManager : CombinedSingleton<SoundManager>
 
 
     #region Volume Control
+    private AudioMixer MixerForBGM => bgmMixerGroup ? bgmMixerGroup.audioMixer : audioMixer;
+    private AudioMixer MixerForSFX => sfxMixerGroup ? sfxMixerGroup.audioMixer : audioMixer;
+
     public void SetBGMSoundVolume(float volume)
     {
         bgmSoundVolume = Mathf.Clamp01(volume);
 
-        if (audioMixer)
+        float dbVolume;
+
+        if (volume > 0f)
         {
-            float dbVolume;
+            dbVolume = Mathf.Log10(volume) * 20f;
+        }
 
-            if (volume > 0f)
-            {
-                // 선형 볼륨을 데시벨로 변환
-                dbVolume = Mathf.Log10(volume) * 20f;
-            }
-            else
-            {
-                // 볼륨이 0 이하일 때는 음소거 (-80dB)
-                dbVolume = -80f;
-            }
+        else
+        {
+            dbVolume = -80f;                        // 음소거
+        }
 
-            audioMixer.SetFloat("BGMVolume", dbVolume);  // Audio Mixer 추가
+        var mixer = MixerForBGM;
+        if (mixer != null)
+        {
+            bool ok = mixer.SetFloat("BGMVolume", dbVolume);
+            if (!ok)
+            {
+                Debug.LogWarning($"[SoundManager] 'BGMVolume' 파라미터를 {mixer.name}에서 찾지 못했습니다.");
+            }
         }
 
         PlayerPrefs.SetFloat("BGMVolume", volume);
-        PlayerPrefs.Save();
     }
 
     public void SetSFXSoundVolume(float volume)
     {
         sfxSoundVolume = Mathf.Clamp01(volume);
 
-        if (audioMixer)
+        float dbVolume;
+
+        if (volume > 0f)
         {
-            float dbVolume;
+            dbVolume = Mathf.Log10(volume) * 20f;
+        }
+        else
+        {
+            dbVolume = -80f;
+        }
 
-            if (volume > 0f)
+        var mixer = MixerForSFX;
+        if (mixer != null)
+        {
+            bool ok = mixer.SetFloat("SFXVolume", dbVolume);
+            if (!ok)
             {
-                // 선형 볼륨을 데시벨로 변환
-                dbVolume = Mathf.Log10(volume) * 20f;
+                Debug.LogWarning($"[SoundManager] 'SFXVolume' 파라미터를 {mixer.name}에서 찾지 못했습니다.");
             }
-            else
-            {
-                // 볼륨이 0 이하일 때는 음소거 (-80dB)
-                dbVolume = -80f;
-            }
-
-            audioMixer.SetFloat("SFXVolume", dbVolume);
         }
 
         PlayerPrefs.SetFloat("SFXVolume", volume);
-        PlayerPrefs.Save();
     }
 
     #endregion
@@ -398,7 +406,7 @@ public class SoundManager : CombinedSingleton<SoundManager>
             if (_bgmAudioSource.isPlaying && _bgmAudioSource.clip == audioClip)
                 return;
 
-            await CrossfadeToAsync(audioClip, soundData.isLoop, CalculateBGMVolume(soundData.defaultVolume), defaultBgmFade);
+            await CrossfadeToAsync(audioClip, soundData.isLoop, defaultBgmFade);
         }
         catch (Exception ex)
         {
@@ -611,6 +619,9 @@ public class SoundManager : CombinedSingleton<SoundManager>
         {
             Debug.LogWarning("SceneSoundMappingConfig가 설정되지 않았습니다.");
         }
+
+        SetBGMSoundVolume(bgmSoundVolume);
+        SetSFXSoundVolume(sfxSoundVolume);
     }
 
     private void OnSceneUnloaded(Scene scene)
@@ -633,7 +644,7 @@ public class SoundManager : CombinedSingleton<SoundManager>
     #region 내부 유틸: SFX 보이스/크로스페이드
     private AudioSource AcquireSfxVoice()
     {
-        
+
         for (int i = 0; i < _sfxPool.Count; i++)
         {
             int idx = (_sfxCursor + i) % _sfxPool.Count;
@@ -643,27 +654,28 @@ public class SoundManager : CombinedSingleton<SoundManager>
                 return _sfxPool[idx];
             }
         }
-        
+
         var steal = _sfxPool[_sfxCursor];
         _sfxCursor = (_sfxCursor + 1) % _sfxPool.Count;
         return steal;
     }
 
-    private async Task CrossfadeToAsync(AudioClip clip, bool loop, float targetVolume, float fadeSeconds)
+    private async Task CrossfadeToAsync(AudioClip clip, bool loop, float fadeSeconds)
     {
         _bgmCts?.Cancel();
         _bgmCts = new CancellationTokenSource();
         var ct = _bgmCts.Token;
 
-        
+
         _bgmIdle.clip = clip;
         _bgmIdle.loop = loop;
+
+        _bgmActive.volume = 1f;
         _bgmIdle.volume = 0f;
         _bgmIdle.Play();
 
         float fade = Mathf.Max(0.01f, fadeSeconds);
         float t = 0f;
-        float fromStart = _bgmActive.volume;
 
         try
         {
@@ -672,8 +684,9 @@ public class SoundManager : CombinedSingleton<SoundManager>
                 if (ct.IsCancellationRequested) return;
                 t += Time.deltaTime;
                 float k = t / fade;
-                _bgmActive.volume = Mathf.Lerp(fromStart, 0f, k);
-                _bgmIdle.volume = Mathf.Lerp(0f, targetVolume, k);
+
+                _bgmActive.volume = 1f - k;
+                _bgmIdle.volume = k;
                 await Task.Yield();
             }
         }
@@ -682,12 +695,45 @@ public class SoundManager : CombinedSingleton<SoundManager>
             if (!ct.IsCancellationRequested)
             {
                 _bgmActive.Stop();
-                _bgmIdle.volume = targetVolume;
-               
+
+                _bgmActive.volume = 1f;
+                _bgmIdle.volume = 1f;
+
                 var tmp = _bgmActive; _bgmActive = _bgmIdle; _bgmIdle = tmp;
             }
         }
     }
 
     #endregion
+
+    public async Task<float> GetMusicLengthAsync(string soundName, float fallbackSeconds = 180f)
+    {
+        try
+        {
+            if (_currentSettings?.soundCollection == null)
+                return fallbackSeconds;
+
+            // BGM 데이터 찾기
+            var soundData = _currentSettings.soundCollection.GetBGM(soundName);
+            if (soundData == null)
+                return fallbackSeconds;
+
+            // 로드된 경우
+            if (_loadedClips.TryGetValue(soundData.soundName, out var cached) && cached != null)
+                return Mathf.Max(0.01f, cached.length);
+
+            // 로드해서 길이 얻기
+            var clip = await LoadAudioClipAsync(soundData);
+            
+            if (clip == null)
+                return fallbackSeconds;
+
+            return Mathf.Max(0.01f, clip.length);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError(ex.Message);
+            return fallbackSeconds;
+        }
+    }
 }

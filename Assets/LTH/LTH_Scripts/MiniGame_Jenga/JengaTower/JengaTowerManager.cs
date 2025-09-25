@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Cysharp.Threading.Tasks;
 using DesignPattern;
 using InputBlocker;
 using Photon.Pun;
@@ -69,6 +70,7 @@ public class JengaTowerManager : CombinedSingleton<JengaTowerManager>, IGameComp
     // 개별 타워별로 구독한 델리게이트를 보관(해제용)
     private readonly HashSet<int> _mutedActors = new();
     private readonly Dictionary<int, (Action on, Action off)> _towerMuteHandlers = new();
+
     public bool IsArenaMuted(int ownerActorNumber) => _mutedActors.Contains(ownerActorNumber);
 
     private bool _isCreatingProxies = false;

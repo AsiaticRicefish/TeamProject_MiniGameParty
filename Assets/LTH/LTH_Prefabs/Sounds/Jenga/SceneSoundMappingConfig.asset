@@ -15,3 +15,7 @@ MonoBehaviour:
   sceneMappings:
   - sceneName: MiniGameJengaScene
     gameType: 3
+  - sceneName: PMS_ShootingTestScene
+    gameType: 5
+  - sceneName: Rhythm
+    gameType: 4

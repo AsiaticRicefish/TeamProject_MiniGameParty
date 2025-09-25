@@ -1,59 +1,69 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Customization;
 using Cysharp.Threading.Tasks;
+using Data;
 using LDH_UI;
 using LDH_Util;
 using Managers;
+using Store;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.UI;
+using static LDH_Util.Define_LDH;
+
 
 namespace Customization
 {
     public class ClosetController : MonoBehaviour
     {
-        [Header("Prefabs & Parents")] [SerializeField]
-        private UI_ClosetItemButton charTogglePrefab; // 버튼 프리팹 (비어있는 슬롯용)
-
+        [Header("Prefabs & Parents")]  //--------------------------------------//
+        [SerializeField] private UI_ClosetItemButton charTogglePrefab; // 버튼 프리팹 (비어있는 슬롯용)
         [SerializeField] private UI_ClosetItemButton equipItemTogglePrefab; // 버튼 프리팹 (비어있는 슬롯용)
         [SerializeField] private Transform characterContent; // 캐릭터 ScrollView Content
         [SerializeField] private Transform equipmentContent; // 탈 것 ScrollView Content
-
-        [Header("Canvas Group")] [SerializeField]
-        private CanvasGroup characterCanvasGroup; // 미리 빌드 중 숨김/보임 제어
-
+        
+        [Header("Canvas Group")]  //--------------------------------------//
+        [SerializeField] private CanvasGroup characterCanvasGroup; // 미리 빌드 중 숨김/보임 제어
         [SerializeField] private CanvasGroup equipmentCanvasGroup;
 
-        [Header("Toggle Group")] [SerializeField]
-        private ToggleGroup characterToggleGroup;
-
+        [Header("Toggle Group")]  //--------------------------------------//
+        [SerializeField] private ToggleGroup characterToggleGroup;
         [SerializeField] private ToggleGroup equipToggleGroup;
 
-        [Header("Control Buttons")] [SerializeField]
-        private Button applyButton;
-
+        [Header("Control Buttons")]  //--------------------------------------//
+        [SerializeField] private Button applyButton;
         [SerializeField] private Button resetButton;
+        [SerializeField] private Button purchaseButton;
+        
+        [Header("Avatar")]  //--------------------------------------//
+        [SerializeField] private AvatarStruct avatarStruct;
 
+        [Header("Setting")] [SerializeField] private bool includeOwnedEvenIfDisabled = true;
 
-        [Header("Avatar")] [SerializeField] private AvatarStruct avatarStruct;
-
-
-        // 생성된 버튼
+        
+        
+        // DataManager --------------------------------------//
+        private DataManager Data => Manager.Data;
+        
+        
+        // 생성된 버튼 --------------------------------------//
         private readonly List<UI_ClosetItemButton> _charToggles = new();
         private readonly List<UI_ClosetItemButton> _equipToggles = new();
-
-        //  로드 핸들 추적
+        private readonly Dictionary<string, UI_ClosetItemButton> _charBtnById = new();
+        private readonly Dictionary<string, UI_ClosetItemButton> _equipBtnById = new();
+        
+        //  로드 핸들 추적 --------------------------------------//
         private readonly List<AsyncOperationHandle<Sprite>> _loadedSpriteHandles = new();
 
-        // flag
+        // flag --------------------------------------//
         private bool _built;
         private bool _initializing;
         private bool _applying;
 
-        // staged 임시 선택
+        // staged 임시 선택 --------------------------------------//
         private UnimoCombo _stagedCombo;
 
         private void Awake()
@@ -62,22 +72,25 @@ namespace Customization
             SetActiveGroup(equipmentCanvasGroup, false);
 
             applyButton.onClick.RemoveAllListeners();
-            applyButton.onClick.AddListener(() => ApplyClicked().Forget());
+            applyButton.onClick.AddListener(ApplyClicked);
 
             resetButton.onClick.RemoveAllListeners();
             resetButton.onClick.AddListener(ResetClicked);
+            
+            purchaseButton.onClick.RemoveAllListeners();
+            purchaseButton.onClick.AddListener(PurchaseClicked);
         }
 
         private async void Start()
         {
-            Debug.Log("[ClosetPrebuilder] Wait until managers are initialized");
+            Debug.Log("[ClosetController] Wait until managers are initialized");
             var token = this.GetCancellationTokenOnDestroy();
             await UniTask.WaitUntil(() => CatalogProvider.IsReady, cancellationToken: token);
             await UniTask.WaitUntil(() => Manager.Custom != null && Manager.Custom.IsReady, cancellationToken: token);
 
             await PrebuildAllAsync();
 
-            Debug.Log("[ClosetPrebuilder] Apply Initial Selection");
+            Debug.Log("[ClosetController] Apply Initial Selection");
             _stagedCombo = Manager.Custom.GetEquippedLocal();
             ApplyInitialSelection(_stagedCombo);
         }
@@ -99,23 +112,47 @@ namespace Customization
             if (_built) return;
             _built = true;
 
-            Debug.Log("[ClosetPrebuilder] start prebuild");
+            Debug.Log("[ClosetController] start prebuild");
 
-            // 1) 데이터 가져오기 (CatalogProvider에서 정의 제공)
-            var characters = CatalogProvider.CharactersSorted;
-            var equips = CatalogProvider.EquipsSorted;
-            if (characters == null || equips == null)
+            // 1) 정의(Definition) 목록
+            var allCharacters = CatalogProvider.CharactersSorted;
+            var allEquips     = CatalogProvider.EquipsSorted;
+            if (allCharacters == null || allEquips == null)
             {
-                Debug.LogError("[ClosetPrebuilder] CatalogProvider.Characters or CatalogProvider.Equips is null");
+                Debug.LogError("[ClosetController] CatalogProvider.Characters or Equips is null");
                 return;
             }
+            
+            // 2) Firestore ItemData의 Enabled 기준으로 허용 id 집합 만들기
+            //    - 없으면(미등록) 비활성으로 간주
+            //    - 필요시 '보유중이면 비활성이어도 보이게' 옵션에 따라 설정
+            var enabledCharIds = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var kv in Data.CharacterItemDict)
+            {
+                if (kv.Value?.Enabled == true) enabledCharIds.Add(kv.Key);
+            }
+            if (includeOwnedEvenIfDisabled && Data.Custom.ownedCharacters !=null)
+                foreach (var id in  Data.Custom.ownedCharacters) enabledCharIds.Add(id);
+            
+            var enabledEquipIds = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var kv in Data.EquipItemDict)
+            {
+                if (kv.Value?.Enabled == true) enabledEquipIds.Add(kv.Key);
+            }
+            if (includeOwnedEvenIfDisabled && Data.Custom.ownedEquips !=null)
+                foreach (var id in Data.Custom.ownedEquips ) enabledEquipIds.Add(id);
+            
+            // 3) 실제 생성에 쓸 리스트는 Enabled만 통과
+            var characters = allCharacters.Where(def => enabledCharIds.Contains(def.id)).ToList();
+            var equips     = allEquips.Where(def => enabledEquipIds.Contains(def.id)).ToList();
 
+            
 
-            // 2) 버튼 프리팹들 미리 생성 (동기 Instantiate → 빠르게 끝남)
+            // 4) 버튼 프리팹들 미리 생성 (동기 Instantiate → 빠르게 끝남)
             BuildToggles(characterContent, _charToggles, characters.Count, charTogglePrefab, characterToggleGroup);
             BuildToggles(equipmentContent, _equipToggles, equips.Count, equipItemTogglePrefab, equipToggleGroup);
 
-            // 3) 아이콘 등 Addressables 리소스를 선로딩
+            // 5) 아이콘 등 Addressables 리소스를 선로딩
             // 비동기 task를 리스트에 넣어 아래 task가 끝날 때까지 대기
             var charIconTasks = new List<UniTask<Sprite>>();
             var equipIconTasks = new List<UniTask<Sprite>>();
@@ -130,12 +167,17 @@ namespace Customization
             var equipIcons = await UniTask.WhenAll(equipIconTasks);
 
 
-            // 4) 로드한 리소스를 적용
+            // 6) 로드한 리소스를 적용
             for (int i = 0; i < _charToggles.Count; i++)
             {
                 var toggle = _charToggles[i];
                 var def = characters[i];
                 var icon = charIcons[i];
+
+                //딕셔너리에 등록
+                _charBtnById.TryAdd(def.id, toggle);
+                
+                toggle.SetOwned(Data.HasCharacter(def.id));
 
                 toggle.Bind(
                     id: def.id,
@@ -147,8 +189,8 @@ namespace Customization
                         _stagedCombo.characterId = id;
                         ChangeCharacter(id).Forget();
                         UpdateApplyButton();
-                    }
-                );
+                        UpdatePurchaseButton();
+                    });
             }
 
             for (int i = 0; i < _equipToggles.Count; i++)
@@ -156,6 +198,10 @@ namespace Customization
                 var toggle = _equipToggles[i];
                 var def = equips[i];
                 var icon = equipIcons[i];
+               
+                //딕셔너리에 등록
+                _equipBtnById.TryAdd(def.id, toggle);
+                toggle.SetOwned(Data.HasEquip(def.id));
 
                 toggle.Bind(
                     id: def.id,
@@ -167,11 +213,11 @@ namespace Customization
                         _stagedCombo.equipId = id;
                         ChangeEquip(id).Forget();
                         UpdateApplyButton();
-                    }
-                );
+                        UpdatePurchaseButton();
+                    });
             }
 
-            // 6) 레이아웃 리빌드 후 가시화
+            // 7) 레이아웃 리빌드 후 가시화
             ForceRebuild(characterContent as RectTransform);
             ForceRebuild(equipmentContent as RectTransform);
 
@@ -179,7 +225,7 @@ namespace Customization
             SetActiveGroup(equipmentCanvasGroup, true);
 
 
-            Debug.Log("[ClosetPrebuilder] prebuild complete");
+            Debug.Log("[ClosetController] prebuild complete");
         }
 
         #region Toggle Build
@@ -249,7 +295,7 @@ namespace Customization
             Debug.Log($"[Closet] Change Character → {id}");
 
             //입력 막기
- 
+
             await Manager.Custom.ApplyToAvatarAsync(avatarStruct, characterId: id);
             Debug.Log("Apply가 완료되었습니다.");
 
@@ -282,7 +328,7 @@ namespace Customization
 
             if (charToggle == null || equipToggle == null)
             {
-                Debug.LogError("[ClosetPreBuilder] apply initial selection error");
+                Debug.LogError("[ClosetController] apply initial selection error");
                 return;
             }
 
@@ -292,6 +338,7 @@ namespace Customization
 
             _initializing = false;
         }
+        
 
         #endregion
 
@@ -300,14 +347,67 @@ namespace Customization
         private void UpdateApplyButton()
         {
             if (_stagedCombo.characterId == null || _stagedCombo.equipId == null) return;
-
+            
+            bool valid = Data.HasCharacter(_stagedCombo.characterId) && Data.HasEquip(_stagedCombo.equipId);
             bool modified = Manager.Custom.IsModified(_stagedCombo);
-            bool valid = !string.IsNullOrEmpty(_stagedCombo.characterId) && !string.IsNullOrEmpty(_stagedCombo.equipId);
-
             applyButton.interactable = !_applying && modified && valid;
         }
 
-        private async UniTaskVoid ApplyClicked()
+        private void UpdatePurchaseButton()
+        {
+            if (_stagedCombo.characterId == null || _stagedCombo.equipId == null) return;
+            
+            bool owned = Data.HasCharacter(_stagedCombo.characterId) && Data.HasEquip(_stagedCombo.equipId);
+
+            purchaseButton.interactable = !owned;
+
+        }
+
+        
+        // ===== 구매 팝업 호출 =====
+        private async void PurchaseClicked()
+        {
+            //보유하지 않은 아이템인 경우 가격 조회
+            List<PurchaseLine> purchaseLines = new();
+
+            if (!Data.HasCharacter(_stagedCombo.characterId))
+                purchaseLines.Add(new PurchaseLine(new ItemUnit(ItemKind.Character, _stagedCombo.characterId), 1));
+            if(!Data.HasEquip(_stagedCombo.equipId))
+                purchaseLines.Add(new PurchaseLine(new ItemUnit(ItemKind.Equip, _stagedCombo.equipId), 1));
+
+            try
+            {
+                var purchaseQuote = await Manager.Purchase.QuoteAsync(purchaseLines);
+                var popup = Manager.UI.CreatePopupUI<UI_Popup_ItemPurchase>();
+                popup.SetData(purchaseQuote);
+                popup.OnPurchaseSuccess = async (grantedItems) =>
+                {
+                    var tasks = new List<UniTask>();
+                    foreach (var item in grantedItems)
+                    {
+                        if (item.Kind == ItemKind.Character)
+                            tasks.Add(ChangeCharacter(item.Id));
+                            
+                           
+                        else if (item.Kind == ItemKind.Equip)
+                            tasks.Add(ChangeEquip(item.Id));
+                        else
+                            continue;
+                    }
+                    
+                    await UniTask.WhenAll(tasks);
+                    MarkOwned(grantedItems);
+                };
+                
+                Manager.UI.ShowPopupUI(popup).Forget();
+            }
+            catch(Exception e)
+            {
+                Debug.LogException(e);
+                Manager.UI.EnqueueToast("가격 계산 중 오류가 발생했습니다. 나중에 시도해주세요.");
+            }
+        }
+        private async void ApplyClicked()
         {
             if (!_stagedCombo.characterId?.Any() ?? true) return;
             if (!_stagedCombo.equipId?.Any() ?? true) return;
@@ -315,11 +415,10 @@ namespace Customization
 
             Debug.Log("ApplyClicked && 현재 장착 상태 적용가능");
             _applying = true;
-            UpdateApplyButton();
 
             // 실제 저장 API 호출
             bool ok = await Manager.Custom.UpdateComboAsync(_stagedCombo);
-
+            
             if (ok)
             {
                 Debug.Log($"[Closet] Success saving staged combo");
@@ -333,6 +432,7 @@ namespace Customization
 
             _applying = false;
             UpdateApplyButton();
+            UpdatePurchaseButton();
         }
 
         public void ResetClicked()
@@ -340,8 +440,26 @@ namespace Customization
             _stagedCombo = Manager.Custom.GetEquippedLocal();
             ApplyInitialSelection(_stagedCombo);
             UpdateApplyButton();
+            UpdatePurchaseButton();
         }
 
         #endregion
+        
+        
+        private void MarkOwned(IEnumerable<ItemUnit> items)
+        {
+            foreach (var it in items)
+            {
+                if (it.Kind == ItemKind.Character && _charBtnById.TryGetValue(it.Id, out var cbtn))
+                    cbtn.SetOwned(true);
+                else if (it.Kind == ItemKind.Equip && _equipBtnById.TryGetValue(it.Id, out var ebtn))
+                    ebtn.SetOwned(true);
+            }
+
+            // 버튼 상태 갱신
+            UpdateApplyButton();
+            UpdatePurchaseButton();
+        }
+        
     }
 }

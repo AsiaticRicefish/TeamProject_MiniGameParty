@@ -23,6 +23,8 @@ public class JengaSceneController : BaseGameSceneController
 
     private const string ROOMKEY_SLOTS = "JG_SLOTS";
 
+    private InputLockToken _loadingInputLock; // 로딩 중 입력 차단 토큰
+
     [Header("Loading Theme")]
     [SerializeField] private UI_LoadingTheme jengaLoadingTheme; // 젠가 테마
 
@@ -37,6 +39,12 @@ public class JengaSceneController : BaseGameSceneController
         }
         _only = this;
 
+        // InputManager 먼저 확실히 생성
+        EnsureInputManagerForScene();
+
+        // InputManager가 제대로 생성될 때까지 잠시 대기 후 차단 적용
+        StartCoroutine(ApplyLoadingInputBlock());
+
         // 로딩창 생성 및 테마 적용
         _uiLoading = Manager.UI.CreatePopupUI<UI_Loading>();
         
@@ -48,27 +56,37 @@ public class JengaSceneController : BaseGameSceneController
         {
             // 기본 텍스트라도 설정
             _uiLoading.SetTitle("JENGA GAME");
-            _uiLoading.SetBigDescription("준비 중...");
             _uiLoading.SetAllPanelColors(Color.black, Color.gray, Color.white);
         }
 
         Manager.UI.ShowPopupUI(_uiLoading).Forget();
     }
 
+    private IEnumerator ApplyLoadingInputBlock()
+    {
+        // InputManager가 준비될 때까지 대기
+        yield return new WaitUntil(() => InputManager.Instance != null && InputManager.Instance.IsInitialized);
+
+        // 로딩 중 모든 입력 차단
+        _loadingInputLock = InputManager.Instance.Acquire(InputType.UI, "Loading Screen");
+        Debug.Log("[Scene] Loading input lock applied successfully");
+    }
+
     protected override IEnumerator WaitForManagersAwake()
     {
-        EnsureInputManagerForScene();
-
         // 초기 진행률 설정
         if (_uiLoading) _uiLoading.SetProgress(0.1f);
+        yield return new WaitForSeconds(2.0f); // 최소 1초 대기
 
         // 모든 플레이어가 uid 셋팅될 때까지 잠깐 대기
         yield return WaitForAllPlayerUids(5f);
         if (_uiLoading) _uiLoading.SetProgress(0.3f);
+        yield return new WaitForSeconds(2.0f); // 최소 1초 대기
 
         // 슬롯맵이 준비될 때까지 잠깐 대기
         yield return WaitForSlotMapReady(5f);
         if (_uiLoading) _uiLoading.SetProgress(0.5f);
+        yield return new WaitForSeconds(2.0f); // 최소 1초 대기
 
         // 각 매니저들이 Awake에서 생성되기를 기다림
         yield return WaitForSingletonReady<JengaGameManager>();
@@ -76,6 +94,7 @@ public class JengaSceneController : BaseGameSceneController
         yield return WaitForSingletonReady<JengaTowerManager>();
 
         if (_uiLoading) _uiLoading.SetProgress(0.7f);
+        yield return new WaitForSeconds(2.0f); // 최소 1초 대기
         Debug.Log("젠가 매니저들 Awake 완료");
     }
 
@@ -134,7 +153,6 @@ public class JengaSceneController : BaseGameSceneController
             if (_uiLoading)
             {
                 _uiLoading.SetProgress(1.0f);
-                _uiLoading.SetBigDescription("READY!");
             }
 
             // 로딩창 닫기
@@ -143,6 +161,9 @@ public class JengaSceneController : BaseGameSceneController
                 Manager.UI.ClosePopupUI(_uiLoading).Forget();
                 _uiLoading = null;
             }
+
+            _loadingInputLock?.Dispose();
+            _loadingInputLock = null;
 
             if (!Camera.main)
                 Debug.LogWarning("[Scene] MainCamera가 아직 준비되지 않았습니다.");
@@ -160,6 +181,10 @@ public class JengaSceneController : BaseGameSceneController
         catch (Exception ex)
         {
             Debug.LogError($"[NotifyGameStart] Exception: {ex}\n{ex.StackTrace}");
+
+            // 예외 발생 시에도 입력 차단 해제
+            _loadingInputLock?.Dispose();
+            _loadingInputLock = null;
         }
 
         Debug.Log($"=== [Scene] NotifyGameStart END ===");
@@ -193,6 +218,13 @@ public class JengaSceneController : BaseGameSceneController
             var go = new GameObject("@InputManager_Jenga");
             go.AddComponent<InputManager>();
         }
+
+        // 강제로 즉시 초기화
+        if (!InputManager.Instance.IsInitialized)
+        {
+            InputManager.Instance.Initialize();
+        }
+
         // 씬 진입 시 잠금 초기화(안전장치)
         InputManager.Instance.ResetAllLocks();
     }

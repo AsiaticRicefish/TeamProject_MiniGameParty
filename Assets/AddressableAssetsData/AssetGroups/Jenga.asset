@@ -46,12 +46,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Sound
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 471088445f741e64c82f447ba7849c30
-    m_Address: Jenga_Success
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Effect
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 637fa8e41abec614c98e530ec2fcc2fb
     m_Address: RowPrefab
     m_ReadOnly: 0
@@ -59,6 +53,12 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 73aa60451d569294b859b805b3bbcd35
     m_Address: Assets/Imports/JengaAsset/JengaSound/Jenga_Success.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 792db11eb670f5d4cb772091c74e90ae
+    m_Address: Assets/Imports/JengaAsset/JengaSound/Jenga Breake1.wav
     m_ReadOnly: 0
     m_SerializedLabels:
     - Sound

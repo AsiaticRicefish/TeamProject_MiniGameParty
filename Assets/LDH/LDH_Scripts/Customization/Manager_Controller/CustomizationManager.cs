@@ -2,34 +2,35 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
+using Data;
 using DesignPattern;
 using LDH_Util;
+using Network;
 using Photon.Pun;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.SceneManagement;
 
 namespace Customization
 {
     public class CustomizationManager : CombinedSingleton<CustomizationManager>, ICustomizationService
     {
+        private CustomizationData customData => DataManager.Instance.Custom;
+        
         [SerializeField] private Transform charPoolRegistry_Transform;
         [SerializeField] private Transform equipPoolRegistry_Transform;
 
         // 풀
         PrefabPoolRegistry _charPools;
         PrefabPoolRegistry _equipPools;
+        
+        // 아이콘 이미지 전용 캐시 / 핸들
+        private readonly Dictionary<string, Sprite> _iconCache = new();
+        private readonly Dictionary<string, AsyncOperationHandle<Sprite>> _iconHandles = new();
 
-
+        
         public bool IsReady { get; private set; }
-        public event Action<UnimoCombo> OnEquippedChanged; // 장착이 변경되었을 때
-
-
-        // 유저 상태
-        readonly HashSet<string> _ownedCharacters = new();
-        readonly HashSet<string> _ownedEquips = new();
-        private UnimoCombo _equipped;
-        public IReadOnlyList<string> OwnedCharacters => _ownedCharacters.ToList();
-        public IReadOnlyList<string> OwnedEquips => _ownedEquips.ToList();
-
 
         protected override void OnAwake()
         {
@@ -38,74 +39,35 @@ namespace Customization
             _equipPools = new(equipPoolRegistry_Transform);
         }
 
+        private void OnEnable()
+        {
+            SceneManager.sceneLoaded += (_, _) => ReleaseAllIcons();
+        }
+
         private void OnDisable()
         {
+            ReleaseAllIcons();
             DisposePools();
         }
 
         public async UniTask InitAsync(string uid = null)
         {
-            // CatalogProvider.InitAsync()가 완료된 상태
-            await LoadLocalCache();
-            // TODO: Firestore로 치환 예정
+            DataManager.Instance.OnCustomizationChanged += OnCustomizationChanged;
+            
             IsReady = true;
             await UniTask.Yield();
 
             Debug.Log("[CustomizationManager] Init 완료");
         }
-
-        async UniTask LoadLocalCache()
-        {
-            // 현재 장착한 custom 저장 정보 가져오기
-            if (!PlayerPrefs.HasKey(
-                    Define_LDH.PlayerProps.GetPlayerInfoKey(Define_LDH.PlayerProps.PlayerInfoKey.CharacterId))
-                && !PlayerPrefs.HasKey(
-                    Define_LDH.PlayerProps.GetPlayerInfoKey(Define_LDH.PlayerProps.PlayerInfoKey.EquipId)))
-            {
-                // 데모: 기본 보유
-                Debug.Log("저장된 커스텀 데이터 없음");
-                _equipped = new UnimoCombo() { characterId = "unimo_ch_001", equipId = "unimo_equip_001" };
-            }
-
-            else
-            {
-                Debug.Log("저장된 커스텀 데이터 있음");
-                string charId =
-                    PlayerPrefs.GetString(
-                        Define_LDH.PlayerProps.GetPlayerInfoKey(Define_LDH.PlayerProps.PlayerInfoKey.CharacterId));
-                string equipId =
-                    PlayerPrefs.GetString(
-                        Define_LDH.PlayerProps.GetPlayerInfoKey(Define_LDH.PlayerProps.PlayerInfoKey.EquipId));
-                _equipped = new UnimoCombo() { characterId = charId, equipId = equipId };
-            }
-
-            // 소유 정보 (데모버전은 모두 소유 상태로 표시)
-            //todo: 수정 필요
-            foreach (var charDef in CatalogProvider.CharactersSorted)
-            {
-                _ownedCharacters.Add(charDef.id);
-            }
-
-            foreach (var equipDef in CatalogProvider.EquipsSorted)
-            {
-                _ownedEquips.Add(equipDef.id);
-            }
-
-
-            SaveEquippedCombo(_equipped.characterId, _equipped.equipId);
-            UpdatePhotonPlayerProps();
-
-            await UniTask.Yield();
-        }
-
-
+        
         #region Interface 구현 - 커스터마이징 기능
 
-        public UnimoCombo GetEquippedLocal() => _equipped;
-        public bool HasCharacter(string id) => _ownedCharacters.Contains(id);
-        public bool HasEquip(string id) => _ownedEquips.Contains(id);
+        public UnimoCombo GetEquippedLocal() => customData.CurrentCombo;
+        public bool HasCharacter(string id) => customData.ownedCharacters.Contains(id);
+        public bool HasEquip(string id) => customData.ownedEquips.Contains(id);
 
-
+        
+        #region UpdateCombo
         /// <summary>
         ///장착 상태를 바꾸는 메서드 (데이터를 업데이트)
         ///소유여부 검증
@@ -116,33 +78,14 @@ namespace Customization
         /// <returns></returns>
         public async UniTask<bool> UpdateComboAsync(string characterId, string equipId)
         {
-            Debug.Log("[CustomizationManager] Start Updating Combo Date");
-            var newChar = characterId ?? _equipped.characterId;
-            var newEquip = equipId ?? _equipped.equipId;
-            Debug.Log($"[CustomizationManager] Update Combo Async - new char : {newChar}, new equip : {newEquip}");
-            //같은 데이터면 업데이트 하지 않음
-            if (newChar.Equals(_equipped.characterId) && newEquip.Equals(_equipped.equipId))
-            {
-                Debug.Log($"[CustomizationManager] Update Combo Async - 이미 동일함. 변경하지 않음");
-                return false;
-            }
-
-            // todo: 소유/호환 검증(cbt에서 임시 주석 처리)
-            if (!HasCharacter(newChar) || !HasEquip(newEquip))
-            {
-                Debug.LogWarning($"[CustomizationManager] Do not have the character or equipment");
-                return false;
-            }
-
-            _equipped = new UnimoCombo(newChar, newEquip);
-
-            // TODO: Firestore 저장 or PlayerPrefs 캐시
-            Debug.Log($"[CustomizationManager] Save and Update Data");
-            SaveEquippedCombo(_equipped.characterId, _equipped.equipId);
-            UpdatePhotonPlayerProps();
-            OnEquippedChanged?.Invoke(_equipped);
-            await UniTask.Yield();
-            return true;
+            if (!IsModified(characterId, equipId)) return false;
+            #if TEST_WITHOUT_LOGIN
+            var ok = await Data.DataManager.Instance.UpdateCustomizationLocalAsync(characterId, equipId);
+            #else
+            var ok = await Data.DataManager.Instance.UpdateCustomizationAsync(characterId, equipId);
+            #endif
+            
+            return ok;
         }
 
         public async UniTask<bool> UpdateComboAsync(UnimoCombo newCombo)
@@ -151,10 +94,10 @@ namespace Customization
         }
 
         public UniTask<bool> UpdateCharacterAsync(string characterId) =>
-            UpdateComboAsync(characterId, _equipped.equipId);
+            UpdateComboAsync(characterId, customData.equipId);
 
-        public UniTask<bool> UpdateEquipAsync(string equipId) => UpdateComboAsync(_equipped.characterId, equipId);
-
+        public UniTask<bool> UpdateEquipAsync(string equipId) => UpdateComboAsync(customData.characterId, equipId);
+        #endregion
 
         #region Apply Character
 
@@ -182,7 +125,7 @@ namespace Customization
 
         public async UniTask ApplyCharacterToAvatarAsync(AvatarStruct avatarStruct, string characterId)
         {
-            var targetChar = characterId ?? _equipped.characterId;
+            var targetChar = characterId ?? customData.characterId;
 
             // 캐릭터만 바뀐 경우에만 스왑
             //기존 캐릭터를 풀에 반납
@@ -218,7 +161,7 @@ namespace Customization
 
         public async UniTask ApplyEquipToAvatarAsync(AvatarStruct avatarStruct, string equipId)
         {
-            var targetMount = equipId ?? _equipped.equipId;
+            var targetMount = equipId ?? customData.equipId;
             Debug.Log("[CustomizationManager] 엔진이 변경되었는지를 확인합니다.");
             if (!string.IsNullOrEmpty(equipId) && avatarStruct.CurrentEquipId != equipId &&
                 CatalogProvider.TryGetEquip(equipId, out var eDef))
@@ -235,9 +178,9 @@ namespace Customization
 
                 //새로운 탈 것 적용
                 Debug.Log($"[CustomizationManager] 새로운 엔진을 꺼내와서 적용합니다.");
-                var charObj = await _charPools.GetInstanceAsync(eDef.id, eDef.prefabRef, avatarStruct.equipRoot);
+                var equipObj = await _equipPools.GetInstanceAsync(eDef.id, eDef.prefabRef, avatarStruct.equipRoot);
 
-                await avatarStruct.BindEquip(charObj, eDef.id);
+                await avatarStruct.BindEquip(equipObj, eDef.id);
             }
             else
             {
@@ -249,14 +192,78 @@ namespace Customization
 
         public async UniTask<Sprite> GetIconAsync(string characterId)
         {
-            if (CatalogProvider.TryGetCharacter(characterId, out var def))
-            {
-                return await def.iconRef.LoadAssetAsync<Sprite>().Task;
+            if (string.IsNullOrEmpty(characterId)) return null;
+            if (!CatalogProvider.TryGetCharacter(characterId, out var def) || def.iconRef == null) return null;
+
+            // 1) 이미 캐시에 있으면 바로 반환
+            if (_iconCache.TryGetValue(characterId, out var cached))
+                return cached;
+            
+            // 2) 이미 로드되어 있으면(같은 AssetReference) 재사용
+            if (def.iconRef.Asset != null) {        // 이미 로드되어서 메모리에 있는 실제 오브젝트가 존재한다면
+                var sp = def.iconRef.Asset as Sprite;
+                _iconCache[characterId] = sp;
+                return sp;
             }
+            
+            if (def.iconRef.OperationHandle.IsValid()) {
+                var sp = def.iconRef.OperationHandle.Result as Sprite;      // 메모리에 로드를 담당했던 핸들이 유효하
+                _iconCache[characterId] = sp;
+                return sp;
+            }
+            
+            // 3) 처음 로드하는 경우: 핸들 저장
+            var handle = def.iconRef.LoadAssetAsync<Sprite>();
+            var sprite = await handle.Task;
+            _iconHandles[characterId] = handle;
+            _iconCache[characterId]    = sprite;
+            return sprite;
 
-            return null;
         }
+        
+        public void ReleaseAllIcons()
+        {
+            // 0) 카탈로그 준비 전이면 아무 것도 안 함
+            if (!CatalogProvider.IsReady || CatalogProvider.Characters == null)
+            {
+                _iconCache?.Clear();
+                return;
+            }
+            Debug.Log("[CustomizationManager] 모든 아이콘 handle을 release 합니다.");
+            
+            // 1) 캐싱된 스프라이트만 비움(여기엔 Addressables 핸들이 없으므로 단순 클리어)
+            _iconCache?.Clear();
+            
+            // 2) 실제 Addressables 쪽은 "로드 이력이 있는" 것만 해제
+            foreach (var def in CatalogProvider.Characters.Values)
+            {
+                if (def == null) continue;
+                var aref = def.iconRef;
+                if (aref == null) continue;
 
+                // 이미 메모리에 로드되어 있던 경우
+                // (Asset이 있거나, OperationHandle이 유효하고 완료된 경우)
+                bool loadedAsset = aref.Asset != null;
+                bool validHandle = aref.OperationHandle.IsValid();
+                bool completedOk = validHandle &&
+                                   aref.OperationHandle.IsDone &&
+                                   aref.OperationHandle.Status == AsyncOperationStatus.Succeeded;
+
+                if (loadedAsset || completedOk)
+                {
+                    try
+                    {
+                        aref.ReleaseAsset();
+                    }
+                    catch (System.Exception e)
+                    {
+                        Debug.LogWarning($"[ReleaseAllIcons] ReleaseAsset() 실패: {def.name} - {e.Message}");
+                    }
+                }
+            }
+            
+            Resources.UnloadUnusedAssets();
+        }
 
         //모든 풀 레지스트리 dispose
         public void DisposePools()
@@ -269,33 +276,31 @@ namespace Customization
 
 
         #region 데이터 저장 / Photon Properties 변경
+        
+        private void OnCustomizationChanged(CustomizationData c)
+        {
+            // Photon PlayerProperties 갱신, 필요한 뷰 업데이트 등
+            UpdatePhotonPlayerProps(c.characterId, c.equipId);
+        }
 
-        private void UpdatePhotonPlayerProps()
+        private void UpdatePhotonPlayerProps(string charId, string equipId)
         {
             if (!Photon.Pun.PhotonNetwork.IsConnected) return;
             var table = new ExitGames.Client.Photon.Hashtable
             {
                 {
                     Define_LDH.PlayerProps.GetPlayerInfoKey(Define_LDH.PlayerProps.PlayerInfoKey.CharacterId),
-                    _equipped.characterId ?? string.Empty
+                    charId ?? string.Empty
                 },
                 {
                     Define_LDH.PlayerProps.GetPlayerInfoKey(Define_LDH.PlayerProps.PlayerInfoKey.EquipId),
-                    _equipped.equipId ?? string.Empty
+                    equipId ?? string.Empty
                 }
             };
 
             PhotonNetwork.LocalPlayer.SetCustomProperties(table);
-        }
-
-        private void SaveEquippedCombo(string charId, string equipId)
-        {
-            PlayerPrefs.SetString(
-                Define_LDH.PlayerProps.GetPlayerInfoKey(Define_LDH.PlayerProps.PlayerInfoKey.CharacterId), charId);
-            PlayerPrefs.SetString(Define_LDH.PlayerProps.GetPlayerInfoKey(Define_LDH.PlayerProps.PlayerInfoKey.EquipId),
-                equipId);
-
-            Debug.Log($"[CustomizationManager] 커스텀 저장 완료 : {charId}, {equipId}");
+            
+            Debug.Log( "[CustomizationManager] PlayerProps에 custom 장착 data를 저장합니다. 장착한 character id :" + PhotonNetwork.LocalPlayer.CustomProperties[Define_LDH.PlayerProps.GetPlayerInfoKey(Define_LDH.PlayerProps.PlayerInfoKey.CharacterId)].ToString());
         }
 
         #endregion
@@ -304,20 +309,20 @@ namespace Customization
 
         public bool IsModified(UnimoCombo stagedUnimoCombo)
         {
-            return !_equipped.Equals(stagedUnimoCombo);
+            return !(customData.CurrentCombo.Equals(stagedUnimoCombo));
         }
 
         public bool IsModified(string stagedCharId, string stagedEquipId)
         {
             var staged = new UnimoCombo(stagedCharId.Trim(), stagedEquipId.Trim());
-            return !_equipped.Equals(staged);
+            return !customData.CurrentCombo.Equals(staged);
         }
 
         // 바뀐 항목만 알고 싶으면 flags/diff도 제공
         public (bool charChanged, bool equipChanged) Diff(string stagedCharId, string stagedEquipId)
         {
-            var ch = !string.Equals(_equipped.characterId, stagedCharId.Trim(), StringComparison.Ordinal);
-            var eq = !string.Equals(_equipped.equipId, stagedEquipId.Trim(), StringComparison.Ordinal);
+            var ch = !string.Equals(customData.characterId, stagedCharId.Trim(), StringComparison.Ordinal);
+            var eq = !string.Equals(customData.equipId, stagedEquipId.Trim(), StringComparison.Ordinal);
 
             return (ch, eq);
         }

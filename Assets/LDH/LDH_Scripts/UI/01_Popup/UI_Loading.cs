@@ -1,7 +1,10 @@
+using System;
 using LDH_MainGame;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 namespace LDH_UI
 {
@@ -9,7 +12,6 @@ namespace LDH_UI
     {
         [Header("Loading UI")]
         [SerializeField] private TMP_Text title;               // 큰 제목
-        [SerializeField] private TMP_Text bigDescription;      // 메인 설명(큰 글씨)
         [SerializeField] private TMP_Text smallDescription;    // 서브 설명(작은 글씨)
 
         [Header("Common Visuals (Prefab handles colors/background)")]
@@ -22,6 +24,33 @@ namespace LDH_UI
         [SerializeField] private Image descriptionPanel;      // 설명창 패널
 
         private GameObject _spawnedUnimo;
+        
+        // event
+        public Action<Scene> onSceneLoaded;
+        
+
+        #region Unity Life Cycle / Scene Loaded
+
+        protected override void Init()
+        {
+            base.Init();
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        protected override void Clear()
+        {
+            base.Clear();
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            onSceneLoaded?.Invoke(scene);
+        }
+
+
+        #endregion
+       
 
         /// <summary>
         /// 테마 적용 (텍스트/유니모)
@@ -30,15 +59,28 @@ namespace LDH_UI
         {
             if (!theme) return;
 
-            SetTitle(theme.gameTitle);
-            SetBigDescription(theme.bigDescription);
-            SetSmallDescription(theme.smallDescription);
-
             SetTitlePanelColor(theme.titlePanelColor);
             SetBackgroundPanelColor(theme.backgroundPanelColor);
             SetDescriptionPanelColor(theme.descriptionPanelColor);
 
             SpawnRandomUnimo(theme.unimoPrefabs);
+
+            if (theme.useGoogleSheetsText && GoogleSheetsLoadingManager.Instance != null)
+            {
+                // 구글시트에서 해당 카테고리 텍스트 가져오기
+                string category = theme.GetActiveCategory();
+                var textData = GoogleSheetsLoadingManager.Instance.GetRandomLoadingData(category);
+                SetTitle(textData.gameTitle);
+                SetSmallDescription(textData.smallDescription);
+                Debug.Log($"구글시트 텍스트 적용: {theme.themeType} → '{category}' 카테고리");
+            }
+            else
+            {
+                // 테마의 고정 텍스트 사용
+                SetTitle(theme.gameTitle);
+                SetSmallDescription(theme.smallDescription);
+                Debug.Log($"테마 고정 텍스트 적용: {theme.themeType}");
+            }
         }
 
         /// <summary>
@@ -54,10 +96,7 @@ namespace LDH_UI
         {
             if (title) title.text = text ?? string.Empty;
         }
-        public void SetBigDescription(string text)
-        {
-            if (bigDescription) bigDescription.text = text ?? string.Empty;
-        }
+       
         public void SetSmallDescription(string text)
         {
             if (smallDescription) smallDescription.text = text ?? string.Empty;

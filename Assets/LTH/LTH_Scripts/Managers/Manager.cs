@@ -3,8 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using Customization;
 using Cysharp.Threading.Tasks;
+using Data;
+using Firebase.Database;
 using LDH_UI;
 using Network;
+using Store;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.SceneManagement;
@@ -19,9 +22,13 @@ namespace Managers
         public static NetworkManager Network => NetworkManager.Instance;        // Network
 
         public static CameraManager Camera => CameraManager.Instance;         // CameraManager
-
-        public static CustomizationManager Custom => CustomizationManager.Instance;     // Customizing
         
+        public static CustomizationManager Custom => CustomizationManager.Instance;     // Customizing
+
+        public static DataManager Data => DataManager.Instance;             // Data
+        public static PurchaseManager Purchase => PurchaseManager.Instance;     //Purchase
+        
+        public static ParticleManager Particle => ParticleManager.Instance;     // Particle
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         public static void Initialize()
@@ -33,9 +40,12 @@ namespace Managers
             var manager = Object.Instantiate(Resources.Load<GameObject>("Prefabs/@Manager"));
             Object.DontDestroyOnLoad(manager);
 
+            manager.AddComponent<DataManager>();
             manager.AddComponent<PlayerManager>();
             manager.AddComponent<UIManager>();
             manager.AddComponent<CameraManager>();
+            manager.AddComponent<PurchaseManager>();
+
 
             SceneManager.sceneLoaded += OnSceneLoaded;
             

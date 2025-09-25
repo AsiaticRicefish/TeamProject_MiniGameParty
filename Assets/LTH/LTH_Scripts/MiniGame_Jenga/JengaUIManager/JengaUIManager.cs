@@ -271,6 +271,9 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
 
     public void OnClick_RotateTower()
     {
+        // 입력 차단 확인 추가
+        if (InputManager.Instance != null && InputManager.Instance.IsBlocked(InputType.UI)) return;
+
         SoundManager.Instance.PlaySFX("Click");
 
         var mgr = JengaTowerManager.Instance;

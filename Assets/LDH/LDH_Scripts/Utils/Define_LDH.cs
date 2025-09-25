@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -39,7 +40,7 @@ namespace LDH_Util
 
         #endregion
 
-        #region User Info
+        #region User Info - Player Properties
 
         public static partial class PlayerProps
         {
@@ -91,8 +92,19 @@ namespace LDH_Util
         #endregion
         
         #region Main Game
-        
-        public enum MainState {Init, Picking, Ready, LoadingMiniGame, PlayingMiniGame, ApplyingResult, End }
+
+        public enum MainState
+        {
+            None,
+            Intro, 
+            Picking, 
+            Ready, 
+            LoadingMiniGame, 
+            PlayingMiniGame, 
+            UnloadingMiniGame,
+            ApplyingResult, 
+            End
+        }
 
         public static partial class RoomProps
         {
@@ -108,6 +120,15 @@ namespace LDH_Util
         {
             public const string InGameReady = "inGameReady";
             public const string InGameDone = "inGameDone";
+            public const string InGameResultDone = "inGameResultDone"; // 결과 연출 완료
+
+        }
+
+        public static partial class DefaultData
+        {
+            public const CurrencyType DefaultRewardCurrency = CurrencyType.Currency1;
+            public const int DefaultReward = 250;
+            public const int DefaultPointReward = 10;
         }
         
         #endregion
@@ -115,14 +136,44 @@ namespace LDH_Util
 
         #region Customizing
 
-        public enum ClosetCategory
+        public enum ItemType
         {
             Character,
             Equip,
         }
 
+        public static partial class DefaultData
+        {
+            public const string DefaultCharacter = "unimo_ch_001";
+            public const string DefaultEquip = "unimo_equip_001";
+        }
+
         #endregion
 
+        #region Currency
+
+        public static partial class DefaultData
+        {
+            public const int DefaultCurrency1 = 10000;
+            public const int DefaultCurrency2 = 10000;
+            public const int DefaultCurrency3 = 10000;
+        }
+        
+        public enum CurrencyType
+        {
+            Currency1,
+            Currency2,
+            Currency3,
+        }
+
+        public static int CurrencyCount => Enum.GetValues(typeof(CurrencyType)).Length;
+        public const long MaxCurrencyValue = 999999999;
+        public const long MinCurrencyValue = 0;
+        
+        #endregion
+
+        
+        
         #region Setting
 
         /// <summary>
@@ -133,9 +184,13 @@ namespace LDH_Util
             public const string Terms   = "https://hwiggames38434.imweb.me/termofuse";
             public const string Privacy = "https://hwig.games/?mode=privacy";
             public const string Support = "https://www.notion.so/2697de437a0c8007b7eeceb6a707547a?source=copy_link";
+
+            public const string RTDB = "https://unimo-56ebc-default-rtdb.asia-southeast1.firebasedatabase.app/";
         }
 
+      
         #endregion
+        
     }
 
 }
