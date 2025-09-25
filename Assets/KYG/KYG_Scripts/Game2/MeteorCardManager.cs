@@ -46,6 +46,8 @@ namespace YG
         private readonly Dictionary<int, MeteorCardItem> _indexToItem = new();
         private readonly Dictionary<int, int> _actorToValue = new();
         private readonly HashSet<int> _lockedValues = new();
+
+        private List<int> _values = new();
         private Coroutine _timeoutCo;
 
         private void OnEnable() => StartCoroutine(Co_WaitAndSpawn());
@@ -76,7 +78,31 @@ namespace YG
             ClearChildren(cardParent);
 
             int n = Mathf.Clamp(PhotonNetwork.CurrentRoom.PlayerCount, 1, 4);
-            var values = GenerateValues(n);
+
+            StartCoroutine(GenerateRandomValues(n));
+
+        }
+
+
+        private IEnumerator GenerateRandomValues(int n)
+        {
+            for (int i = 0; i < n; i++)
+            {
+                yield return new WaitForSeconds(2f);
+
+                if (!PhotonNetwork.IsMasterClient) continue;
+
+                int num = 0;
+
+                while (_values.Contains(num))
+                {
+                    num = Random.Range(1, n + 1);
+                }
+                
+                photonView.RPC(nameof(RPC_AddListRandomNumber), RpcTarget.AllBuffered, num);
+            }
+
+            yield return new WaitUntil(() => _values.Count == n);
 
             for (int i = 0; i < n; i++)
             {
@@ -84,40 +110,20 @@ namespace YG
                 var item = go.GetComponent<MeteorCardItem>();
                 if (!item) continue;
 
-                int value = values[i];
+                int value = _values[i];
                 int index = i;
                 item.Init(index, OnClickCard, value);
                 _indexToItem[index] = item;
             }
         }
 
-        private List<int> GenerateValues(int n)
+        [PunRPC]
+        private void RPC_AddListRandomNumber(int n)
         {
-            switch (distributionRule)
-            {
-                case DistributionRule.UniqueRandom:
-                    var bag = Enumerable.Range(1, maxCardValue).ToList();
-                    for (int i = 0; i < bag.Count; i++)
-                    {
-                        int j = Random.Range(i, bag.Count);
-                        (bag[i], bag[j]) = (bag[j], bag[i]);
-                    }
-                    return bag.Take(n).ToList();
-
-                case DistributionRule.FixedPreset:
-                    return presetValues.Take(n).ToList();
-
-                case DistributionRule.RandomAny:
-                    var vals = new List<int>();
-                    for (int i = 0; i < n; i++)
-                        vals.Add(Random.Range(1, maxCardValue + 1));
-                    return vals;
-
-                default:
-                    return Enumerable.Range(1, n).ToList();
-            }
+            _values.Add(n);
         }
-
+        
+        
         private void ClearChildren(RectTransform rt)
         {
             if (!rt) return;
@@ -225,13 +231,13 @@ namespace YG
             foreach (var kv in _indexToItem)
             {
                 var item = kv.Value;
-                if (!item) continue;
+                //if (!item) continue;
 
                 // **선택 즉시 숫자 공개하지 않음**
                 if (item.Value == value)
                     item.MarkPicked(mine: actorNumber == PhotonNetwork.LocalPlayer.ActorNumber);
                 //else
-                    //item.DimUnavailable();
+                   //item.DimUnavailable();
             }
             if (actorNumber == PhotonNetwork.LocalPlayer.ActorNumber)
                 SetBanner("다른 플레이어 대기중…");

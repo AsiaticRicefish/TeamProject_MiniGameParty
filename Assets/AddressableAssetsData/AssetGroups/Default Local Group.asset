@@ -16,7 +16,17 @@ MonoBehaviour:
   m_Data:
     m_SerializedData: []
   m_GUID: 8dc196d36c902c4439b304ad961ef94d
-  m_SerializeEntries: []
+  m_SerializeEntries:
+  - m_GUID: 74b4033cb15e3234cbd09a87d609d3a5
+    m_Address: Assets/Imports/Meteo1.1.0/BGM/BGM001.mp3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9a932b3611580e94190a1e363dae5efc
+    m_Address: Assets/Imports/Meteo1.1.0/BGM/click2.mp3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: efc2531fbc716f7409d27168060779e5, type: 2}
   m_SchemaSet:

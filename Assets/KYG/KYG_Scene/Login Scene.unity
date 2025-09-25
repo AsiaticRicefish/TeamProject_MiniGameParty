@@ -726,6 +726,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   guestLoginUI: {fileID: 99408738}
+  tapSfxName: Click
   disableGameObjectAfterTap: 1
 --- !u!1001 &1268800756
 PrefabInstance:
@@ -748,12 +749,12 @@ PrefabInstance:
     - target: {fileID: 4827618967646636642, guid: ab169cd4aaf8c4929a6a5e14b129a0b7,
         type: 3}
       propertyPath: m_AnchorMax.x
-      value: 0.4
+      value: 0.5537037
       objectReference: {fileID: 0}
     - target: {fileID: 4827618967646636642, guid: ab169cd4aaf8c4929a6a5e14b129a0b7,
         type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0.1875
+      value: 0.71580404
       objectReference: {fileID: 0}
     - target: {fileID: 4827618967646636642, guid: ab169cd4aaf8c4929a6a5e14b129a0b7,
         type: 3}
@@ -1367,6 +1368,7 @@ GameObject:
   - component: {fileID: 7478722001490121238}
   - component: {fileID: 7587567041375533421}
   - component: {fileID: 1771110005793179502}
+  - component: {fileID: 7587567041375533422}
   m_Layer: 5
   m_Name: GuestLoginButton
   m_TagString: Untagged
@@ -1405,6 +1407,7 @@ GameObject:
   - component: {fileID: 1787580480281102287}
   - component: {fileID: 8600693711138875719}
   - component: {fileID: 9199652751304874120}
+  - component: {fileID: 9199652751304874121}
   m_Layer: 5
   m_Name: GPGSButton
   m_TagString: Untagged
@@ -1424,6 +1427,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: LoginPopup
+      objectReference: {fileID: 0}
+    - target: {fileID: 5153368874503152742, guid: d970f6f242ba69249abe2dd37f75d2b5,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8761812890970323292, guid: d970f6f242ba69249abe2dd37f75d2b5,
         type: 3}
@@ -1582,6 +1590,19 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &7587567041375533422
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3532186526487322628}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51914864b4ec07543b2bf5ce58649db2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sfxName: Click
 --- !u!114 &8600693711138875719
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1668,6 +1689,19 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &9199652751304874121
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5209678924471509189}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51914864b4ec07543b2bf5ce58649db2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sfxName: Click
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

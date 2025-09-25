@@ -13,11 +13,5 @@ MonoBehaviour:
   m_Name: SceneSoundMappingConfig
   m_EditorClassIdentifier: 
   sceneMappings:
-  - sceneName: MiniGameJengaScene
-    gameType: 3
-  - sceneName: PMS_ShootingTestScene
-    gameType: 5
-  - sceneName: Rhythm
-    gameType: 4
   - sceneName: Login Scene
     gameType: 0

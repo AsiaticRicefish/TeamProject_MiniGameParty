@@ -18,8 +18,8 @@ namespace YG
         [Header("Colors")]
         [SerializeField] private Color normalColor = Color.white;                  // 기본
         [SerializeField] private Color dimColor = new Color(1,1,1,0.35f);         // 남이 골라서 막힌 카드
-        [SerializeField] private Color mineColor = new Color(0.9f,0.95f,1f);      // 내가 고른 카드(강조)
-        [SerializeField] private Color takenColor = new Color(1f,0.95f,0.6f);     // 남이 고른 카드(강조)
+        [SerializeField] private Color mineColor = new Color(1f,0.95f,0.6f);      // 내가 고른 카드(강조)
+        [SerializeField] private Color takenColor = new Color(0.9f,0.95f,1f);     // 남이 고른 카드(강조)
 
         public int Index { get; private set; }
         public int Value { get; private set; }

@@ -498,6 +498,7 @@ GameObject:
   - component: {fileID: 7559016606102594722}
   - component: {fileID: 9039751968535157339}
   - component: {fileID: 2177127024360861998}
+  - component: {fileID: 2985830385690961871}
   m_Layer: 5
   m_Name: CancelButton
   m_TagString: Untagged
@@ -605,7 +606,32 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 9039751968535157339}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2985830385690961871}
+        m_TargetAssemblyTypeName: SfxPlayer, Assembly-CSharp
+        m_MethodName: Play
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+--- !u!114 &2985830385690961871
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3522330050441355212}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ec735d0c9c7a1b4aba5c1036dced763, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sfxName: Click
 --- !u!1 &4122563662925656273
 GameObject:
   m_ObjectHideFlags: 0
@@ -693,6 +719,7 @@ GameObject:
   - component: {fileID: 6873842834316123873}
   - component: {fileID: 4131791277201008555}
   - component: {fileID: 8817869572383520212}
+  - component: {fileID: 9223369397658931366}
   m_Layer: 5
   m_Name: ConnectButton
   m_TagString: Untagged
@@ -801,18 +828,31 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: 
+      - m_Target: {fileID: 9223369397658931366}
+        m_TargetAssemblyTypeName: SfxPlayer, Assembly-CSharp
+        m_MethodName: Play
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &9223369397658931366
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5959407998914891296}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ec735d0c9c7a1b4aba5c1036dced763, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sfxName: Click
 --- !u!1 &6874501131621002952
 GameObject:
   m_ObjectHideFlags: 0
@@ -1052,6 +1092,7 @@ GameObject:
   - component: {fileID: 3101245582055698939}
   - component: {fileID: 6961161046847384231}
   - component: {fileID: 8701207154758185220}
+  - component: {fileID: 8002775235786344529}
   m_Layer: 5
   m_Name: Button
   m_TagString: Untagged
@@ -1159,7 +1200,32 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 6961161046847384231}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 8002775235786344529}
+        m_TargetAssemblyTypeName: SfxPlayer, Assembly-CSharp
+        m_MethodName: Play
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+--- !u!114 &8002775235786344529
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7325677954617401908}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ec735d0c9c7a1b4aba5c1036dced763, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sfxName: Click
 --- !u!1 &7799277460651047201
 GameObject:
   m_ObjectHideFlags: 0

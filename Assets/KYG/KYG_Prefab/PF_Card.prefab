@@ -99,7 +99,7 @@ MonoBehaviour:
   normalColor: {r: 1, g: 1, b: 1, a: 1}
   dimColor: {r: 1, g: 1, b: 1, a: 0.35}
   mineColor: {r: 0.9, g: 0.95, b: 1, a: 1}
-  takenColor: {r: 0.5080468, g: 1, b: 0.50628924, a: 1}
+  takenColor: {r: 1, g: 0.054920144, b: 0, a: 1}
 --- !u!1 &3284580926990867880
 GameObject:
   m_ObjectHideFlags: 0

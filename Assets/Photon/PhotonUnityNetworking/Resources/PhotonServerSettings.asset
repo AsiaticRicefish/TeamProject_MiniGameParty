@@ -152,6 +152,7 @@ MonoBehaviour:
   - RPC_ShowEndGame
   - RPC_ShowFinalRewards
   - RPC_ShowScoreboardJson
+  - RPC_AddListRandomNumber
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

@@ -37,6 +37,8 @@ public class GuestLoginUI : MonoBehaviour
     [SerializeField] private GameObject nicknamePopupPrefab; // 닉네임 팝업 프리팹(위 NicknamePopup.cs 포함)
     [SerializeField] private Canvas popupCanvasOverride; // 팝업을 띄울 최상단 Canvas (비우면 자동 탐색)
     [SerializeField] private int popupOrderBoost = 100; // 최상단 보장용 정렬 가산치
+    
+    [SerializeField] private GameObject tapCatcher;
 
     private float _lastTypeTime;
     private bool _submitting;
@@ -234,6 +236,37 @@ public class GuestLoginUI : MonoBehaviour
         }
 
         LogButtonStates("SwitchToInput");
+    }
+    
+    public void ReturnToTapCatcher()
+    {
+        // 로그인 팝업 끄기
+        if (buttonRoot) buttonRoot.SetActive(false);
+        if (inputRoot) inputRoot.SetActive(false);
+        if (loadingRoot) loadingRoot.SetActive(false);
+        if (confirmButton) confirmButton.gameObject.SetActive(false);
+
+        if (guestLoginButton) guestLoginButton.gameObject.SetActive(false);
+        if (gpgsLoginButton) gpgsLoginButton.gameObject.SetActive(false);
+
+        // 닉네임 팝업 떠있으면 닫기
+        if (_nicknamePopupInstance)
+        {
+            Destroy(_nicknamePopupInstance);
+            _nicknamePopupInstance = null;
+        }
+
+        // TapCatcher 다시 켜기
+        if (tapCatcher)
+        {
+            tapCatcher.SetActive(true);
+
+            // ★ 핵심: 다음 탭을 받을 수 있도록 리셋
+            var catcher = tapCatcher.GetComponent<ScreenTapCatcher>();
+            if (catcher) catcher.ResetForNextTap();
+        }
+
+        Debug.Log("[GuestLoginUI] ReturnToTapCatcher -> TapCatcher 복귀 완료");
     }
 
     private void OnClickGpgsLogin()
