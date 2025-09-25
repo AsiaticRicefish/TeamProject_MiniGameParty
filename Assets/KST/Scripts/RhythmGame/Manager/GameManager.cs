@@ -60,6 +60,7 @@ namespace RhythmGame
         private Dictionary<string, int> _lastRankSnapshot;
         public Action<Dictionary<string, int>> OnRankingsUpdated; // 실시간 순위 갱신 이벤트
         Dictionary<string, int> _totalScores = new();
+        Dictionary<string, int> _perfectCounts = new();
         bool _receivedRank;
 
         int _songIndex = -1;
@@ -476,7 +477,7 @@ namespace RhythmGame
         }
 
         [PunRPC]
-        public void RPC_ReceiveScore(string uid, int score, int verdictScore)
+        public void RPC_ReceiveScore(string uid, int score, int verdictScore, int perfectCount)
         {
             if (!PhotonNetwork.IsMasterClient) return;
             if (string.IsNullOrEmpty(uid)) return;
@@ -484,6 +485,7 @@ namespace RhythmGame
             // 합산 스코어 집계
             int total = score + verdictScore;
             _totalScores[uid] = total;
+            _perfectCounts[uid] = perfectCount;
 
             // 옵션: 내부 플레이어 데이터에도 보관(원하면)
             if (players.TryGetValue(uid, out var rp)) rp.score = total;
@@ -495,11 +497,14 @@ namespace RhythmGame
         {
             // players 기준으로 빠진 UID는 0점으로 취급
             foreach (var uid in players.Keys)
+            {
                 if (!_totalScores.ContainsKey(uid)) _totalScores[uid] = 0;
-
+                if (!_perfectCounts.ContainsKey(uid)) _perfectCounts[uid] = 0;
+            }
             // 정렬: 합산점수 내림차순 → 그리드 순서(안정화)
             var ordered = _totalScores
                 .OrderByDescending(kv => kv.Value)
+                .ThenByDescending(kv => _perfectCounts.TryGetValue(kv.Key, out var pc) ? pc : 0)
                 .ThenBy(kv => _gridOrder.TryGetValue(kv.Key, out var ord) ? ord : int.MaxValue)
                 .ToList();
 
