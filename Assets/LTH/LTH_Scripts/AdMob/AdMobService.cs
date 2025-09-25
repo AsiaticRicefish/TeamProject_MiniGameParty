@@ -5,6 +5,7 @@
 using System;
 using System.Threading.Tasks;
 using UnityEngine;
+
 #if ADMOB_ENABLED
 using GoogleMobileAds;
 using GoogleMobileAds.Api;
@@ -12,8 +13,9 @@ using GoogleMobileAds.Api;
 
 public static class AdMobService
 {
-    public static event Action OnRewardedLoaded;                 // 준비 완료
-    public static event Action<string> OnRewardedLoadFailed;     // 로드 실패 (메시지)
+    public static event Action OnRewardedLoaded;             // 준비 완료
+    public static event Action<string> OnRewardedLoadFailed; // 로드 실패 (메시지)
+
     public static bool IsRewardedReady =>
 #if ADMOB_ENABLED
         _rewardedAd != null && _rewardedAd.CanShowAd();
@@ -24,10 +26,11 @@ public static class AdMobService
 #if ADMOB_ENABLED
     private static RewardedAd _rewardedAd;
     private static bool _initialized;
+    private static bool _isLoading = false;
 #endif
 
     /// <summary>
-    /// 광고가 나와야 하는 씬 진입 시 1회 호출 (메인맵에서 사용할 예정)
+    /// 광고가 나와야 하는 씬 진입 시 1회 호출
     /// </summary>
     public static async Task InitializeAsync()
     {
@@ -42,6 +45,7 @@ public static class AdMobService
             tcs.SetResult(true);
         });
         await tcs.Task;
+
         _initialized = true;
 
         // 첫 광고 미리 로드
@@ -57,66 +61,136 @@ public static class AdMobService
     /// </summary>
     public static async Task<bool> LoadRewardedAsync()
     {
-        var tcs = new TaskCompletionSource<bool>();
-        var adRequest = new AdRequest();
-
-        RewardedAd.Load("ca-app-pub-3940256099942544/5224354917", adRequest,
-            (RewardedAd ad, LoadAdError error) =>
+        if (_isLoading)
+        {
+            // 이미 로딩 중이면 완료될 때까지 대기
+            while (_isLoading)
             {
-                if (error != null)
-                {
-                    Debug.LogError($"[AdMob] 보상 로드 실패 : {error}");
-                    tcs.SetResult(false);
-                    return;
-                }
-                Debug.Log("[AdMob] 보상 로드 성공");
-                _rewardedAd = ad;
+                await Task.Delay(100);
+            }
+            return IsRewardedReady;
+        }
 
-                // 닫히면 다음 기회 대비 재로드
-                _rewardedAd.OnAdFullScreenContentClosed += () =>
-                {
-                    Debug.Log("[AdMob] Rewarded closed → reload");
-                    _ = LoadRewardedAsync();
-                };
-                _rewardedAd.OnAdFullScreenContentFailed += (AdError e) =>
-                {
-                    Debug.LogWarning("[AdMob] Fullscreen open failed: " + e);
-                };
+        if (IsRewardedReady) return true; // 이미 준비됨
 
-                Debug.Log("[AdMob] 보상 로드 성공");
-                OnRewardedLoaded?.Invoke();
-                tcs.SetResult(true);
-            });
+        _isLoading = true;
+
+        var tcs = new TaskCompletionSource<bool>();
+
+        var adUnitId = AdMobConfig.GetRewardedId();
+        if (string.IsNullOrEmpty(adUnitId) || adUnitId == "unused")
+        {
+            string msg = "[AdMob] Rewarded adUnitId missing (check admob_config.json)";
+            Debug.LogError(msg);
+            OnRewardedLoadFailed?.Invoke(msg);
+            _isLoading = false;
+            tcs.SetResult(false);
+            return await tcs.Task;
+        }
+
+        var request = new AdRequest();
+
+        RewardedAd.Load(adUnitId, request, (ad, error) =>
+        {
+            _isLoading = false;
+            if (error != null)
+            {
+                string em = error.ToString();
+                Debug.LogError($"[AdMob] Rewarded load failed: {em}");
+                OnRewardedLoadFailed?.Invoke(em);
+                tcs.SetResult(false);
+                return;
+            }
+
+            // 기존 광고 객체 정리
+            if (_rewardedAd != null) _rewardedAd.Destroy();
+
+            _rewardedAd = ad;
+
+            _rewardedAd.OnAdFullScreenContentFailed += OnAdFailed;
+
+            Debug.Log("[AdMob] Rewarded loaded successfully");
+            OnRewardedLoaded?.Invoke();
+            tcs.SetResult(true);
+        });
 
         return await tcs.Task;
     }
 
+    #region Event Handlers
+
+    // 광고 실패 이벤트 핸들러
+    private static void OnAdFailed(AdError error)
+    {
+        Debug.LogError($"[AdMob] Fullscreen failed: {error}");
+        _rewardedAd = null; // 현재 광고 무효화
+    }
+    #endregion
+
     /// <summary>
-    /// 광고 표시 성공적으로 표시되어 닫히면 true
+    /// 광고 표시. 성공적으로 표시되어 닫히면 true
     /// 끝까지 시청 시 onRewarded 콜백이 호출됨 (여기서 2배 지급 등 처리)
     /// </summary>
     public static async Task<bool> ShowRewardedAsync(Action<Reward> onRewarded)
     {
-        if (_rewardedAd == null || !_rewardedAd.CanShowAd())
+        if (!IsRewardedReady)
         {
+            Debug.LogWarning("[AdMob] Rewarded not ready, try preload...");
             bool loaded = await LoadRewardedAsync();
-            if (!loaded) return false;
+            if (!loaded || !IsRewardedReady) return false;
         }
 
         var tcs = new TaskCompletionSource<bool>();
 
-        _rewardedAd.Show(reward =>
+        try
         {
-            // 유저가 끝까지 시청 → 보상 콜백
-            onRewarded?.Invoke(reward);
-        });
+            Debug.Log("[AdMob] Attempting to show rewarded ad...");
 
-        // 화면이 닫히면 호출
-        _rewardedAd.OnAdFullScreenContentClosed += () => tcs.SetResult(true);
+            // Show 호출 전 마지막 체크
+            if (!_rewardedAd.CanShowAd())
+            {
+                Debug.LogWarning("[AdMob] CanShowAd returned false");
+                return false;
+            }
 
-        await tcs.Task;
-        return true;
+            // 별도의 닫힘 핸들러 생성 (중복 방지)
+            Action closedHandler = null;
+            closedHandler = () =>
+            {
+                Debug.Log("[AdMob] Show completed, ad closed");
+
+                // 핸들러 제거
+                if (_rewardedAd != null)
+                {
+                    _rewardedAd.OnAdFullScreenContentClosed -= closedHandler;
+                }
+
+                // 광고 무효화
+                _rewardedAd = null;
+
+                tcs.SetResult(true);
+            };
+
+            // Show 전용 닫힘 핸들러 등록
+            _rewardedAd.OnAdFullScreenContentClosed += closedHandler;
+
+            _rewardedAd.Show(reward =>
+            {
+                Debug.Log($"[AdMob] Reward received: {reward.Type}, Amount: {reward.Amount}");
+                onRewarded?.Invoke(reward);
+            });
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[AdMob] Show failed with exception: {ex.Message}");
+            tcs.SetResult(false);
+            return false;
+        }
+
+        bool result = await tcs.Task;
+        Debug.Log($"[AdMob] ShowRewardedAsync completed with result: {result}");
+        return result;
     }
-#endif
 
+#endif
 }
