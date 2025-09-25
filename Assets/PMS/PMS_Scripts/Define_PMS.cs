@@ -7,6 +7,7 @@ namespace PMS_Util
 {
     public enum SH_GameStateType
     {
+        None,
         Init,
         CardSelect,
         GamePlay,
