@@ -9,6 +9,10 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.UI;
 using System;
+using Customization;
+using Cysharp.Threading.Tasks;
+using LDH_Util;
+using PMS_Util;
 
 /// <summary>
 /// 젠가 랭킹 패널 컨트롤러 (DOTween 전용)
@@ -295,16 +299,21 @@ public class JengaRankingUIAnimated : MonoBehaviour
             var le = go.GetComponent<LayoutElement>() ?? go.AddComponent<LayoutElement>();
             le.flexibleWidth = 1f;
             le.flexibleHeight = 0f;
-
-            // 초기 내용
+            
             row.SetContent(kv.Value);
             row.SetColor(ResolveColor(uid));
             row.SetFirstPlace(kv.Value == 1);
 
+            string profileId = PlayerManager.Instance.GetPlayer(uid).CharacterId;
+            Debug.Log($"<color=yellow> 가져온 플레이어의 캐릭터 아이디? {profileId}</color>");
+            row.SetProfile(profileId);
+            
             _rows[uid] = row;
             _rowHandles[uid] = handle;
 
+            yield return null;
             LayoutRebuilder.ForceRebuildLayoutImmediate(content);
+            yield return null;
         }
 
         // 빠진 UID 제거

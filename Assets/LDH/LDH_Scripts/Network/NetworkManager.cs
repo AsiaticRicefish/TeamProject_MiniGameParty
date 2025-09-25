@@ -312,7 +312,7 @@ namespace Network
             // 커스텀 프로퍼티 설정
             if (!PhotonNetwork.LocalPlayer.CustomProperties.ContainsKey("uid"))
             {
-                Debug.Log("프로퍼티 - uid를 설정합니다.");
+//                Debug.Log("프로퍼티 - uid를 설정합니다.");
                 var props = new Hashtable { { "uid", PhotonNetwork.AuthValues?.UserId }, };
                 PhotonNetwork.LocalPlayer.SetCustomProperties(props);
             }

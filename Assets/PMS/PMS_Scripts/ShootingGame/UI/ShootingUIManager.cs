@@ -41,8 +41,6 @@ namespace ShootingScene.ShootingGame
 
        public IEnumerator PlayMyTurnUI()
        {
-           Debug.Log("[ShootingUIManager] 내 턴 ui position reset");
-           myTurnUI.ResetPosition();
            Debug.Log("[ShootingUIManager] 내 턴 ui show 시작");
            yield return Manager.UI.ShowScreenUI(myTurnUI).ToCoroutine();
            Debug.Log("[ShootingUIManager] 일시 정지");

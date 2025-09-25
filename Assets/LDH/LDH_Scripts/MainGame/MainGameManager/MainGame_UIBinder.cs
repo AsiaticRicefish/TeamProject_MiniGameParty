@@ -100,13 +100,20 @@ namespace LDH_MainGame
 
             _readyPanel.ResetAllSlots(isMaster);
 
+            
+            string profileKey = Define_LDH.PlayerProps.GetPlayerInfoKey(Define_LDH.PlayerProps.PlayerInfoKey.CharacterId);
+            
             int ls = -1;
             foreach (var pl in players)
             {
                 int slot = (int)pl.CustomProperties[Define_LDH.PlayerProps.SlotIndex];
-                _readyPanel.SetPlayerPanel(slot, false, pl.IsLocal, pl.IsMasterClient, pl.NickName);
-                _readyPanel[slot].SetInviteActive(false);
-                if (pl.IsLocal) ls = slot;
+                
+                if (pl.CustomProperties.TryGetValue(profileKey, out var v) == true && v is string profileId)
+                {
+                    _readyPanel.SetPlayerPanel(slot, false, pl.IsLocal, pl.IsMasterClient, pl.NickName, profileId);
+                    _readyPanel[slot].SetInviteActive(false);
+                    if (pl.IsLocal) ls = slot;
+                }
             }
 
             _setLocalSlot(ls);
@@ -152,7 +159,6 @@ namespace LDH_MainGame
             _loadingUI = Manager.UI.CreatePopupUI<UI_Loading>();
             UI_LoadingTheme theme = Resources.Load<UI_LoadingTheme>(loadingThemePath);
             _loadingUI.ApplyTheme(theme);
-            _loadingUI.SetBigDescription("로비로 이동 중...");
             _loadingUI.SetSmallDescription("잠시만 기다려 주세요.");
             _loadingUI.SetProgress(0f);
             
@@ -164,7 +170,7 @@ namespace LDH_MainGame
                     return;
                 
                 _loadingUI.SetProgress(1f);
-                _loadingUI.AutoCloseAfter(1.5f, _loadingUI.destroyCancellationToken).Forget();
+                _loadingUI.AutoCloseAfter(0.5f, _loadingUI.destroyCancellationToken).Forget();
             };
             
             // 로딩창 띄우기
@@ -177,7 +183,6 @@ namespace LDH_MainGame
             UI_LoadingTheme theme = Resources.Load<UI_LoadingTheme>(loadingThemePath);
             _loadingUI.ApplyTheme(theme);
             _loadingUI.SetTitle("라운드 종료");
-            _loadingUI.SetBigDescription("결과 집계 중...");
             _loadingUI.SetSmallDescription("점수와 순위를 확인하는 중입니다.\n잠시만 기다려 주세요.");
             
             // 로딩창 띄우기
@@ -206,7 +211,9 @@ namespace LDH_MainGame
         {
             _gameEndPopup = Manager.UI.CreatePopupUI<UI_Popup_GameEnd>();
             if(isMainEnd)
-                _gameEndPopup.SetData("매치 종료");
+                _gameEndPopup.SetMatchEnd();
+            else
+                _gameEndPopup.SetMiniGameEnd();
             
             await Manager.UI.ShowPopupUI(_gameEndPopup);
             await UniTask.Delay(TimeSpan.FromSeconds(1.8f));

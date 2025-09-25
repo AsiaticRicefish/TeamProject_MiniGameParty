@@ -1,4 +1,4 @@
-﻿namespace ShootingScene
+namespace ShootingScene
 {
     public interface IGameState
     {

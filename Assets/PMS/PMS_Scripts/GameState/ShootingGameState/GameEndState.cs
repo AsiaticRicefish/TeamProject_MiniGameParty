@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
 using ShootingScene;
+using PMS_Util;
 
 public class GameEndState : ShootingGameState
 {
+    public override SH_GameStateType GameStateType => SH_GameStateType.GameEnd;
     public override void Enter()
     {
         Debug.Log("[GameEndState] - GameEndState Enter");
@@ -19,20 +21,17 @@ public class GameEndState : ShootingGameState
         //룸 프로퍼티(마스터만) 및 플레이어 프로퍼티 초기화(로컬)        
         ShootingNetworkManager.Instance.ClearShootingGamePlayerProperties();
 
+        //플레이어 인풋 매니저 구독 해제 처리
+        PlayerInputManager.Instance.Cleanup();
+
+        //사운드 정리
+        SoundManager.Instance.StopAllSounds();
+
         if (PhotonNetwork.IsMasterClient)
         {          
             ShootingNetworkManager.Instance.ClearShootingGameRoomProperties();
             ShootingGameManager.Instance.EndGame();
         }
-
-        ShootingScene.PlayerInputManager.Instance.Cleanup();
-    }
-    public override void Update()
-    {
-
-    }
-    public override void Exit()
-    {
-
+        
     }
 }

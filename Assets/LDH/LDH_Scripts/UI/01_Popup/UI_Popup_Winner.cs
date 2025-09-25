@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Customization;
 using Cysharp.Threading.Tasks;
 using LDH_Util;
@@ -21,6 +22,10 @@ namespace LDH_UI
         [SerializeField] private AnimationClip unimoClip;
         [SerializeField] private AnimationClip equipClip;
         
+        [Header("Sound")] [SerializeField]
+        private Define_LDH.SfxKey winnerSfxKey = Define_LDH.SfxKey.Main_Winner;
+        [SerializeField]
+        private Define_LDH.SfxKey loserSfxKey = Define_LDH.SfxKey.Main_Loser;
         
         private Animator UnimoAnimator => avatarStruct.CurrentCharacter?.GetComponent<Animator>();
         private Animator EquipAnimator => avatarStruct.CurrentEquip?.GetComponent<Animator>();
@@ -31,6 +36,8 @@ namespace LDH_UI
         AnimationClipPlayable _unimoClipPlayable;
         PlayableGraph _equipGraph;
         AnimationClipPlayable _equipClipPlayable;
+
+        private bool _isWinner;
         
         protected override void Clear()
         {
@@ -39,7 +46,7 @@ namespace LDH_UI
             if(_equipGraph.IsValid()) _equipGraph.Destroy();
         }
 
-        public async UniTask SetData(string nickname, UnimoCombo combo)
+        public async UniTask SetData(string nickname, UnimoCombo combo, bool isWinner)
         {
             userNickName.text = nickname;
             await CustomizationManager.Instance.ApplyToAvatarAsync(avatarStruct, combo);
@@ -47,6 +54,8 @@ namespace LDH_UI
             //아바타 애니메이션 설정
             (_unimoGraph, _unimoClipPlayable) = AnimationClipPlayer.Play(unimoClip, UnimoAnimator);
             (_equipGraph, _equipClipPlayable) = AnimationClipPlayer.Play(equipClip, EquipAnimator);
+
+            _isWinner = isWinner;
         }
 
         private void Update()
@@ -75,6 +84,13 @@ namespace LDH_UI
                 double e_wrapped = e_t % e_len;
                 _equipClipPlayable.SetTime(e_wrapped);
             }
+        }
+        
+        
+        protected override async UniTask OnShowAsync(CancellationToken ct)
+        {
+            SoundManager.Instance.PlaySFX( _isWinner? winnerSfxKey.ToString() : loserSfxKey.ToString());
+            await base.OnShowAsync(ct);
         }
     }
 }

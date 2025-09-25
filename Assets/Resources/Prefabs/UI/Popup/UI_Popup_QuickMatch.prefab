@@ -1173,7 +1173,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 208, y: -348.5601}
+  m_AnchoredPosition: {x: 121, y: -326.05508}
   m_SizeDelta: {x: 283.9, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &762366099249375287
@@ -1731,6 +1731,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 1041488649161873535}
+    - targetCorrespondingSourceObject: {fileID: 1330773126853593739, guid: 781e76cf87ee34622a365677a99e99ea,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 9017707852635646063}
   m_SourcePrefab: {fileID: 100100000, guid: 781e76cf87ee34622a365677a99e99ea, type: 3}
 --- !u!1 &1727730768533217845 stripped
 GameObject:
@@ -1758,6 +1762,24 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &9017707852635646063
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1727730768533217845}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0bde7ffac2943d98d0b7d5e05bc4ad9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playOnlyWhenInteractable: 1
+  buttonClickSfx: 0
+  toggleOnSfx: 0
+  toggleOffSfx: 0
+  playToggleOnSfx: 1
+  playToggleOffSfx: 0
 --- !u!114 &6981149270313642209 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7309338515615268959, guid: 781e76cf87ee34622a365677a99e99ea,
