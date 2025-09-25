@@ -39,7 +39,7 @@ namespace RhythmGame
             //초기값 지정
             _sm = ScoreManager.Instance;
 
-            scoreText.text = $"indivisual score : {_sm.Score}";
+            scoreText.text = $"점수 : {_sm.Score}";
             // _heatscoreText.text = $"OverHeat Score : {_sm.HeatScore}";
             _heatSlider.value = _sm.HeatScore;
             _verdictText.text = "";
@@ -54,7 +54,7 @@ namespace RhythmGame
 
         void OnScoreValueChanged(int value)
         {
-            scoreText.text = $"indivisual score : {value}";
+            scoreText.text = $"점수 score : {value}";
         }
 
         // void OnOverHeatValueChanged(int value)
