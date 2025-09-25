@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using LDH_Util;
+using Managers;
 using Photon.Pun;
 using UnityEngine;
 using static LDH_Util.Define_LDH;
@@ -20,10 +21,10 @@ namespace LDH_MainGame
         private readonly System.Func<MiniGameInfo, string> _sceneName;
         private readonly System.Func<IEnumerator, Coroutine> _start;
         private readonly System.Action<Coroutine> _stop;
+        private readonly System.Func<bool> _isEnd;
         private readonly PhotonView _pv; // 주입받은 PhotonView (현재는 사용 안 함)
-
-        public int TotalRound { get; }
-        private Define_LDH.MainState _state = Define_LDH.MainState.Init;
+        
+        private Define_LDH.MainState _state = Define_LDH.MainState.None;
         private MiniGameInfo _currentMini;
 
         public MainGame_StateMachine(
@@ -34,7 +35,7 @@ namespace LDH_MainGame
             System.Func<MiniGameInfo, string> sceneName,
             System.Func<IEnumerator, Coroutine> startCoroutine,
             System.Action<Coroutine> stopCoroutine,
-            int totalRound,
+            System.Func<bool> isEnd,
             PhotonView pv)
         {
             _pc = pc;
@@ -46,45 +47,74 @@ namespace LDH_MainGame
             _sceneName = sceneName;
             _start = startCoroutine;
             _stop = stopCoroutine;
-            TotalRound = totalRound;
+            _isEnd = isEnd;
             _pv = pv;
         }
-        
-        
+
+
         public MainState Get() => _state;
+
         public MainState ReadOrDefault()
         {
-            var s = _pc.GetRoomProps(RoomProps.State, MainState.Init.ToString());
-            return System.Enum.TryParse(s, out MainState m) ? m : MainState.Init;
+            var s = _pc.GetRoomProps(RoomProps.State, MainState.Intro.ToString());
+            return System.Enum.TryParse(s, out MainState m) ? m : MainState.Intro;
         }
+
         public bool Changed(MainState next) => next != _state;
         public void Set(MainState next) => _state = next;
 
         #region Coroutine
-        
+
+        public IEnumerator Co_Intro()
+        { 
+           yield return _uiBinder.BuildIntroScreen(PhotonNetwork.PlayerList).ToCoroutine();
+
+           yield return new WaitForSeconds(1.5f);
+           
+           _pc.SetLocalDone(true);
+            yield return null;
+        }
+
         public IEnumerator Co_Picking()
         {
-            MainGameManager.Instance.OnPicking?.Invoke();
+            // 스코어 패널 닫기
+            _uiBinder.CloseScorePanel();
+            yield return new UnityEngine.WaitForSeconds(2f);
             
-            yield return new UnityEngine.WaitForSeconds(1.5f);
+            //done flag 초기화
+            _pc.SetLocalDone(false);
 
             if (_isMaster())
             {
+                //전체 게임 리스트
+                var candidates = _registry.MiniGameInfos;
+                
                 // 직전에 뽑은 미니게임은 다음에는 뽑지 않도록 함(단, 레지스트리에 1개만 있다면 동일한 미니게임 뽑도록 처리)
-                _currentMini = _registry.PickRandomGame(info => _registry.Count==1 || info.id != _currentMini?.id);
-                _pc.SetRoomProps(new Dictionary<string, object> {
-                    { RoomProps.MiniGameId, _currentMini.id },
-                    { RoomProps.State, MainState.Ready.ToString() }
-                });
+                _currentMini = _registry.PickRandomGame(info => _registry.Count == 1 || info.id != _currentMini?.id);
+                
+                // 선택된 미니게임의 인덱스
+                int targetIndex = candidates.FindIndex( info => _currentMini.id == info.id);
+                
+                // 후보 id 배열
+                string[] candidateIds = new string[candidates.Count];
+                for (int i = 0; i < candidates.Count; i++) candidateIds[i] = candidates[i].id;
+                
+                
+                Debug.Log("<color=green>[MiniGame_FSM] 슬롯 머신 팝업 생성 rpc를 보냅니다.</color>");
+                MainGameManager.Instance.photonView.RPC(
+                    nameof(MainGameManager.Instance.RPC_BuildSlotMachine), RpcTarget.All, candidateIds, targetIndex);
             }
 
-            MainGameManager.Instance.OnPicked?.Invoke();;
+            MainGameManager.Instance.OnPicked?.Invoke();
+            
         }
 
         public IEnumerator Co_Ready()
         {
+            //done flag 초기화
+            _pc.SetLocalDone(false);
             yield return new UnityEngine.WaitForSeconds(0.3f);
-            
+
             MainGameManager.Instance.OnWaitAllReady?.Invoke();
 
             string id = _pc.GetRoomProps(RoomProps.MiniGameId, "");
@@ -95,7 +125,6 @@ namespace LDH_MainGame
 
         public IEnumerator Co_LoadingMini()
         {
-         
             if (_currentMini == null)
             {
                 if (_isMaster())
@@ -104,67 +133,126 @@ namespace LDH_MainGame
             }
 
             //UI 비활성화
-            _uiBinder.SetActiveDebugUI(false);
             yield return _uiBinder.CloseReadyPanel().ToCoroutine();
-            
-            
+
+
             // Additive Load
             yield return MainGameManager.Instance.Loader.LoadAdditive(_sceneName(_currentMini), null);
-            
+
             MainGameManager.Instance.OnLoadingMiniGame?.Invoke();
-            
         }
 
         public IEnumerator Co_PlayingMini()
         {
             // 미니게임 종료는 외부에서 State=ApplyingResult로 전환한다고 가정
-            MainGame_PropertiesController.SetLocalReady(false);
-            MainGame_PropertiesController.SetLocalDone(false);
+            _pc.SetLocalReady(false);
+            _pc.SetLocalDone(false);
             yield break;
+        }
+
+        public IEnumerator Co_UnloadingMini()
+        {
+            // 1) 미니게임 종료 연출
+            yield return new WaitForSeconds(0.8f);
+
+            // 2) 결과 집계 중 오버레이
+            _uiBinder.ShowLoadingForResult();
+
+            // 3) 미니게임 씬 언로드
+            yield return MainGameManager.Instance.Loader.UnloadAdditive();
+
+
+            // 4) 필요한 변수 초기화 및 UI 활성화
+            PhotonViewSync.Instance.Clear();
+
+            //5) 언로드 플래그 켜기
+            // 각자 자기 Done = true
+            _pc.SetLocalDone(true);
+
+            yield return null;
+
+            //6) 모두 완료됐으면 마스터가 다음 스테이트로 알아서 전환함
         }
 
         public IEnumerator Co_ApplyingResult()
         {
-            Debug.Log($"[MainGameStateMachine] local done : {MainGame_PropertiesController.GetDone(PhotonNetwork.LocalPlayer)}");
-            yield return MainGameManager.Instance.Loader.UnloadAdditive();
+            // 1) 모두 로딩창 닫기
+            _uiBinder.SetLoadingProgress(1f);
+            yield return new WaitForSeconds(0.8f);
+            _uiBinder.CloseLoadingForResult();
 
-            //photon view sync 변수 초기화
-            PhotonViewSync.Instance.Clear();
+            // 2) 마스터는 점수 계산 + 브로드 캐스트
+            if(_isMaster())        
+                MainGameManager.Instance.ApplyAndBroadcastScoreForCurrentRound();
             
-            _uiBinder.SetActiveDebugUI(true);
-            
-            // 각자 자기 Done = true
-            MainGame_PropertiesController.SetLocalDone(true);
             MainGameManager.Instance.OnEndMiniGame?.Invoke();
         }
 
         public IEnumerator Co_End()
         {
+            if(_isMaster())        
+                MainGameManager.Instance.DistributeFinalRewards();
+            
             MainGameManager.Instance.OnEndGame?.Invoke();
             yield return new UnityEngine.WaitForSeconds(3f);
-            // LeaveRoom은 MainGameManager에서 호출 (씬 전환 담당)
         }
-        
+
         #endregion
-        
-        
+
+
         // ---- Done 종합 판정 → 라운드 증가/전이 ----
-        public void CheckAllPlayerDone()
+        
+        public void CheckAllPlayerIntroDone()
         {
             if (!_isMaster()) return;
-           
+
             Debug.Log("모두 완료됐는지 체크 (PlayerProps 기반)");
             if (!_pc.AllPlayersDone()) return;
 
+            _pc.SetRoomProps(RoomProps.State, MainState.Picking.ToString());
+        }
+
+
+        public async void CheckAllPlayerPickingDone()
+        {
+            if (!_isMaster()) return;
+            Debug.Log("모두 완료됐는지 체크 (PlayerProps 기반)");
+            if (!_pc.AllPlayersDone()) return;
+
+            await UniTask.Delay(TimeSpan.FromSeconds(1.5f));
+            _pc.SetRoomProps(new Dictionary<string, object>
+            {
+                { RoomProps.MiniGameId, _currentMini.id }, { RoomProps.State, MainState.Ready.ToString() }
+            });
+
+        }
+        
+        
+        public void CheckAllPlayerUnloadingDone()
+        {
+            if (!_isMaster()) return;
+
+            Debug.Log("모두 완료됐는지 체크 (PlayerProps 기반)");
+            if (!_pc.AllPlayersDone()) return;
+
+            _pc.SetRoomProps(RoomProps.State, MainState.ApplyingResult.ToString());
+        }
+
+        public void CheckNextState()
+        {
+            if (!_isMaster()) return;
+            Debug.Log("모두 결과창 확인이 완료됐는지 체크 (PlayerProps 기반)");
+            if (!_pc.AllPlayersResultDone()) return;
+            
             int currentRound = _pc.GetRoomProps(RoomProps.Round, 1);
-            bool isEnd    = (currentRound+1) > TotalRound;
+            bool isEnd = _isEnd();
             var nextState = isEnd ? MainState.End : MainState.Picking;
             int nextRound = isEnd ? currentRound : currentRound + 1;
-            
-            _pc.SetRoomProps(new Dictionary<string, object> {
-                { RoomProps.Round,      nextRound },
-                { RoomProps.MiniGameId, ""        },
-                { RoomProps.State,      nextState.ToString() }
+            _pc.SetRoomProps(new Dictionary<string, object>
+            {
+                { RoomProps.Round, nextRound },
+                { RoomProps.MiniGameId, "" },
+                { RoomProps.State, nextState.ToString() }
             });
         }
     }

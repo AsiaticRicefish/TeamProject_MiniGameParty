@@ -52,6 +52,10 @@ namespace Data
         {
             isPersistent = true;
             base.OnAwake();
+            
+            //네크워크 접속 후에 플레이어 프로퍼티에 customizing data를 넣어주어야함.
+            NetworkManager.Instance.ConnectedToMaster += InitCustomDataToPhotonServer;
+
         }
         
         public void BindUserDataRepository(RealTimeUserDataRepository repo, string uid)
@@ -170,6 +174,51 @@ namespace Data
             User.customization = latest;
             // 이벤트
             OnCustomizationChanged?.Invoke(latest);
+            OnUserDataChanged?.Invoke(User);
+            await UniTask.Yield();
+            return true;
+        }
+
+        public async UniTask<bool> UpdateCurrencyAsync(CurrencyType type, int delta)
+        {
+            if (User == null) return false;
+            var (committed, latest) = await _userRepo.SaveCurrencyAsync(_uid,
+                mutator: cur =>
+                {
+                    if (cur == null) return (false, null);
+                    var next = new CurrencyData(cur);
+                    switch (type)
+                    {
+                        case Define_LDH.CurrencyType.Currency1:
+                            long v1 = (long)next.currency1 + delta;
+                            if (v1 < 0) return (false, cur);
+                            next.currency1 = v1;
+                            break;
+                        case Define_LDH.CurrencyType.Currency2:
+                            long v2 = (long)next.currency2 + delta;
+                            if (v2 < 0) return (false, cur);
+                            next.currency2 = v2;
+                            break;
+                        case Define_LDH.CurrencyType.Currency3:
+                            long v3 = (long)next.currency3 + delta;
+                            if (v3 < 0) return (false, cur);
+                            next.currency3 = v3;
+                            break;
+                        default:
+                            return (false, cur);
+                    }
+
+                    return (true, next);
+                }, false);
+             
+            if (!committed || latest == null)
+            {
+                Debug.LogWarning("[DataManager] Currency transaction aborted or failed.");
+                return false;
+            }
+            // 성공시 로컬 데이터 업데이트
+            User.currency = latest;
+            OnCurrencyChanged?.Invoke(Currency);
             OnUserDataChanged?.Invoke(User);
             await UniTask.Yield();
             return true;
@@ -374,6 +423,12 @@ namespace Data
             return dict;
         }
 
+        private void InitCustomDataToPhotonServer()
+        {
+            OnCustomizationChanged?.Invoke(Custom);
+            NetworkManager.Instance.ConnectedToMaster -= InitCustomDataToPhotonServer;
+        }
+
         #endregion
 
 
@@ -415,6 +470,41 @@ namespace Data
             
         }
 
+        public async UniTask<bool> UpdateCurrencyLocalAsync(CurrencyType type, int delta)
+        {
+            
+#if !TEST_WITHOUT_LOGIN
+            Debug.LogWarning("[DataManager] UpdateCurrencyLocalAsync는 TEST_WITHOUT_LOGIN에서만 사용하세요.");
+#endif
+            if (User == null) return false;
+          
+            // 로컬 데이터 수정
+            var latest = User.currency ??= new CurrencyData(User.currency);
+            switch (type)
+            {
+                case CurrencyType.Currency1:
+                    latest.currency1 += delta;
+                    break;
+                case CurrencyType.Currency2:
+                    latest.currency2 += delta;
+                    break;
+                case CurrencyType.Currency3:
+                    latest.currency3 += delta;
+                    break;
+            }
+            latest.updatedAt   = NowMs();
+
+            
+            // 성공시 로컬 데이터 업데이트
+            User.currency = latest;
+            OnCurrencyChanged?.Invoke(Currency);
+            OnUserDataChanged?.Invoke(User);
+            await UniTask.Yield();
+            return true;
+        }
+        
+        
+        
         public async UniTask<Store.PurchaseResult> TryPurchaseLocalAsync(
             long[] totalsByCurrency, // 통화별 총 비용
             GrantPatch patch // 구매 성공 시 로컬에 적용할 변경(소유 추가/장착 등)

@@ -33,6 +33,8 @@ public class OpenGameSettingPopupButton : MonoBehaviour
         // 팝업이 닫힐 때까지 대기
         await UniTask.WaitWhile(() => popup && popup.gameObject.activeSelf);
 
+        PlayerPrefs.Save();
+
         if (button) button.interactable = true;
     }
 }

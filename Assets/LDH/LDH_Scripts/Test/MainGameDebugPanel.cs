@@ -52,7 +52,7 @@ namespace LDH.LDH_Scripts.Test
                 SetLogText("End Game");
             };
             
-            totalRoundText.text = $"Total Round : {MainGameManager.Instance.TotalRound}";
+            //totalRoundText.text = $"Total Round : {MainGameManager.Instance.TotalRound}";
         }
 
         

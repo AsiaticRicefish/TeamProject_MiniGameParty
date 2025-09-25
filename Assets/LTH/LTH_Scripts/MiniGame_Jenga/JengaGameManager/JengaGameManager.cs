@@ -552,7 +552,7 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
     private void SendResultToMainGame(Dictionary<string, int> rankings)
     {
         // 메인 게임에 결과 전달 ("Jenga"라는 키로 결과 저장)
-        //MainGameManager.Instance.ReportMiniGameResult(rankings);
+        MainGameManager.Instance.ReportMiniGameResult(rankings);
 
         // 메인 게임의 PlayerManager를 통한 순위 업데이트
         foreach (var pair in rankings)
@@ -562,7 +562,7 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
             if (player != null)
             {
                 // gamePlayer.WinThisMiniGame = (1등인지 여부) 설정
-                player.WinThisMiniGame = pair.Value == 1;
+                //player.WinThisMiniGame = pair.Value == 1;
             }
         }
 
@@ -855,7 +855,7 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
                 if (player != null)
                 {
                     player.JengaData = null;
-                    player.WinThisMiniGame = false;
+                   // player.WinThisMiniGame = false;
                 }
             }
         }
