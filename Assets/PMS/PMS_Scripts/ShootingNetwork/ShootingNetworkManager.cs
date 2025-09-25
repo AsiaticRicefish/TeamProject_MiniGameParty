@@ -5,11 +5,13 @@ using UnityEngine;
 using DesignPattern;
 using Photon.Pun;
 using Cysharp.Threading.Tasks;
+using ExitGames.Client.Photon;
+using Photon.Realtime;
 
 namespace ShootingScene
 {
     [RequireComponent(typeof(PhotonView))]
-    public class ShootingNetworkManager : PunSingleton<ShootingNetworkManager>, IGameComponent
+    public class ShootingNetworkManager : PunSingleton<ShootingNetworkManager>, IGameComponent, IOnEventCallback
     {
         private string turnObserverId;
         private string SceneChangeObserverId;
@@ -219,5 +221,62 @@ namespace ShootingScene
             networkTimer.CancelTimer();
         }
         #endregion
+
+        //퍼즈 게임 Pause
+        const byte EVT_PAUSE = 199;
+        const byte EVT_RESUME = 199;
+
+        public override void OnEnable()
+        {
+            base.OnEnable(); // 부모 호출 (다른 콜백들 등록)
+            PhotonNetwork.AddCallbackTarget(this);
+        }
+
+        public override void OnDisable()
+        {
+            base.OnDisable(); // 부모 호출 (다른 콜백들 등록)
+            PhotonNetwork.RemoveCallbackTarget(this);
+        }
+
+        // 홈 버튼 등으로 백그라운드 진입 시
+        private void OnApplicationPause(bool pauseStatus)
+        {
+            if (pauseStatus)
+            {
+                PhotonNetwork.RaiseEvent(
+                    EVT_PAUSE,                                 // 이벤트 코드
+                    PhotonNetwork.LocalPlayer.ActorNumber,     // 전송할 데이터
+                    new RaiseEventOptions { Receivers = ReceiverGroup.Others },
+                    new SendOptions { Reliability = true }
+                );
+            }
+
+            if (!pauseStatus)
+            {
+                PhotonNetwork.RaiseEvent(
+                    EVT_RESUME,
+                    PhotonNetwork.LocalPlayer.ActorNumber,
+                    new RaiseEventOptions { Receivers = ReceiverGroup.Others },
+                    new SendOptions { Reliability = true }
+                );
+            }
+        }
+
+        // 수신 측에서는 OnEvent 콜백으로 처리
+        void IOnEventCallback.OnEvent(EventData photonEvent)
+        {
+            if (photonEvent.Code == EVT_PAUSE)
+            {
+                int actorId = (int)photonEvent.CustomData;
+                Debug.Log($"Player {actorId} 백그라운드 진입 감지");      
+                
+            }
+
+            if (photonEvent.Code == EVT_RESUME)
+            {
+                int actorId = (int)photonEvent.CustomData;
+                Debug.Log($"Player {actorId} 복귀 감지");              
+            }
+        }
     }
 }

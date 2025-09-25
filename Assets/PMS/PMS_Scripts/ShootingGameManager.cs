@@ -10,6 +10,8 @@ using ShootingScene.ShootingGame;
 using Photon.Realtime;
 using ShootingScene;
 using PMS_Util;
+using ExitGames.Client.Photon;
+using System.Security.Cryptography.X509Certificates;
 
 [RequireComponent(typeof(PhotonView))]
 [DisallowMultipleComponent]
@@ -127,10 +129,11 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
             case "CardSelectState": ChangeState(new CardSelectState());
                 CardManager.enabled = true;
                 break;
+            case "TurnCheckState": ChangeState(new TurnCheckState()); break;
             case "GamePlayState": ChangeState(new GamePlayState()); break;
             case "CheckGameWinnderState": ChangeState(new CheckGameWinnderState()); break;
             case "GameEndState":ChangeState(new GameEndState()); break;
-            case "TurnCheckState": ChangeState(new TurnCheckState()); break;
+            case "PauseState": ChangeState(new PauseState()); break;
             default:
                 Debug.LogError($"[ChangeStateByName] {stateName}에 해당하는 상태가 없습니다.");
                 break;
@@ -274,9 +277,19 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
 
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
-        /*if(RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.State) == "TurnCheckState" ||
-            "GamePlayState""CheckGameWinnderState")*/
-        //ShootingUIManager.Instance.LeftUserUpdateRanking(otherPlayer.NickName);
+        ChangeStateByName("PauseState");
+        /*if(PhotonNetwork.IsMasterClient)
+        {
+            RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.KEY_STATE, "PauseState");
+        }*/
+        /*
+        if (otherPlayer.IsInactive)
+        {
+            // 잠시 연결 불안정
+        }
+        else
+        {
+            // 게임 오브젝트 정리
+        }*/
     }
-
 }

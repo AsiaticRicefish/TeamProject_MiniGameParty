@@ -7,24 +7,26 @@ namespace PMS_Util
 {
     public enum SH_GameStateType
     {
-        InitState,
+        Init,
         CardSelect,
         GamePlay,
         TurnCheck,
         CheckGameWinner,
-        GameEnd
+        GameEnd,
+        Pause
     }
 
     public static class GameStateName
     {
         public static string ToString(SH_GameStateType stateType) => stateType switch
         {
-            SH_GameStateType.InitState => "InitState",
+            SH_GameStateType.Init => "InitState",
             SH_GameStateType.CardSelect => "CardSelectState",
             SH_GameStateType.GamePlay => "GamePlayState",
             SH_GameStateType.TurnCheck => "TurnCheckState",
             SH_GameStateType.CheckGameWinner => "GameWinnerCheckState",
             SH_GameStateType.GameEnd => "GameEndState",
+            SH_GameStateType.Pause => "PauseState",
             _ => "Unknown"
         };
     }

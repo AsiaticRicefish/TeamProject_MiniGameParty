@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-public class UI_Banner : MonoBehaviour
+public class UI_Banner : MonoBehaviour, IPointerClickHandler
 {
     [SerializeField] private Image bannerBackGround;
     [SerializeField] private Image bannerImage;         //인스펙터창에서 무조건 넣어주기
@@ -24,6 +24,6 @@ public class UI_Banner : MonoBehaviour
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        //data.onClickEvent?.Invoke();
+        data.onClickEvent?.Invoke();
     }
 }
