@@ -30,6 +30,12 @@ namespace LDH_UI
         
 
         private void Awake() => Init();
+
+        private void OnDisable()
+        {
+            // privateMatchToggle.isOn = false;
+        }
+
         private void OnDestroy() => Unsubscribe();
 
         private void Init()

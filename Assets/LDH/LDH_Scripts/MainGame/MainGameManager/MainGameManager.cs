@@ -234,6 +234,11 @@ namespace LDH_MainGame
             {
                 //누구든 나갔을 때 
                 UI.ShowQuitPopup();
+                if (_stateRoutine != null)
+                {
+                    StopCoroutine(_stateRoutine);
+                    _stateRoutine = null;
+                }
             }
             
             // 2) 마스터 클라이언트이고, 메인 게임 상태가 ready(모든 플레이어의 ready를 기다리고 있는 상태)라면 재조정
@@ -288,7 +293,7 @@ namespace LDH_MainGame
         /// </summary>
         private void SwitchState(MainState nextState)
         {
-            Debug.Log($"{nextState.ToString()}으로 상태 변경");
+            // Debug.Log($"{nextState.ToString()}으로 상태 변경");
             if (_stateRoutine != null)
             {
                 StopCoroutine(_stateRoutine);
@@ -581,7 +586,7 @@ namespace LDH_MainGame
                 try
                 {
                     await UI.BuildSlotMachine(list, targetIndex, PropertiesCtrl.GetRoomProps(RoomProps.Round, 1));
-                    Debug.Log($"<color=green> Is master? {IsMaster} / 마스터가 아니면 끝, 마스터면 handle pull하는 rpc 호출</color>");
+                    // Debug.Log($"<color=green> Is master? {IsMaster} / 마스터가 아니면 끝, 마스터면 handle pull하는 rpc 호출</color>");
                     if (IsMaster)
                     {
                         await UniTask.Delay(TimeSpan.FromSeconds(2f));

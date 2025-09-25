@@ -6,6 +6,8 @@ using Cysharp.Threading.Tasks;
 using DesignPattern;
 using LDH_Util;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
 
 namespace LDH_UI
@@ -21,18 +23,23 @@ namespace LDH_UI
         [SerializeField] private int baseOrderPopup = 200;
         [SerializeField] private int baseOrderToast = 300;
 
+        // ui canvas order
         private int _orderScreen, _orderPopup, _orderToast;
-
-
+        
         private readonly Stack<UI_Popup> _popupStack = new(); // 팝업 UI Stack
         private readonly Dictionary<Type, UI_Base> _screenCache = new(); // Screen 풀
         private readonly HashSet<UI_Popup> _closing = new();
 
         //---- toast ui ---- //
         private UI_Toast _toast; // 1개 재사용
-        private readonly Queue<(string msg, float dur)> _toastQueue = new();
+        private readonly Queue<(Define_LDH.ToastType type, string msg, float dur)> _toastQueue = new();
         private bool _isToastShowing;
-
+        
+        //----- toast style ----//
+        public ToastStyleTable ToastStyle { get; private set; }
+        [SerializeField] private string toastStyleLabel = "ui:toastStyle";
+        private AsyncOperationHandle<ToastStyleTable> _toastStyleHandle;
+        
 
         //---- UI Root 오브젝트 ---- //
         public UI_Root UIRoot { get; private set; }
@@ -43,21 +50,20 @@ namespace LDH_UI
         [SerializeField] private string popupFolder = "Prefabs/UI/Popup";
         [SerializeField] private string toastFolder = "Prefabs/UI/Toast";
         
+        
         protected override void OnAwake() => Init();
 
         // UI 매니저 초기화
-        private void Init()
+        private async void Init()
         {
             _orderScreen = baseOrderScreen;
             _orderPopup = baseOrderPopup;
             _orderToast = baseOrderToast;
 
             InitUIRoot(); //UI Root를 생성
-
             InitScreenUIs();
-
+            await LoadToastStyleTableAsync(this.GetCancellationTokenOnDestroy());
             _toast = CreateToast();
-            
             
             //씬을 내릴때마다 screen ui를 모두 close
             SceneManager.sceneUnloaded += ((_) => CloseAllScreenUI().Forget());
@@ -67,6 +73,7 @@ namespace LDH_UI
         {
             base.OnDestroy();
             SceneManager.sceneUnloaded -= ((_) => CloseAllScreenUI().Forget());
+            
         }
 
         #region Initialize
@@ -113,6 +120,22 @@ namespace LDH_UI
 
                 ui.OnCloseRequested += HandleCloseRequested;
             }
+
+        }
+
+        private async UniTask LoadToastStyleTableAsync(CancellationToken ct)
+        {
+            if (_toastStyleHandle.IsValid()) return; // 이미 로드됨
+            
+            // 라벨로 가져오기(에셋 로드)
+            _toastStyleHandle = Addressables.LoadAssetAsync<ToastStyleTable>(toastStyleLabel);
+            ToastStyle = await _toastStyleHandle.Task;
+            
+            ct.ThrowIfCancellationRequested();
+            if (!ToastStyle) Debug.LogError("[UIManager] ToastStyleTable 로드 실패");
+            
+            // 초기화
+            ToastStyle.Init();
 
         }
 
@@ -270,7 +293,7 @@ namespace LDH_UI
 
             // 최상단으로 Push
             _popupStack.Push(popup);
-            Debug.Log($"[UIManager] : {popup.name}을 스택에 추가, 현재 스택 개수 : {_popupStack.Count}");
+            //Debug.Log($"[UIManager] : {popup.name}을 스택에 추가, 현재 스택 개수 : {_popupStack.Count}");
             
 
             await popup.ShowAsync();
@@ -302,7 +325,7 @@ namespace LDH_UI
             //2) 닫기
             try
             {
-                Debug.Log($"{popup.name} 닫기 호출 (pop-first)");
+                // Debug.Log($"{popup.name} 닫기 호출 (pop-first)");
                 await popup.CloseAsync(); // 애니메이션(비동기) 대기
             }
             catch (Exception e)
@@ -339,7 +362,7 @@ namespace LDH_UI
 
             // 최상단 팝업 Pop 후 제거
             UI_Popup top = _popupStack.Peek();
-            Debug.Log($"top : {top.name}");
+            // Debug.Log($"top : {top.name}");
             await ClosePopupUI(top, destroy);
         }
 
@@ -392,9 +415,9 @@ namespace LDH_UI
         }
         
 
-        public void EnqueueToast(string message, float duration = 1.5f)
+        public void EnqueueToast(Define_LDH.ToastType type, string message, float duration = 1.5f)
         {
-            _toastQueue.Enqueue((message, duration));
+            _toastQueue.Enqueue((type, message, duration));
             if (!_isToastShowing)
                 ProcessToastQueue(this.GetCancellationTokenOnDestroy()).Forget(LogException);
         }
@@ -419,8 +442,8 @@ namespace LDH_UI
 
                 while (_toastQueue.Count > 0)
                 {
-                    var (msg, dur) = _toastQueue.Dequeue();
-
+                    var (type, msg, dur) = _toastQueue.Dequeue();
+                    _toast.SetType(type);
                     _toast.SetMessage(msg);
                     SetCanvas(_toast.gameObject, Define_LDH.UILayer.Toast, sort: true);
                     await _toast.ShowAsync();

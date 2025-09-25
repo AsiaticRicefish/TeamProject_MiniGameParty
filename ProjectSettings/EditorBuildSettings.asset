@@ -17,7 +17,7 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/PMS/PMS_Scene/PMS_TestScene.unity
     guid: 20ba2fa499427ab40bc3f1b4178f45e0
-  - enabled: 0
+  - enabled: 1
     path: Assets/PMS/PMS_Scene/PMS_ShootingTestScene.unity
     guid: e2271c715e00939448e20aa628796000
   - enabled: 0
@@ -26,7 +26,7 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/LTH/LTH_Scenes/Test_MiniGameJengaScene.unity
     guid: 819050f4afc3e104b86c5df6d448906c
-  - enabled: 0
+  - enabled: 1
     path: Assets/Scenes/MiniGameJengaScene.unity
     guid: 221c75271dfd06f408256b27231ef1a6
   - enabled: 1
@@ -39,11 +39,11 @@ EditorBuildSettings:
     path: Assets/KYG/KYG_Scene/MiniGameScene.unity
     guid: 25303574da5dd81498a3031c5ccb0d60
   - enabled: 0
-    path: Assets/KYG/KYG_Scene/MeteorScene2.unity
-    guid: f7d4716f4a61b5243995d901f1bb3ff9
-  - enabled: 1
     path: Assets/KYG/KYG_Scene/MeteorScene.unity
     guid: 1c63b2b15a7697a4390d8636cae8c147
+  - enabled: 1
+    path: Assets/Imports/SplashArt/00_Scenes/GameScene/Splash.unity
+    guid: 0c66d6d6a884b9d48a437abc5baa69de
   m_configObjects:
     com.unity.addressableassets: {fileID: 11400000, guid: 9748f23a63eb47849a6b41e7064ec766,
       type: 2}

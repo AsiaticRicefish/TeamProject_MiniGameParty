@@ -12,8 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16e882dba42855d41b248d3300c2d923, type: 3}
   m_Name: Jenga_Theme
   m_EditorClassIdentifier: 
+  themeType: 3
+  themeName: Jenga
   gameTitle: "\uC820\uAC00\uC2A4\uD0C0!"
-  bigDescription: 
   smallDescription: "\uC820\uAC00 \uBE14\uB7ED\uC744 \uD0C0\uC774\uBC0D\uC5D0 \uB9DE\uCDB0\uC11C
     \uBE60\uB974\uAC8C \uC810\uC218\uB97C \uC313\uC544\uBCF4\uC138\uC694 !"
   titlePanelColor: {r: 0, g: 0, b: 0, a: 1}
@@ -22,3 +23,5 @@ MonoBehaviour:
   unimoPrefabs:
   - {fileID: 3380019038747022192, guid: 658f3813a0c86d341878bb3628d1b24f, type: 3}
   - {fileID: 3380019038747022192, guid: f61a8b3cfcc1fb7479287411ec8fb801, type: 3}
+  useGoogleSheetsText: 1
+  sheetCategory: Jenga

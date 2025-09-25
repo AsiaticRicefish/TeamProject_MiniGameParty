@@ -26,8 +26,8 @@ namespace LDH_MainGame
             //먼저 disable 되도 괜찮은 컴포넌트
             yield return StartCoroutine(Disable<AudioListener>(_mainScene));
             yield return StartCoroutine(Disable<EventSystem>(_mainScene)); 
-            
-            
+            yield return StartCoroutine(Disable<AudioListener>(_mainScene));
+
             // 미니게임 씬 addtive 로드
             var op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
             

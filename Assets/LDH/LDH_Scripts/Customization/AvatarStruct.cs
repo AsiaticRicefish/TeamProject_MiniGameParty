@@ -23,6 +23,11 @@ namespace Customization
         [Header ("엔진 animation hash")]
         private  readonly int Equip_BaseLayer_IdleState = Animator.StringToHash("Base Layer.anim_EQ000_Idle");
         private  readonly int Equip_Altitude_IdleState = Animator.StringToHash("Altitude.anim_EQ000_Idle_Altitude");
+        
+        [Header("Animation Control")] 
+        [SerializeField] private bool forceAnimationIdleOnChange = false;
+
+        
 
         public async UniTask BindCharacter(GameObject go, string id, bool inheritLayer = true)
         {
@@ -43,6 +48,8 @@ namespace Customization
             CurrentEquip = go; 
             CurrentEquipId = id;
 
+            if(!forceAnimationIdleOnChange) return;
+            
             Animator animator = CurrentEquip.GetComponent<Animator>();
             await ForceAnimStateAsync(animator,
                 new[]

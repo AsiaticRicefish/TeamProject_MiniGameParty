@@ -8,6 +8,10 @@ using DesignPattern;
 using LDH_MainGame;
 using ShootingScene.ShootingGame;
 using Photon.Realtime;
+using ShootingScene;
+using PMS_Util;
+using ExitGames.Client.Photon;
+using System.Security.Cryptography.X509Certificates;
 
 [RequireComponent(typeof(PhotonView))]
 [DisallowMultipleComponent]
@@ -37,6 +41,10 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
 
     protected override void OnAwake()
     {
+        if(currentState == null)
+        {
+            ChangeStateByName("InitState");
+        }
         base.isPersistent = false;          //슈팅 게임 안에서만 존재 
     }
 
@@ -95,6 +103,11 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
         currentState.Enter();
     }
 
+    public SH_GameStateType GetCurrentState()
+    {
+        return currentState.GameStateType;
+    }
+
     public void OnGameStart()
     {
         if (JengaNetworkManager.Instance == null)
@@ -112,18 +125,6 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
         //난 타이머가 없어도 된다. 
     }
 
-    [PunRPC]
-    private void InputOn()
-    {
-        OnGameStarted?.Invoke();
-    }
-
-    [PunRPC]
-    private void InputOff()
-    {
-        OnGameEnded?.Invoke();
-    }
-
     public void ChangeStateByName(string stateName)
     {
         switch (stateName)
@@ -132,10 +133,11 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
             case "CardSelectState": ChangeState(new CardSelectState());
                 CardManager.enabled = true;
                 break;
+            case "TurnCheckState": ChangeState(new TurnCheckState()); break;
             case "GamePlayState": ChangeState(new GamePlayState()); break;
             case "CheckGameWinnderState": ChangeState(new CheckGameWinnderState()); break;
             case "GameEndState":ChangeState(new GameEndState()); break;
-            case "TurnCheckState": ChangeState(new TurnCheckState()); break;
+            case "PauseState": ChangeState(new PauseState()); break;
             default:
                 Debug.LogError($"[ChangeStateByName] {stateName}에 해당하는 상태가 없습니다.");
                 break;
@@ -154,7 +156,7 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
         //UnimoEgg[] activeEggs = GameObject.FindObjectsOfType<UnimoEgg>();
         UnimoEgg[] allEggs = EggManager.Instance.viewIdToEgg.Values.ToArray();
 
-        Debug.Log($"[GameManager] - 활성화 된 알 개수 : {allEggs.Length}");
+        Debug.Log($"[GameManager] - 모든 UnimoEgg의 개수 : {allEggs.Length}");
 
         // 2. 활성화된 알만 거리 기준 오름차순 정렬
         var sortedEggs = allEggs
@@ -214,32 +216,45 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
     {
         if (!PhotonNetwork.IsMasterClient) return;
 
-        UnimoEgg[] unimoEggList = GameObject.FindObjectsOfType<UnimoEgg>();
+        // 0. 리스트 초기화
+        unimoRankingList.Clear();
 
-        UnimoEgg winnerUnimo = null;
-        float minDistanceSqr = float.MaxValue;
+        // 1. 현재 맵에 있는 모든 알 찾기
+        UnimoEgg[] allEggs = EggManager.Instance.viewIdToEgg.Values.ToArray();
 
-        foreach(var unimoEgg in unimoEggList)
+        Debug.Log($"[GameManager] - 모든 UnimoEgg의 개수 : {allEggs.Length}");
+
+        // 2. 활성화된 알만 거리 기준 오름차순 정렬
+        var sortedEggs = allEggs
+            .Where(e => e.gameObject.activeInHierarchy) // 비활성화된 알 제외
+            .OrderBy(e => Mathf.Abs(e.transform.position.z - finishLine.transform.position.z))
+            .ToList();
+
+        // 3. shooterUid로 그룹바이를 하고 그중에서 제일 첫번째꺼를 ShooterUID
+        var rankedUids = sortedEggs
+            .GroupBy(e => e.ShooterUid)
+            .Select(g => g.First().ShooterUid)
+            .ToList();
+
+        // 5. 랭킹 리스트 구성: 먼저 쏜 유저들 → 나머지 유저들
+        foreach (var uid in rankedUids)
+            unimoRankingList.Add(uid);
+
+        foreach (var uid in PlayerManager.Instance.Players.Keys)
         {
-            Vector3 worldDir = finishLine.transform.position - unimoEgg.transform.position;
-            worldDir.y = 0f; // 높이 무시
-
-            Vector2 flatDir = new Vector2(worldDir.x, worldDir.z);
-            float distSqr = flatDir.sqrMagnitude;
-
-            if (distSqr < minDistanceSqr)
-            {
-                minDistanceSqr = distSqr;
-                winnerUnimo = unimoEgg;
-                     
-            }
+            if (!unimoRankingList.Contains(uid))
+                unimoRankingList.Add(uid); // 알이 없거나 비활성화된 유저도 포함
         }
-        if (winnerUnimo != null)
-            Debug.Log($"[ShootingGameManager] - 우승자 {winnerUnimo.ShooterUid}");
 
-        //return winnerUnimo.ShooterUid;
-        
-        //EndGame();
+        // 5. UID별 등수 매핑
+        Dictionary<string, int> rankings = new Dictionary<string, int>();
+        for (int i = 0; i < unimoRankingList.Count; i++)
+        {
+            rankings[unimoRankingList[i]] = i + 1; // 1등부터 시작
+        }
+
+        // 6. 결과 보고
+        MainGameManager.Instance.ReportMiniGameResult(rankings);
     }
 
     public void EndGame()
@@ -261,24 +276,24 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
         }
     }*/
 
-    public void Timer()
-    {
-        
-    }
-
-    private void ResetTimer()
-    {
-        
-    }
-
     //나간 플레이어의 닉네임을 저장하는 곳
     //private List<string> leftUserNickName = new List<string>();
 
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
-        /*if(RoomPropertyObserver.Instance.GetRoomProperty(ShootingGamePropertyKeys.State) == "TurnCheckState" ||
-            "GamePlayState""CheckGameWinnderState")*/
-        //ShootingUIManager.Instance.LeftUserUpdateRanking(otherPlayer.NickName);
+        ChangeStateByName("PauseState");
+        /*if(PhotonNetwork.IsMasterClient)
+        {
+            RoomPropertyObserver.Instance.SetRoomProperty(ShootingGamePropertyKeys.KEY_STATE, "PauseState");
+        }*/
+        /*
+        if (otherPlayer.IsInactive)
+        {
+            // 잠시 연결 불안정
+        }
+        else
+        {
+            // 게임 오브젝트 정리
+        }*/
     }
-
 }

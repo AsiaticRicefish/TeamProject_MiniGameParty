@@ -4,6 +4,7 @@ using Photon.Pun;
 using ShootingScene;
 using UnityEngine.UI;
 using Customization;
+using PMS_Util;
 
 [RequireComponent(typeof(LocalPlayerInput))]
 [RequireComponent(typeof(Rigidbody))]
@@ -155,7 +156,7 @@ public class UnimoEgg : MonoBehaviourPun
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.CompareTag("UnimoEgg"))
+        if (collision.gameObject.CompareTag("UnimoEgg") && ShootingGameManager.Instance?.GetCurrentState() == SH_GameStateType.GamePlay)
         {
             ContactPoint contact = collision.contacts[0];
             Vector3 hitPosition = contact.point;

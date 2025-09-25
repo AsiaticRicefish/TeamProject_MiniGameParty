@@ -4,6 +4,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using LDH_MainGame;
+using LDH_Util;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -39,6 +40,12 @@ namespace LDH_UI
         [SerializeField] private float dropOvershoot = 28f; // 되튀기 픽셀
         [SerializeField] private float handleDownDeg = 40f; // 레버 회전 각도
 
+        
+        [Header("Sound")] [SerializeField]
+        private Define_LDH.SfxKey pickingStateSfx = Define_LDH.SfxKey.Main_Picking;
+        
+        
+        
         private int _targetIndex;
         private Vector3 _originHandleRot;
 
@@ -67,7 +74,10 @@ namespace LDH_UI
 
             // 전체 캔버스 alpha 활성화
             cg.alpha = 1f;
-
+            
+            // 사운드
+            SoundManager.Instance.PlaySFX(pickingStateSfx.ToString());
+            
             // 1) 타이틀 인
             var twTitle = DOTween.Sequence()
                 .Join(title.DOAnchorPosY(t0.y, titleInTime)).SetEase(Ease.OutCubic)
@@ -111,7 +121,7 @@ namespace LDH_UI
                 .SetEase(Ease.OutCubic)
                 .SetLink(gameObject);
             await down.AsyncWaitForCompletion();
-
+            
             slotRow.StartRotating(_targetIndex);
 
             var up = handle
