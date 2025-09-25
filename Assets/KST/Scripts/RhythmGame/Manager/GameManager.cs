@@ -70,7 +70,11 @@ namespace RhythmGame
             // 사운드 전체 정리
             SoundManager.Instance.StopAllSounds();
         }
-
+        protected override void Awake()
+        {
+            base.Awake();
+            Application.targetFrameRate = 60; // 60fps 고정
+        }
 
         public void Initialize()
         {
