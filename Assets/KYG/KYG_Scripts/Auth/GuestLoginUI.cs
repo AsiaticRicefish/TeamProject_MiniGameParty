@@ -825,18 +825,20 @@ public class GuestLoginUI : MonoBehaviour
             {
                 string nick = Sanitize(raw);
 
-                // 입력 규칙을 먼저 통과해야 DB 트래픽 낭비 방지
+                // 1) 규칙 체크: 실패 시 예외로 이유 전달
                 if (!ValidateNickname(nick, out var ruleMsg))
+                    throw new KYG.NicknameInvalidException(ruleMsg);
+
+                try
                 {
-                    popup.ShowError(ruleMsg);
-                    return false;
+                    // 2) DB 중복 확인 (최초 호출은 타임아웃 여유 있게)
+                    bool available = await NicknameRegistry.IsAvailableAsync(nick, timeoutMs: 8000);
+                    return available; // true=사용가능, false=중복
                 }
-
-                // 서버 중복검사 (이미 구현되어 있는 API 사용)
-                bool available = await NicknameRegistry.IsAvailableAsync(nick);
-
-                // (선택) confirm 버튼의 활성화는 팝업이 자동 처리하므로 여기서는 bool만 반환
-                return available;
+                catch (TimeoutException)
+                {
+                    throw new KYG.NicknameTimeoutException("네트워크가 느립니다. 다시 시도해주세요.");
+                }
             }
         );
     }

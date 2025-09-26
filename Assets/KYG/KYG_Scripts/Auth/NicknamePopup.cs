@@ -129,35 +129,52 @@ public class NicknamePopup : MonoBehaviour
                 checkBtn.interactable = false;
 
                 bool available = false;
+                bool handled = false; // ← 이 플래그가 true면 아래 "중복" 문구를 표시하지 않음
                 try
                 {
-                    // 외부(GuestLoginUI 등)에서 Sanitize/Validate 후 DB 가용성 조회
-                    available = await _onCheck(raw);
+                    available = await _onCheck(raw); // true=사용가능 / false=중복
+                }
+                catch (KYG.NicknameInvalidException nie)
+                {
+                    ShowError(nie.Message);          // 규칙 위반 → 에러 라벨만 표시
+                    available = false;
+                    handled = true;
+                }
+                catch (KYG.NicknameTimeoutException te)
+                {
+                    ShowError(te.Message);           // 타임아웃 → 에러 라벨만 표시
+                    available = false;
+                    handled = true;
                 }
                 catch (Exception e)
                 {
                     Debug.LogException(e);
-                    ShowCheck(false, "검사 중 오류가 발생했습니다.");
+                    ShowError("검사 중 오류가 발생했습니다.");
                     available = false;
+                    handled = true;
                 }
                 finally
                 {
                     checkBtn.interactable = true;
                 }
 
-                // 검사 결과를 내부 상태로 저장
+                // 내부 상태 기록
                 _dupCheckedOk = available;
                 _lastDupCheckedName = available ? raw : null;
 
+                // ✅ 결과 표시: "중복" 문구는 진짜 중복일 때만!
                 if (available)
                 {
                     ShowCheck(true, "사용 가능한 닉네임입니다.\n 확인을 눌러 진행하세요.");
-                    // ✅ 통과했을 때만 확인 버튼 활성화
                     if (requireDuplicateCheck && confirmBtn) confirmBtn.interactable = true;
                 }
                 else
                 {
-                    ShowCheck(false, "중복된 닉네임 입니다. \n 다른 이름을 입력하세요.");
+                    if (!handled)
+                    {
+                        // false지만 규칙 위반/타임아웃이 아닌 "진짜 중복"만 여기로 옴
+                        ShowCheck(false, "중복된 닉네임 입니다. \n 다른 이름을 입력하세요.");
+                    }
                     if (confirmBtn) confirmBtn.interactable = false;
                 }
             });
