@@ -41,14 +41,29 @@ namespace Customization
 
         private void OnEnable()
         {
-            SceneManager.sceneLoaded += (_, _) => ReleaseAllIcons();
+            SceneManager.sceneUnloaded += OnSceneUnloaded;
         }
 
         private void OnDisable()
         {
+            SceneManager.sceneUnloaded -= OnSceneUnloaded;
+
+
+            // DumpIconAddressables("OnDisable-BeforeRelease");
             ReleaseAllIcons();
+            // DumpIconAddressables("OnDisable-AfterRelease");
             DisposePools();
         }
+
+        private void OnSceneUnloaded(Scene scene)
+        {
+            // 씬 로드 직후 상태
+            // DumpIconAddressables($"SceneLoaded[{scene.name}]-BeforeRelease");
+            // 필요 시 바로 정리
+            ReleaseAllIcons();
+            // DumpIconAddressables($"SceneLoaded[{scene.name}]-AfterRelease");
+        }
+
 
         public async UniTask InitAsync(string uid = null)
         {
@@ -166,7 +181,7 @@ namespace Customization
         {
             var targetEquip = equipId ?? customData.equipId;
 //            Debug.Log("[CustomizationManager] 엔진이 변경되었는지를 확인합니다.");
-           
+
             if (!string.IsNullOrEmpty(targetEquip) &&
                 avatarStruct.CurrentEquipId != targetEquip &&
                 CatalogProvider.TryGetEquip(targetEquip, out var eDef))
@@ -249,6 +264,7 @@ namespace Customization
             if (!CatalogProvider.IsReady || CatalogProvider.Characters == null)
             {
                 _iconCache?.Clear();
+                _iconHandles?.Clear();
                 return;
             }
 
@@ -283,8 +299,10 @@ namespace Customization
                 }
             }
 
+            _iconHandles?.Clear();
+
             Resources.UnloadUnusedAssets();
-            Debug.Log("[CustomizationManager] 모든 아이콘 handle을 release 했습니다..");
+            Debug.Log("<color=red>[CustomizationManager] 모든 아이콘 handle을 release 했습니다.</color>");
         }
 
         //모든 풀 레지스트리 dispose
@@ -295,6 +313,28 @@ namespace Customization
         }
 
         #endregion
+
+        public void DumpIconAddressables(string tag = "")
+        {
+            int cached = _iconCache?.Count ?? 0;
+            int handleCount = _iconHandles?.Count ?? 0;
+
+            Debug.Log(
+                $"<color=red>[CustomizationManager][{tag}] Icons: cacheCount={cached}, handleCount={handleCount}</color>");
+
+            if (_iconHandles != null)
+            {
+                foreach (var kv in _iconHandles)
+                {
+                    string id = kv.Key;
+                    var h = kv.Value;
+                    string state = h.IsValid()
+                        ? $"IsDone={h.IsDone}, Status={h.Status}, Result={(h.Result ? h.Result.name : "null")}"
+                        : "InvalidHandle";
+                    Debug.Log($"  - [{id}] {state}");
+                }
+            }
+        }
 
 
         #region 데이터 저장 / Photon Properties 변경
