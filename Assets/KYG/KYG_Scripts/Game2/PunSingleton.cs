@@ -9,7 +9,7 @@ namespace YG
     /// - 씬에 하나만 존재
     /// - DontDestroyOnLoad 적용 가능
     /// </summary>
-    public class PunSingleton<T> : MonoBehaviourPun where T : MonoBehaviourPun
+    public class PunSingleton<T> : MonoBehaviourPunCallbacks where T : MonoBehaviour
     {
         private static T _instance;
         public static T Instance
@@ -17,13 +17,7 @@ namespace YG
             get
             {
                 if (_instance == null)
-                {
                     _instance = FindObjectOfType<T>();
-                    if (_instance == null)
-                    {
-                        Debug.LogError($"[PunSingleton] {typeof(T).Name} not found in scene!");
-                    }
-                }
                 return _instance;
             }
         }

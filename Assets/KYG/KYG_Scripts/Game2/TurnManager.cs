@@ -13,7 +13,7 @@ namespace YG
     /// - Singleton: 씬에 1개
     /// - GameOver: currentActor == -1 브로드캐스트
     /// </summary>
-    public class TurnManager : MonoBehaviourPun
+    public class TurnManager : MonoBehaviourPunCallbacks
     {
         public static TurnManager Instance { get; private set; }
 
@@ -46,7 +46,7 @@ namespace YG
             if (PhotonNetwork.IsMasterClient && order.Count > 0)
                 photonView.RPC(nameof(RPC_SetCurrentTurn), RpcTarget.AllBuffered, -1, order[curIndex]);
         }
-
+        
         public void NextTurn()
         {
             if (!PhotonNetwork.IsMasterClient || order.Count == 0) return;
@@ -72,6 +72,19 @@ namespace YG
             }
 
             NextTurn();
+        }
+        
+        public override void OnMasterClientSwitched(Player newMasterClient)
+        {
+            if (order.Count == 0) return;
+
+            // 새 마스터만 현재 턴 상태를 즉시 재브로드캐스트 (버퍼 포함)
+            if (PhotonNetwork.IsMasterClient)
+            {
+                int prev = -2; // 디버깅용 태그 값
+                photonView.RPC(nameof(RPC_SetCurrentTurn), RpcTarget.AllBuffered, prev, CurrentActor);
+                if (showLog) Debug.Log($"[Turn] Master switched → rebroadcast current={CurrentActor}");
+            }
         }
 
         [PunRPC]

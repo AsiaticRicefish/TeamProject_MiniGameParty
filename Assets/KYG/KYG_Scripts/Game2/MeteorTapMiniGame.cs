@@ -54,9 +54,11 @@ public class MeteorTapMiniGame : MonoBehaviourPun
     // ---------- lifecycle ----------
     public void SafeInitialize()
     {
-        if (verboseLogs) Debug.Log("[MeteorTap] SafeInitialize");
-        TurnManager.Instance.OnTurnChanged += HandleTurnChanged; // 턴 변경 수신
+        TurnManager.Instance.OnTurnChanged += HandleTurnChanged;
         EnsureAnimatorBaseState();
+
+        // 씬 합류 직후에도 현재 턴 상태를 즉시 반영(배너/버튼 상태 동기화)
+        HandleTurnChanged(-2, TurnManager.Instance.CurrentActor);
     }
 
     public void OnGameStart()
@@ -199,6 +201,7 @@ public class MeteorTapMiniGame : MonoBehaviourPun
     /// </summary>
     private void TryEndTurn()
     {
+        Debug.Log($"[Tap] TryEndTurn by {PhotonNetwork.LocalPlayer.ActorNumber} (master:{PhotonNetwork.IsMasterClient}) localTurnTap={localTurnTap}");
         if (!myTurn) return;
 
         int need = Mathf.Max(0, minTapsPerTurn - localTurnTap);
@@ -211,9 +214,28 @@ public class MeteorTapMiniGame : MonoBehaviourPun
         // 내 턴 버튼 막기
         if (!disableUI) ui?.SetTapInteractable(false);
 
-        // 마스터만 턴 전환
+        // ✅ 누구 턴이든 "마스터"가 NextTurn을 호출하도록 보장
         if (PhotonNetwork.IsMasterClient)
+        {
             TurnManager.Instance.NextTurn();
+        }
+        else
+        {
+            // 비마스터일 땐 마스터에게 다음 턴 요청
+            photonView.RPC(nameof(RPC_RequestNextTurn), RpcTarget.MasterClient);
+        }
+    }
+    
+    [PunRPC]
+    private void RPC_RequestNextTurn(PhotonMessageInfo info)
+    {
+        if (!PhotonNetwork.IsMasterClient) return;
+
+        // 보안: 정말 그 턴의 주인이 보낸 건지 확인
+        if (TurnManager.Instance.CurrentActor != info.Sender.ActorNumber) return;
+
+        TurnManager.Instance.NextTurn();
+        Debug.Log($"[Turn] RPC_RequestNextTurn from {info.Sender.ActorNumber}, current={TurnManager.Instance.CurrentActor}");
     }
 
     // ---------- network tap add: 마스터 경유 ----------
@@ -236,9 +258,13 @@ public class MeteorTapMiniGame : MonoBehaviourPun
     [PunRPC]
     private void RPC_RequestAddTap(int delta, int requesterActor)
     {
-        // 안전장치: 현재 턴 주인이 아니면 무시(치팅/지연 방지)
         if (!PhotonNetwork.IsMasterClient) return;
+
+        // 1) 이 미니게임이 “마스터가 알고 있는 현재 턴 주인”과 일치하는가?
         if (requesterActor != currentActor) return;
+
+        // 2) TurnManager의 현재 턴과도 일치하는가? (이중 검증)
+        if (TurnManager.Instance.CurrentActor != requesterActor) return;
 
         photonView.RPC(nameof(RPC_AddTap), RpcTarget.AllBuffered, delta, currentActor);
     }
