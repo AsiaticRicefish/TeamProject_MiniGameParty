@@ -16,7 +16,43 @@ MonoBehaviour:
   m_Data:
     m_SerializedData: []
   m_GUID: faa7df2425dd0cc408b64906f88f8d61
-  m_SerializeEntries: []
+  m_SerializeEntries:
+  - m_GUID: 13280dcb8a19a474d987a7b508d9bda7
+    m_Address: Assets/Imports/Rhythm/Sound/Pixel Parade (1).mp3
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2a703b7936e5747b9a1214e4ff10816e
+    m_Address: Assets/Imports/Rhythm/Sound/Dreamy Meadow March.mp3
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 64be09812690f469cb652da7b120bb75
+    m_Address: Assets/Imports/Rhythm/Sound/Dreamy Stroll Through Green Hills.mp3
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d7eedad9a8f4a4b2ea2bcf99c2251f32
+    m_Address: Assets/Imports/Rhythm/Sound/TOOL_Compressed_Air_Burst_mono.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e960e427e3fd54286822b51db9825da0
+    m_Address: Assets/Imports/Rhythm/Sound/TOOL_Hammer_Nail_RR1_mono.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ee46ea6faac2a4b12b0c8b7c5eac42d3
+    m_Address: Assets/Imports/Rhythm/Sound/321.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: efc2531fbc716f7409d27168060779e5, type: 2}
   m_SchemaSet:
