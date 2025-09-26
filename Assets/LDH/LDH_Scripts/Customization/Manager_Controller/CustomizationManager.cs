@@ -41,14 +41,29 @@ namespace Customization
 
         private void OnEnable()
         {
-            SceneManager.sceneLoaded += (_, _) => ReleaseAllIcons();
+            SceneManager.sceneUnloaded += OnSceneUnloaded;
         }
 
         private void OnDisable()
         {
+            SceneManager.sceneUnloaded -= OnSceneUnloaded;
+
+
+            // DumpIconAddressables("OnDisable-BeforeRelease");
             ReleaseAllIcons();
+            // DumpIconAddressables("OnDisable-AfterRelease");
             DisposePools();
         }
+
+        private void OnSceneUnloaded(Scene scene)
+        {
+            // 씬 로드 직후 상태
+            // DumpIconAddressables($"SceneLoaded[{scene.name}]-BeforeRelease");
+            // 필요 시 바로 정리
+            ReleaseAllIcons();
+            // DumpIconAddressables($"SceneLoaded[{scene.name}]-AfterRelease");
+        }
+
 
         public async UniTask InitAsync(string uid = null)
         {
@@ -133,8 +148,9 @@ namespace Customization
             //기존 캐릭터를 풀에 반납
 //            Debug.Log("[CustomizationManager] 유니모가 변경되었는지를 확인합니다.");
 
-            if (!string.IsNullOrEmpty(characterId) && avatarStruct.CurrentCharacterId != targetChar &&
-                CatalogProvider.TryGetCharacter(characterId, out var cDef))
+            if (!string.IsNullOrEmpty(targetChar) &&
+                avatarStruct.CurrentCharacterId != targetChar &&
+                CatalogProvider.TryGetCharacter(targetChar, out var cDef))
             {
 //                Debug.Log("[CustomizationManager] 유니모가 변경됨");
                 if (avatarStruct.CurrentCharacter && !string.IsNullOrEmpty(avatarStruct.CurrentCharacterId))
@@ -163,10 +179,12 @@ namespace Customization
 
         public async UniTask ApplyEquipToAvatarAsync(AvatarStruct avatarStruct, string equipId)
         {
-            var targetMount = equipId ?? customData.equipId;
+            var targetEquip = equipId ?? customData.equipId;
 //            Debug.Log("[CustomizationManager] 엔진이 변경되었는지를 확인합니다.");
-            if (!string.IsNullOrEmpty(equipId) && avatarStruct.CurrentEquipId != equipId &&
-                CatalogProvider.TryGetEquip(equipId, out var eDef))
+
+            if (!string.IsNullOrEmpty(targetEquip) &&
+                avatarStruct.CurrentEquipId != targetEquip &&
+                CatalogProvider.TryGetEquip(targetEquip, out var eDef))
             {
                 if (avatarStruct.CurrentEquip && !string.IsNullOrEmpty(avatarStruct.CurrentEquipId))
                 {
@@ -224,8 +242,9 @@ namespace Customization
                     Debug.Log("<color=yellow>핸들 작업이 완료될때까지 대기</color>");
                     await h.Task;
                 }
+
                 var res = h.Result;
-                var sp = res as Sprite; 
+                var sp = res as Sprite;
                 _iconCache[characterId] = sp;
                 return sp;
             }
@@ -245,6 +264,7 @@ namespace Customization
             if (!CatalogProvider.IsReady || CatalogProvider.Characters == null)
             {
                 _iconCache?.Clear();
+                _iconHandles?.Clear();
                 return;
             }
 
@@ -279,9 +299,10 @@ namespace Customization
                 }
             }
 
-            Resources.UnloadUnusedAssets();
-            Debug.Log("[CustomizationManager] 모든 아이콘 handle을 release 했습니다..");
+            _iconHandles?.Clear();
 
+            Resources.UnloadUnusedAssets();
+            Debug.Log("<color=red>[CustomizationManager] 모든 아이콘 handle을 release 했습니다.</color>");
         }
 
         //모든 풀 레지스트리 dispose
@@ -292,6 +313,28 @@ namespace Customization
         }
 
         #endregion
+
+        public void DumpIconAddressables(string tag = "")
+        {
+            int cached = _iconCache?.Count ?? 0;
+            int handleCount = _iconHandles?.Count ?? 0;
+
+            Debug.Log(
+                $"<color=red>[CustomizationManager][{tag}] Icons: cacheCount={cached}, handleCount={handleCount}</color>");
+
+            if (_iconHandles != null)
+            {
+                foreach (var kv in _iconHandles)
+                {
+                    string id = kv.Key;
+                    var h = kv.Value;
+                    string state = h.IsValid()
+                        ? $"IsDone={h.IsDone}, Status={h.Status}, Result={(h.Result ? h.Result.name : "null")}"
+                        : "InvalidHandle";
+                    Debug.Log($"  - [{id}] {state}");
+                }
+            }
+        }
 
 
         #region 데이터 저장 / Photon Properties 변경

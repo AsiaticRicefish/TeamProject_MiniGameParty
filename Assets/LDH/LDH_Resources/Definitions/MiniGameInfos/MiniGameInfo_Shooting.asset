@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: Shooting
   sceneName: PMS_ShootingTestScene
-  gameName: "\uB0A0\uC544\uB77C \uC720\uB2C8\uBAA8"
+  gameName: "\uB0A0\uC544\uB77C! \uC720\uB2C8\uBAA8"
   description: 
   sprite: {fileID: 0}
   tutorialVideo: {fileID: 0}

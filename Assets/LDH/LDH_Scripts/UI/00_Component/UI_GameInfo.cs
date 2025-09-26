@@ -15,7 +15,7 @@ namespace LDH_UI
 
         public void SetPlayerCount(int current)
         {
-            playerCount.text = $"Current Players : {current}";
+            playerCount.text = $"현재 플레이 인원 수 : {current}";
         }
 
     }

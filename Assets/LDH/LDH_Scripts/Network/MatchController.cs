@@ -59,7 +59,7 @@ namespace Network
         public void SetMatching(MatchType type, bool isMatching)
         {
             IsMatching = isMatching;
-            CurrentMatchType = type;
+            CurrentMatchType = isMatching ? type : MatchType.None;
             
             MatchTypeChanged?.Invoke(type, isMatching);
             RefreshButtons();
@@ -94,6 +94,12 @@ namespace Network
                 default:
                     return;
             }
+        }
+
+        public void CancelMatching()
+        {
+            Debug.Log($"<color=pink>{CurrentMatchType} 매칭 취소</color>");
+            SetMatching(CurrentMatchType, false);
         }
 
 #endif

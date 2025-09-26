@@ -73,4 +73,5 @@ MonoBehaviour:
   mainGameManagerPrefabPath: Net/MainGameManager
   photonViewSyncPrefabPath: Net/PhotonViewSyncManager
   initializeObjects: []
-  _spawnedViewIds: 
+  loadingTheme: {fileID: 11400000, guid: 413e0bfba4a9642c8bd729cc9c38c87a, type: 2}
+  spawnedViewIds: 

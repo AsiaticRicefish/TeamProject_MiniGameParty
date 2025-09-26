@@ -34,11 +34,13 @@ namespace LDH_UI
         [SerializeField] private Image currencyImage;
         [SerializeField] private TMP_Text rewardText;
 
-        [Header("Anim")] [SerializeField] private float appearDuration = 0.25f;
+        [Header("Anim")] 
+        [SerializeField] private float appearDuration = 0.25f;
         [SerializeField] private float pulseDuration = 1f;
-
-
+        
         [Header("Sound")] 
+        [SerializeField] private Define_LDH.SfxKey playerPanelShow = Define_LDH.SfxKey.Main_PlayerBanner;
+        
         [SerializeField] private Define_LDH.SfxKey coinSfx = Define_LDH.SfxKey.Main_Coin;
         private int _maxTicks = 20;
 
@@ -123,9 +125,19 @@ namespace LDH_UI
 
         public UniTask PlayAppearAsync(float delay, CancellationToken ct)
         {
-            cg.DOFade(1f, appearDuration).SetDelay(delay);
+            // 안전: 기존 트윈 정리
+            cg.DOKill();
+            transform.DOKill();
+
+            // 시작 상태(등장 연출용)
+            cg.alpha = 0f;
+            
             var seq = DOTween.Sequence()
                 .AppendInterval(delay)
+                .AppendCallback(() =>           // ← 지연 다음 소리
+                {
+                    SoundManager.Instance.PlaySFX(playerPanelShow.ToString());
+                })
                 .Append(cg.DOFade(1f, appearDuration))
                 .Join(transform.DOScale(1f, appearDuration).SetEase(Ease.OutBack))
                 .SetUpdate(true);

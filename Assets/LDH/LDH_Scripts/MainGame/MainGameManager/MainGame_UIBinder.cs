@@ -159,7 +159,6 @@ namespace LDH_MainGame
             _loadingUI = Manager.UI.CreatePopupUI<UI_Loading>();
             UI_LoadingTheme theme = Resources.Load<UI_LoadingTheme>(loadingThemePath);
             _loadingUI.ApplyTheme(theme);
-            _loadingUI.SetSmallDescription("잠시만 기다려 주세요.");
             _loadingUI.SetProgress(0f);
             
             
