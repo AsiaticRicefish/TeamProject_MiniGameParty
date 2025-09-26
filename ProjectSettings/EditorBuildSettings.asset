@@ -42,6 +42,9 @@ EditorBuildSettings:
     path: Assets/KYG/KYG_Scene/MeteorScene.unity
     guid: 1c63b2b15a7697a4390d8636cae8c147
   - enabled: 1
+    path: Assets/KYG/KYG_Scene/MeteorScene2.unity
+    guid: f7d4716f4a61b5243995d901f1bb3ff9
+  - enabled: 0
     path: Assets/Imports/SplashArt/00_Scenes/GameScene/Splash.unity
     guid: 0c66d6d6a884b9d48a437abc5baa69de
   m_configObjects:

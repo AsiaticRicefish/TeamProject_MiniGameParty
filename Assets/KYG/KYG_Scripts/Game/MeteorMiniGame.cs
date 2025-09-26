@@ -3,7 +3,10 @@ using Photon.Pun;
 using TMPro;
 using UnityEngine.UI;
 using System.Collections;
+using KYG.Framework; // ← 인터페이스 네임스페이스
 using DesignPattern;
+using LDH.LDH_Scripts.Network;
+using KYG;
 
 namespace KYG
 {
@@ -15,7 +18,7 @@ namespace KYG
     /// - 중복 종료/중복 NextTurn 방지 가드
     /// </summary>
     [RequireComponent(typeof(PhotonView))]
-    public class MeteorTapMiniGame : MonoBehaviourPun
+    public class MeteorTapMiniGame : MonoBehaviourPun, IGameComponent, ICoroutineGameComponent
     {
         [Header("Refs")]
         [SerializeField] private AudioSource sfxTap;
@@ -81,6 +84,11 @@ namespace KYG
         
         [SerializeField] private float bannerShowTime = 0.9f;   // 배너 노출 시간(짧게)
         [SerializeField] private float bannerFadeOut  = 0.2f;   // 페이드아웃 시간
+        
+        [SerializeField] private int maxTapsPerTurn = 3;
+        private int tapsThisTurn = 0;                    // 이번 내 턴에서만 카운트
+        private bool passedThisTurn = false;
+        private bool endedThisTurn = false;
 
         // 내부 상태
         private int  currentEndingCount;
@@ -90,83 +98,101 @@ namespace KYG
         private float turnTimeMax = 10f;
 
         private bool countActive  = false;
-        private int  tapsThisTurn = 0;
-        private bool endedThisTurn = false;
+        
         
         private AudioSource _changeSrc;
         private int _lastDangerTier = -1; // 0=yellow, 1=orange, 2=red (변경 시에만 사운드)
         
         private bool _isFlashing; // 플래시 중인지 가드
         
-        
+        // 내 턴에서 눌린 탭 수 누적
+        private int myTapCount = 0;
 
+        // 전체 공유 탭 카운트 (턴마다 리셋 or 계속 누적)
+        private int sharedTapCount = 0;
+
+        // 이번 턴의 엔딩까지 필요한 탭 수
+        [SerializeField] private int endingCount = 10;
+
+        // 이번 턴의 액터 (TurnManager.BroadcastCurrentTurn에서 전달받음)
+        private int currentActor = -1;
+        
+        /// <summary>
+        /// 한 프레임 내 동기 초기화.
+        /// - UI 안전 가시화
+        /// - 기본 머티리얼/애니메이션 리셋
+        /// - 타이머/배너/카운트텍스트 초기 상태 세팅
+        /// </summary>
+        public void Initialize()
+        {
+            // UI가 비활성/알파 0으로 잠겨 들어오는 경우를 복구
+            EnsureUIVisible(); // 원본 유틸 사용(아래에 정의). :contentReference[oaicite:3]{index=3}
+
+            // 기본 비주얼 리셋
+            if (starRenderer && starNormalMat) starRenderer.material = starNormalMat;
+            if (unimoFace) unimoFace.Play("Idle", 0, 0);
+
+            // 타이머/배너 초기화
+            turnTimeMax = 10f;
+            turnTimeLeft = turnTimeMax;
+            if (turnTimerUI) turnTimerUI.value = 1f;
+
+            if (turnBannerMine)  turnBannerMine.gameObject.SetActive(false);
+            if (turnBannerOther) turnBannerOther.gameObject.SetActive(false);
+
+            if (countNumberText)
+            {
+                countNumberText.text = "";
+                countNumberText.gameObject.SetActive(false);
+            }
+
+            // 상태 리셋
+            currentTap = 0;
+            tapsThisTurn = 0;
+            endedThisTurn = false;
+            _lastDangerTier = -1;
+            _isFlashing = false;
+        }
+        
+        /// <summary>
+        /// 다프레임(비동기) 초기화.
+        /// - 포톤 연결/룸/필요 매니저 등장까지 대기
+        /// - PhotonViewSync 완료까지 대기(있다면)
+        /// </summary>
+        public IEnumerator InitializeCoroutine()
+        {
+            // 1) 포톤 연결/룸 입장 대기 (오프라인 테스트면 바로 통과)
+            if (Photon.Pun.PhotonNetwork.IsConnected)
+            {
+                yield return new WaitUntil(() => Photon.Pun.PhotonNetwork.InRoom);
+            }
+
+            // 2) (선택) 필요한 매니저만 로드 대기 - 타입 의존성 없는 안전 대기
+            float t = 0f;
+            while (KYG.TurnManager.Instance == null && t < 10f)
+            {
+                t += Time.deltaTime;
+                yield return null;
+            }
+        }
+        
         // ─────────────────────────────────────────────────────────
 
         /// <summary>
         /// TurnManager.RPC_SetCurrentTurn → EnsureMiniAndInit 에서 호출.
         /// 모든 클라 동일 엔딩카운트(sharedEndingCount)를 사용.
         /// </summary>
-        public void InitTurnWithEnding(bool isMine, int roundIndex, int alivePlayerCount, int sharedEndingCount)
+        public void InitTurnWithEnding(bool mine, int actor, int round, int alive, int ending)
         {
-            Debug.Log($"[MTM] InitTurnWithEnding start mine={isMine}  " +
-                      $"mineTxt={(turnBannerMine? turnBannerMine.name : "null")}#{(turnBannerMine? turnBannerMine.GetInstanceID():0)} " +
-                      $"otherTxt={(turnBannerOther? turnBannerOther.name : "null")}#{(turnBannerOther? turnBannerOther.GetInstanceID():0)} " +
-                      $"instances={FindObjectsOfType<MeteorTapMiniGame>(true).Length}");
-            
-            // 로컬 오프라인 테스트면 항상 내 턴으로 강제
-            if (!Photon.Pun.PhotonNetwork.IsConnected)
-                isMine = true;
-            
-            myTurn = isMine;
-            //currentTap = 0;
+            myTurn = mine;
+            currentActor = actor;
             tapsThisTurn = 0;
+            passedThisTurn = false;
             endedThisTurn = false;
+            if (ending > 0) endingCount = ending; // 항상 브로드캐스트 값으로 덮어쓰기
 
-            currentEndingCount = Mathf.Max(3, sharedEndingCount);
-
-            // UI/비주얼 초기화
-            if (starRenderer && starNormalMat) starRenderer.material = starNormalMat;
-            //SafeSetActive(turnBannerMine,  isMine);
-            //SafeSetActive(turnBannerOther, !isMine);
-            if (unimoFace) unimoFace.Play("Idle", 0, 0);
-
-            turnTimeMax = 10f;
-            turnTimeLeft = turnTimeMax;
-            if (turnTimerUI) turnTimerUI.value = 1f;
-
-            SafeSetActive(countNumberText, isMine); // 숫자 카운트는 내 턴만 표시
-            EnsureUIVisible();                      // 렌더/알파 잠김 대비
-            
-            // InitTurnWithEnding 내부 UI/비주얼 초기화 부분 교체
-            // (둘 다 끄고 → 하나만 켜서 '동시 ON'을 원천 차단)
-            if (turnBannerMine)  turnBannerMine.gameObject.SetActive(false);
-            if (turnBannerOther) turnBannerOther.gameObject.SetActive(false);
-
-            if (isMine) {
-                if (turnBannerMine)  turnBannerMine.gameObject.SetActive(true);   // 내 턴만 보임
-            } else {
-                if (turnBannerOther) turnBannerOther.gameObject.SetActive(true);  // 상대 턴 전환은 모두에게
-            }
-            
-            // 잘못된 참조(같은 오브젝트를 두 슬롯에 꽂은 경우) 탐지
-            if (turnBannerMine && turnBannerOther && ReferenceEquals(turnBannerMine, turnBannerOther)) {
-                Debug.LogError("[MeteorTapMiniGame] turnBannerMine과 turnBannerOther가 같은 오브젝트를 참조하고 있습니다!");
-            }
-
-            // 씬에 복수 인스턴스 가드(두 컴포넌트가 서로 켜는 상황 방지)
-            if (FindObjectsOfType<MeteorTapMiniGame>(true).Length > 1) {
-                Debug.LogWarning("[MeteorTapMiniGame] 씬에 MeteorTapMiniGame이 2개 이상 존재합니다. 배너 중복 노출 원인일 수 있습니다.");
-            }
-            
-            // 배너는 "짧게" 보여주고 자동 숨김
-            // 모든 플레이어: turnBannerOther = 상대 턴 전환 알림 (NEXT >>)
-            // 내 턴인 플레이어만: turnBannerMine = 내 턴 알림 (MY TURN!)
-            PlayTurnTransitionBanners(isMine);
-
-            if (isMine) StartCoroutine(CoCountWindow());
-            else        countActive = false;
-
-            Debug.Log($"[MeteorTapMiniGame] InitTurn → mine={isMine}, round={roundIndex}, alive={alivePlayerCount}, ending={currentEndingCount}");
+            //SafeShowBanners(myTurn, !myTurn);
+            Debug.Log($"[MTM] InitTurn → mine={myTurn}, actor={currentActor}, ending={endingCount}");
         }
 
         private void Update()
@@ -181,16 +207,72 @@ namespace KYG
         // UI 버튼(탭)
         public void OnTap()
         {
-            if (!myTurn) return;
-            if (!countActive) return;
-            if (endedThisTurn) return;
-            if (tapsThisTurn >= maxTapPerTurn) return;
+            if (!myTurn || passedThisTurn || endedThisTurn) return;
+
+            tapsThisTurn++;
+            sharedTapCount++;
+            Debug.Log($"[MTM] 탭 {tapsThisTurn}/{maxTapsPerTurn}, 누적 {sharedTapCount}/{endingCount}");
+
+            // (1) 최종 카운트에 닿은 순간 → 탈락 종료
+            if (sharedTapCount >= endingCount) { TryEndTurn(); return; }
+
+            // (2) 3탭 채우면 → 패스
+            if (tapsThisTurn >= maxTapsPerTurn) { TryPassTurn(); return; }
 
             DoOneTapFXAndLogic();
-            tapsThisTurn++;
 
-            Debug.Log($"[MeteorTapMiniGame] 내 턴 탭 횟수: {tapsThisTurn}/{maxTapPerTurn}, 총 누적 탭: {currentTap}/{currentEndingCount}");
+            if (sharedTapCount >= endingCount)
+            {
+                TryEndTurn();
+            }
+            else if (myTapCount >= maxTapPerTurn)
+            {
+                TryPassTurn();
+            }
         }
+        
+        private void TryPassTurn()
+        {
+            if (passedThisTurn || endedThisTurn) return;
+            passedThisTurn = true;
+
+            var tm = KYG.TurnManager.Instance ?? FindObjectOfType<KYG.TurnManager>(true);
+            if (tm == null) return;
+
+            if (PhotonNetwork.IsMasterClient)
+            {
+                Debug.Log("[MTM] 3탭 → Master NextTurn()");
+                tm.NextTurn();
+            }
+            else
+            {
+                Debug.Log("[MTM] 3탭 → RequestPassTurn(to Master)");
+                tm.RequestPassTurnFromClient(0);
+            }
+        }
+
+        private void TryEndTurn()
+        {
+            if (endedThisTurn) return;
+            endedThisTurn = true;
+
+            var tm = KYG.TurnManager.Instance ?? FindObjectOfType<KYG.TurnManager>(true);
+            if (tm == null) return;
+
+            if (PhotonNetwork.IsMasterClient)
+            {
+                Debug.Log("[MTM] Ending 도달 → Master EndTurn()");
+                tm.EndTurn();
+            }
+            else
+            {
+                Debug.Log("[MTM] Ending 도달 → RequestEndTurn(to Master)");
+                tm.RequestEndTurnFromClient(0);
+            }
+        }
+
+        [PunRPC] private void RPC_RequestPassTurn(int reason) { if (PhotonNetwork.IsMasterClient) KYG.TurnManager.Instance?.NextTurn(); }
+        [PunRPC] private void RPC_RequestEndTurn(int reason)  { if (PhotonNetwork.IsMasterClient) KYG.TurnManager.Instance?.EndTurn(); }
 
         private void DoOneTapFXAndLogic()
         {
@@ -279,11 +361,69 @@ namespace KYG
             }
         }
         
+        private void CheckEnding()
+        {
+            if (endedThisTurn) return;
+
+            if (sharedTapCount >= endingCount)
+            {
+                endedThisTurn = true;
+
+                // 마스터면 직접 턴 종료 RPC, 아니면 마스터에게 요청
+                if (PhotonNetwork.IsMasterClient)
+                {
+                    Debug.Log("[MeteorTap] Ending reached → Master EndTurn()");
+                    var tm = KYG.TurnManager.Instance ?? FindObjectOfType<KYG.TurnManager>(true);
+                    if (tm != null) tm.EndTurn();
+                }
+                else
+                {
+                    Debug.Log("[MeteorTap] Ending reached → Request RPC_EndTurn");
+                    photonView.RPC(nameof(RPC_EndTurn), RpcTarget.MasterClient, currentActor);
+                }
+            }
+        }
+        
+        [PunRPC]
+        private void RPC_EndTurn(int actor)
+        {
+            Debug.Log($"[MeteorTap] RPC_EndTurn 수신 → actor={actor}");
+
+            var tm = KYG.TurnManager.Instance ?? FindObjectOfType<KYG.TurnManager>(true);
+            if (tm == null) return;
+
+            if (PhotonNetwork.IsMasterClient)
+            {
+                // 마스터는 실제로 턴 종료 처리
+                tm.EndTurn();
+            }
+        }
+        
+        private IEnumerator CoNotifyEndTurnAfter(float delay)
+        {
+            yield return new WaitForSeconds(delay);
+
+            // 마스터면 직접 처리, 아니면 마스터에게 요청
+            var tm = KYG.TurnManager.Instance ?? FindObjectOfType<KYG.TurnManager>(true);
+            if (tm == null) yield break;
+
+            if (PhotonNetwork.IsMasterClient)
+            {
+                Debug.Log("[MeteorTap] Ending reached → Master EndTurn()");
+                tm.EndTurn();
+            }
+            else
+            {
+                Debug.Log("[MeteorTap] Ending reached → RequestEndTurnFromClient()");
+                tm.RequestEndTurnFromClient(0);
+            }
+        }
+        
         public void InitTurn(bool isMine, int roundIndex, int alivePlayerCount)
         {
             // ✅ 구버전 호출 호환용: 방/라운드/인원 기반 결정적 엔딩수 산출
             int sharedEndingCount = ComputeCompatEnding(roundIndex, alivePlayerCount);
-            InitTurnWithEnding(isMine, roundIndex, alivePlayerCount, sharedEndingCount);
+            //InitTurnWithEnding(isMine, roundIndex, alivePlayerCount, sharedEndingCount);
         }
 
         private int ComputeCompatEnding(int roundIndex, int alivePlayers)
@@ -342,7 +482,7 @@ namespace KYG
                 yield return new WaitForSeconds(afterDelay);
                 if (!endedThisTurn && currentTap < currentEndingCount)
                 {
-                    TryNextTurnOrLocalFallback(); // ← 내부에서 LocalMiniGameBoot.NextLocalTurn() 호출
+                    //KYG.TurnManager.Instance?.RequestNextTurnFromLocal(); // ← 내부에서 LocalMiniGameBoot.NextLocalTurn() 호출
                 }
             }
         }
@@ -507,22 +647,20 @@ private void HandleEliminationAndAdvance()
     // 현재 턴의 플레이어 탈락 처리(온라인=마스터 / 오프라인=로컬 폴백)
     if (IsAuthoritative())
     {
-        int actor = (KYG.TurnManager.Instance != null)
-            ? KYG.TurnManager.Instance.GetCurrentTurnActor()
-            : -1;
+        //int actor = (KYG.TurnManager.Instance != null)
+            //? KYG.TurnManager.Instance.GetCurrentTurnActor() : -1;
 
         // 온라인: 매니저에 위임
         if (KYG.ShootingGameManager.Instance != null && Photon.Pun.PhotonNetwork.IsConnectedAndReady)
         {
-            KYG.ShootingGameManager.Instance.Eliminate(actor);
-            if (!KYG.ShootingGameManager.Instance.IsGameOver())
-                TryNextTurnOrLocalFallback(); // 다음 턴
-            // 게임오버면 ShootingGameManager가 마무리
-        }
-        else
-        {
-            // 로컬 1인 테스트: 다음 턴 순환(카드 순서 기반)
-            TryNextTurnOrLocalFallback();
+            //KYG.ShootingGameManager.Instance.Eliminate(actor);
+
+            // 탈락 반영
+            var prm = UnityEngine.Object.FindObjectOfType<KYG.PlayerRootManager>(true);
+            if (prm && prm.enabled) prm.RefreshVisibility_AllExceptEliminated();
+
+            //if (!KYG.ShootingGameManager.Instance.IsGameOver())
+                //KYG.TurnManager.Instance?.RequestNextTurnFromLocal();
         }
     }
 }
