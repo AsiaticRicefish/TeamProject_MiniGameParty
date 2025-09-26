@@ -99,7 +99,17 @@ namespace LDH_UI
         
         protected override async UniTask OnShowAsync(CancellationToken ct)
         {
-            SoundManager.Instance.PlaySFX( _isWinner? winnerSfxKey.ToString() : loserSfxKey.ToString());
+            if (_isWinner)
+            {
+                Debug.Log("<color=green> winner 효과음 재생합니다.</color>");
+                SoundManager.Instance.PlaySFX( winnerSfxKey.ToString());
+            }
+            else
+            {
+                Debug.Log("<color=green> loser 효과음 재생합니다.</color>");
+                SoundManager.Instance.PlaySFX( loserSfxKey.ToString());
+            }
+         
             await base.OnShowAsync(ct);
             await UniTask.Delay(TimeSpan.FromSeconds(0.5f));
             SoundManager.Instance.PlayBGM(winnerBgmKey.ToString());
