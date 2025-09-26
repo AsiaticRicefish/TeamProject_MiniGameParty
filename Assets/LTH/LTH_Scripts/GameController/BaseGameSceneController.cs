@@ -5,10 +5,11 @@ using System.Linq;
 using LDH_MainGame;
 using LDH.LDH_Scripts.Network;
 using Photon.Pun;
+using Photon.Realtime;
 using UnityEngine;
 
 [RequireComponent(typeof(PhotonView))]
-public abstract class BaseGameSceneController : MonoBehaviourPun
+public abstract class BaseGameSceneController : MonoBehaviourPunCallbacks
 {
     [Header("초기화 설정")]
     [SerializeField] protected float initTimeout = 30f; // WaitForAllPlayersLoaded()에서 사용하는 안전장치
@@ -31,6 +32,12 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
     private HashSet<int> initializedPlayers = new();
     private bool isInitializing = false;
 
+    
+    // ====== 추가: 타임아웃, 플레이어 이탈로 인한 로직 중단 플래그 ======
+    protected bool _aborted;
+    protected bool _gameStarted = false;  // StartGame 이후엔 이탈 무시
+
+    
     protected virtual void Awake()            // enable에서 호출하니 초기화 순서 문제로 awake에서 호출
     {
         Debug.Log("[BaseSceneController] Awake 호출 시점");
@@ -172,6 +179,7 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
     [PunRPC]
     public void StartGame()
     {
+        _gameStarted = true;
         NotifyGameStart();
     }
     #endregion
@@ -185,12 +193,15 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
             yield return null;
 
         float timer = 0f;
+        
         while (loadedPlayers.Count < PhotonNetwork.CurrentRoom.PlayerCount)
         {
+            
             timer += syncCheckInterval;
             if (timer > initTimeout)
             {
-                Debug.LogError($"[{GameType}Controller] 플레이어 로딩 타임아웃!");
+                Debug.LogWarning($"[{GameType}Controller] WaitForAllPlayersLoaded timeout.");
+                AbortInit($"[{GameType}Controller] WaitForAllPlayersLoaded timeout.");
                 yield break;
             }
             yield return new WaitForSeconds(syncCheckInterval);
@@ -205,10 +216,13 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
         float timer = 0f;
         while (initializedPlayers.Count < PhotonNetwork.CurrentRoom.PlayerCount)
         {
+            
             timer += syncCheckInterval;
             if (timer > initTimeout)
             {
-                Debug.LogError($"[{GameType}Controller] 플레이어 초기화 타임아웃!");
+                // Debug.LogError($"[{GameType}Controller] 플레이어 초기화 타임아웃!");
+                Debug.LogWarning($"[{GameType}Controller] 플레이어 초기화 타임아웃!");
+                AbortInit($"[{GameType}Controller] 플레이어 초기화 타임아웃!");
                 yield break;
             }
             yield return new WaitForSeconds(syncCheckInterval);
@@ -218,6 +232,25 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
     }
     #endregion
 
+    #region TimeOut 대응 로직 / Punc Call Back
+
+    // 타임 아웃 로직은 MainGameSceneController에서 일괄 처리할 예정
+    protected virtual void AbortInit(string reason)
+    {
+        Debug.LogWarning($"[{GameType}] Init abort: {reason}");
+        StopAllCoroutines();
+
+    }
+    
+    public override void OnPlayerLeftRoom(Player otherPlayer)
+    {
+        if (_aborted || _gameStarted) return;
+        _aborted = true;
+        AbortInit("A player left during init. Aborting.");
+    }
+
+    #endregion
+    
     #region 유틸리티
     // 특정 매니저(싱글톤)이 생성될 때까지 대기   
     protected IEnumerator WaitForSingletonReady<T>() where T : MonoBehaviour
@@ -244,7 +277,6 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
 
             
             bool failed = false;
-
             try
             {
                 component.Initialize();
@@ -256,7 +288,7 @@ public abstract class BaseGameSceneController : MonoBehaviourPun
                     $"[{GameType}Controller] 초기화 실패 → {component.GetType().Name}\n" +
                     $"- Scene : {scene}\n" +
                     $"- Active: {(go ? go.activeInHierarchy : false)}, Enabled: {(mb ? mb.enabled : false)}\n" +
-                    go /* context */);
+                    go?.name + " " + e.Message);
 
             }
 

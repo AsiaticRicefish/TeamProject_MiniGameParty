@@ -118,29 +118,29 @@ namespace LDH_UI
                 Debug.Log("AutoSlideLoop 시작");
                 while (!token.IsCancellationRequested)
                 {
-                    Debug.Log("  → Delay 전");
+                    // Debug.Log("  → Delay 전");
                     await UniTask.Delay(System.TimeSpan.FromSeconds(autoSlideDelay), cancellationToken: token);
 
                     // 마지막 페이지라면 첫 페이지로
                     int lastpage = bannersParent.childCount;
                     if (scrollSnap.CurrentPage >= lastpage - 1)
                     {
-                        Debug.Log("마지막 페이지 입니다 -> 처음페이지 이동");
+                        // Debug.Log("마지막 페이지 입니다 -> 처음페이지 이동");
                         scrollSnap.GoToScreen(0);
                     }
                     else
                     {
-                        Debug.Log("다음페이지 이동");
+                        // Debug.Log("다음페이지 이동");
                         scrollSnap.NextScreen();
                     }
-                    Debug.Log("  → Delay 후: 현재 페이지=" + scrollSnap.CurrentPage);
+                    // Debug.Log("  → Delay 후: 현재 페이지=" + scrollSnap.CurrentPage);
                 }
             }
             catch (OperationCanceledException)
             {
                 // 토큰 취소로 인한 정상 종료
                 // Debug.Log("토큰 취소!");
-                Debug.Log("AutoSlideLoop 정상 취소");
+                // Debug.Log("AutoSlideLoop 정상 취소");
             }
         }
 

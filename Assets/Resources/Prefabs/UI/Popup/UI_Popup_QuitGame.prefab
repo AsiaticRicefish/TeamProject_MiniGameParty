@@ -427,10 +427,12 @@ MonoBehaviour:
   blocksRaycasts: 1
   fadeTime: 0.2
   okButton: {fileID: 5854359914405354430}
+  infoMessage: {fileID: 0}
   targetRect: {fileID: 7719812484099602438}
   offsetFromCenter: 495
   easyType: 9
   useUnscaledTime: 1
+  uiLoadingTheme: {fileID: 11400000, guid: ff445375cda8541a68d3d25c2bad1b2f, type: 2}
 --- !u!225 &8341945572358257345
 CanvasGroup:
   m_ObjectHideFlags: 0

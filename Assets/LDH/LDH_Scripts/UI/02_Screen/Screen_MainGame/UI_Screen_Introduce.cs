@@ -35,6 +35,9 @@ namespace LDH_UI.Screen_MainGame
         [SerializeField] private float stepDelay = 1f;     // 다음 패널까지 딜레이
         [SerializeField] private float fadeTime = 0.25f;      // 알파 페이드 시간
 
+        [Header("Sound")] private Define_LDH.SfxKey playerPanelSpawnSfxKey = Define_LDH.SfxKey.Main_PlayerBanner;
+
+        
 
         private int[] _activeOrder;    // 등장할 패널 인덱스 순서
         private Vector2[] _targetPosCache;                    // 각 패널의 본래 위치
@@ -69,10 +72,9 @@ namespace LDH_UI.Screen_MainGame
         public async UniTask SetData(Player[] players)
         {
             if(playerUis == null || playerUis.Count == 0) return;
-            if(players.Length < 2) return;
             
             int playerCount = Mathf.Clamp(players.Length, 0, playerUis.Count);
-            
+            Debug.LogWarning(playerCount);
             // 원래 위치 캐싱하기 위한 배열 초기화
             _targetPosCache ??= new Vector2[playerUis.Count];
             
@@ -92,6 +94,7 @@ namespace LDH_UI.Screen_MainGame
                 .ToArray();
             for (int i = 0; i < playerCount; i++)
             {
+                Debug.LogWarning(_activeOrder.Length);
                 int panelIndex = _activeOrder[i];
                 // Debug.Log($"panel index = {panelIndex}");
                 var ui = playerUis[panelIndex];
@@ -137,6 +140,8 @@ namespace LDH_UI.Screen_MainGame
                 
                 var toPos = _targetPosCache[panelIndex];
 
+                SoundManager.Instance.PlaySFX(playerPanelSpawnSfxKey.ToString());
+                
                 var seq = DOTween.Sequence()
                     .Join(rt.DOAnchorPos(toPos, moveTime).SetEase(Ease.OutBack, overshoot))
                     .Join(cg.DOFade(1f, fadeTime))

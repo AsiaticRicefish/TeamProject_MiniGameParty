@@ -7,6 +7,7 @@ using LDH_UI;
 using LDH_Util;
 using Managers;
 using Photon.Pun;
+using Photon.Realtime;
 using UnityEditor;
 using UnityEngine;
 
@@ -16,16 +17,12 @@ namespace LDH_MainGame
     {
         public static MainGameSceneController Instance { get; private set; }
         protected override string GameType => "Main";
-
-        [Header("초기화 대상 (IGameComponent, ICouroutineGameComponent)")] 
-        [SerializeField] private string mainGameManagerPrefabPath;
-        [SerializeField] private string photonViewSyncPrefabPath;
         
+
+        [Header("초기화 대상 (IGameComponent, ICouroutineGameComponent)")] [SerializeField]
+        private string mainGameManagerPrefabPath;
+        // [SerializeField] private string photonViewSyncPrefabPath;
         [SerializeField] private GameObject[] initializeObjects;
-
-        [Header("Loading Theme")]
-        [SerializeField] private UI_LoadingTheme loadingTheme; // 테마
-        
         
         private readonly List<IGameComponent> _sequential = new();
         private readonly List<ICoroutineGameComponent> _parallel = new();
@@ -34,7 +31,7 @@ namespace LDH_MainGame
 
 
         private UI_Loading _uiLoading;
-       [SerializeField] private int[] spawnedViewIds;   // 마스터가 뿌린 ViewID 목록을 받는 버퍼
+        [SerializeField] private int[] spawnedViewIds; // 마스터가 뿌린 ViewID 목록을 받는 버퍼
 
 
         #region 초기화 구현(BasSceneController Implement)
@@ -42,28 +39,17 @@ namespace LDH_MainGame
         protected override void Awake()
         {
             base.Awake();
-
-            // 1. 로딩창 생성
-            _uiLoading = Manager.UI.CreatePopupUI<UI_Loading>();
-
-            // 2. 테마 적용 (있는 경우)
-            if (loadingTheme)
-            {
-                _uiLoading.ApplyTheme(loadingTheme);
-            }
-            _uiLoading.SetProgress(0f);
             
-            // 3. 테마 없을 때 -> 적용안함.
-            Manager.UI.ShowPopupUI(_uiLoading).Forget();
-
             if (Instance == null)
                 Instance = this;
-            
+
             _sequential.Clear();
             _parallel.Clear();
             
+            _uiLoading = _uiLoading ? _uiLoading : Manager.UI.PeekPopupUI<UI_Loading>();
+            
         }
-        
+
         /// <summary>
         /// - 메인 게임 씬 UI 활성화 or 배치
         /// - 메인 게임 매니저 초기화
@@ -72,31 +58,34 @@ namespace LDH_MainGame
         /// <returns></returns>
         protected override IEnumerator WaitForManagersAwake()
         {
-            //플레이어 UID가 있는지 확인 (임시 메서드)
+            //플레이어 인원수 확인 및 모든 플레이어 ui 확인
             yield return WaitForAllPlayerUids(5f);
-            _uiLoading?.SetProgress(0.2f); 
-            
+            _uiLoading?.SetProgress(0.2f);
+            Debug.Log("2");
             //룸 오브젝트 - 메인 게임 매니저 생성
-            yield return StartCoroutine(CreateRoomObjects(new[] { mainGameManagerPrefabPath }));
+            yield return StartCoroutine(EnsureRoomObjects(new[] { mainGameManagerPrefabPath }));
             _uiLoading?.SetProgress(0.4f);
-            
+            Debug.Log("3");
             //타입 체크 및 type list 초기화
             yield return StartCoroutine(SetInitializeList());
             _uiLoading?.SetProgress(0.6f);
-            
+            Debug.Log("4");
+
             // 초기화가 필요한 대상(매니저 등 initializeTargets에 있는 요소들)이 생성될 때까지 대기  
             foreach (var seqType in _seqTypeMap.Values)
             {
                 //초반에 배열에 있는 타입들을 찾아서 initializeTypes에 추가해두었으므로 이 타입을 넘긴다.
                 yield return WaitForSingletonReady(seqType);
             }
+            Debug.Log("5");
+
             _uiLoading?.SetProgress(0.7f);
 
             foreach (var parType in _parTypeMap.Values)
             {
                 yield return WaitForSingletonReady(parType);
             }
-            
+
             // Util_LDH.ConsoleLog(this, "메인 게임에 필요한 Manager들 생성 완료");
         }
 
@@ -124,39 +113,60 @@ namespace LDH_MainGame
 
             // 포톤뷰 싱크 플래그 끄기
             PhotonViewSync.Instance.Clear();
-            
+
             // 로딩 패널을 꺼주기
-            await Manager.UI.CloseTopPopupUI();
+            if(Manager.UI.PeekPopupUI<UI_Loading>() !=null)
+                await Manager.UI.CloseTopPopupUI();
 
             //메인 게임 매니저가 게임을 시작
+            Debug.Log("메인 게임 매니저 초기화? " + MainGameManager.Instance.Initalized);
             MainGameManager.Instance.StartGame();
         }
 
         #endregion
 
-
-        #region Temp
+        #region Uid
 
         private IEnumerator WaitForAllPlayerUids(float timeoutSec = 5f)
         {
-            float end = Time.time + timeoutSec;
-            while (Time.time < end)
+            float t = 0f;
+            while (t < timeoutSec)
             {
-                var list = PhotonNetwork.PlayerList;
-                bool allHaveUid = list != null && list.Length > 0 && list.All(p =>
-                    p.CustomProperties != null &&
-                    p.CustomProperties.TryGetValue("uid", out var v) &&
-                    v is string s && !string.IsNullOrEmpty(s));
+                // 방이 없거나 연결 안되면 다음 프레임
+                if (!PhotonNetwork.IsConnected || !PhotonNetwork.InRoom || PhotonNetwork.CurrentRoom == null)
+                {
+                    yield return null;
+                    t += Time.deltaTime;
+                    continue;
+                }
 
-                if (allHaveUid) yield break;
+                var list = PhotonNetwork.PlayerList;
+                if (list != null && list.Length > 0)
+                {
+                    if (list.Length != PhotonNetwork.CurrentRoom.MaxPlayers)
+                    {
+                        // 중간에 누군가가 탈주
+                        AbortInit("[MainGameSceneController] 플레이 인원 수 != 최대 인원 수. 게임을 중지합니다.");
+
+                    }
+                    
+                    // 현재 인원 기준으로 판정
+                    bool allHaveUid = list.All(p =>
+                        p.CustomProperties != null &&
+                        p.CustomProperties.TryGetValue("uid", out var v) &&
+                        v is string s && !string.IsNullOrEmpty(s));
+
+                    if (allHaveUid) yield break;
+                }
+
+                t += 0.1f;
                 yield return new WaitForSeconds(0.1f);
             }
 
-            Debug.LogWarning("[Init] Not all players have UID. Continue anyway.");
+            AbortInit("[MainGameManager] Init - WaitForAllPlayerUids timeout.");
         }
 
         #endregion
-
 
         #region Editor / Type Setting / Room Object 생성
 
@@ -175,75 +185,151 @@ namespace LDH_MainGame
 
         private IEnumerator SetInitializeList()
         {
-           
             _seqTypeMap.Clear();
             _parTypeMap.Clear();
-            
+
             // Debug.Log($"initialize objects 개수 : {initializeObjects.Length}");
             foreach (var go in initializeObjects)
             {
                 Register(go);
             }
-            
+
             // Util_LDH.ConsoleLog(this, "초기화 대상 리스트, 맵 세팅 완료");
             yield return null;
         }
-        
-        private IEnumerator CreateRoomObjects(string[] roomObjectPaths)
+
+        private IEnumerator EnsureRoomObjects(string[] roomObjectPaths)
         {
-            
-            Debug.Log("Create room object");
+            Debug.Log("2-2");
+            // 0) 이미 누군가가 스폰해둔 경우(마스터 교체 등): 프로퍼티만 기다리면 됨
+            if (TryGetRoomObjectIds(out var idsFromProp) && idsFromProp.Length == roomObjectPaths.Length)
+            {
+                yield return WaitForLocalViews(idsFromProp);
+                yield break;
+            }
+
+            // 마스터면 책임지고 보충
             if (PhotonNetwork.IsMasterClient)
             {
-                var ids = new List<int>();
-
-                foreach (var path in roomObjectPaths)
+                // 아직 세팅 안되어 있으면 내가 생성해서 세팅
+                if (!TryGetRoomObjectIds(out var cur) || cur == null || cur.Length == 0)
                 {
-                    var ro = PhotonNetwork.InstantiateRoomObject(path, Vector3.zero, Quaternion.identity);
-                    if (ro != null && ro.TryGetComponent(out PhotonView pv))
-                    {
-                        Debug.Log(pv.ViewID);
-                        ids.Add(pv.ViewID);
-                    }
-                        
-                    else
-                        Util_LDH.ConsoleLogWarning(this, $"RoomObject spawn failed or missing PhotonView: {path}");
+                    yield return StartCoroutine(SpawnAndSetRoomObjectIds(roomObjectPaths));
                 }
-                
-                photonView.RPC(nameof(RPC_AnnounceRoomObjects), RpcTarget.AllBuffered, ids.ToArray());
             }
             
-            // Debug.Log("마스터가 viewid 뿌릴때까지 대기");
-            // 1) 마스터가 뿌린 ViewID 목록을 받을 때까지 대기
-            yield return new WaitUntil(() => spawnedViewIds != null && spawnedViewIds.Length == roomObjectPaths.Length);
-            // Debug.Log("내 로컬에 뷰 아이디 생길때까지 대기");
-            // 2) 내 로컬에 해당 ViewID 들이 실제로 생길 때까지 대기
-            yield return new WaitUntil(() =>
+            // 세팅이 되었는지 체크
+            if (TryGetRoomObjectIds(out var finalIds) && finalIds.Length == roomObjectPaths.Length)
             {
-                for (int i = 0; i < spawnedViewIds.Length; i++)
+                yield return WaitForLocalViews(finalIds);
+            }
+        }
+
+        private IEnumerator SpawnAndSetRoomObjectIds(string[] roomObjectPaths)
+        {
+            var ids = new List<int>();
+
+            foreach (var path in roomObjectPaths)
+            {
+                Debug.Log($"[RoomSpawn] Try spawn path='{path}' (master={PhotonNetwork.IsMasterClient})");
+
+                var ro = PhotonNetwork.InstantiateRoomObject(path, Vector3.zero, Quaternion.identity);
+                if (ro == null)
                 {
-                    Debug.Log(spawnedViewIds[i]);
-                    if (PhotonView.Find(spawnedViewIds[i]) == null)
-                    {
-                        Debug.Log($"Find? {PhotonView.Find(spawnedViewIds[i]) == null}");
-                        return false;
-                    }
+                    AbortInit($"RoomObject spawn failed: {path} (null)");
+                    yield break;
                 }
+                
+                if (!ro.TryGetComponent(out PhotonView pv))
+                {
+                    AbortInit($"RoomObject missing PhotonView: {path}");
+                    yield break;
+                }
+                Debug.Log($"[RoomSpawn] Spawned '{ro.name}' ViewID={pv.ViewID}");
+                ids.Add(pv.ViewID);
+            }
+
+            // 룸 프로퍼티에 기록 (idempotent)
+            var props = new ExitGames.Client.Photon.Hashtable
+            {
+                { Define_LDH.RoomProps.RoomObjectsViewIds, ids.ToArray() }
+            };
+            PhotonNetwork.CurrentRoom.SetCustomProperties(props);
+            Debug.Log($"[RoomSpawn] Saved IDs -> [{string.Join(",", ids)}]");
+            yield return null; // 한 프레임 보장
+        }
+
+        private bool TryGetRoomObjectIds(out int[] ids)
+        {
+            ids = null;
+            var room = PhotonNetwork.CurrentRoom;
+            if (room?.CustomProperties == null) return false;
+
+            if (!room.CustomProperties.TryGetValue(Define_LDH.RoomProps.RoomObjectsViewIds, out var v))
+                return false;
+            
+            try
+            {
+                if (v is int[] arr) ids = arr;
+                else if (v is object[] oarr) ids = Array.ConvertAll(oarr, o => Convert.ToInt32(o));
+                else
+                {
+                    Debug.LogError($"[RoomProps] Unexpected type: {v.GetType()}");
+                    return false;
+                }
+                Debug.Log($"[RoomProps] IDs from room -> [{string.Join(",", ids)}]");
                 return true;
-            });
-            // Debug.Log("완료 1프레임 대기 하고 메서드 종료");
-            // 3) 컴포넌트 Awake/Start 보장 위해 한 프레임 더 쉼
-            spawnedViewIds = null;
-            yield return null;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[RoomProps] Parse error: {e.Message}");
+                return false;
+            }
             
         }
 
-        
-        [PunRPC]
-        private void RPC_AnnounceRoomObjects(int[] viewIds)
+        private IEnumerator WaitForLocalViews(int[] viewIds)
         {
-            spawnedViewIds = viewIds;
+            float t = 0f;
+            while (true)
+            {
+                var missing = viewIds.Where(id => PhotonView.Find(id) == null).ToArray();
+                if (missing.Length == 0) break;
+                //
+                // bool allReady = true;
+                //
+                // for (int i = 0; i < viewIds.Length; i++)
+                // {
+                //     if (PhotonView.Find(viewIds[i]) == null)
+                //     {
+                //         allReady = false;
+                //         break;
+                //     }
+                // }
+                //
+                // if (allReady)
+                //     break;
+
+                t += Time.deltaTime;
+                if (t > initTimeout)
+                {Debug.LogError($"[WaitForLocalViews] timeout. Missing IDs: [{string.Join(",", missing)}] " +
+                                $"(scene='{UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}', " +
+                                $"playerIsMaster={PhotonNetwork.IsMasterClient})");
+                    AbortInit("WaitForLocalViews timeout.");
+                    yield break;
+                }
+
+                yield return null;
+            }
+
+            yield return null;
         }
+        
+        // [PunRPC]
+        // private void RPC_AnnounceRoomObjects(int[] viewIds)
+        // {
+        //     spawnedViewIds = viewIds;
+        // }
 
         public void Register(GameObject go)
         {
@@ -269,7 +355,31 @@ namespace LDH_MainGame
                 }
             }
         }
-    }
 
-    #endregion
+        #endregion
+
+        #region pun call backs / 타임아웃 대응 로직 override
+
+        // 타임아웃이 된 경우 처리
+        protected override void AbortInit(string reason)
+        {
+            base.AbortInit(reason);
+            //모든 코루틴 중지
+            StopAllCoroutines();
+            
+            // main game manager 가 존재한다면? 게임 강제 중지 로직 실행
+            if (MainGameManager.Instance != null && MainGameManager.Instance.Initalized)
+                MainGameManager.Instance.ForceStopGame();
+
+            // 없는 경우 직접 게임 강제 중지 시키기
+            else
+            {
+                Debug.LogWarning("[MainGameSceneController] main game manager가 아직 초기화되지 않아서 scene controller에서 강제 중지 시킵니다.");
+                var quitPopup = Manager.UI.CreatePopupUI<UI_Popup_QuitGame>();
+                Manager.UI.ShowPopupUI(quitPopup).Forget();
+            }
+        }
+
+        #endregion
+    }
 }

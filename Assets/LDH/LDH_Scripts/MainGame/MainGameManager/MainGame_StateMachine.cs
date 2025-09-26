@@ -197,6 +197,12 @@ namespace LDH_MainGame
             yield return new UnityEngine.WaitForSeconds(3f);
         }
 
+        public IEnumerator Co_ForceStopGame()
+        {
+            _uiBinder.ShowQuitPopup();
+            yield return null;
+        }
+
         #endregion
 
 

@@ -36,7 +36,7 @@ namespace Network
 
         [Header("Sound")] [SerializeField]
         private Define_LDH.SfxKey matchingSfx;
-
+        
         
         private void Start()
         {
@@ -80,6 +80,10 @@ namespace Network
             // 룸 상태 변화 → UI 전환(매칭중 ↔ 매칭완료)
             Manager.Network.MatchStateChanged += OnMatchStateChanged;
             
+            // 누가 나간 경우
+            Manager.Network.PlayerLeft += MatchController.Instance.OnAnyPlayerLeft;
+
+            
         }
 
         private void Unsubscribe()
@@ -91,6 +95,7 @@ namespace Network
                 Manager.Network.RoomPlayerCountChanged -=  TryStartGame;  
                 Manager.Network.MasterClientSwiched -= OnMasterClientSwitched;
                 Manager.Network.MatchStateChanged -= OnMatchStateChanged;
+                Manager.Network.PlayerLeft -= MatchController.Instance.OnAnyPlayerLeft;
                 
                 if (_popupQuickMatch != null)
                     Manager.Network.RoomPlayerCountChanged -= _popupQuickMatch.SetPlayerCount;
@@ -138,6 +143,7 @@ namespace Network
         //빠른 매칭 취소
         public void OnClickMatchCancel()
         {
+            
             Manager.Network.LeaveRoom();
             Unsubscribe();
             
@@ -275,7 +281,17 @@ namespace Network
             }
         }
 
-        
+
+        public async UniTask CloseRoomPanel()
+        {
+            //UI 닫기
+            if (_popupQuickMatch != null)
+            {
+                await Manager.UI.ClosePopupUI(_popupQuickMatch);
+                _popupQuickMatch = null;
+            }
+          
+        }
 
         /// 방 상태가 바뀌면 모든 클라에서 UI 전환.
         /// 일정 시간 후 팝업 닫힘 처리
@@ -293,9 +309,6 @@ namespace Network
                 _cts?.Cancel();
                 _cts.Dispose();
                 _cts = null;
-                
-                //UI 닫기
-                _popupQuickMatch.AutoCloseAfter(MatchController.Instance.startDelaySec, _popupQuickMatch.GetCancellationTokenOnDestroy()).Forget();
             }
             else
             {
@@ -312,6 +325,9 @@ namespace Network
             
             AssignSlot();
         }
+
+
+    
         
         #endregion
         

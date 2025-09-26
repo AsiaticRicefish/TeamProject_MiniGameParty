@@ -179,12 +179,12 @@ namespace LDH_Game
             PhotonNetwork.ConnectUsingSettings();
             phaseFinal.Report(0.7f);
 #if TEST_WITHOUT_LOGIN
-            if (SceneManager.GetActiveScene().name == Manager.Network.LobbySceneName)
-            {
-                _loadingUI.AutoCloseAfter(0.5f, this.destroyCancellationToken).Forget();
-            }
-
+            // if (SceneManager.GetActiveScene().name == Manager.Network.LobbySceneName)
+            // {
+            //     _loadingUI.AutoCloseAfter(0.5f, this.destroyCancellationToken).Forget();
+            // }
 #endif
+            Small("잠시 후 로비로 진입합니다!");
         }
 
 
@@ -201,13 +201,13 @@ namespace LDH_Game
             
             if (SceneManager.GetActiveScene().name == Manager.Network.LobbySceneName) return;
             
-            // 씬전환 이벤트 설정
-            _loadingUI.onSceneLoaded = (s) =>
-            {
-                Small("잠시 후 로비로 진입합니다!");
-                _loadingUI.SetProgress(1f);
-                _loadingUI.AutoCloseAfter(0.5f, this.destroyCancellationToken).Forget();
-            };
+            // // 씬전환 이벤트 설정
+            // _loadingUI.onSceneLoaded = (s) =>
+            // {
+            //     Small("잠시 후 로비로 진입합니다!");
+            //     _loadingUI.SetProgress(1f);
+            //     _loadingUI.AutoCloseAfter(0.5f, this.destroyCancellationToken).Forget();
+            // };
         }
 
         private void DestroyGameBootstrap(UI_Base uiBase)

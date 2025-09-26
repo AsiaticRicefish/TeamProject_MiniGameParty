@@ -20,7 +20,7 @@ namespace LDH_MainGame
     public class MainGameManager : PunSingleton<MainGameManager>, IGameComponent
     {
         [Header("Mini Games")] public MiniGameRegistry registry;
-
+        
         //------- Controllers -----------//
         public MainGame_PropertiesController PropertiesCtrl;
         public MainGame_UIBinder UI;
@@ -48,23 +48,21 @@ namespace LDH_MainGame
 
         private int _localSlot = -1;
         private Coroutine _stateRoutine;
-
+        private bool _initialized = false;
+        public bool Initalized => _initialized;
 
         protected override void OnAwake()
         {
             PhotonNetwork.AutomaticallySyncScene = false;
+            base.OnAwake();
+            if (this != Instance) return; // 내가 싱글톤 아니면 즉시 리턴
             MainGameSceneController.Instance.Register(gameObject);
-
-
+            
             //변수 초기화
             InitPlayerScores();
-
-
-            base.OnAwake();
-        }
-
-        public void Initialize()
-        {
+            
+            if(_initialized) return;
+            
             Util_LDH.ConsoleLog(this, "MainGameManager 초기화 로직 실행");
 
             PropertiesCtrl = new(
@@ -93,6 +91,14 @@ namespace LDH_MainGame
             Debug.Log("[MainGameManager] PlayerManager에 플레이어를 등록합니다.");
             Manager.Player.ClearAllPlayers();
             Manager.Player.EnsureAllPhotonPlayersRegistered();
+
+            _initialized = true;
+
+        }
+
+        public void Initialize()
+        {
+          
         }
 
         private void InitPlayerScores()
@@ -120,7 +126,11 @@ namespace LDH_MainGame
         {
             // 필수 서비스 준비 확인
             if (PropertiesCtrl == null || FSM == null || UI == null)
-            {
+            {    
+                Debug.Log($"propertiesctrl null? {PropertiesCtrl == null}");
+                Debug.Log($"fsm null? {FSM == null}");
+                Debug.Log($"fsm null? {UI == null}");
+
                 Debug.LogError("[MainGameManager] StartGame() called before Initialize() — abort.");
                 return; // 또는 Initialize() 호출 후 재시도 로직을 넣어도 됨
             }
@@ -137,6 +147,19 @@ namespace LDH_MainGame
                     }
                 );
             OnRoundChanged?.Invoke(1);
+        }
+
+        public void ForceStopGame()
+        {
+            if (IsMaster)
+            {
+                if(_initialized && FSM!=null)
+                    PropertiesCtrl.SetRoomProps(RoomProps.State, MainState.ForceStop.ToString());
+                else
+                {
+                    Debug.Log("FSM 없음");
+                }
+            }
         }
 
         #region MiniGame이 사용하는 API
@@ -185,7 +208,10 @@ namespace LDH_MainGame
             }
 
             // 상태 변경 반영
-            SyncGameState();
+            if (changed.ContainsKey(RoomProps.State))
+            {
+                SyncGameState();
+            }
         }
 
         public override void OnPlayerPropertiesUpdate(Player target, Hashtable changedProps)
@@ -230,17 +256,14 @@ namespace LDH_MainGame
             var room = PhotonNetwork.CurrentRoom;
             if (room == null) return; // 방이 없다면 패스
 
-            if (FSM.Get() != MainState.End)
+            if (FSM.Get() != MainState.End && FSM.Get()!=MainState.ForceStop)
             {
-                //누구든 나갔을 때 
-                UI.ShowQuitPopup();
-                if (_stateRoutine != null)
+                //누구든 나갔을 때
+                if (IsMaster)
                 {
-                    StopCoroutine(_stateRoutine);
-                    _stateRoutine = null;
+                    ForceStopGame();
                 }
             }
-            
             // 2) 마스터 클라이언트이고, 메인 게임 상태가 ready(모든 플레이어의 ready를 기다리고 있는 상태)라면 재조정
             if (!IsMaster) return;
             if (FSM.Get() != MainState.Ready) return;
@@ -332,6 +355,9 @@ namespace LDH_MainGame
                     break;
                 case MainState.End:
                     _stateRoutine = StartCoroutine(FSM.Co_End());
+                    break;
+                case MainState.ForceStop:
+                    _stateRoutine = StartCoroutine(FSM.Co_ForceStopGame());
                     break;
             }
         }

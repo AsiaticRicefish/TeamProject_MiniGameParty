@@ -241,7 +241,7 @@ namespace Network
         public void LoadGameScene()
         {
             Debug.Log("[NetworkManager] 게임 씬으로 이동합니다.");
-            StartCoroutine(Util_LDH.LoadSceneWithDelay(gameSceneName, 0.5f));
+            StartCoroutine(Util_LDH.LoadSceneWithDelay(gameSceneName, 0.5f, false));
         }
 
         #endregion
@@ -327,6 +327,8 @@ namespace Network
             else
             {
                 Debug.Log("[NetworkManager] 현재 로비 씬입니다.");
+                if (Manager.UI.PeekPopupUI<UI_Loading>() != null)
+                    Manager.UI.CloseTopPopupUI();
             }
             JoinedLobby?.Invoke();
         }
