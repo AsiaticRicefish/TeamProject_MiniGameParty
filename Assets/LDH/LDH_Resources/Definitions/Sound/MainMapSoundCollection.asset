@@ -12,7 +12,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ed36c625efc985f4ab3d1baae6c43571, type: 3}
   m_Name: MainMapSoundCollection
   m_EditorClassIdentifier: 
-  bgmSounds: []
+  bgmSounds:
+  - soundName: Main_Win_Bgm
+    audioClip:
+      m_AssetGUID: 44a1ebde7995e4e9cbbd85bfa5b59dde
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    defaultVolume: 1
+    isLoop: 0
+    preloadOnStart: 0
+    keepInMemory: 0
+  - soundName: Main_MiniGameResult_Bgm
+    audioClip:
+      m_AssetGUID: 898068ac82f794b57a0986e074e510c8
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    defaultVolume: 0.5
+    isLoop: 0
+    preloadOnStart: 0
+    keepInMemory: 0
   sfxSounds:
   - soundName: Main_Coin
     audioClip:
@@ -23,7 +43,7 @@ MonoBehaviour:
     defaultVolume: 1
     isLoop: 0
     preloadOnStart: 0
-    keepInMemory: 1
+    keepInMemory: 0
   - soundName: Main_Picking
     audioClip:
       m_AssetGUID: e51bb5f3a1bd94ca9b2e19b34f8cabe8
@@ -33,7 +53,7 @@ MonoBehaviour:
     defaultVolume: 1
     isLoop: 0
     preloadOnStart: 0
-    keepInMemory: 1
+    keepInMemory: 0
   - soundName: Main_Roullet
     audioClip:
       m_AssetGUID: 7b2ea14c4d5e249369ba021ab7b17af1
@@ -43,7 +63,7 @@ MonoBehaviour:
     defaultVolume: 1
     isLoop: 0
     preloadOnStart: 0
-    keepInMemory: 1
+    keepInMemory: 0
   - soundName: Main_MiniGamePicked
     audioClip:
       m_AssetGUID: 5abc3a12646b5443fb15d500cda5b888
@@ -53,7 +73,7 @@ MonoBehaviour:
     defaultVolume: 1
     isLoop: 0
     preloadOnStart: 0
-    keepInMemory: 1
+    keepInMemory: 0
   - soundName: Main_ReadyClick
     audioClip:
       m_AssetGUID: 1e51c1d1d54a8464083188053b1ce0c9
@@ -63,7 +83,7 @@ MonoBehaviour:
     defaultVolume: 1
     isLoop: 0
     preloadOnStart: 0
-    keepInMemory: 1
+    keepInMemory: 0
   - soundName: Main_MiniGameEnd
     audioClip:
       m_AssetGUID: 16142cde93ae440f393c710c405ffa82
@@ -73,7 +93,7 @@ MonoBehaviour:
     defaultVolume: 1
     isLoop: 0
     preloadOnStart: 0
-    keepInMemory: 1
+    keepInMemory: 0
   - soundName: Main_MatchEnd
     audioClip:
       m_AssetGUID: abb38e2b8bfe34308918b1047bf93787
@@ -83,7 +103,7 @@ MonoBehaviour:
     defaultVolume: 1
     isLoop: 0
     preloadOnStart: 0
-    keepInMemory: 1
+    keepInMemory: 0
   - soundName: Main_Loser
     audioClip:
       m_AssetGUID: c7a82edc245bf49dd9174e625d7a9f87
@@ -93,7 +113,7 @@ MonoBehaviour:
     defaultVolume: 1
     isLoop: 0
     preloadOnStart: 0
-    keepInMemory: 1
+    keepInMemory: 0
   - soundName: Main_Winner
     audioClip:
       m_AssetGUID: aa5e65afe5588425daa892937e86aab9
@@ -103,7 +123,7 @@ MonoBehaviour:
     defaultVolume: 1
     isLoop: 0
     preloadOnStart: 0
-    keepInMemory: 1
+    keepInMemory: 0
   - soundName: Main_Reward
     audioClip:
       m_AssetGUID: 77afdce237e154b5ab9ebec1a5918801
@@ -113,4 +133,24 @@ MonoBehaviour:
     defaultVolume: 1
     isLoop: 0
     preloadOnStart: 0
-    keepInMemory: 1
+    keepInMemory: 0
+  - soundName: Main_PlayerBanner
+    audioClip:
+      m_AssetGUID: 70f63596800584c5c8f1b62c4f536fec
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    defaultVolume: 1
+    isLoop: 0
+    preloadOnStart: 0
+    keepInMemory: 0
+  - soundName: Main_ShowWinner
+    audioClip:
+      m_AssetGUID: 0db492534c6cd47888e8480c23ac0b72
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+    defaultVolume: 1
+    isLoop: 0
+    preloadOnStart: 0
+    keepInMemory: 0

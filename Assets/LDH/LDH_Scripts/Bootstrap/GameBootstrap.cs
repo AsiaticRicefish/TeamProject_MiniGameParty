@@ -123,6 +123,9 @@ namespace LDH_Game
 #endif
             //============= [1단계] ==================
 
+            // 0) 광고 AdMobService 초기화
+            await AdMobService.InitializeAsync();
+            
             // 1) Addressable 초기화
             Small("리소스 시스템 초기화…");
             await Addressables.InitializeAsync().Task;

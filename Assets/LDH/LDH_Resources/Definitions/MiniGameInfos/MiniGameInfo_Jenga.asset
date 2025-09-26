@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: Jenga
   sceneName: MiniGameJengaScene
-  gameName: "\uC138\uC5B4\uB77C \uC720\uB2C8\uBAA8!"
+  gameName: "\uC820\uAC00\uC2A4\uD0C0"
   description: 
   sprite: {fileID: 0}
   tutorialVideo: {fileID: 0}

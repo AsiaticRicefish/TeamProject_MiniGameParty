@@ -17,6 +17,7 @@ namespace RhythmGame
         private int _combo;
         private int _bestCombo;
         private int _verdictScore;
+        public int perfectCount { get; private set; }
 
         public int Combo => _combo;
         public int BestCombo => _bestCombo;
@@ -38,7 +39,7 @@ namespace RhythmGame
 
         void Start()
         {
-            _combo = 0; _bestCombo = 0; _score = 0; _verdictScore = 0;
+            _combo = 0; _bestCombo = 0; _score = 0; _verdictScore = 0; perfectCount = 0;
         }
 
         /// <summary>
@@ -83,7 +84,7 @@ namespace RhythmGame
             var uid = PhotonNetwork.LocalPlayer.CustomProperties?["uid"] as string;
             if (string.IsNullOrEmpty(uid)) return;
 
-            GameManager.Instance.photonView.RPC(nameof(GameManager.RPC_ReceiveScore), RpcTarget.MasterClient, uid, _score, _verdictScore);
+            GameManager.Instance.photonView.RPC(nameof(GameManager.RPC_ReceiveScore), RpcTarget.MasterClient, uid, _score, _verdictScore,perfectCount);
         }
 
         #region RPC
@@ -202,10 +203,10 @@ namespace RhythmGame
             var type = note.Type;
 
             var player = PhotonNetwork.CurrentRoom?.GetPlayer(actorNum);
-            if(player!=null)
+            if (player != null)
                 GameManager.Instance.MissBlock(player, type);
 
-            MissToAll(actorNum,type);
+            MissToAll(actorNum, type);
 
             //노트 파괴()
             NoteSpawner.Instance.DestroyNote(noteId, false);
@@ -336,6 +337,7 @@ namespace RhythmGame
             if (verdict == Verdict.Perfect)
             {
                 _verdictScore++;
+                perfectCount++;
                 Debug.Log("퍼펙트");
             }
             else if (verdict == Verdict.Good)

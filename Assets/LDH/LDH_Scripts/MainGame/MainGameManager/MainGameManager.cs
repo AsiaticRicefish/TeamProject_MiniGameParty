@@ -341,6 +341,9 @@ namespace LDH_MainGame
         {
             _stateRoutine = null;
             _isLeavingRoom = true;
+            
+            //bgm이 있다면 멈추기
+            SoundManager.Instance.StopBGM();
 
             await Manager.UI.CloseAllPopupUI();
             UI.ShowLoadingToLobby();
@@ -442,7 +445,7 @@ namespace LDH_MainGame
                 }).ToArray()
             };
 
-            Debug.Log($"<color=green> BroadcastScoreJson - 직렬화해서 rpc로 다 보냅니다.</color>");
+            // Debug.Log($"<color=green> BroadcastScoreJson - 직렬화해서 rpc로 다 보냅니다.</color>");
 
             string json = JsonUtility.ToJson(payload);
             Debug.Log($"<color=green>sending data : {json}</color>");
@@ -499,7 +502,7 @@ namespace LDH_MainGame
 
             var payload = JsonUtility.FromJson<ScoreboardPayload>(json);
             if (payload == null || payload.players == null) return;
-            Debug.Log($"<color=green> json 변환 성공 </color>");
+            // Debug.Log($"<color=green> json 변환 성공 </color>");
 
             // 1) 전원 플래그 초기화
             foreach (var kv in PlayerManager.Instance.Players)
@@ -521,7 +524,7 @@ namespace LDH_MainGame
             }
 
 
-            Debug.Log($"<color=green> 점수 패널 활성화 합니다. </color>");
+            // Debug.Log($"<color=green> 점수 패널 활성화 합니다. </color>");
 
             // 3) UI 렌더 (표시 순서 = payload.players 순서)
             var orderedPlayers = payload.players

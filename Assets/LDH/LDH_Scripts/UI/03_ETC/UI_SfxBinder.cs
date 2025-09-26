@@ -52,7 +52,7 @@ namespace LDH_UI
         public void OnPointerDown(PointerEventData eventData)
         {
             _couldPlayAtDown = CanPlay();
-            Debug.Log(_couldPlayAtDown);
+            //Debug.Log(_couldPlayAtDown);
         }
         
         private void OnButtonClick()
