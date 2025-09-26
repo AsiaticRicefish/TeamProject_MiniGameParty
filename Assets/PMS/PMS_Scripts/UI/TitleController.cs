@@ -34,6 +34,31 @@ public class TitleController : MonoBehaviour
     }
     private void Start()
     {
+        // 시퀀스 생성 - 차례대로 뛰기
+        /*Sequence seq = DOTween.Sequence();
+
+        for (int i = 0; i < items.Length; i++)
+        {
+            RectTransform rt = items[i];
+            float startY = originalPositions[i].y;
+
+            // 올라가기 → 내려오기(Yoyo 효과) 를 Loop 대신 직접 Append
+            seq.Append(rt
+                .DOAnchorPosY(startY + jumpHeight, duration)
+                .SetEase(Ease.OutQuad));
+
+            seq.Append(rt
+                .DOAnchorPosY(startY, duration)
+                .SetEase(Ease.InQuad));
+
+            // 아이템 간 짧은 대기
+            seq.AppendInterval(staggerDelay);
+        }
+
+        // 전체 시퀀스를 무한 반복
+        seq.SetLoops(-1, LoopType.Restart);*/
+        
+        //다 같이 뛰는데 텀이 존재
         for (int i = 0; i < items.Length; i++)
         {
             RectTransform rt = items[i];
