@@ -20,58 +20,69 @@ MonoBehaviour:
   - m_GUID: 4971625a34f54b34db882bfcc16d6828
     m_Address: Assets/Imports/Shooting1.1.0/Sounds/Turn Sound.wav
     m_ReadOnly: 0
-    m_SerializedLabels: []
+    m_SerializedLabels:
+    - Sound
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4a2fbed884fe3d545a94480ae632456d
     m_Address: "Assets/Imports/Shooting1.1.0/Sounds/\uC2B9\uB9AC\uC0AC\uC6B4\uB4DC.wav"
     m_ReadOnly: 0
-    m_SerializedLabels: []
+    m_SerializedLabels:
+    - Sound
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4e688ead4b5db88458f7df613cd3ecf0
     m_Address: "Assets/Imports/Shooting1.1.0/Sounds/\uD328\uBC30\uC0AC\uC6B4\uB4DC.wav"
     m_ReadOnly: 0
-    m_SerializedLabels: []
+    m_SerializedLabels:
+    - Sound
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4ffbc3d1c8a2f8a47878224574f22971
     m_Address: "Assets/Imports/Shooting1.1.0/Sounds/\uAC8C\uC784\uC885\uB8CC\uC0AC\uC6B4\uB4DC.wav"
     m_ReadOnly: 0
-    m_SerializedLabels: []
+    m_SerializedLabels:
+    - Sound
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 532a5eccbc7323244a312a85e08589d9
     m_Address: Assets/Imports/Shooting1.1.0/Sounds/card.mp3
     m_ReadOnly: 0
-    m_SerializedLabels: []
+    m_SerializedLabels:
+    - Sound
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5878d2c9be1575f46abe36ee1b2064f1
     m_Address: Assets/Imports/Shooting1.1.0/Sounds/321.wav
     m_ReadOnly: 0
-    m_SerializedLabels: []
+    m_SerializedLabels:
+    - Sound
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a8f66ebd5b712bd40b6306c76aa7b849
     m_Address: Assets/Imports/Shooting1.1.0/Sounds/Shooting.wav
     m_ReadOnly: 0
-    m_SerializedLabels: []
+    m_SerializedLabels:
+    - Sound
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b1399649105c4d34487eb2ea35eca3ff
     m_Address: Assets/Imports/Shooting1.1.0/Sounds/click2.mp3
     m_ReadOnly: 0
-    m_SerializedLabels: []
+    m_SerializedLabels:
+    - Sound
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e7107e5f08f1a3f48abdb0ffd3136988
     m_Address: Assets/Imports/Shooting1.1.0/Sounds/Shooting_BGM.mp3
     m_ReadOnly: 0
-    m_SerializedLabels: []
+    m_SerializedLabels:
+    - Sound
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f8712fda032d9eb499d70593d3ddb3d5
     m_Address: "Assets/Imports/Shooting1.1.0/Sounds/\uCE74\uC6B4\uD2B8 \uB2E4\uC6B4
       \uC608\uBE44 1.wav"
     m_ReadOnly: 0
-    m_SerializedLabels: []
+    m_SerializedLabels:
+    - Sound
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fc8806c80e23bf54bbef8616db876b3a
     m_Address: Assets/Imports/Shooting1.1.0/Sounds/Shooting_Crush.wav
     m_ReadOnly: 0
-    m_SerializedLabels: []
+    m_SerializedLabels:
+    - Sound
     FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: efc2531fbc716f7409d27168060779e5, type: 2}

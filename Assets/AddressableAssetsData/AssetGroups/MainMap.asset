@@ -16,7 +16,91 @@ MonoBehaviour:
   m_Data:
     m_SerializedData: []
   m_GUID: 9cb65a99cee064bcb9b1c9594d856b97
-  m_SerializeEntries: []
+  m_SerializeEntries:
+  - m_GUID: 0db492534c6cd47888e8480c23ac0b72
+    m_Address: Assets/Imports/MainMap/Main_winnerShow.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 16142cde93ae440f393c710c405ffa82
+    m_Address: Assets/Imports/MainMap/Main_MiniGameEnd.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1e51c1d1d54a8464083188053b1ce0c9
+    m_Address: Assets/Imports/MainMap/Main_ReadyClick.mp3
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 44a1ebde7995e4e9cbbd85bfa5b59dde
+    m_Address: Assets/Imports/MainMap/Main_win_bgm.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5abc3a12646b5443fb15d500cda5b888
+    m_Address: Assets/Imports/MainMap/Main_MiniGamePicked.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 70f63596800584c5c8f1b62c4f536fec
+    m_Address: Assets/Imports/MainMap/Main_PlayerBanner.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 77afdce237e154b5ab9ebec1a5918801
+    m_Address: Assets/Imports/MainMap/Main_Reward.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7b2ea14c4d5e249369ba021ab7b17af1
+    m_Address: Assets/Imports/MainMap/Main_Roullet.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 898068ac82f794b57a0986e074e510c8
+    m_Address: Assets/Imports/MainMap/Main_MiniGameResult_BGM.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aa5e65afe5588425daa892937e86aab9
+    m_Address: Assets/Imports/MainMap/Main_Winner.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: abb38e2b8bfe34308918b1047bf93787
+    m_Address: Assets/Imports/MainMap/Main_MatchEnd.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c7a82edc245bf49dd9174e625d7a9f87
+    m_Address: Assets/Imports/MainMap/Main_Loser.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c8edfbaef26834a13ba0d3364bbd7232
+    m_Address: Assets/Imports/MainMap/Main_Coin.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e51bb5f3a1bd94ca9b2e19b34f8cabe8
+    m_Address: Assets/Imports/MainMap/Main_Picking.wav
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Sound
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: efc2531fbc716f7409d27168060779e5, type: 2}
   m_SchemaSet:
