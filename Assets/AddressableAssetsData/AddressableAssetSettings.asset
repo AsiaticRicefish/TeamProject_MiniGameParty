@@ -73,7 +73,7 @@ MonoBehaviour:
       - m_Id: 02938c44b772cca4084bc6bd827213eb
         m_Value: '[UnityEngine.AddressableAssets.Addressables.BuildPath]/[BuildTarget]'
       - m_Id: 637c694c823b2c0418058f6b420cd3a9
-        m_Value: https://unimobukkit.s3.ap-northeast-2.amazonaws.com/Android/[BuildTarget]
+        m_Value: https://unimobukkit.s3.ap-northeast-2.amazonaws.com/[BuildTarget]
       - m_Id: 7dd4afa979153c347b2c5d81b09d2a1f
         m_Value: '{UnityEngine.AddressableAssets.Addressables.RuntimePath}/[BuildTarget]'
       - m_Id: 82c4a942f190edd4e9761cf3b48048e6
