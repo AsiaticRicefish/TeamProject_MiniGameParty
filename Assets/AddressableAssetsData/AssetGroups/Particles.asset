@@ -35,12 +35,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Effect
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f683447c6570076418716c53d120168a
-    m_Address: Particles/ShootingGame/WindlinesSpeedy
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Effect
-    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: efc2531fbc716f7409d27168060779e5, type: 2}
   m_SchemaSet:
