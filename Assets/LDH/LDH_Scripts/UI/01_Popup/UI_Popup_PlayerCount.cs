@@ -15,6 +15,7 @@ namespace LDH_UI
         [SerializeField] private Button decreaseButton;
         [SerializeField] private TMP_Text currentCountText;
         [SerializeField] private Button okButton;
+        [SerializeField] private Button closeButton;
         
         
         private const int MinPlayCount = 2;
@@ -30,6 +31,7 @@ namespace LDH_UI
             increaseButton.onClick.AddListener(()=> AdjustCount(true));
             decreaseButton.onClick.AddListener(() => AdjustCount(false));
             okButton.onClick.AddListener(SetCountAndStartMatch);
+            closeButton.onClick.AddListener(OnCancelMatch);
         }
         
 
@@ -53,6 +55,14 @@ namespace LDH_UI
 #if TEST_PLAYER_COUNT
             MatchController.Instance.StartMatching();
 #endif
+        }
+
+        private void OnCancelMatch()
+        {
+#if TEST_PLAYER_COUNT
+            MatchController.Instance.CancelMatching();
+#endif
+            Manager.UI.ClosePopupUI(this).Forget();
         }
     }
 }

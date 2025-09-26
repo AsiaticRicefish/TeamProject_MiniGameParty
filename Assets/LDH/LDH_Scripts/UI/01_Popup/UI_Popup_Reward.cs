@@ -13,17 +13,17 @@ namespace LDH_UI
 {
     public class UI_Popup_Reward : UI_Popup
     {
-        [Header("UI")]
-        [SerializeField] private Image currencyIcon;
+        [Header("UI")] [SerializeField] private Image currencyIcon;
         [SerializeField] private TMP_Text rewardText;
         [SerializeField] private Button okButton;
         [SerializeField] private Button adsButton;
 
         [Header("Sound")] [SerializeField] private Define_LDH.SfxKey sfxKey = Define_LDH.SfxKey.Main_Reward;
-        
+
         private int reward;
         private Define_LDH.CurrencyType rewardType;
-        private bool claimed;
+        private bool claimed; // 최종 수령 완료 플래그
+        private bool requesting; // 어떤 비동기 작업(광고/수령) 중인지
 
         protected override void Init()
         {
@@ -31,8 +31,11 @@ namespace LDH_UI
             okButton.onClick.RemoveAllListeners();
             okButton.onClick.AddListener(OnClickClaim);
 
+            adsButton.onClick.RemoveAllListeners();
+            adsButton.onClick.AddListener(OnClickAds);
 
-            //todo: ads button
+            // 버튼 활성화 처리
+            SetButtonsInteractable(true);
         }
 
 
@@ -48,15 +51,76 @@ namespace LDH_UI
             }
 
             claimed = false;
-            adsButton.interactable = false; // 광고 로직 붙이기 전 기본 꺼두기(todo: 수정 예정)
+            requesting = false;
+
             await UniTask.Yield();
         }
 
+        private void SetButtonsInteractable(bool v)
+        {
+            if (okButton) okButton.interactable = v;
+            if (adsButton) adsButton.interactable = v && AdMobService.IsRewardedReady;
+        }
+
+
         private async void OnClickClaim()
         {
-            // Button.onClick은 async 직접 못 붙임 → 래핑해서 fire & forget
-            await ClaimAsync();
+            if (requesting || claimed || reward <= 0) return;
+
+            requesting = true;
+            SetButtonsInteractable(false);
+            try
+            {
+                await ClaimAsync(); // 성공 시 내부에서 메인 게임 씬 종료 처리 & 로비로 이동
+            }
+            finally
+            {
+                // 실패했을 때를 대비해 복구
+                if (!claimed) SetButtonsInteractable(true);
+                requesting = false;
+            }
         }
+
+        private async void OnClickAds()
+        {
+            if (requesting || claimed || reward <= 0) return;
+
+            requesting = true;
+            SetButtonsInteractable(false);
+
+            try
+            {
+                bool earned = false; // 광고 시청 완료 여부
+
+                // 광고 표시 & 보상 콜백
+                bool closed = await AdMobService.ShowRewardedAsync(rewardObj =>
+                {
+                    earned = true;
+                });
+
+                // 창은 닫혔지만 보상 자격(earned)이 없을 수 있음(중도 종료)
+                if (!closed || !earned)
+                {
+                    // 실패/중도취소 → 다시 시도 가능하게 버튼 복구
+                    Manager.UI.EnqueueToast(Define_LDH.ToastType.Notify, "광고 시청이 완료되지 않았습니다.");
+                    // 그러면 여기서 다시 시도 가능하게 버튼을 복구해야하는데 return해버려서 finally 실행 안되는거 아니야?
+                    return;
+                }
+                
+                Debug.Log("<color=red>광고 시청 완료</color>");
+
+                // 보상 2배
+                reward *= 2;
+                // 수령
+                await ClaimAsync();
+            }
+            finally
+            {
+                if (!claimed) SetButtonsInteractable(true);
+                requesting = false;
+            }
+        }
+
 
         private async UniTask ClaimAsync()
         {
@@ -72,7 +136,7 @@ namespace LDH_UI
             if (result)
             {
                 claimed = true;
-                Manager.UI.EnqueueToast(Define_LDH.ToastType.Check,$"보상 {reward} 수령 완료!");
+                Manager.UI.EnqueueToast(Define_LDH.ToastType.Check, $"보상 {reward} 수령 완료!", 2f);
                 await UniTask.Delay(TimeSpan.FromSeconds(1.5f));
                 MainGameManager.Instance?.EndGameAsync(false).Forget();
             }
@@ -80,6 +144,8 @@ namespace LDH_UI
             {
                 claimed = false;
                 okButton.interactable = true;
+                Manager.UI.EnqueueToast(Define_LDH.ToastType.Error, "보상 수령에 실패했습니다. 다시 시도해 주세요.");
+
             }
         }
 

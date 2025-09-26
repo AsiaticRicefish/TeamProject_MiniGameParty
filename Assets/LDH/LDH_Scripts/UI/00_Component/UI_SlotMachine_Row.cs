@@ -126,13 +126,15 @@ namespace LDH_UI
             
             rowListRect.offsetMin = new Vector2(0f, rowListRect.offsetMin.y); // left = 0
             rowListRect.offsetMax = new Vector2(0f, rowListRect.offsetMax.y); // right = 0
-            
-            
             rowListRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, _totalHeight);
-            rowListRect.anchoredPosition = Vector2.zero; // 맨 위에서 시작 (0번째 아이템이 보이게)
-            // Debug.Log($"cell height : {_cellHeight}, total height : {_totalHeight}");
             
+            // 시작을 "맨 위 아이템(0번)이 보이도록" 맞춘다
+            float startWrapped = Mathf.Max(0f, _totalHeight - _cellHeight);
+            _rawY = startWrapped;
+            ApplyWrappedPosition(_rawY);
             
+            rowStopped = true;
+            stoppedSlot = null;
             _rawY = 0f;                                                 // 원시 y도 0으로 초기화
             rowStopped = true;
             
@@ -162,19 +164,27 @@ namespace LDH_UI
             int count = _ids.Count;
             
             // 현재 인덱스
-            int currentIndex = Mathf.RoundToInt((Wrap(_rawY) / _cellHeight)) % count;
-            if (currentIndex < 0) currentIndex += count;
-
-            // 목표 인덱스
-            int target = forceTargetIndex ?? Random.Range(0, count);         // 멈출 칸 결정
+            float wrappedNow = Wrap(_rawY);
+            int curCellFromBottom = Mathf.FloorToInt(wrappedNow / _cellHeight) % count;
+            if (curCellFromBottom < 0) curCellFromBottom += count;
+            
+            // 목표 위치: Top 인덱스를 Bottom 셀 기준으로 변환
+            int targetCellFromBottom;
+            if (forceTargetIndex.HasValue)
+                targetCellFromBottom = TopIndexToBottomCell(forceTargetIndex.Value, count);
+            else
+                targetCellFromBottom = Random.Range(0, count);
+            
             
             // 몇 바퀴를 돌 지
             int laps = Random.Range(extraLapsMin, extraLapsMax + 1);
+            int forward = (targetCellFromBottom - curCellFromBottom);
+            if (forward < 0) forward += count;
+
             
             // 총 이동해야 할 "칸 수" = (추가 바퀴 * 항목수 + 목표 인덱스 - 현재 인덱스)
-            int deltaCells = laps * count + (target - currentIndex);            // 총 지나갈 칸 수
-            if (deltaCells <= count) deltaCells += count;                     // 한 바퀴 이상 보장
-            int minCells = Mathf.Max(8, 2 * count);                           // 최소 N칸 보장
+            int deltaCells = laps * count + forward;                            // 총 지나갈 칸 수
+            int minCells = Mathf.Max(8, 2 * count);
             if (deltaCells < minCells)
                 deltaCells += ((minCells - deltaCells + count - 1) / count) * count;
             // 총 이동해야 할 거리(px) = 칸 수 * 한 칸 높이
@@ -231,9 +241,8 @@ namespace LDH_UI
 
            
            // 최종 멈춘 인덱스 계산: (랩핑된 y / 한 칸 높이)로 화면상 칸 번호 구함
-           int finalIndex = Mathf.RoundToInt((Wrap(_rawY) / _cellHeight)) % count; // 0~count-1
-           if (finalIndex < 0) finalIndex += count;                    // 음수 보정
-           stoppedSlot = _ids[finalIndex];                             // 멈춘 슬롯 id 기록
+           int finalTopIndex = VisibleIndex_FromBottomPivot(Wrap(_rawY));
+           stoppedSlot = _ids[finalTopIndex];
            rowStopped  = true;                                         // 멈춤 플래그 true
            _spinTween = null;                                          // 트윈 참조 해제
            
@@ -260,9 +269,9 @@ namespace LDH_UI
             //----- 칸 경계를 지날때 마다 소리가 나도록 ---- // 
             // 현재 칸 인덱스
             if (_ids.Count == 0 || _cellHeight <= 0f) return;
-            int cell = Mathf.FloorToInt(wrapped / _cellHeight);
+            int cellFromBottom = Mathf.FloorToInt(wrapped / _cellHeight);
 
-            if (cell != _lastTickCell)
+            if (cellFromBottom != _lastTickCell)
             {
                 // 과도재생 방지 (아주 고속 구간에서 too many ticks 방지)
                 float t = Time.unscaledTime;
@@ -272,8 +281,7 @@ namespace LDH_UI
                     SoundManager.Instance.PlaySFX(spinningRoulletSfx.ToString());
                     _lastTickTime = t;
                 }
-
-                _lastTickCell = cell;
+                _lastTickCell = cellFromBottom;
 
             }
             
@@ -298,6 +306,30 @@ namespace LDH_UI
             
             _colorMap[key] = c;
             return c;
+        }
+        
+        
+        /// <summary>하단 피벗에서의 wrapped 값 → Top 기준 인덱스(0..count-1)</summary>
+        private int VisibleIndex_FromBottomPivot(float wrapped)
+        {
+            if (_ids.Count == 0 || _cellHeight <= 0f) return 0;
+            int count = _ids.Count;
+
+            int cellFromBottom = Mathf.FloorToInt(wrapped / _cellHeight) % count;
+            if (cellFromBottom < 0) cellFromBottom += count;
+
+            int indexFromTop = (count - 1 - cellFromBottom) % count;
+            if (indexFromTop < 0) indexFromTop += count;
+            return indexFromTop;
+        }
+
+        
+        
+        /// <summary>Top 인덱스(0..count-1) → Bottom 셀 번호(0..count-1)</summary>
+        private int TopIndexToBottomCell(int idxFromTop, int count)
+        {
+            int v = (count - 1 - idxFromTop) % count;
+            return (v < 0) ? v + count : v;
         }
         
     }

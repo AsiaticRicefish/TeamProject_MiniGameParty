@@ -12,7 +12,9 @@ namespace LDH_UI
 {
     public class UI_Popup_Winner : UI_Popup
     {
-        [Header("Unimo Avatar")]
+        [Header("Unimo Avatar")] 
+        [SerializeField] private GameObject unimoPrefab;
+        [SerializeField] private Vector3 unimoSpawnPos = new Vector3(-1000, -1000, -1000);
         [SerializeField] private AvatarStruct avatarStruct;
         
         [Header("UI Component")] 
@@ -26,6 +28,8 @@ namespace LDH_UI
         private Define_LDH.SfxKey winnerSfxKey = Define_LDH.SfxKey.Main_Winner;
         [SerializeField]
         private Define_LDH.SfxKey loserSfxKey = Define_LDH.SfxKey.Main_Loser;
+        private Define_LDH.BgmKey winnerBgmKey = Define_LDH.BgmKey.Main_Win_Bgm;
+        
         
         private Animator UnimoAnimator => avatarStruct.CurrentCharacter?.GetComponent<Animator>();
         private Animator EquipAnimator => avatarStruct.CurrentEquip?.GetComponent<Animator>();
@@ -49,6 +53,12 @@ namespace LDH_UI
         public async UniTask SetData(string nickname, UnimoCombo combo, bool isWinner)
         {
             userNickName.text = nickname;
+            
+            // 유니모 프리팹으로 인스턴스 생성
+            GameObject unimo = Instantiate(unimoPrefab, unimoSpawnPos, Quaternion.identity);
+            avatarStruct = unimo.GetComponentInChildren<AvatarStruct>(true);
+            
+            Debug.Log($"<color=blue>winner combo : {combo.characterId}, {combo.equipId}</color>");
             await CustomizationManager.Instance.ApplyToAvatarAsync(avatarStruct, combo);
             
             //아바타 애니메이션 설정
@@ -89,8 +99,20 @@ namespace LDH_UI
         
         protected override async UniTask OnShowAsync(CancellationToken ct)
         {
-            SoundManager.Instance.PlaySFX( _isWinner? winnerSfxKey.ToString() : loserSfxKey.ToString());
+            if (_isWinner)
+            {
+                Debug.Log("<color=green> winner 효과음 재생합니다.</color>");
+                SoundManager.Instance.PlaySFX( winnerSfxKey.ToString());
+            }
+            else
+            {
+                Debug.Log("<color=green> loser 효과음 재생합니다.</color>");
+                SoundManager.Instance.PlaySFX( loserSfxKey.ToString());
+            }
+         
             await base.OnShowAsync(ct);
+            await UniTask.Delay(TimeSpan.FromSeconds(0.5f));
+            SoundManager.Instance.PlayBGM(winnerBgmKey.ToString());
         }
     }
 }
