@@ -15,7 +15,7 @@ MonoBehaviour:
   bgmSounds:
   - soundName: Title
     audioClip:
-      m_AssetGUID: 74b4033cb15e3234cbd09a87d609d3a5
+      m_AssetGUID: 0150d7dea9d616144af15397cc784bff
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
@@ -26,7 +26,7 @@ MonoBehaviour:
   sfxSounds:
   - soundName: Click
     audioClip:
-      m_AssetGUID: 9a932b3611580e94190a1e363dae5efc
+      m_AssetGUID: 89138ab3d47044009932d54f0a343883
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0

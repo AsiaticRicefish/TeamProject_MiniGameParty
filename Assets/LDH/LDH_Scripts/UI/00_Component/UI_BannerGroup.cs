@@ -125,10 +125,10 @@ namespace LDH_UI
         {
             try
             {
-                Debug.Log("AutoSlideLoop 시작");
+                //Debug.Log("AutoSlideLoop 시작");
                 while (!token.IsCancellationRequested)
                 {
-                    Debug.Log("  → Delay 전");
+                    //Debug.Log("  → Delay 전");
                     await UniTask.Delay(System.TimeSpan.FromSeconds(autoSlideDelay), cancellationToken: token);
 
                     // 마지막 페이지라면 첫 페이지로
@@ -136,42 +136,42 @@ namespace LDH_UI
                     //int lastpage = bannersParent.childCount;
                     if (scrollSnap.CurrentPage >= pageCount - 1)
                     {
-                        Debug.Log("마지막 페이지 입니다 -> 처음페이지 이동");
+                        //Debug.Log("마지막 페이지 입니다 -> 처음페이지 이동");
                         scrollSnap.GoToScreen(0);
                     }
                     else
                     {
-                        Debug.Log("다음페이지 이동");
+                        //Debug.Log("다음페이지 이동");
                         scrollSnap.NextScreen();
                     }
-                    Debug.Log("  → Delay 후: 현재 페이지=" + scrollSnap.CurrentPage);
+                    //Debug.Log("  → Delay 후: 현재 페이지=" + scrollSnap.CurrentPage);
                 }
             }
             catch (OperationCanceledException)
             {
                 // 토큰 취소로 인한 정상 종료
                 // Debug.Log("토큰 취소!");
-                Debug.Log("AutoSlideLoop 정상 취소");
+                //Debug.Log("AutoSlideLoop 정상 취소");
             }
         }
 
         private void OnPageSettled(int pageIndex)
         {
-            Debug.Log($"[Banner] 페이지 안정화 완료: {pageIndex}");
+            //Debug.Log($"[Banner] 페이지 안정화 완료: {pageIndex}");
             UpdateToggleIndicator(pageIndex);
         }
 
         // 사용자가 드래그 시작(눌렀을 때)
         public void OnBeginDrag(PointerEventData eventData)
         {
-            Debug.Log("[Banner] OnBeginDrag 호출됨");
+            //Debug.Log("[Banner] OnBeginDrag 호출됨");
             CancelAutoSlide();
         }
 
         // 사용자가 드래그 해제
         public void OnEndDrag(PointerEventData eventData)
         {
-            Debug.Log("[Banner] OnEndDrag 호출됨");
+            //Debug.Log("[Banner] OnEndDrag 호출됨");
             scrollSnap.OnEndDrag(eventData);
             RestartAutoSlide();
         }
