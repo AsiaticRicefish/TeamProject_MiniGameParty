@@ -1,231 +1,228 @@
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
-using DesignPattern;
 using Photon.Pun;
-using DesignPattern;
+using KYG.Framework;   // IGameComponent
+using DesignPattern;  // PunSingleton
 
 namespace KYG
 {
     /// <summary>
     /// 턴 진행의 단일 권위(마스터).
-    /// - 카드 공개 후 첫 턴 시작
-    /// - 현재 턴/라운드 브로드캐스트 (+ 이번 라운드 엔딩카운트 동기화)
-    /// - 다음 턴 진행(씬 의존 오브젝트는 가드)
+    /// - 현재 턴/라운드 브로드캐스트 (+ 엔딩카운트 동기화)
+    /// - 3탭 패스 / 최종카운트 도달 시 탈락 처리
     /// </summary>
     [RequireComponent(typeof(PhotonView))]
     public class TurnManager : PunSingleton<TurnManager>, IGameComponent
     {
-        [Header("Rounds")]
-        [SerializeField] private int totalRounds = 1; // 추후 확장 가능
+        // ======= 게임 진행 파라미터 =======
+        [SerializeField] private int sharedEndingCount = 18; // 라운드 엔딩 카운트(브로드캐스트됨)
+        [SerializeField] private int currentRoundIndex = 1;
 
-        // 내부 상태(1-based)
-        private int currentTurnIndex = 0;
-        private int currentRound     = 1;
+        // ======= 내부 상태 =======
+        private readonly List<int> actorOrder = new(); // 순서대로 ActorNumber
+        private int currentTurnIndex = 0;              // actorOrder 인덱스
+        private bool _turnChanging = false;
 
-        // 전파 지연 대비(내 turnIndex 미전파 시 보류)
-        private (int turn, int round, int ending)? _pendingTurn;
-
-        protected override void OnAwake()
-        {
-            isPersistent = false; // 씬 생명주기 따름
-        }
+        [Header("Retry Guard")]
+        [SerializeField] private float broadcastRetryGap = 0.1f;
+        [SerializeField] private int   broadcastRetryMax = 10;
 
         public void Initialize()
         {
+            // 첫 진입 시 액터 순서 구성(마스터 기준)
+            BuildActorOrderIfNeeded();
             Debug.Log("[TurnManager] Initialize");
         }
 
-        /// <summary>마스터만 호출. 첫 라운드/턴 초기화.</summary>
+        // ======= 외부 트리거 =======
+
+        /// <summary>마스터만: 첫 턴 세팅(필요 시 외부에서 호출)</summary>
         public void SetupTurn()
         {
-            Debug.Log("[TurnManager] SetupTurn 호출됨");
             if (!PhotonNetwork.IsMasterClient) return;
-
-            currentTurnIndex = 0;
-            currentRound     = 1;
-
-            // RoomPropertyObserver가 비활성일 수 있으므로 가드
-            var obs = RoomPropertyObserver.Instance;
-            if (obs != null)
-                obs.SetRoomProperty(ShootingGamePropertyKeys.State, "GamePlayState");
-            else
-                Debug.LogWarning("[TurnManager] RoomPropertyObserver not ready. Skip setting state.");
+            BuildActorOrderIfNeeded();
+            ClampPointerToAlive();
+            BroadcastCurrentTurnWithRetry();
         }
 
-        /// <summary>마스터만 첫 턴 시작.</summary>
-        public void StartFirstTurn()
-        {
-            if (!PhotonNetwork.IsMasterClient) return;
-            currentTurnIndex = 1; // 1번부터
-            BroadcastCurrentTurn();
-        }
-
-        /// <summary>마스터만 다음 턴으로.</summary>
+        /// <summary>마스터만: 다음 턴으로</summary>
         public void NextTurn()
         {
             if (!PhotonNetwork.IsMasterClient) return;
+            if (_turnChanging) return;
+            StartCoroutine(CoNextTurn());
+        }
 
-            // (슈팅씬 잔존 의존성 가드)
-            if (EggManager.Instance != null && EggManager.Instance.photonView != null)
-                EggManager.Instance.photonView.RPC("ClearCurrentEgg", RpcTarget.All);
-            else
-                Debug.LogWarning("[TurnManager] EggManager not found in this scene. Skip clearing egg.");
+        /// <summary>마스터만: 현재 턴 플레이어 탈락 → 다음 턴 or 게임 종료</summary>
+        public void EndTurn()
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+            if (_turnChanging) return;
+            StartCoroutine(CoEndTurn());
+        }
 
-            int tries = PhotonNetwork.CurrentRoom.PlayerCount + 2; // 안전 가드
-            do
+        // ======= RPC (클라이언트 → 마스터 요청) =======
+        [PunRPC] private void RPC_RequestPassTurn(int reason)
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+            NextTurn();
+        }
+        [PunRPC] private void RPC_RequestEndTurn(int reason)
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+            EndTurn();
+        }
+
+        public void RequestPassTurnFromClient(int reason = 0)
+            => photonView.RPC(nameof(RPC_RequestPassTurn), RpcTarget.MasterClient, reason);
+        public void RequestEndTurnFromClient(int reason = 0)
+            => photonView.RPC(nameof(RPC_RequestEndTurn), RpcTarget.MasterClient, reason);
+
+        // ======= 코루틴 =======
+        private IEnumerator CoNextTurn()
+        {
+            _turnChanging = true;
+
+            AdvancePointerToNextAlive();
+
+            // 브로드캐스트 재시도 가드
+            for (int i = 0; i < broadcastRetryMax; i++)
             {
-                currentTurnIndex++;
-                if (currentTurnIndex > PhotonNetwork.CurrentRoom.PlayerCount)
+                if (GetCurrentTurnActor() > 0)
                 {
-                    currentTurnIndex = 1;
-                    currentRound++;
+                    BroadcastCurrentTurn();
+                    _turnChanging = false;
+                    yield break;
                 }
-                tries--;
+                yield return new WaitForSeconds(broadcastRetryGap);
             }
-            while (tries > 0 && IsTurnIndexEliminated(currentTurnIndex));
 
+            Debug.LogWarning("[TurnManager] NextTurn: actor resolve timeout → force broadcast");
             BroadcastCurrentTurn();
+            _turnChanging = false;
         }
-        
-        private bool IsTurnIndexEliminated(int turnIndex1Based)
+
+        private IEnumerator CoEndTurn()
         {
-            // turnIndex == X 인 Actor 찾기 → 탈락 여부 확인
-            foreach (var p in PhotonNetwork.PlayerList)
+            _turnChanging = true;
+
+            var actor = GetCurrentTurnActor();
+            Debug.Log($"[TurnManager] EndTurn by Master. currentActor={actor}");
+
+            // 탈락 처리
+            if (actor > 0 && ShootingGameManager.Instance != null)
+                ShootingGameManager.Instance.Eliminate(actor);
+
+            // 게임 오버?
+            if (ShootingGameManager.Instance != null && ShootingGameManager.Instance.IsGameOver())
             {
-                if (p.CustomProperties != null &&
-                    p.CustomProperties.TryGetValue("turnIndex", out var v) &&
-                    v is int idx && idx == turnIndex1Based)
-                {
-                    return KYG.ShootingGameManager.Instance != null &&
-                           KYG.ShootingGameManager.Instance.IsEliminated(p.ActorNumber);
-                }
+                Debug.Log("[TurnManager] Game Over.");
+                _turnChanging = false;
+                yield break;
             }
-            return false;
-        }
-        
-        public int GetCurrentTurnActor()
-        {
-            foreach (var p in PhotonNetwork.PlayerList)
+
+            // 짧은 텀 후 다음 턴
+            yield return new WaitForSeconds(0.35f);
+            AdvancePointerToNextAlive();
+
+            // 브로드캐스트 재시도 가드
+            for (int i = 0; i < broadcastRetryMax; i++)
             {
-                if (p.CustomProperties != null &&
-                    p.CustomProperties.TryGetValue("turnIndex", out var v) &&
-                    v is int idx && idx == currentTurnIndex)
+                if (GetCurrentTurnActor() > 0)
                 {
-                    // 탈락자는 제외
-                    if (KYG.ShootingGameManager.Instance != null &&
-                        KYG.ShootingGameManager.Instance.IsEliminated(p.ActorNumber))
-                        continue;
-                    return p.ActorNumber;
+                    BroadcastCurrentTurn();
+                    _turnChanging = false;
+                    yield break;
                 }
+                yield return new WaitForSeconds(broadcastRetryGap);
             }
-            return -1;
+
+            Debug.LogWarning("[TurnManager] EndTurn: actor resolve timeout → force broadcast");
+            BroadcastCurrentTurn();
+            _turnChanging = false;
         }
 
-        /// <summary>현재 턴/라운드 + 이번 라운드 엔딩카운트를 모든 클라에 브로드캐스트.</summary>
-        public void BroadcastCurrentTurn()
+        // ======= 브로드캐스트 / 유틸 =======
+        private void BroadcastCurrentTurnWithRetry()
         {
-            int alive = KYG.ShootingGameManager.Instance != null
-                ? KYG.ShootingGameManager.Instance.ActiveCount
-                : PhotonNetwork.CurrentRoom.PlayerCount;
-
-            int ending = ComputeEndingCount(currentRound, alive); // ★ 생존자 수 반영
-            photonView.RPC(nameof(RPC_SetCurrentTurn), RpcTarget.All,
-                currentTurnIndex, currentRound, ending);
+            StartCoroutine(CoNextTurn()); // 포인터 유지 + 브로드캐스트만 수행
         }
 
-        // 라운드/인원에 따른 엔딩카운트 산출(미니게임 규칙과 동일)
-        private int ComputeEndingCount(int roundIndex, int alivePlayers)
+        private void BroadcastCurrentTurn()
         {
-            Vector2Int range = new Vector2Int(20, 30);
-            if (roundIndex == 2) range = new Vector2Int(15, 25);
-            else if (roundIndex >= 3) range = new Vector2Int(10, 20);
-
-            int ending = Random.Range(range.x, range.y + 1);
-            ending -= Mathf.Max(0, 4 - alivePlayers) * 2; // 4인 기준 보정
-            return Mathf.Max(3, ending);
-        }
-
-        /// <summary>
-        /// 현재 턴 통지 수신 → 내 턴 판정 → 미니게임 활성 보장 후 Init 호출
-        /// (turnIndex 전파 지연/미니게임 비활성 레이스 모두 방지)
-        /// </summary>
-        [PunRPC]
-        private void RPC_SetCurrentTurn(int turnIndex, int roundIndex, int sharedEndingCount)
-        {
-            // 1) 내 turnIndex가 아직 미전파면 재시도 예약
-            int myTurnIdx = -1;
-            if (PhotonNetwork.LocalPlayer.CustomProperties != null &&
-                PhotonNetwork.LocalPlayer.CustomProperties.TryGetValue("turnIndex", out var v))
-                myTurnIdx = v is int i ? i : -1;
-
-            if (myTurnIdx == -1)
+            int actor = GetCurrentTurnActor();
+            if (actor <= 0)
             {
-                _pendingTurn = (turnIndex, roundIndex, sharedEndingCount);
-                StartCoroutine(RetryWhenTurnIndexReady());
-                Debug.LogWarning("[TurnManager] turnIndex가 아직 없음 → 잠시 후 재시도");
+                Debug.LogWarning("[TurnManager] BroadcastCurrentTurn: invalid actor");
                 return;
             }
 
-            bool isMyTurn = (turnIndex == myTurnIdx);
-            Debug.Log($"[TurnManager] 현재 라운드={roundIndex}, 턴={turnIndex}, 내턴?={isMyTurn}, ending={sharedEndingCount}");
+            int round = currentRoundIndex;
+            int alive = (ShootingGameManager.Instance != null)
+                ? ShootingGameManager.Instance.ActiveCount
+                : (PhotonNetwork.PlayerList?.Length ?? 0);
+            int ending = sharedEndingCount;
 
-            // 2) 미니게임 활성 보장 후 Init
-            StartCoroutine(EnsureMiniAndInit(isMyTurn, roundIndex, sharedEndingCount));
-        }
-
-        private IEnumerator RetryWhenTurnIndexReady()
-        {
-            float t = 0f;
-            while (t < 1.0f) // 최대 1초
+            // 각 클라의 MeteorMiniGame에 전달
+            var minis = Object.FindObjectsOfType<MeteorTapMiniGame>(true);
+            foreach (var mm in minis)
             {
-                if (PhotonNetwork.LocalPlayer.CustomProperties != null &&
-                    PhotonNetwork.LocalPlayer.CustomProperties.ContainsKey("turnIndex"))
-                {
-                    if (_pendingTurn.HasValue)
-                    {
-                        var p = _pendingTurn.Value;
-                        _pendingTurn = null;
-                        RPC_SetCurrentTurn(p.turn, p.round, p.ending);
-                    }
-                    yield break;
-                }
-                t += Time.deltaTime;
-                yield return null;
+                int my = PhotonNetwork.LocalPlayer.ActorNumber;
+                bool mine = (my == actor);
+                mm.InitTurnWithEnding(mine, actor, round, alive, ending);
             }
-            Debug.LogWarning("[TurnManager] turnIndex 재시도 타임아웃");
+
+            Debug.Log($"[TurnManager] BroadcastCurrentTurn actor={actor}, round={round}, alive={alive}, ending={ending}");
         }
 
-        private IEnumerator EnsureMiniAndInit(bool isMyTurn, int roundIndex, int sharedEndingCount)
+        private void BuildActorOrderIfNeeded()
         {
-            // (선택) 코디네이션 완료까지 대기 → roots 활성 보장
-            while (LDH_MainGame.PhotonViewSync.Instance != null &&
-                   !LDH_MainGame.PhotonViewSync.Instance.SyncCompleted)
-                yield return null;
-
-            // 미니게임 오브젝트가 "활성"될 때까지 보장
-            KYG.MeteorTapMiniGame mini = null;
-            while ((mini = UnityEngine.Object.FindObjectOfType<KYG.MeteorTapMiniGame>(true)) == null ||
-                   !mini.gameObject.activeInHierarchy)
-                yield return null;
-
-            int aliveCount = KYG.ShootingGameManager.Instance != null
-                ? KYG.ShootingGameManager.Instance.ActiveCount
-                : PhotonNetwork.CurrentRoom.PlayerCount;
-            mini.InitTurnWithEnding(isMyTurn, roundIndex, aliveCount, sharedEndingCount);
+            if (actorOrder.Count > 0) return;
+            var players = PhotonNetwork.PlayerList;
+            actorOrder.Clear();
+            actorOrder.AddRange(players.OrderBy(p => p.ActorNumber).Select(p => p.ActorNumber));
+            currentTurnIndex = 0;
         }
 
-        // (옵션) 일정 시간 후 자동 턴 전환
-        public void StartTurnCorutine(float delay)
+        private int GetCurrentTurnActor()
         {
-            StartCoroutine(TurnChangeDelay(delay));
+            if (actorOrder.Count == 0) BuildActorOrderIfNeeded();
+            if (actorOrder.Count == 0) return -1;
+            if (currentTurnIndex < 0 || currentTurnIndex >= actorOrder.Count) currentTurnIndex = 0;
+            return actorOrder[currentTurnIndex];
         }
 
-        private IEnumerator TurnChangeDelay(float delay)
+        private void AdvancePointerToNextAlive()
         {
-            yield return new WaitForSeconds(delay);
-            NextTurn();
+            if (actorOrder.Count == 0) BuildActorOrderIfNeeded();
+            if (actorOrder.Count == 0) return;
+
+            // 다음 인덱스로 이동하며 탈락자 스킵
+            for (int step = 0; step < actorOrder.Count; step++)
+            {
+                currentTurnIndex = (currentTurnIndex + 1) % actorOrder.Count;
+                int candidate = actorOrder[currentTurnIndex];
+
+                bool alive = ShootingGameManager.Instance == null
+                             || !ShootingGameManager.Instance.IsEliminated(candidate);
+                if (alive) break;
+            }
         }
 
-        public void EndTurn() { /* 필요 시 구현 */ }
+        private void ClampPointerToAlive()
+        {
+            if (actorOrder.Count == 0) return;
+            int safeGuard = actorOrder.Count;
+            while (safeGuard-- > 0)
+            {
+                int actor = GetCurrentTurnActor();
+                bool alive = ShootingGameManager.Instance == null
+                             || !ShootingGameManager.Instance.IsEliminated(actor);
+                if (alive) break;
+                currentTurnIndex = (currentTurnIndex + 1) % actorOrder.Count;
+            }
+        }
     }
 }

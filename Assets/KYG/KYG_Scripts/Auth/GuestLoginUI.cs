@@ -5,7 +5,13 @@ using System.Collections;
 using KYG.Auth;
 using Managers;
 using Photon.Pun;
+using System.Text.RegularExpressions;
+using System;
+using Firebase.Extensions;
 
+namespace KYG
+{
+    
 public class GuestLoginUI : MonoBehaviour
 {
     [Header("UI Roots")] [SerializeField] private GameObject buttonRoot; // 팝업 카드(버튼 컨테이너)
@@ -37,6 +43,22 @@ public class GuestLoginUI : MonoBehaviour
     [SerializeField] private GameObject nicknamePopupPrefab; // 닉네임 팝업 프리팹(위 NicknamePopup.cs 포함)
     [SerializeField] private Canvas popupCanvasOverride; // 팝업을 띄울 최상단 Canvas (비우면 자동 탐색)
     [SerializeField] private int popupOrderBoost = 100; // 최상단 보장용 정렬 가산치
+    
+    [SerializeField] private GameObject tapCatcher;
+    
+    // ===== [추가] 금칙어/검사 옵션 =====
+    [Header("Nickname Rules / Profanity")]
+    [SerializeField] private TextAsset profanityList;   // (선택) 외부 금칙어 파일
+    [SerializeField] private bool requireDuplicateCheck = true; // 중복확인 강제
+    [SerializeField] private bool blockOnProfanity = true;      // 금칙어 발견 시 즉시 차단
+    [SerializeField] private bool allowAsciiLettersDigitsOnly = false; // true면 영문/숫자만 허용(한글 금지). false면 기존 그대로.
+    
+    [Header("Button Wiring (GPGS 스타일)")]
+    [SerializeField] private bool wireButtonsInCode = false; 
+
+    
+    private bool _dupCheckedOk = false;  // "중복확인 통과" 여부
+    private string _lastDupCheckedName = ""; // 어떤 이름으로 체크했는지 저장
 
     private float _lastTypeTime;
     private bool _submitting;
@@ -55,16 +77,28 @@ public class GuestLoginUI : MonoBehaviour
 
     private void Awake()
     {
+        ProfanityFilter.Configure(profanityList);
         // 시작 시 버튼/입력/로딩 모두 숨김(팝업은 ScreenTapCatcher가 ShowLoginChoice로 띄움)
         SafeShowFirst();
 
         if (guestLoginButton)
         {
-            guestLoginButton.onClick.RemoveAllListeners(); // ← 기존 SwitchToInput 등 전부 제거
+            guestLoginButton.onClick.RemoveAllListeners(); // ← 인스펙터 연결까지 지워버림
             guestLoginButton.onClick.AddListener(OpenNicknamePopup);
         }
 
         if (gpgsLoginButton)
+        {
+            gpgsLoginButton.onClick.RemoveAllListeners();
+            gpgsLoginButton.onClick.AddListener(OnClickGpgsLogin);
+        }
+        
+        if (wireButtonsInCode && guestLoginButton)
+        {
+            guestLoginButton.onClick.RemoveAllListeners();
+            guestLoginButton.onClick.AddListener(OnClickGuestLogin); // ▼아래 공개 메서드
+        }
+        if (wireButtonsInCode && gpgsLoginButton)
         {
             gpgsLoginButton.onClick.RemoveAllListeners();
             gpgsLoginButton.onClick.AddListener(OnClickGpgsLogin);
@@ -78,7 +112,10 @@ public class GuestLoginUI : MonoBehaviour
 
         if (confirmButton)
         {
+            confirmButton.onClick.RemoveAllListeners();
             confirmButton.onClick.AddListener(OnClickConfirm);
+
+            // [변경] 기본은 꺼둠: 길이/금칙어/중복검사 통과 후 켜짐
             confirmButton.interactable = false;
         }
 
@@ -93,6 +130,7 @@ public class GuestLoginUI : MonoBehaviour
         enabled = false;
 
         if (guestLoginButton) guestLoginButton.onClick.RemoveListener(SwitchToInput);
+        if (guestLoginButton) guestLoginButton.onClick.RemoveListener(OpenNicknamePopup);
         if (gpgsLoginButton) gpgsLoginButton.onClick.RemoveListener(OnClickGpgsLogin);
 
         if (nicknameInput)
@@ -197,9 +235,63 @@ public class GuestLoginUI : MonoBehaviour
         if (toastGroup) StartCoroutine(CoToast());
         else StartCoroutine(CoShake(hintText.transform));
     }
+    
+    // === 버튼 OnClick에서 직접 연결할 공개 메서드 ===
+    // 1) 게스트 로그인 버튼용
+    /// <summary>
+    /// GPGS처럼 인스펙터 OnClick에서 직접 연결하는 공개 메서드.
+    /// 닉네임 팝업을 최상단 Canvas에 안전하게 띄웁니다.
+    /// </summary>
+    public void OnClickGuestLogin()
+    {
+        // 내부 구현은 기존 OpenNicknamePopup()을 그대로 재사용
+        OpenNicknamePopup();
+    }
 
     // ---------- 내부 구현 ----------
 
+    // [추가] 허용 문자 규칙: 영문/숫자만 허용하고 싶을 때(옵션)
+    private static readonly Regex RxAsciiLetterDigitOnly = new Regex(@"^[A-Za-z0-9]+$", RegexOptions.Compiled);
+    
+    // [추가] 입력값 규칙 검증(길이/문자/금칙어). 실패 사유를 msg로 반환.
+    private bool ValidateNickname(string raw, out string msg)
+    {
+        msg = "";
+
+        string nick = Sanitize(raw);
+        if (string.IsNullOrEmpty(nick))
+        {
+            msg = $"닉네임을 입력하세요 (최소 {minLength}자, 최대 {CalcEffectiveMax("")}자)";
+            return false;
+        }
+
+        int effMax = CalcEffectiveMax(nick);
+        if (nick.Length < minLength)
+        {
+            msg = $"닉네임을 {minLength}자 이상 입력하세요";
+            return false;
+        }
+        if (nick.Length > effMax)
+        {
+            msg = $"닉네임을 {minLength}~{effMax}자 범위로 입력하세요";
+            return false;
+        }
+
+        if (allowAsciiLettersDigitsOnly && !RxAsciiLetterDigitOnly.IsMatch(nick))
+        {
+            msg = "영문/숫자만 사용할 수 있습니다.";
+            return false;
+        }
+
+        if (blockOnProfanity && ProfanityFilter.ContainsBannedWord(nick, out _))
+        {
+            msg = "닉네임에 사용할 수 없는 \n 단어가 들어가 있습니다. \n 다른 닉네임을 사용하세요";
+            return false;
+        }
+
+        return true;
+    }
+    
     private bool IsReady()
     {
         var mgr = GuestLoginManager.Instance;
@@ -235,6 +327,37 @@ public class GuestLoginUI : MonoBehaviour
 
         LogButtonStates("SwitchToInput");
     }
+    
+    public void ReturnToTapCatcher()
+    {
+        // 로그인 팝업 끄기
+        if (buttonRoot) buttonRoot.SetActive(false);
+        if (inputRoot) inputRoot.SetActive(false);
+        if (loadingRoot) loadingRoot.SetActive(false);
+        if (confirmButton) confirmButton.gameObject.SetActive(false);
+
+        if (guestLoginButton) guestLoginButton.gameObject.SetActive(false);
+        if (gpgsLoginButton) gpgsLoginButton.gameObject.SetActive(false);
+
+        // 닉네임 팝업 떠있으면 닫기
+        if (_nicknamePopupInstance)
+        {
+            Destroy(_nicknamePopupInstance);
+            _nicknamePopupInstance = null;
+        }
+
+        // TapCatcher 다시 켜기
+        if (tapCatcher)
+        {
+            tapCatcher.SetActive(true);
+
+            // ★ 핵심: 다음 탭을 받을 수 있도록 리셋
+            var catcher = tapCatcher.GetComponent<ScreenTapCatcher>();
+            if (catcher) catcher.ResetForNextTap();
+        }
+
+        Debug.Log("[GuestLoginUI] ReturnToTapCatcher -> TapCatcher 복귀 완료");
+    }
 
     private void OnClickGpgsLogin()
     {
@@ -266,24 +389,49 @@ public class GuestLoginUI : MonoBehaviour
         if (_destroyed) return;
         _lastTypeTime = Time.unscaledTime;
 
-        _effectiveMax = CalcEffectiveMax(nicknameInput != null ? nicknameInput.text : string.Empty);
-        if (nicknameInput) nicknameInput.characterLimit = _effectiveMax;
+        string msg;
+        bool ok = ValidateNickname(nicknameInput != null ? nicknameInput.text : string.Empty, out msg);
 
-        int len = (nicknameInput != null ? nicknameInput.text : string.Empty).Trim().Length;
-        bool lenOk = len >= minLength && len <= _effectiveMax;
-        bool ready = IsReady();
+        // 중복확인 결과는 타이핑이 바뀌면 무효화
+        if (_dupCheckedOk && nicknameInput && !string.Equals(_lastDupCheckedName, nicknameInput.text.Trim(), StringComparison.Ordinal))
+        {
+            _dupCheckedOk = false;
+        }
 
         if (hintText)
         {
-            if (!lenOk) hintText.text = $"닉네임을 입력하세요 (최소 {minLength}자, 최대 {_effectiveMax}자)";
+            if (!ok)
+            {
+                hintText.text = msg;                // 규칙/금칙어 사유
+                hintText.color = errorHintColor;
+            }
             else
-                hintText.text = ready
-                    ? "완료/확인 버튼을 누르거나 잠시 기다리면 연결됩니다"
-                    : "초기화 중... 잠시만 기다려주세요";
+            {
+                // 규칙 통과 → 중복확인 여부 안내
+                if (requireDuplicateCheck && !_dupCheckedOk)
+                {
+                    hintText.text = "중복확인을 먼저 진행해주세요.";
+                    hintText.color = normalHintColor;
+                }
+                else
+                {
+                    hintText.text = _lastReady ? "확인 버튼을 누르거나 잠시 기다리면 연결됩니다" : "초기화 중... 잠시만 기다려주세요";
+                    hintText.color = normalHintColor;
+                }
+            }
         }
 
-        if (confirmButton) confirmButton.interactable = lenOk && ready;
-        if (cancelInInputButton) cancelInInputButton.gameObject.SetActive(inputRoot && inputRoot.activeSelf);
+        // 버튼 인터랙션: 길이/금칙어 ok + Firebase 준비 + (중복확인 통과 or 옵션 미사용)
+        bool ready = IsReady();
+        if (confirmButton)
+            confirmButton.interactable = ok && ready && (!requireDuplicateCheck || _dupCheckedOk);
+
+        if (cancelInInputButton)
+            cancelInInputButton.gameObject.SetActive(inputRoot && inputRoot.activeSelf);
+
+        // characterLimit 유지 업데이트(기존 로직)
+        _effectiveMax = CalcEffectiveMax(nicknameInput != null ? nicknameInput.text : string.Empty);
+        if (nicknameInput) nicknameInput.characterLimit = _effectiveMax;
     }
 
     private void OnSubmit(string _)
@@ -302,6 +450,7 @@ public class GuestLoginUI : MonoBehaviour
     {
         if (_blockSubmit || _destroyed || _submitting) return;
 
+        // 0) Firebase 준비 여부
         if (!IsReady())
         {
             SafeSetHint("초기화 중입니다. 잠시 후 다시 시도하세요.");
@@ -310,18 +459,53 @@ public class GuestLoginUI : MonoBehaviour
             return;
         }
 
-        string nick = Sanitize(raw);
-        _effectiveMax = CalcEffectiveMax(nick);
-        if (nicknameInput) nicknameInput.characterLimit = _effectiveMax;
-
-        if (nick.Length < minLength || nick.Length > _effectiveMax)
+        // 1) 규칙/금칙어 검사
+        string msg;
+        if (!ValidateNickname(raw, out msg))
         {
-            SafeSetHint($"닉네임을 {minLength}~{_effectiveMax}자 범위로 입력하세요");
+            ShowErrorHint(msg);                 // 길이/문자/금칙어 사유 표시
             if (confirmButton) confirmButton.interactable = false;
             ActivateInput();
             return;
         }
 
+        string nick = Sanitize(raw);
+
+        // 2) (강제) 중복확인 통과 확인 + 서버 가용성 재확인(우회 제출 방지)
+        if (requireDuplicateCheck)
+        {
+            // UI 상으로 통과하지 않았거나, 입력이 바뀌었으면 서버 확인
+            if (!_dupCheckedOk || !string.Equals(_lastDupCheckedName, nick, StringComparison.Ordinal))
+            {
+                _submitting = true; ShowSubmittingUI(true);
+                NicknameRegistry.IsAvailableAsync(nick).ContinueWithOnMainThread(task =>
+                {
+                    bool ok = task.Exception == null && task.Result;
+
+                    if (!ok)
+                    {
+                        _dupCheckedOk = false;
+                        ShowErrorHint("이미 사용 중인 닉네임입니다.\n 다른 이름으로 다시 시도하세요.");
+                        if (confirmButton) confirmButton.interactable = false;
+                        ActivateInput();
+                    }
+                    else
+                    {
+                        _dupCheckedOk = true;
+                        _lastDupCheckedName = nick;
+                        ProceedLogin(nick);
+                    }
+                });
+                return;
+            }
+        }
+
+        // 3) 여기까지 왔으면 바로 진행
+        ProceedLogin(nick);
+    }
+    
+    private void ProceedLogin(string nick)
+    {
         var mgr = GuestLoginManager.Instance;
         if (mgr == null)
         {
@@ -339,18 +523,15 @@ public class GuestLoginUI : MonoBehaviour
 
         try
         {
-#if TEST_WITHOUT_LOGIN
-            GuestLoginManager.Instance.ApplyPhotonIdentityAndConnect($"Player-{nick}", nick);
-#else
             mgr.LoginAsGuestWithNickname(nick);
-#endif
         }
         catch (System.Exception e)
         {
             Debug.LogError($"[GuestLoginUI] 로그인 요청 중 예외: {e.Message}");
             _submitting = false;
             SafeSetHint("연결 실패. 다시 시도하세요.");
-            if (confirmButton) confirmButton.interactable = nick.Length >= minLength && IsReady();
+            if (confirmButton) confirmButton.interactable =
+                (!requireDuplicateCheck || _dupCheckedOk) && IsReady();
             ShowSubmittingUI(false);
             ActivateInput();
         }
@@ -622,31 +803,42 @@ public class GuestLoginUI : MonoBehaviour
         popup.Init(
             onConfirm: (raw) =>
             {
-                string nick = Sanitize(raw);
-                int effMax = CalcEffectiveMax(nick);
-                if (nick.Length < 2 || nick.Length > effMax)
+                string nick = Sanitize(raw);                     // 공백/기호 제거 + 길이 컷
+                if (!ValidateNickname(nick, out var msg))        // 길이/허용문자/금칙어
                 {
-                    popup.ShowError($"닉네임을 2~{effMax}자 범위로 입력하세요");
+                    popup.ShowError(msg);
                     return;
                 }
 
-                popup.Close();          // 입력 성공 → 팝업 닫기
-                ShowSubmittingUI(true); // 로딩 표시
-                TrySubmit(nick);        // 기존 로그인 흐름(예약/Photon 연결 포함)
+                // 여기까지 왔으면 팝업 내부에서 "중복확인 통과"가 보장됨.
+                popup.Close();
+                ShowSubmittingUI(true);                          // 로딩 표시
+                TrySubmit(nick);                                 // 계정 생성/로그인 진행
             },
             onCancel: () =>
             {
-                if (buttonRoot) buttonRoot.SetActive(true);
-                ForceButtonsOn();
+                // 취소 시, 로그인 선택 화면 복귀 등
+                if (buttonRoot) { buttonRoot.SetActive(true); ForceButtonsOn(); }
             },
-            placeholder: "(최대 한글 6자, 영문 8자)",
+            placeholder: "(최대 한글 6자, 영문 10자)",
             onCheck: async (raw) =>
             {
-                // ★ 단순 가용성 조회(예약 X)
                 string nick = Sanitize(raw);
-                int effMax = CalcEffectiveMax(nick);
-                if (nick.Length < 2 || nick.Length > effMax) return false;
-                return await NicknameRegistry.IsAvailableAsync(nick);
+
+                // 1) 규칙 체크: 실패 시 예외로 이유 전달
+                if (!ValidateNickname(nick, out var ruleMsg))
+                    throw new KYG.NicknameInvalidException(ruleMsg);
+
+                try
+                {
+                    // 2) DB 중복 확인 (최초 호출은 타임아웃 여유 있게)
+                    bool available = await NicknameRegistry.IsAvailableAsync(nick, timeoutMs: 8000);
+                    return available; // true=사용가능, false=중복
+                }
+                catch (TimeoutException)
+                {
+                    throw new KYG.NicknameTimeoutException("네트워크가 느립니다. 다시 시도해주세요.");
+                }
             }
         );
     }
@@ -657,5 +849,6 @@ public class GuestLoginUI : MonoBehaviour
 
     _nicknamePopupInstance = go;
     Debug.Log("[GuestLoginUI] 로그인 팝업 OFF, 닉네임 팝업 ON(Instantiate).");
+}
 }
 }

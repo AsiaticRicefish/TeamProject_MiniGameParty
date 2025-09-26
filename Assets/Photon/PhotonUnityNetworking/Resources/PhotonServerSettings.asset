@@ -134,14 +134,28 @@ MonoBehaviour:
   - RPC_VerdictDelta
   - RPC_SyncPlayerData
   - RPC_ChangeBGM
-  - RPC_ShowFinalRewards
-  - RPC_ShowScoreboard
-  - RPC_ShowScoreboardJson
+  - RPC_RequestNextTurn
+  - RPC_ReceiveScore
+  - RPC_ScheduleStopSpawn
+  - RPC_EndTurn
+  - RPC_RequestEndTurn
+  - RPC_RequestPassTurn
+  - RPC_RequestNextTurnAfterCountdown
+  - RPC_AddTap
+  - RPC_BeginNewRound
+  - RPC_ConfirmPick
+  - RPC_RequestPick
+  - RPC_StartRound
+  - RPC_RevealAndStart
   - RPC_BuildSlotMachine
   - RPC_PullSlotHandle
   - RPC_ShowEndGame
-  - RPC_ReceiveScore
-  - RPC_ScheduleStopSpawn
+  - RPC_ShowFinalRewards
+  - RPC_ShowScoreboardJson
+  - RPC_AddListRandomNumber
+  - RPC_RequestAddTap
+  - RPC_ShowGameOverFor
+  - RPC_SetDeck
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1
