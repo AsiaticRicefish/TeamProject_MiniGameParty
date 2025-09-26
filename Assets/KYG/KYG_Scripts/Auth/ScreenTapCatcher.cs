@@ -6,6 +6,10 @@ using UnityEngine.EventSystems;
 /// - 첫 터치 시 GuestLoginUI를 불러 로그인 선택 팝업을 띄운다.
 /// - 이후에는 스스로 비활성화(또는 레이캐스트 차단 해제)하여 버튼 클릭을 방해하지 않는다.
 /// </summary>
+
+namespace KYG
+{
+    
 [RequireComponent(typeof(CanvasRenderer))]
 public class ScreenTapCatcher : MonoBehaviour, IPointerDownHandler
 {
@@ -87,4 +91,5 @@ public class ScreenTapCatcher : MonoBehaviour, IPointerDownHandler
             cg.alpha = 0; // 완전 투명(선택)
         }
     }
+}
 }
