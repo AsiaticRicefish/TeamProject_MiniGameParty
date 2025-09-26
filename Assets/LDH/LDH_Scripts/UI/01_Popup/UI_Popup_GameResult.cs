@@ -28,12 +28,11 @@ namespace LDH_UI
         protected float endDelay = 2f;
 
 
-
-        
+        [Header("Sound")] 
+        [SerializeField] private Define_LDH.BgmKey miniGameResultBgm = Define_LDH.BgmKey.Main_MiniGameResult_Bgm;
         
         protected GamePlayer[] _playerResults;
         protected List<UI_ScoreEntry> _scoreEntries = new();
-
         
         
         public async UniTask SetData(int round, string gameName, GamePlayer[] players)
@@ -60,7 +59,8 @@ namespace LDH_UI
         protected override async UniTask OnShowAsync(CancellationToken ct)
         {
             cg.alpha = 1f;
-
+            
+            SoundManager.Instance.PlayBGM(miniGameResultBgm.ToString()); 
             await UniTask.Delay(System.TimeSpan.FromSeconds(startDelay), cancellationToken: ct);    //0.3f;
             
             // 1) 좌→우 순차 등장
@@ -105,6 +105,7 @@ namespace LDH_UI
                 await UniTask.Delay(System.TimeSpan.FromSeconds(rankRevealStagger), cancellationToken: ct);
             }
             
+            SoundManager.Instance.StopBGM();
             await UniTask.Delay(System.TimeSpan.FromSeconds(endDelay), cancellationToken: ct);
     
         }

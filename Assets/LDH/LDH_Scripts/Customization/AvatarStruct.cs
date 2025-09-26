@@ -44,10 +44,12 @@ namespace Customization
         public async UniTask BindEquip(GameObject go, string id, bool inheritLayer = true)
         {
             if (inheritLayer)
-                SetLayerRecursively(go, characterRoot.gameObject.layer);
+                await SetLayerRecursively(go, characterRoot.gameObject.layer);
             CurrentEquip = go; 
             CurrentEquipId = id;
-
+            
+            await UniTask.Yield();
+            
             if(!forceAnimationIdleOnChange) return;
             
             Animator animator = CurrentEquip.GetComponent<Animator>();
@@ -61,7 +63,7 @@ namespace Customization
         }
         
         
-        private static void SetLayerRecursively(GameObject go, int layer)
+        private static async UniTask SetLayerRecursively(GameObject go, int layer)
         {
             if (!go) return;
             go.layer = layer;
@@ -72,6 +74,8 @@ namespace Customization
             {
                 if (trs[i]) trs[i].gameObject.layer = layer;
             }
+
+            await UniTask.Yield();
         }
 
         private async UniTask  ForceAnimStateAsync(
