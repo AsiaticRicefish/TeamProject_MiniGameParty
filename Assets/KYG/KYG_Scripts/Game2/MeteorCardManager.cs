@@ -79,12 +79,42 @@ namespace YG
 
             int n = Mathf.Clamp(PhotonNetwork.CurrentRoom.PlayerCount, 1, 4);
 
-            StartCoroutine(GenerateRandomValues(n));
+            if (PhotonNetwork.IsMasterClient)
+            {
+                // 1..N 덱 생성 후 Fisher–Yates 셔플
+                var deck = Enumerable.Range(1, n).ToList();
+                for (int i = n - 1; i > 0; i--)
+                {
+                    int j = Random.Range(0, i + 1);
+                    (deck[i], deck[j]) = (deck[j], deck[i]);
+                }
+                // 전원에게 같은 덱 동기화
+                photonView.RPC(nameof(RPC_SetDeck), RpcTarget.AllBuffered, deck.ToArray());
+            }
+        }
+        
+        // 2) 덱을 수신하면 즉시 카드 스폰 (전원 동일)
+        [PunRPC]
+        private void RPC_SetDeck(int[] deck)
+        {
+            _values = deck.ToList();
 
+            // 카드 생성 + 값 바인딩
+            for (int i = 0; i < _values.Count; i++)
+            {
+                var go = Instantiate(cardItemPrefab, cardParent);
+                var item = go.GetComponent<MeteorCardItem>();
+                if (!item) continue;
+
+                int value = _values[i];
+                int index = i;
+                item.Init(index, OnClickCard, value);
+                _indexToItem[index] = item;
+            }
         }
 
 
-        private IEnumerator GenerateRandomValues(int n)
+        /*private IEnumerator GenerateRandomValues(int n)
         {
             for (int i = 0; i < n; i++)
             {
@@ -115,7 +145,9 @@ namespace YG
                 item.Init(index, OnClickCard, value);
                 _indexToItem[index] = item;
             }
-        }
+        }*/
+        
+        
 
         [PunRPC]
         private void RPC_AddListRandomNumber(int n)

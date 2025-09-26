@@ -153,6 +153,9 @@ MonoBehaviour:
   - RPC_ShowFinalRewards
   - RPC_ShowScoreboardJson
   - RPC_AddListRandomNumber
+  - RPC_RequestAddTap
+  - RPC_ShowGameOverFor
+  - RPC_SetDeck
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

@@ -553,7 +553,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &562621478
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1529,14 +1529,14 @@ MonoBehaviour:
   starImage: {fileID: 0}
   starAnimator: {fileID: 3247915723829185700}
   ui: {fileID: 1395323802}
+  minTapsPerTurn: 1
+  maxTapsPerTurn: 3
+  noTapAutoTime: 3
   disableAnimator: 1
   disableVFX: 1
   disableSFX: 1
   disableUI: 0
   verboseLogs: 1
-  vfx: {fileID: 0}
-  vfxMeteorTrail: VFX_MeteorTrail
-  vfxExplosion: VFX_Explosion_Round
   trgStarShake: Star_Shake
   trgStarPulse: Star_Pulse
   trgMeteorDrop: Meteor_Drop
@@ -1701,12 +1701,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   myTurnBanner: {fileID: 1909530764}
-  otherTurnBanner: {fileID: 562621477}
+  nextBanner: {fileID: 0}
   sharedCountText: {fileID: 1028160840}
   roundInfoText: {fileID: 1948850265}
   progressBar: {fileID: 0}
   tapButton: {fileID: 1287887179}
   gameOverPanel: {fileID: 2130115543}
+  bannerShowSec: 0.8
 --- !u!225 &1395323803
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -2054,7 +2055,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1909530765
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2188,7 +2189,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1948850264
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2678,7 +2679,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2130115544
 RectTransform:
   m_ObjectHideFlags: 0

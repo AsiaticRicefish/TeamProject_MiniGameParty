@@ -16,17 +16,7 @@ MonoBehaviour:
   m_Data:
     m_SerializedData: []
   m_GUID: 76be9ea73b8214c439bc5380c19f7d7d
-  m_SerializeEntries:
-  - m_GUID: 66f4f52b1d30ede4d9aa6487c4bfe7e3
-    m_Address: Particles/ShootingGame/StarExplosionOrage
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 807ac099c6539b149af4fcf8ffc46ecd
-    m_Address: Particles/ShootingGame/WindlinesSpeedy
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
+  m_SerializeEntries: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: efc2531fbc716f7409d27168060779e5, type: 2}
   m_SchemaSet:
