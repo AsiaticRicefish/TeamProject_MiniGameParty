@@ -12,7 +12,9 @@ namespace LDH_UI
 {
     public class UI_Popup_Winner : UI_Popup
     {
-        [Header("Unimo Avatar")]
+        [Header("Unimo Avatar")] 
+        [SerializeField] private GameObject unimoPrefab;
+        [SerializeField] private Vector3 unimoSpawnPos = new Vector3(-1000, -1000, -1000);
         [SerializeField] private AvatarStruct avatarStruct;
         
         [Header("UI Component")] 
@@ -51,6 +53,11 @@ namespace LDH_UI
         public async UniTask SetData(string nickname, UnimoCombo combo, bool isWinner)
         {
             userNickName.text = nickname;
+            
+            // 유니모 프리팹으로 인스턴스 생성
+            GameObject unimo = Instantiate(unimoPrefab, unimoSpawnPos, Quaternion.identity);
+            avatarStruct = unimo.GetComponentInChildren<AvatarStruct>(true);
+            
             Debug.Log($"<color=blue>winner combo : {combo.characterId}, {combo.equipId}</color>");
             await CustomizationManager.Instance.ApplyToAvatarAsync(avatarStruct, combo);
             
