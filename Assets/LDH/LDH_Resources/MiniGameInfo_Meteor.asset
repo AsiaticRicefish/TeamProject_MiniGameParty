@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: MiniGameInfo_Meteor
   m_EditorClassIdentifier: 
   id: Meteor
-  sceneName: MeteorScene
+  sceneName: MeteorScene2
   gameName: Meteor Game
   description: 
   sprite: {fileID: 0}

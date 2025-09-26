@@ -28,14 +28,16 @@ namespace KYG
 
             _eliminated.Add(actor);
 
-            // UI 업데이트가 필요하면 여기서 브로드캐스트 이벤트/RoomProperty 세팅
-            // (예: 방 속성 "elim" 배열을 기록하여 후입장 복구)
+            // ✅ PlayerRootManager 업데이트
+            var prm = UnityEngine.Object.FindObjectOfType<KYG.PlayerRootManager>(true);
+            if (prm && prm.enabled)
+                prm.RefreshVisibility_AllExceptEliminated();
 
-            // 승자 판정
+            // TODO: 방 속성 "elim" 기록 → 후입장 플레이어 복구할 수 있도록 하면 완벽
+            // PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable { { "elim", _eliminated.ToArray() } });
+
             if (IsGameOver())
-            {
                 AnnounceWinnerAndEnd();
-            }
         }
 
         private void AnnounceWinnerAndEnd()

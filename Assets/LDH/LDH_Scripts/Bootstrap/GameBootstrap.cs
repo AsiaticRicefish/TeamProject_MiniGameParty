@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Customization;
 using Cysharp.Threading.Tasks;
 using Data;
@@ -9,6 +10,7 @@ using Photon.Pun;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Assertions.Must;
+using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
 
 namespace LDH_Game
@@ -104,6 +106,21 @@ namespace LDH_Game
             Util_LDH.ConsoleLog(this, "[0단계] 완료");
 
 
+#if UNITY_EDITOR
+            // 만약 Addressable 데이터를 서버에서 다시 받고 싶으면 local 캐시를 삭제 해주셔야합니다.
+            // 수동으로 캐시를 삭제해주시나거나
+
+            // 모든 로케이터 → 모든 키 순회하며 캐시 삭제
+            /*foreach (var locator in Addressables.ResourceLocators)
+            {
+                foreach (var key in locator.Keys)
+                {
+                    // 삭제 요청
+                    Addressables.ClearDependencyCacheAsync(key);
+                    Debug.Log($"'{key}' 그룹/키 캐시 삭제 완료");
+                }
+            }*/
+#endif
             //============= [1단계] ==================
 
             // 0) 광고 AdMobService 초기화
@@ -132,12 +149,22 @@ namespace LDH_Game
 
             // 3) Addressables 선 다운로드
             Small("필요 용량 계산…");
-            var keys = new object[] { CatalogProvider.CharacterLabel, CatalogProvider.EquipLabel };
+
+            // 3 - 1) 카탈로그에 등록된 모든 키 수집
+            var allKeys = new HashSet<object>();
+            foreach (var locator in Addressables.ResourceLocators)
+                foreach (var key in locator.Keys)
+                    allKeys.Add(key);
+
+            // 3 - 2) 전체 다운로드 사이즈 요청
+            var sizeHandle = Addressables.GetDownloadSizeAsync(allKeys);
+            sizeHandle.Completed += OnSizeCalculated;
+            //var keys = new object[] { CatalogProvider.CharacterLabel, CatalogProvider.EquipLabel };
             // 필요 용량 체크
-            var sizeH = Addressables.GetDownloadSizeAsync(keys);
-            await sizeH.Task;
-            var bytes = sizeH.Result;
-            Addressables.Release(sizeH);
+            //var sizeH = Addressables.GetDownloadSizeAsync(keys);
+            //await sizeH.Task;
+            //var bytes = sizeH.Result;
+            //Addressables.Release(sizeH);
             subStep3.Complete();
 
             // 4) 병렬 작업
@@ -185,6 +212,21 @@ namespace LDH_Game
             // }
 #endif
             Small("잠시 후 로비로 진입합니다!");
+        }
+
+        private void OnSizeCalculated(AsyncOperationHandle<long> handle)
+        {
+            if (handle.Status == AsyncOperationStatus.Succeeded)
+            {
+                long totalBytes = handle.Result;
+                Debug.Log($"전체 다운로드 용량: {totalBytes} bytes");
+                // 필요하다면 human-readable 포맷으로 변환
+                Debug.Log($"≈ {totalBytes / (1024f * 1024f):F2} MB");
+            }
+            else
+            {
+                Debug.LogError("다운로드 사이즈 계산 실패");
+            }
         }
 
 

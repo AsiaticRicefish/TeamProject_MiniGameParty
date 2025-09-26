@@ -109,6 +109,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 9630081833c04f849a8e30288083fd2e, type: 2}
   - {fileID: 11400000, guid: bee09325fb49a4202bf435c09dc098c7, type: 2}
   - {fileID: 11400000, guid: 8024544eee1594fa68c412d65b86c3c4, type: 2}
+  - {fileID: 11400000, guid: 748139694b778fe4f956ac41ecf8060b, type: 2}
   sceneMappingConfig: {fileID: 11400000, guid: 5f345a74cd81c684684e972398d13743, type: 2}
   currentGameType: 0
   defaultBgmFade: 0.5

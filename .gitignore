@@ -144,3 +144,11 @@ Assets/Firebase/Plugins/x86_64/FirebaseCppApp-13_1_0.so.meta
 
 # Crashlytics auto-generated
 Assets/Plugins/Android/**/crashlytics_build_id.xml
+
+# Server Data 
+ServerData/
+ServerData/Android
+
+# catalog json hash
+/ServerData/Android/**/catalog*.json
+/ServerData/Android/**/catalog*.hash

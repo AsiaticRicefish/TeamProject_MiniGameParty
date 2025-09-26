@@ -23,3 +23,5 @@ MonoBehaviour:
     gameType: 1
   - sceneName: LDH_MainMapScene
     gameType: 2
+  - sceneName: Login Scene
+    gameType: 0
