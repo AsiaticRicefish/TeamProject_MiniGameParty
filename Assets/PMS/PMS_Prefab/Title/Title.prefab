@@ -34,7 +34,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: 0, y: -130}
+  m_AnchoredPosition: {x: 8, y: -85}
   m_SizeDelta: {x: -47, y: 500}
   m_Pivot: {x: 0, y: 0}
 --- !u!222 &2469514244516103620
@@ -109,8 +109,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: -193, y: 100}
-  m_SizeDelta: {x: -100, y: 600}
+  m_AnchoredPosition: {x: -158, y: 300}
+  m_SizeDelta: {x: 7, y: 400}
   m_Pivot: {x: 1, y: 0}
 --- !u!222 &3396209862054361404
 CanvasRenderer:
@@ -140,7 +140,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 3ed5ca8268d02c445b19a57192474f29, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 84fd019783a474641b84563e0fbdb38c, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -274,7 +274,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 0, y: 540}
+  m_AnchoredPosition: {x: 0, y: 738}
   m_SizeDelta: {x: 394.2, y: 126.400024}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2446187391796535273
@@ -452,8 +452,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 0, y: -130}
-  m_SizeDelta: {x: -47, y: 500}
+  m_AnchoredPosition: {x: 0, y: -84}
+  m_SizeDelta: {x: 66.5, y: 500}
   m_Pivot: {x: 1, y: 0}
 --- !u!222 &471357315070003852
 CanvasRenderer:
@@ -483,7 +483,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 95de5615a0e0d9b438df8caa5b986c27, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 2bb07fd72d9396149b65a707d94c38d2, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -553,7 +553,7 @@ MonoBehaviour:
   - {fileID: 1381577444479752165}
   - {fileID: 614182235604953929}
   staggerDelay: 0.2
-  jumpHeight: 50
+  jumpHeight: 30
   duration: 0.5
   startButtonImage: {fileID: 4350097878482860819}
   blinkDuration: 0.5
@@ -667,8 +667,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: 196, y: 100}
-  m_SizeDelta: {x: -100, y: 600}
+  m_AnchoredPosition: {x: 196, y: 203}
+  m_SizeDelta: {x: -100, y: 500}
   m_Pivot: {x: 0, y: 0}
 --- !u!222 &9180610659794106905
 CanvasRenderer:

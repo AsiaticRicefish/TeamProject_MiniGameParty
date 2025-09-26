@@ -8,6 +8,7 @@ using Photon.Pun;
 using System.Text.RegularExpressions;
 using System;
 using Firebase.Extensions;
+using LDH_UI;
 
 namespace KYG
 {
@@ -773,6 +774,14 @@ public class GuestLoginUI : MonoBehaviour
         Debug.LogError("[GuestLoginUI] Canvas가 없어 닉네임 팝업을 표시할 수 없습니다.");
         return;
     }
+    
+    // ---- safe area 안으로 넣기 위해 safe are를 찾아오기 --- // (추가)
+    var safeArea = canvas.GetComponentInChildren<SafeAreaAdapter>(true);
+    if (safeArea == null)
+    {
+        Debug.LogError("[GuestLoginUI] Root canvas 아래에 Safe Area가 없음. Safe Area를 넣어주세요.");
+        return;
+    }
 
     // 3) 프리팹 지정 확인
     if (nicknamePopupPrefab == null)
@@ -783,7 +792,7 @@ public class GuestLoginUI : MonoBehaviour
 
     // 4) 항상 새 인스턴스 생성(씬 오브젝트/프리팹 여부 상관없이)
     //    ※ 프리팹 루트가 비활성이라면 인스턴스도 비활성로 생성되므로 곧바로 SetActive(true) 처리
-    var go = Instantiate(nicknamePopupPrefab, canvas.transform);
+    var go = Instantiate(nicknamePopupPrefab, safeArea.transform);
     go.SetActive(true);
 
     // 5) 최상단 보장
