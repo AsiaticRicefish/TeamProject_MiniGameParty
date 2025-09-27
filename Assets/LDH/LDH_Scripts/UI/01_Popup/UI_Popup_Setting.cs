@@ -257,20 +257,24 @@ namespace LDH_UI
             return !string.IsNullOrEmpty(idToken);
         }
 
+        private void FinishAccountFlow(bool success, string msg)
+        {
+            RefreshAllAccountUI();
+            Manager.UI.EnqueueToast(success ? Define_LDH.ToastType.Check : Define_LDH.ToastType.Error, msg);
 
+            // 버튼 상태 업데이트(연결되면 비활성화)
+            bool connected = false;
+            try { connected = PlayGamesPlatform.Instance.localUser.authenticated; } catch { connected = false; }
+            if (accountButton) accountButton.interactable = !connected;
+        }
+        
         private void ApplyGpgsProfileToPhotonAndReleaseOld()
         {
             // 1) 현재(적용 전) 내 닉네임을 old로 백업
             var oldName = (PhotonNetwork.LocalPlayer?.NickName ?? "").Trim();
-
-            // 2) GPGS 닉네임 적용 (비어있으면 기존 유지)
-            var gpgsName = Social.localUser.userName;
-            if (string.IsNullOrWhiteSpace(gpgsName)) gpgsName = PhotonNetwork.NickName;
-            if (PhotonNetwork.LocalPlayer != null)
-                PhotonNetwork.LocalPlayer.NickName = gpgsName;
             
-            // 3) 레지스트리에서 이전 닉네임 반납 (같아도 무조건 시도)
-            var uidStr = PhotonNetwork.LocalPlayer?.UserId ?? "";
+            // 2) 레지스트리에서 이전 닉네임 반납 (같아도 무조건 시도)
+            var uidStr = PhotonNetwork.LocalPlayer?.UserId ?? (Manager.Data?.UID ?? "");
              if (!string.IsNullOrWhiteSpace(uidStr) && !string.IsNullOrWhiteSpace(oldName))
             {
                 UniTask.Void(async () =>
@@ -284,11 +288,19 @@ namespace LDH_UI
                     {
                         Debug.LogWarning($"[Settings] Release old nickname failed: {e.Message}");
                     }
-
-                    RefreshAllAccountUI();
                 });
             }
+            // 3) GPGS 닉네임 적용 (비어있으면 기존 유지)
+            var gpgsName = Social.localUser.userName;
+            if (string.IsNullOrWhiteSpace(gpgsName)) gpgsName = PhotonNetwork.NickName;
+            if (PhotonNetwork.LocalPlayer != null)
+                PhotonNetwork.LocalPlayer.NickName = gpgsName;
+            
+            // RefreshAllAccountUI();
         }
+        
+        
+        
 #endif
         #endregion
 

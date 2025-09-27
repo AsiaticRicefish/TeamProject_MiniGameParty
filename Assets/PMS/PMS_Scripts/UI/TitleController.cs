@@ -72,21 +72,40 @@ public class TitleController : MonoBehaviour
               .OnStepComplete(() =>
               {
                   // 각 이미지가 착지할 때 실행
-                  Debug.Log($"Item {i} landed");
+                  // Debug.Log($"Item {i} landed");
               });
         }
-
-        // 알파 값을 minAlpha까지 낮췄다가 원래대로 돌아오는 무한 요요
-        startButtonImage
-            .DOFade(minAlpha, blinkDuration)
-            .SetLoops(-1, LoopType.Yoyo)
-            .SetEase(Ease.Linear)
-            .SetLink(startButtonImage.gameObject, LinkBehaviour.KillOnDisable);
+        
+        StartStartButtonAnimation();
+      
     }
 
     private IEnumerator Test()
     {
         yield return new WaitForSeconds(5.0f);
         startButtonImage.gameObject.SetActive(false);
+    }
+
+
+    public void HideStartButton()
+    {
+        startButtonImage.gameObject.SetActive(false);
+    }
+
+    public void ShowStartButton()
+    {
+        startButtonImage.gameObject.SetActive(true);
+        StartStartButtonAnimation();
+    }
+
+
+    private void StartStartButtonAnimation()
+    {
+        // 알파 값을 minAlpha까지 낮췄다가 원래대로 돌아오는 무한 요요
+        startButtonImage
+            .DOFade(minAlpha, blinkDuration)
+            .SetLoops(-1, LoopType.Yoyo)
+            .SetEase(Ease.Linear)
+            .SetLink(startButtonImage.gameObject, LinkBehaviour.KillOnDisable);
     }
 }
