@@ -109,7 +109,7 @@ public class SoundManager : CombinedSingleton<SoundManager>
 
 
         // 타이틀 사운드로 초기화
-        LoadGameSounds(GameType.Title);
+        //LoadGameSounds(GameType.Title);
     }
 
     protected override void OnDestroy()

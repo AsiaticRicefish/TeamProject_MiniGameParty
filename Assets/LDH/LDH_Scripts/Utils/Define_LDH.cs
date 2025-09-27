@@ -245,6 +245,7 @@ namespace LDH_Util
 
         public enum BgmKey
         {
+            Title,
             Lobby_BGM,
             Main_Win_Bgm,
             Main_MiniGameResult_Bgm,
