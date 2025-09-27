@@ -301,12 +301,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &585700147 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3709094554513307345, guid: 1413c71ec6ba0ed4ca21b4ac9cc3a26c,
-    type: 3}
-  m_PrefabInstance: {fileID: 1403389312}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &590628683
 GameObject:
   m_ObjectHideFlags: 0
@@ -742,6 +736,7 @@ MonoBehaviour:
   guestLoginUI: {fileID: 99408738}
   tapSfxName: Click
   disableGameObjectAfterTap: 1
+  _titleController: {fileID: 1403389314}
 --- !u!114 &1217156123
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -811,18 +806,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 585700147}
-        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-        m_MethodName: SetActive
-        m_Mode: 6
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
 --- !u!1001 &1268800756
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -844,7 +827,7 @@ PrefabInstance:
     - target: {fileID: 4827618967646636642, guid: ab169cd4aaf8c4929a6a5e14b129a0b7,
         type: 3}
       propertyPath: m_AnchorMax.x
-      value: 0.8161435
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4827618967646636642, guid: ab169cd4aaf8c4929a6a5e14b129a0b7,
         type: 3}
@@ -1009,21 +992,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 355882969694130176, guid: 1413c71ec6ba0ed4ca21b4ac9cc3a26c,
         type: 3}
-      propertyPath: m_LocalScale.x
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 355882969694130176, guid: 1413c71ec6ba0ed4ca21b4ac9cc3a26c,
-        type: 3}
-      propertyPath: m_LocalScale.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 355882969694130176, guid: 1413c71ec6ba0ed4ca21b4ac9cc3a26c,
-        type: 3}
-      propertyPath: m_LocalScale.z
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 355882969694130176, guid: 1413c71ec6ba0ed4ca21b4ac9cc3a26c,
-        type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
@@ -1087,6 +1055,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Title
       objectReference: {fileID: 0}
+    - target: {fileID: 6663345378763641870, guid: 1413c71ec6ba0ed4ca21b4ac9cc3a26c,
+        type: 3}
+      propertyPath: m_PresetInfoIsWorld
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6811394248181752643, guid: 1413c71ec6ba0ed4ca21b4ac9cc3a26c,
         type: 3}
       propertyPath: m_SizeDelta.y
@@ -1103,6 +1076,18 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 1403389312}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1403389314 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3196372979967275605, guid: 1413c71ec6ba0ed4ca21b4ac9cc3a26c,
+    type: 3}
+  m_PrefabInstance: {fileID: 1403389312}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a86765e0c9ae20439dcccfeb7e5083d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1475716219
 GameObject:
   m_ObjectHideFlags: 0
@@ -1792,6 +1777,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: LoginPopup
+      objectReference: {fileID: 0}
+    - target: {fileID: 5153368874503152742, guid: d970f6f242ba69249abe2dd37f75d2b5,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8761812890970323292, guid: d970f6f242ba69249abe2dd37f75d2b5,
         type: 3}

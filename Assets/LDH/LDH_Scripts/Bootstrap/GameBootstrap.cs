@@ -34,7 +34,7 @@ namespace LDH_Game
             var root = new ProgressNode(p =>
             {
                 _loadingUI.SetProgress(p);
-                Debug.Log($"<color=red> loading total progress = {p}</color>");
+                // Debug.Log($"<color=red> loading total progress = {p}</color>");
             });
             //   3개의 페이즈로 분할(0단계, 1단계, 2단계)
             var phases = root.Fan(0.25f, 0.55f, 0.20f);

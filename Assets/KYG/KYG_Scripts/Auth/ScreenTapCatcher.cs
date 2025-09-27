@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
 /// <summary>
@@ -24,6 +25,9 @@ public class ScreenTapCatcher : MonoBehaviour, IPointerDownHandler
     [SerializeField] private bool disableGameObjectAfterTap = true;
 
     private bool opened = false; // 이미 처리했는지 중복 클릭 방지 플래그
+
+    [Header("Title Animation Control")] [SerializeField]
+    private TitleController _titleController;
     
     
     public void ResetForNextTap()
@@ -41,7 +45,10 @@ public class ScreenTapCatcher : MonoBehaviour, IPointerDownHandler
             // 투명으로 썼었다면 다시 보이게 (필요 없으면 주석)
             cg.alpha = 1f;
         }
-
+        
+        // ---- 추가  ---- title start 버튼 다시 보이게 + 애니메이션 시작
+        _titleController.ShowStartButton();
+        
         // 안전하게 자기 자신도 켠다 (비활성로 껐다면)
         if (!gameObject.activeSelf) gameObject.SetActive(true);
     }
@@ -64,6 +71,9 @@ public class ScreenTapCatcher : MonoBehaviour, IPointerDownHandler
             Debug.LogWarning("[ScreenTapCatcher] SoundManager 또는 SFX 이름이 비어있습니다.");
         }
 
+        // ---- 추가  ---- title start 버튼 닫기
+        _titleController.HideStartButton();
+        
         // 2) 로그인 팝업 UI 열기
         if (guestLoginUI == null)
         {
