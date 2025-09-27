@@ -187,15 +187,16 @@ namespace LDH_MainGame
             Manager.UI.ShowPopupUI(_loadingUI).Forget();
         }
 
-        public void CloseLoadingForResult()
+        public async UniTask CloseLoadingForResult()
         {
             if (_loadingUI == null)
             {
                 Debug.LogError("Loading UI is null!!!");
                 return;
             }
-            
-            _loadingUI.RequestClose();
+
+            await Manager.UI.ClosePopupUI(_loadingUI);
+            _loadingUI = null;
         }
         
         public void SetLoadingProgress(float percent) => _loadingUI?.SetProgress(percent);

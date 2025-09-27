@@ -179,7 +179,7 @@ namespace LDH_MainGame
             // 1) 모두 로딩창 닫기
             _uiBinder.SetLoadingProgress(1f);
             yield return new WaitForSeconds(0.8f);
-            _uiBinder.CloseLoadingForResult();
+            yield return _uiBinder.CloseLoadingForResult().ToCoroutine();
 
             // 2) 마스터는 점수 계산 + 브로드 캐스트
             if(_isMaster())        

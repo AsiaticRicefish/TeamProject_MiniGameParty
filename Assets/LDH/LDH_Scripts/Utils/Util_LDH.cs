@@ -381,10 +381,6 @@ namespace LDH_Util
             
             // 0.9f에서 대기 중일 때 100% 표시
             if (showProgress) loadingUI?.SetProgress(1f);
-
-            // 모달 보여지는 시간 확보
-            yield return new WaitForSeconds(delay);
-            
             
             // 씬 활성화
             op.allowSceneActivation = true;
@@ -392,6 +388,10 @@ namespace LDH_Util
             // 실제 완료까지 대기
             while (!op.isDone)
                 yield return null;
+            
+            // 모달 보여지는 시간 확보
+            yield return new WaitForSeconds(delay);
+            
             loadingUI?.RequestClose(); // 혹은 Manager.UI.ClosePopup(loadingUI)
    
         }

@@ -260,22 +260,22 @@ namespace Network
         
         #region  Player Enter/Leave/Props/Master Change
 
-        private void OnPlayerEnteredRoom(Player newPlayer)
+        private async void OnPlayerEnteredRoom(Player newPlayer)
         {
-            // Debug.Log($"[PrivateMatchController] {newPlayer.NickName}가 입장했습니다.");
-            // 슬롯 인덱스 설정이 완료된 플레이어면 패널 UI 빌드
-            int slotIndex = GetSlotIndex(newPlayer);
-            // Debug.Log($"[PrivateMatchController] Entered player slot:{slotIndex}");
-            
-            if (slotIndex >= 0)
-                BuildPanel(slotIndex, newPlayer);
-                
+            // // Debug.Log($"[PrivateMatchController] {newPlayer.NickName}가 입장했습니다.");
+            // // 슬롯 인덱스 설정이 완료된 플레이어면 패널 UI 빌드
+            // int slotIndex = GetSlotIndex(newPlayer);
+            // // Debug.Log($"[PrivateMatchController] Entered player slot:{slotIndex}");
+            //
+            // if (slotIndex >= 0)
+            //      BuildPanel(slotIndex, newPlayer);
+            //     
         }
 
-        private void OnPlayerLeftRoom(Player otherPlayer)
+        private async void OnPlayerLeftRoom(Player otherPlayer)
         {
             // Debug.Log($"[PrivateMatchController] {otherPlayer.NickName}가 퇴장했습니다.");
-           RebuildAllPanels();
+            await RebuildAllPanels();
         }
 
         private void OnMasterClientChanged(Player newMaster)
