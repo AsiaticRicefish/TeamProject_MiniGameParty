@@ -247,7 +247,7 @@ namespace RhythmGame
             if (!GameManager.Instance || !GameManager.Instance.IsGameStart || GameManager.Instance.IsGameOver) return false;
 
             //스턴 시 입력 방지
-            if (GameManager.Instance.IsOverHeat) return false;
+            // if (GameManager.Instance.IsOverHeat) return false;
 
             //UI 입력일 경우 아랫단 무시
             if (IsOnUI()) return false;

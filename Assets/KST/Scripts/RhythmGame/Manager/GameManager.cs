@@ -7,7 +7,6 @@ using LDH_MainGame;
 using Photon.Pun;
 using Photon.Realtime;
 using TMPro;
-using Unity.Mathematics;
 using UnityEngine;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
 
@@ -32,26 +31,24 @@ namespace RhythmGame
         Coroutine _waitEndCo;
 
         //게임 규칙
-        // [SerializeField] int hitScore = 100; //적중 시 점수
         int missScore = -1; // 미스 시 감점 점수
-        // [SerializeField] int overHeatPoint = 5; // 미스 시 과열 증가
-        // [SerializeField] int frozenPoint = 5; // 적중 시 과열 감소
-        [SerializeField] int overHeatMaxValue = 100; // 임계치
 
-        //과열 관리
-        int overHeatValue = 0;// 마스터가 유지하는 공유 과열 값
-        public bool IsOverHeat = false; //과열여부
-        public event Action OnIsOverHeat; // 과열 발생
-        [SerializeField] float overHeatingTime = 3f; //과열 유지 시간
+        // //과열 관리
+        // int overHeatValue = 0;// 마스터가 유지하는 공유 과열 값
+        // public bool IsOverHeat = false; //과열여부
+        // public event Action OnIsOverHeat; // 과열 발생
+        // [SerializeField] float overHeatingTime = 3f; //과열 유지 시간
 
         //플레이어 자리
         [SerializeField] Transform[] playerPoints;
-        //노트 스폰 오프셋
-        [SerializeField] float noteSpawnDist = 12f;
+        [SerializeField] Transform[] playerVerdictPoints;
+        // //노트 스폰 오프셋
+        // [SerializeField] float noteSpawnDist = 12f;
 
         [Header("플레이어 프리팹 이름")]
-        [SerializeField] string playerPrefabName = "RhythmPlayer";
-        [SerializeField] string backupPrefabName = "Prefabs/RhythmPlayer"; //테스트용
+        [SerializeField] string playerPrefabName = "Prefabs/Rhythm/RhythmUnimo";
+        [SerializeField] string backupPrefabName = "Prefabs/Rhythm/RhythmPlayer"; //테스트용
+        [SerializeField] string playerVerdictPrefab = "Prefabs/Rhythm/VerdictModel"; //테스트용
         [SerializeField] Vector3 tempSpawnPos = Vector3.zero; // 임시 스폰 위치
 
         private Dictionary<string, RhythmPlayerData> players = new(); // UID를 key로 가지는 플레이어 데이터
@@ -81,14 +78,20 @@ namespace RhythmGame
             InitializePlayers();
             //테스트 환경에서 리소스 없는 것을 방지
             var prefab = Resources.Load<GameObject>(playerPrefabName);
+            var verdictPrefab = Resources.Load<GameObject>(playerVerdictPrefab);
             if (prefab == null)
             {
                 Debug.Log($"{playerPrefabName}가 없어서 {backupPrefabName}로 플레이어 캐릭터 모델 변경 ");
                 playerPrefabName = backupPrefabName;
             }
+            if (verdictPrefab == null)
+                Debug.Log($"{verdictPrefab}가 없습니다.");
+
 
             // 캐릭터 생성
             PhotonNetwork.Instantiate(playerPrefabName, tempSpawnPos, Quaternion.identity);
+            //판정바 생성
+            PhotonNetwork.Instantiate(playerVerdictPrefab, tempSpawnPos, Quaternion.identity);
         }
 
         #region 게임 시작 종료 로직
@@ -341,14 +344,23 @@ namespace RhythmGame
                 StartCoroutine(IE_DelayPlace(actorNumber, lane));
                 return;
             }
+            //플레이어 컨트롤러가 액터 넘버 기준으로 딕셔너리에 등록돼 있는지 확인
+            if (!PlayerVerdict.VerdictByActor.TryGetValue(actorNumber, out var vt))
+            {
+                //아닐 경우 코루틴으로 지연 후 확인
+                StartCoroutine(IE_DelayVerdictPlace(actorNumber, lane));
+                return;
+            }
             //lane 인덱스 초과 방지
             int idx = Mathf.Clamp(lane - 1, 0, playerPoints.Length - 1);
 
             //해당 인덱스의 플레이어 위치 가져오기
             var p = playerPoints[idx];
+            var vp = playerVerdictPoints[idx];
 
             //아바타 위치 해당 위치로 이동
             t.SetPositionAndRotation(p.position, p.rotation);
+            vt.SetPositionAndRotation(vp.position, vp.rotation);
         }
 
 
@@ -369,6 +381,24 @@ namespace RhythmGame
                 }
             }
             Debug.LogWarning($"액터넘버 : {actorNumber} 아바타를 찾지 못했습니다.");
+        }
+        IEnumerator IE_DelayVerdictPlace(int actorNumber, int lane)
+        {
+            //최대 10번 시도
+            for (int i = 0; i < 10; i++)
+            {
+                yield return new WaitForSeconds(0.1f);
+
+                //아바타가 딕셔너리에 등록돼 있다면 배치 진행
+                if (PlayerVerdict.VerdictByActor.TryGetValue(actorNumber, out var t))
+                {
+                    int idx = Mathf.Clamp(lane - 1, 0, playerVerdictPoints.Length - 1);
+                    var p = playerVerdictPoints[idx];
+                    t.SetPositionAndRotation(p.position, p.rotation);
+                    yield break;
+                }
+            }
+            Debug.LogWarning($"액터넘버 : {actorNumber} 판정바를 찾지 못했습니다.");
         }
 
         public Pose GetLaneSpawnPose(int lane)
@@ -405,13 +435,13 @@ namespace RhythmGame
 
                 if (gamePlayer != null)
                 {
-                    // GamePlayer에 미니게임 전용 데이터인 JengaPlayerData를 새로 만들어 할당
+                    // GamePlayer에 미니게임 전용 데이터인 RhythmPlayerData를 새로 만들어 할당
                     gamePlayer.RhythmPlayerData = new RhythmPlayerData
                     {
                         score = 0
                     };
 
-                    // RhythmGameManager의 players 딕셔너리에 UID를 key로 사용해서 JengaPlayerData를 등록
+                    // RhythmGameManager의 players 딕셔너리에 UID를 key로 사용해서 RhythmPlayerData를 등록
                     players[uid] = gamePlayer.RhythmPlayerData;
                     // 점수를 저장하는 playerScores 딕셔너리에도 해당 UID로 0점 등록 (초기값)
                     playerScores[uid] = 0;
