@@ -593,4 +593,4 @@ MonoBehaviour:
   scoreEntryPrefab: {fileID: 4105719652083736053, guid: 52806d7fa5df74aff8566ab9f3867ef1,
     type: 3}
   scoreEntryContent: {fileID: 6653954701571132535}
-  miniGameResultBgm: 2
+  miniGameResultBgm: 3

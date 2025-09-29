@@ -39,6 +39,13 @@ namespace Customization
             _equipPools = new(equipPoolRegistry_Transform);
         }
 
+        protected override void OnDestroy()
+        {
+            _charPools.DisposeAll();
+            _equipPools.DisposeAll();
+            CatalogProvider.Clear();
+        }
+
         private void OnEnable()
         {
             SceneManager.sceneUnloaded += OnSceneUnloaded;
