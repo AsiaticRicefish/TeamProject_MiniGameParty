@@ -49,9 +49,8 @@ namespace LDH_Util
                 // 폴백: 상수 테이블 매핑
                 url = key switch
                 {
-                    "terms"   => Define_LDH.Urls.Terms,
+                    "hwigPrivacy"   => Define_LDH.Urls.HwigPrivacy,
                     "privacy" => Define_LDH.Urls.Privacy,
-                    "support" => Define_LDH.Urls.Support,
                     _         => null
                 };
             }
