@@ -44,10 +44,16 @@ public class EggManager : PunSingleton<EggManager>, IGameComponent
         registerdPools.Clear();
     }
 
-    public async void Initialize()
+    public async void Initialize() 
     {
         Debug.Log("EggManager Initialize 시작");
-        await LocalInitPool();              //끝까지 돌 때까지 
+        await LocalInitPool();              //끝까지 돌 때까지        
+        Debug.Log("모든 유저의 Unimo 풀 생성 및 커스터마이징 적용완료 했습니다.");
+    }
+
+    public async UniTask WaitForPoopInit()
+    {
+        await UniTask.WaitUntil(() => isPoolReady);
     }
 
     // 각자 자신의 풀 생성

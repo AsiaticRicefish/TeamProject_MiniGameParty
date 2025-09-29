@@ -38,8 +38,8 @@ public class PrefabPool
     
     public async UniTask<GameObject> GetInstance(Transform parent)
     {
-        await EnsureLoaded();
-        var go = _pool.Count > 0 ? _pool.Pop() : Object.Instantiate(_prefabHandle!.Value.Result);
+        var prefab = await EnsureLoaded();
+        var go = _pool.Count > 0 ? _pool.Pop() : Object.Instantiate(prefab);
         if (_inPool.Count > 0) _inPool.Remove(go); // ★ 풀에서 꺼낼 때 제거
 
         _alive++;

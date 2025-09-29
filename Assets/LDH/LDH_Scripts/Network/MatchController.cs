@@ -237,7 +237,7 @@ namespace Network
                 else if (CurrentMatchType == MatchType.Private)
                     await PrivateMatch.CloseRoomPanel();
                 
-                Manager.UI.ShowPopupUI(_uiLoading).Forget();
+                await Manager.UI.ShowPopupUI(_uiLoading);
             }
         }
 

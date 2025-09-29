@@ -1404,6 +1404,16 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7964345057500876356, guid: cdfff6d121f834aeeba6813a51cbe69f,
         type: 3}
+      propertyPath: m_fontSize
+      value: 110
+      objectReference: {fileID: 0}
+    - target: {fileID: 7964345057500876356, guid: cdfff6d121f834aeeba6813a51cbe69f,
+        type: 3}
+      propertyPath: m_fontSizeBase
+      value: 110
+      objectReference: {fileID: 0}
+    - target: {fileID: 7964345057500876356, guid: cdfff6d121f834aeeba6813a51cbe69f,
+        type: 3}
       propertyPath: m_HorizontalAlignment
       value: 1
       objectReference: {fileID: 0}
@@ -1679,6 +1689,16 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7964345057500876356, guid: cdfff6d121f834aeeba6813a51cbe69f,
         type: 3}
+      propertyPath: m_fontSize
+      value: 110
+      objectReference: {fileID: 0}
+    - target: {fileID: 7964345057500876356, guid: cdfff6d121f834aeeba6813a51cbe69f,
+        type: 3}
+      propertyPath: m_fontSizeBase
+      value: 110
+      objectReference: {fileID: 0}
+    - target: {fileID: 7964345057500876356, guid: cdfff6d121f834aeeba6813a51cbe69f,
+        type: 3}
       propertyPath: m_HorizontalAlignment
       value: 1
       objectReference: {fileID: 0}
@@ -1825,8 +1845,13 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7964345057500876356, guid: cdfff6d121f834aeeba6813a51cbe69f,
         type: 3}
+      propertyPath: m_fontSize
+      value: 110
+      objectReference: {fileID: 0}
+    - target: {fileID: 7964345057500876356, guid: cdfff6d121f834aeeba6813a51cbe69f,
+        type: 3}
       propertyPath: m_fontSizeBase
-      value: 139.3
+      value: 110
       objectReference: {fileID: 0}
     - target: {fileID: 8977690164561970539, guid: cdfff6d121f834aeeba6813a51cbe69f,
         type: 3}
@@ -1963,6 +1988,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: NickName
+      objectReference: {fileID: 0}
+    - target: {fileID: 7964345057500876356, guid: cdfff6d121f834aeeba6813a51cbe69f,
+        type: 3}
+      propertyPath: m_fontSize
+      value: 110
+      objectReference: {fileID: 0}
+    - target: {fileID: 7964345057500876356, guid: cdfff6d121f834aeeba6813a51cbe69f,
+        type: 3}
+      propertyPath: m_fontSizeBase
+      value: 110
       objectReference: {fileID: 0}
     - target: {fileID: 8977690164561970539, guid: cdfff6d121f834aeeba6813a51cbe69f,
         type: 3}
