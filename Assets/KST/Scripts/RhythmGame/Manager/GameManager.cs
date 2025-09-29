@@ -54,6 +54,8 @@ namespace RhythmGame
         [SerializeField] string backupPrefabName = "Prefabs/RhythmPlayer"; //테스트용
         [SerializeField] Vector3 tempSpawnPos = Vector3.zero; // 임시 스폰 위치
 
+
+        private HashSet<string> customedPlayer = new(); //플레이어 커스텀 데이터 적용 여부를 저장하는 hash set
         private Dictionary<string, RhythmPlayerData> players = new(); // UID를 key로 가지는 플레이어 데이터
         private Dictionary<string, int> playerScores = new();        // 플레이어별 점수
         private readonly Dictionary<string, int> _gridOrder = new(); // uid -> 0,1,2,...
@@ -86,9 +88,9 @@ namespace RhythmGame
                 Debug.Log($"{playerPrefabName}가 없어서 {backupPrefabName}로 플레이어 캐릭터 모델 변경 ");
                 playerPrefabName = backupPrefabName;
             }
-
             // 캐릭터 생성
             PhotonNetwork.Instantiate(playerPrefabName, tempSpawnPos, Quaternion.identity);
+            
         }
 
         #region 게임 시작 종료 로직
@@ -104,6 +106,11 @@ namespace RhythmGame
 
         private IEnumerator IE_StartGame()
         {
+            // 플레이어 캐릭터 커스텀 적용이 모두 완료되었는지 체크
+            Debug.Log("모든 플레이어의 커스터마이징이 완료될때까지 대기");
+            yield return new WaitUntil(() => customedPlayer.Count == PhotonNetwork.CurrentRoom.PlayerCount);
+            Debug.Log("모든 플레이어의 커스터마이징 완료");
+            
             // 플레이어 자리 배정
             LaneManager.Instance.SetLane();
 
@@ -605,5 +612,16 @@ namespace RhythmGame
         }
 
 
+        #region Customizing
+
+        public void AddCustomizedPlayer(string uid)
+        {
+            customedPlayer.Add(uid);
+            string nickname = PlayerManager.Instance.GetPlayer(uid).Nickname;
+            Debug.Log($"{nickname}의 캐릭터 적용 완료");
+        }
+
+        #endregion
+        
     }
 }
