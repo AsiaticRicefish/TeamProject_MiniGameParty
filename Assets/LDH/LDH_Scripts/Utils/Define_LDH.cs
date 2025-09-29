@@ -207,7 +207,7 @@ namespace LDH_Util
         {
             public const int DefaultCurrency1 = 500;
             public const int DefaultCurrency2 = 500;
-            public const int DefaultCurrency3 = 500;
+            public const int DefaultCurrency3 = 0;
         }
         
         public enum CurrencyType
