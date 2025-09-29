@@ -18,6 +18,9 @@ public class ShootingSceneController : BaseGameSceneController
     [Header("Loading Theme")]
     [SerializeField] private UI_LoadingTheme ShootingLoadingTheme; // 테마
 
+    [Header("Background Particle Effect Pos")]
+    [SerializeField] private Transform BG_ParticleEffectPos;
+
     private UI_Loading _uiLoading; // 꼭 추가!
 
     [SerializeField] private GameObject[] iGameComponents;
@@ -116,7 +119,9 @@ public class ShootingSceneController : BaseGameSceneController
 
         var parallelComponents = new List<ICoroutineGameComponent>();
 
-        //parallelComponents.Add()
+        // UniTask를 코루틴으로 변환해서 기다리기
+        yield return EggManager.Instance.WaitForPoopInit().ToCoroutine();
+
         _uiLoading?.SetProgress(0.95f); // 병렬 초기화 완료
 
         yield return StartCoroutine(InitializeCoroutineComponentsSafely(parallelComponents));
