@@ -617,8 +617,8 @@ namespace RhythmGame
         public void AddCustomizedPlayer(string uid)
         {
             customedPlayer.Add(uid);
-            string nickname = PlayerManager.Instance.GetPlayer(uid).Nickname;
-            Debug.Log($"{nickname}의 캐릭터 적용 완료");
+            GamePlayer gp = PlayerManager.Instance.GetPlayer(uid);
+            Debug.Log($"{gp.Nickname}의 캐릭터 적용 완료");
         }
 
         #endregion
