@@ -1238,6 +1238,7 @@ MonoBehaviour:
   QuickMatch: {fileID: 662488574}
   PrivateMatch: {fileID: 662488576}
   startDelaySec: 0.8
+  loadingTheme: {fileID: 11400000, guid: 413e0bfba4a9642c8bd729cc9c38c87a, type: 2}
 --- !u!114 &701753707 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2484762052336817888, guid: 80169b7ffbed145c5ac7b5409b87cda0,

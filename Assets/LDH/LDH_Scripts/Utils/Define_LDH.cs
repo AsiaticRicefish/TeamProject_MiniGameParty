@@ -152,7 +152,8 @@ namespace LDH_Util
             PlayingMiniGame, 
             UnloadingMiniGame,
             ApplyingResult, 
-            End
+            End,
+            ForceStop,
         }
 
         public static partial class RoomProps
@@ -163,6 +164,7 @@ namespace LDH_Util
             public const string ReadyMask = "readyMask";
             public const string DoneMask = "doneMask";
             public const string MiniGameResult = "miniGameResult";
+            public const string RoomObjectsViewIds = "roomObjectViewIds";
         }
         
         public static partial class PlayerProps
@@ -243,6 +245,7 @@ namespace LDH_Util
 
         public enum BgmKey
         {
+            Title,
             Lobby_BGM,
             Main_Win_Bgm,
             Main_MiniGameResult_Bgm,

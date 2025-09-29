@@ -161,16 +161,15 @@ namespace LDH_MainGame
             _loadingUI.ApplyTheme(theme);
             _loadingUI.SetProgress(0f);
             
-            
             // 로딩 UI 이벤트 설정
-            _loadingUI.onSceneLoaded = (s) =>
-            {
-                if (!s.name.Equals(Manager.Network.LobbySceneName, StringComparison.Ordinal))
-                    return;
-                
-                _loadingUI.SetProgress(1f);
-                _loadingUI.AutoCloseAfter(0.5f, _loadingUI.destroyCancellationToken).Forget();
-            };
+            // _loadingUI.onSceneLoaded = (s) =>
+            // {
+            //     if (!s.name.Equals(Manager.Network.LobbySceneName, StringComparison.Ordinal))
+            //         return;
+            //     
+            //     _loadingUI.SetProgress(1f);
+            //     _loadingUI.AutoCloseAfter(0.5f, _loadingUI.destroyCancellationToken).Forget();
+            // };
             
             // 로딩창 띄우기
             Manager.UI.ShowPopupUI(_loadingUI).Forget();
@@ -188,15 +187,16 @@ namespace LDH_MainGame
             Manager.UI.ShowPopupUI(_loadingUI).Forget();
         }
 
-        public void CloseLoadingForResult()
+        public async UniTask CloseLoadingForResult()
         {
             if (_loadingUI == null)
             {
                 Debug.LogError("Loading UI is null!!!");
                 return;
             }
-            
-            _loadingUI.RequestClose();
+
+            await Manager.UI.ClosePopupUI(_loadingUI);
+            _loadingUI = null;
         }
         
         public void SetLoadingProgress(float percent) => _loadingUI?.SetProgress(percent);

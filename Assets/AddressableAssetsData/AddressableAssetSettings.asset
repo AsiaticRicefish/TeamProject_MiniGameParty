@@ -15,9 +15,9 @@ MonoBehaviour:
   m_DefaultGroup: 8dc196d36c902c4439b304ad961ef94d
   m_currentHash:
     serializedVersion: 2
-    Hash: 00000000000000000000000000000000
+    Hash: 6bb2f21dd29fcf1d4b1bf3e17fa736a1
   m_OptimizeCatalogSize: 0
-  m_BuildRemoteCatalog: 0
+  m_BuildRemoteCatalog: 1
   m_BundleLocalCatalog: 0
   m_CatalogRequestsTimeout: 0
   m_DisableCatalogUpdateOnStart: 0
@@ -35,9 +35,9 @@ MonoBehaviour:
   m_CheckForContentUpdateRestrictionsOption: 0
   m_MonoScriptBundleCustomNaming: 
   m_RemoteCatalogBuildPath:
-    m_Id: 
+    m_Id: 82c4a942f190edd4e9761cf3b48048e6
   m_RemoteCatalogLoadPath:
-    m_Id: 
+    m_Id: 637c694c823b2c0418058f6b420cd3a9
   m_ContentStateBuildPathProfileVariableName: <default settings path>
   m_CustomContentStateBuildPath: 
   m_ContentStateBuildPath: 
@@ -59,6 +59,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: aa7d9b149dfd96048843149b878eaa5b, type: 2}
   - {fileID: 11400000, guid: 5ef6ea55b29e7400ab3c02c8bb421c5d, type: 2}
   - {fileID: 11400000, guid: 87ed1bc4d3854431ba12aa34ebca49a7, type: 2}
+  - {fileID: 11400000, guid: f6c8998788994594499cb034769cca12, type: 2}
   - {fileID: 11400000, guid: ec1980f8ac3bf4b438979c4b389b45f4, type: 2}
   m_BuildSettings:
     m_CompileScriptsInVirtualMode: 0
@@ -74,7 +75,7 @@ MonoBehaviour:
       - m_Id: 02938c44b772cca4084bc6bd827213eb
         m_Value: '[UnityEngine.AddressableAssets.Addressables.BuildPath]/[BuildTarget]'
       - m_Id: 637c694c823b2c0418058f6b420cd3a9
-        m_Value: http://[PrivateIpAddress]:[HostingServicePort]
+        m_Value: https://unimobukkit.s3.ap-northeast-2.amazonaws.com/[BuildTarget]
       - m_Id: 7dd4afa979153c347b2c5d81b09d2a1f
         m_Value: '{UnityEngine.AddressableAssets.Addressables.RuntimePath}/[BuildTarget]'
       - m_Id: 82c4a942f190edd4e9761cf3b48048e6

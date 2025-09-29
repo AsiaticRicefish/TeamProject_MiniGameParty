@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   entries:
   - key: terms
-    url: https://hwiggames38434.imweb.me/termofuse
+    url: https://sites.google.com/kiweb.or.kr/terms
   - key: privacy
-    url: https://hwig.games/?mode=privacy
+    url: https://sites.google.com/kiweb.or.kr/terms-privacy/
   - key: support
     url: https://www.notion.so/2697de437a0c8007b7eeceb6a707547a?source=copy_link

@@ -42,7 +42,7 @@ namespace LDH_UI
                 var uiEntry = Instantiate(scoreEntryPrefab, scoreEntryContent);
                 uiEntry.transform.SetSiblingIndex(i);
                 
-                await uiEntry.SetData(gp.Nickname, gp.LastMiniGameRank, gp.TotalRank, gp.CharacterId, gp.Score,
+                await uiEntry.SetData(gp.Nickname, gp.TotalRank, gp.TotalRank, gp.CharacterId, gp.Score,
                     gp.WonThisRound, Define_LDH.DefaultData.DefaultRewardCurrency, gp.Reward);
                 _scoreEntries.Add(uiEntry);
             }

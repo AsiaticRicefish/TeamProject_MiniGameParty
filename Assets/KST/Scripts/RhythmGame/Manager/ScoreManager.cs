@@ -167,11 +167,28 @@ namespace RhythmGame
             else
             {
                 GameManager.Instance.GoodHitScore(type, info.Sender);
-                if (SoundManager.Instance != null)
+                /*if (SoundManager.Instance != null)
                     SoundManager.Instance.PlaySFX
-                    (type == NoteType.Continue ? "Continue" : "Touch");
+                    (type == NoteType.Continue ? "Continue" : "Touch");*/
+
+                photonView.RPC(nameof(RPC_ExecuteSoundAction), info.Sender, type);
             }
         }
+
+        // TODO - 확장성 있게 만들려면 
+        [PunRPC] 
+        void RPC_ExecuteSoundAction(NoteType type)
+        {
+            if (SoundManager.Instance != null)
+            {
+                SoundManager.Instance.PlaySFX(
+                    type == NoteType.Continue ? "Continue" : "Touch"
+                );
+
+                // TODO - 노트Type의 이름이랑 사운드 Key값이 같다는 가정하에
+                //SoundManager.Instance.PlaySFX(type.ToString());
+            }
+        }             
 
         public void RequestMiss(NoteType noteType)
         {

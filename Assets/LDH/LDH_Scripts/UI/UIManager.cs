@@ -51,6 +51,7 @@ namespace LDH_UI
         [SerializeField] private string toastFolder = "Prefabs/UI/Toast";
         
         
+        
         protected override void OnAwake() => Init();
 
         // UI 매니저 초기화
@@ -394,9 +395,30 @@ namespace LDH_UI
             
         }
 
+        public T PeekPopupUI<T>() where T : UI_Popup
+        {
+            if (_popupStack.Count == 0) return null;
+            var top = _popupStack.Peek();
+            return (top && top is T t) ? t : null;
+        }
         
-        public Coroutine ClosePopupUI_AsCoroutine(UI_Popup popup, bool destroy = true)
-            => StartCoroutine(ClosePopupUI(popup, destroy).ToCoroutine());
+
+        // 스택에서 먼저 찾고, 못 찾으면 UIRoot 하위에서 비활성 포함 검색
+        public T FindPopupUI<T>() where T : UI_Popup
+        {
+            // 1) 스택(보이는 팝업들)에서 찾기 (top → bottom)
+            foreach (var p in _popupStack)
+                if (p && p is T t) return t;
+
+            // 2) 씬에서 찾기 (UIRoot 하위, inactive 포함)
+            if (UIRoot)
+            {
+                var found = UIRoot.GetComponentInChildren<T>(true);
+                if (found) return found;
+            }
+
+            return null;
+        }
 
         #endregion
 

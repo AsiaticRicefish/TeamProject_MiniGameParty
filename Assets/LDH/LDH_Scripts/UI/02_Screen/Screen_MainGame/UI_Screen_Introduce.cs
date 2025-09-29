@@ -35,9 +35,12 @@ namespace LDH_UI.Screen_MainGame
         [SerializeField] private float stepDelay = 1f;     // 다음 패널까지 딜레이
         [SerializeField] private float fadeTime = 0.25f;      // 알파 페이드 시간
 
+        [Header("Sound")] private Define_LDH.SfxKey playerPanelSpawnSfxKey = Define_LDH.SfxKey.Main_PlayerBanner;
 
-        private int[] _activeOrder;    // 등장할 패널 인덱스 순서
+        
+        private int[] _order;   // 데이터 & 애니메이션 모두에 사용할 순서
         private Vector2[] _targetPosCache;                    // 각 패널의 본래 위치
+        
         
         protected override void Clear()
         {
@@ -54,9 +57,9 @@ namespace LDH_UI.Screen_MainGame
         
         
         // 외곽 -> 중앙 대칭 채우기 순서로 채운다.
-        private IEnumerable<int> MakeSymmetricOrder(int n)
+        private IEnumerable<int> GetPanelOrder()
         {
-            int l = 0, r = n - 1;
+            int l = 0, r = 3;
             while (l <= r)
             {
                 yield return l;
@@ -64,12 +67,12 @@ namespace LDH_UI.Screen_MainGame
                 l++;
                 r--;
             }
+            // return new int[] { 0, 3, 2, 1 };
         }
         
         public async UniTask SetData(Player[] players)
         {
             if(playerUis == null || playerUis.Count == 0) return;
-            if(players.Length < 2) return;
             
             int playerCount = Mathf.Clamp(players.Length, 0, playerUis.Count);
             
@@ -85,15 +88,15 @@ namespace LDH_UI.Screen_MainGame
                 ui.panel.SetActive(false);
             }
             
-            // 외곽 -> 중앙부터 player count 개만큼 키면서 데이터 넣기
-            // 실제 등장 순서
-            _activeOrder = MakeSymmetricOrder(playerUis.Count)
-                .Take(playerCount)   // 인원수만큼만!
-                .ToArray();
+            // 1) 대칭 순서에서 인원수만큼 자르고 → 2) 오름차순 정렬 → 이 순서를 전역으로 보관
+            _order = GetPanelOrder()
+                        .Take(playerCount)
+                        .OrderBy(x => x)
+                        .ToArray();
+            
             for (int i = 0; i < playerCount; i++)
             {
-                int panelIndex = _activeOrder[i];
-                // Debug.Log($"panel index = {panelIndex}");
+                int panelIndex = _order[i];
                 var ui = playerUis[panelIndex];
                 var rt = ui.playerInfoTransform;
            
@@ -108,16 +111,14 @@ namespace LDH_UI.Screen_MainGame
                     ui.profileImage.sprite = await CustomizationManager.Instance.GetIconAsync(profileId);
                 else
                     ui.profileImage.sprite = null;
+
                 await UniTask.Yield();
-                
                 
                 // 시작 위치 설정
                 // 시작 위치: 0/2는 +X에서, 1/3은 -X에서
                 moveDistance = rt.rect.width; // 필요시 고정값 사용 권장
                 float fromX = (panelIndex == 0 || panelIndex == 2) ? +moveDistance : -moveDistance;
                 rt.anchoredPosition = _targetPosCache[panelIndex] + new Vector2(fromX, 0f);
-                
-                
             }
         }
 
@@ -125,10 +126,10 @@ namespace LDH_UI.Screen_MainGame
         protected override async UniTask OnShowAsync(CancellationToken ct)
         {
             base.OnShowAsync(ct);
-;            for (int i = 0; i < PhotonNetwork.CurrentRoom.Players.Count; i++)
+            for (int i = 0; i < _order.Length; i++)
             {
                 ct.ThrowIfCancellationRequested();
-                int panelIndex = _activeOrder[i];
+                int panelIndex = _order[i];
                 var ui = playerUis[panelIndex];
                 var rt = ui.playerInfoTransform;               
                 
@@ -137,6 +138,8 @@ namespace LDH_UI.Screen_MainGame
                 
                 var toPos = _targetPosCache[panelIndex];
 
+                SoundManager.Instance.PlaySFX(playerPanelSpawnSfxKey.ToString());
+                
                 var seq = DOTween.Sequence()
                     .Join(rt.DOAnchorPos(toPos, moveTime).SetEase(Ease.OutBack, overshoot))
                     .Join(cg.DOFade(1f, fadeTime))

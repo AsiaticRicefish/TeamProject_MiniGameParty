@@ -6,6 +6,7 @@ using LDH_Util;
 using Managers;
 using Photon.Pun;
 using Photon.Realtime;
+using Unity.VisualScripting;
 using UnityEngine;
 using static LDH_Util.Define_LDH;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
@@ -46,6 +47,7 @@ namespace Network
             Manager.Network.SlotIndexChanged  += OnPlayerSlotChanged;
             Manager.Network.MatchStateChanged += OnMatchStateChanged;
             Manager.Network.MasterClientSwiched += OnMasterClientChanged;
+            Manager.Network.PlayerLeft += MatchController.Instance.OnAnyPlayerLeft;
         }
 
         private void UnsubscribeNetwork()
@@ -62,6 +64,7 @@ namespace Network
             Manager.Network.SlotIndexChanged  -= OnPlayerSlotChanged;
             Manager.Network.MatchStateChanged -= OnMatchStateChanged;
             Manager.Network.MasterClientSwiched -= OnMasterClientChanged;
+            Manager.Network.PlayerLeft -= MatchController.Instance.OnAnyPlayerLeft;
         }
 
         
@@ -84,9 +87,6 @@ namespace Network
             Debug.Log($"[PrivateMatchController] 친구 목록 패널 팝업을 생성합니다.");
             // 룸 패널 팝업 ui 생성
             _popupFriends = Manager.UI.CreatePopupUI<UI_Popup_FriendsList>();
-            
-            //todo: 친구 목록 불러오기 및 설정 코드 추가
-
             Manager.UI.ShowPopupUI(_popupFriends).Forget();
             
         }
@@ -220,7 +220,6 @@ namespace Network
             // 7) 초기 UI 빌드
             //RebuildAllPanels();
             
-            
             // 모든 설정이 완료됐다면 UI를 표시한다.
             // Debug.Log($"[PrivateMatchController] Popup shown");
             Manager.UI.ShowPopupUI(_popupRoom).Forget();
@@ -244,9 +243,9 @@ namespace Network
 
         
         // 방 퇴장
-        private void OnClickLeaveRoom()
+        public void OnClickLeaveRoom()
         {
-            // Debug.Log($"[PrivateMatchController] 나가기 버튼 클릭 -> 방 나가기 및 설정 정리");
+            Debug.Log($"[PrivateMatchController] 나가기 버튼 클릭 -> 방 나가기 및 설정 정리");
             
             UnbindAllPanelEvents();  
             Manager.Network.LeaveRoom();
@@ -261,22 +260,22 @@ namespace Network
         
         #region  Player Enter/Leave/Props/Master Change
 
-        private void OnPlayerEnteredRoom(Player newPlayer)
+        private async void OnPlayerEnteredRoom(Player newPlayer)
         {
-            // Debug.Log($"[PrivateMatchController] {newPlayer.NickName}가 입장했습니다.");
-            // 슬롯 인덱스 설정이 완료된 플레이어면 패널 UI 빌드
-            int slotIndex = GetSlotIndex(newPlayer);
-            // Debug.Log($"[PrivateMatchController] Entered player slot:{slotIndex}");
-            
-            if (slotIndex >= 0)
-                BuildPanel(slotIndex, newPlayer);
-                
+            // // Debug.Log($"[PrivateMatchController] {newPlayer.NickName}가 입장했습니다.");
+            // // 슬롯 인덱스 설정이 완료된 플레이어면 패널 UI 빌드
+            // int slotIndex = GetSlotIndex(newPlayer);
+            // // Debug.Log($"[PrivateMatchController] Entered player slot:{slotIndex}");
+            //
+            // if (slotIndex >= 0)
+            //      BuildPanel(slotIndex, newPlayer);
+            //     
         }
 
-        private void OnPlayerLeftRoom(Player otherPlayer)
+        private async void OnPlayerLeftRoom(Player otherPlayer)
         {
             // Debug.Log($"[PrivateMatchController] {otherPlayer.NickName}가 퇴장했습니다.");
-           RebuildAllPanels();
+            await RebuildAllPanels();
         }
 
         private void OnMasterClientChanged(Player newMaster)
@@ -529,6 +528,15 @@ namespace Network
 
         #region 매치 상태 / 시작
         
+        public async UniTask CloseRoomPanel()
+        {
+            if (_popupRoom != null)
+            {
+                await Manager.UI.ClosePopupUI(_popupRoom);
+                _popupRoom = null;
+            }
+        }
+        
         // 마스터만 게임 시작 가능한지 체크
         private void TryStartGame()
         {
@@ -570,9 +578,6 @@ namespace Network
                 {
                     playerPanel.SetInteractableAll(false);
                 }
-                
-                //UI 자동 닫기
-                _popupRoom.AutoCloseAfter(MatchController.Instance.startDelaySec, _popupRoom.GetCancellationTokenOnDestroy()).Forget();
             }
             else
             {

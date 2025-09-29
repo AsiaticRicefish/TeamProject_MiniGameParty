@@ -24,9 +24,10 @@ namespace LDH_UI
         [SerializeField] private int offsetX;
         [SerializeField] private float iconWidth = 45f;
         [SerializeField] private float iconHeight = 45f;
+
+        
+        private LayoutElement _labelLE;
         private float maxWidth;
-
-
         private float spacing = 35f;
 
         public RectTransform TargetRect => targetRect;
@@ -38,7 +39,18 @@ namespace LDH_UI
 
             maxWidth = root.parent.GetComponent<RectTransform>().rect.size.x - offsetX * 2;
 
+            
+            // TMP 줄바꿈 보장
+            label.enableWordWrapping = true;
+            label.overflowMode = TextOverflowModes.Truncate; // or Ellipsis
+            
+            // LayoutElement 확보
+            _labelLE = label.GetComponent<LayoutElement>();
+            if (_labelLE == null) _labelLE = label.gameObject.AddComponent<LayoutElement>();
+            _labelLE.flexibleWidth = 0; // 늘어나지 않게
+            
             base.Init();
+            
         }
 
 
@@ -77,6 +89,8 @@ namespace LDH_UI
 
             // 4) Label에게 할당 가능한 폭 = 최종폭 - (아이콘+스페이싱)
             float labelAvailWidth = Mathf.Max(0f, finalW - (iconWidth + spacing));
+            
+            // _labelLE.preferredWidth = labelAvailWidth;
             SetWidth(label.rectTransform, labelAvailWidth);
 
             // 5) 다시 갱신해서 줄바꿈 반영된 최종 높이 계산

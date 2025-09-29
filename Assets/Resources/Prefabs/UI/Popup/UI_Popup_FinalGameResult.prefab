@@ -131,7 +131,7 @@ PrefabInstance:
     - target: {fileID: 7245162538309069561, guid: fb63d0dc508b44286a4950eb59e578ce,
         type: 3}
       propertyPath: m_Name
-      value: UI_Popup_FinalResult
+      value: UI_Popup_FinalGameResult
       objectReference: {fileID: 0}
     - target: {fileID: 8582210233809134647, guid: fb63d0dc508b44286a4950eb59e578ce,
         type: 3}
@@ -141,7 +141,17 @@ PrefabInstance:
     - target: {fileID: 8614715979461851309, guid: fb63d0dc508b44286a4950eb59e578ce,
         type: 3}
       propertyPath: m_Spacing
-      value: 135
+      value: 120
+      objectReference: {fileID: 0}
+    - target: {fileID: 8614715979461851309, guid: fb63d0dc508b44286a4950eb59e578ce,
+        type: 3}
+      propertyPath: m_Padding.m_Top
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 8614715979461851309, guid: fb63d0dc508b44286a4950eb59e578ce,
+        type: 3}
+      propertyPath: m_Padding.m_Bottom
+      value: 50
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 3496758183037696642, guid: fb63d0dc508b44286a4950eb59e578ce, type: 3}
@@ -205,6 +215,7 @@ MonoBehaviour:
   scoreEntryPrefab: {fileID: 4105719652083736053, guid: 52806d7fa5df74aff8566ab9f3867ef1,
     type: 3}
   scoreEntryContent: {fileID: 1950505523865794959}
+  miniGameResultBgm: 2
 --- !u!114 &4824357346770826829 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 411377391401108405, guid: fb63d0dc508b44286a4950eb59e578ce,

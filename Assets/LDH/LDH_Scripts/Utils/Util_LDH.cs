@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using Customization;
+using Cysharp.Threading.Tasks;
+using LDH_UI;
+using Managers;
 using Photon.Pun;
 using Photon.Realtime;
 using Unity.VisualScripting;
@@ -224,6 +227,7 @@ namespace LDH_Util
 
             return totalRank;
         }
+        
 
         #endregion
         
@@ -359,16 +363,37 @@ namespace LDH_Util
         /// <summary>
         /// 비동기 씬전환
         /// </summary>
-        public static IEnumerator LoadSceneWithDelay(string sceneName, float delay)
+        public static IEnumerator LoadSceneWithDelay(string sceneName, float delay, bool showProgress = false)
         {
+            var loadingUI = Manager.UI.PeekPopupUI<UI_Loading>();
+            Debug.Log($"loding ui? {loadingUI == null}");
+            
             AsyncOperation op = SceneManager.LoadSceneAsync(sceneName);
             op.allowSceneActivation = false;
+            
+            while (op.progress < 0.9f)
+            {
+                float p = Mathf.Clamp01(op.progress / 0.9f); // 0.0 ~ 1.0 스케일
+                if (showProgress) loadingUI?.SetProgress(p);
+               
+                yield return null;
+            }
+            
+            // 0.9f에서 대기 중일 때 100% 표시
+            if (showProgress) loadingUI?.SetProgress(1f);
+            
+            // 씬 활성화
+            op.allowSceneActivation = true;
 
+            // 실제 완료까지 대기
+            while (!op.isDone)
+                yield return null;
+            
             // 모달 보여지는 시간 확보
             yield return new WaitForSeconds(delay);
-
-            // 씬 전환
-            op.allowSceneActivation = true;
+            
+            loadingUI?.RequestClose(); // 혹은 Manager.UI.ClosePopup(loadingUI)
+   
         }
 
 
