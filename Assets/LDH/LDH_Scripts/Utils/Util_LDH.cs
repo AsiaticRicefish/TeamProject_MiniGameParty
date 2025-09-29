@@ -366,8 +366,7 @@ namespace LDH_Util
         public static IEnumerator LoadSceneWithDelay(string sceneName, float delay, bool showProgress = false)
         {
             var loadingUI = Manager.UI.PeekPopupUI<UI_Loading>();
-            Debug.Log($"loding ui? {loadingUI == null}");
-            
+            // Debug.Log($"loding ui? {loadingUI == null}");
             AsyncOperation op = SceneManager.LoadSceneAsync(sceneName);
             op.allowSceneActivation = false;
             

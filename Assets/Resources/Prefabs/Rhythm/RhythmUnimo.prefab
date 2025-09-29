@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 5773829714023628006}
   - component: {fileID: 4169288139635542436}
   - component: {fileID: -2224002215980941915}
+  - component: {fileID: 6787585082363760145}
   m_Layer: 20
   m_Name: RhythmUnimo
   m_TagString: Untagged
@@ -83,6 +84,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 54797064f4421574c94f5a650f70507e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  avatarStruct: {fileID: 6787585082363760145}
+--- !u!114 &6787585082363760145
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 11735339577678118}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69d8396f5a2145c8b327f2fb69e1c15a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  characterRoot: {fileID: 8069142830057370441}
+  equipRoot: {fileID: 2788847542378213145}
+  forceAnimationIdleOnChange: 0
 --- !u!1 &8556661253972926254
 GameObject:
   m_ObjectHideFlags: 0

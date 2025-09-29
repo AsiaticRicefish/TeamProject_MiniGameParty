@@ -156,6 +156,9 @@ MonoBehaviour:
   - RPC_RequestAddTap
   - RPC_ShowGameOverFor
   - RPC_SetDeck
+  - RPC_ExecuteSoundAction
+  - SetPlayerCustom
+  - RPC_SetPlayerCustom
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1
