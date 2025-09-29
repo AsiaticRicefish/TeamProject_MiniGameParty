@@ -18,6 +18,7 @@ namespace LDH_Util
         {
             var entry = entries.Find(x => x.key == key);
             
+            Debug.Log($"<color=red>{entry.key}</color>");
             return string.IsNullOrEmpty(entry.url) ? null : entry.url;
 
         }

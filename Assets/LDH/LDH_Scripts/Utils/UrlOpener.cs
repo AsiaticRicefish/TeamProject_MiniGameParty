@@ -42,7 +42,7 @@ namespace LDH_Util
         /// <param name="key"></param>
         public static void OpenByKey(string key)
         {
-            string url = _config?.Get(key);
+            string url = Config?.Get(key);
 
             if (string.IsNullOrWhiteSpace(url))
             {

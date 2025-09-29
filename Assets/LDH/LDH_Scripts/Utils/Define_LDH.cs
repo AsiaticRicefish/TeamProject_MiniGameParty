@@ -205,9 +205,9 @@ namespace LDH_Util
 
         public static partial class DefaultData
         {
-            public const int DefaultCurrency1 = 10000;
-            public const int DefaultCurrency2 = 10000;
-            public const int DefaultCurrency3 = 10000;
+            public const int DefaultCurrency1 = 500;
+            public const int DefaultCurrency2 = 500;
+            public const int DefaultCurrency3 = 500;
         }
         
         public enum CurrencyType
