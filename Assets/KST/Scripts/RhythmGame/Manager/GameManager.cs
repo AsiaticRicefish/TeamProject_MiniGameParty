@@ -48,7 +48,7 @@ namespace RhythmGame
         [Header("플레이어 프리팹 이름")]
         [SerializeField] string playerPrefabName = "Prefabs/Rhythm/RhythmUnimo";
         [SerializeField] string backupPrefabName = "Prefabs/Rhythm/RhythmPlayer"; //테스트용
-        [SerializeField] string playerVerdictPrefab = "Prefabs/Rhythm/VerdictModel"; //테스트용
+        // [SerializeField] string playerVerdictPrefab = "Prefabs/Rhythm/VerdictModel"; //테스트용
         [SerializeField] Vector3 tempSpawnPos = Vector3.zero; // 임시 스폰 위치
 
         private Dictionary<string, RhythmPlayerData> players = new(); // UID를 key로 가지는 플레이어 데이터
@@ -78,20 +78,20 @@ namespace RhythmGame
             InitializePlayers();
             //테스트 환경에서 리소스 없는 것을 방지
             var prefab = Resources.Load<GameObject>(playerPrefabName);
-            var verdictPrefab = Resources.Load<GameObject>(playerVerdictPrefab);
+            // var verdictPrefab = Resources.Load<GameObject>(playerVerdictPrefab);
             if (prefab == null)
             {
                 Debug.Log($"{playerPrefabName}가 없어서 {backupPrefabName}로 플레이어 캐릭터 모델 변경 ");
                 playerPrefabName = backupPrefabName;
             }
-            if (verdictPrefab == null)
-                Debug.Log($"{verdictPrefab}가 없습니다.");
+            // if (verdictPrefab == null)
+            //     Debug.Log($"{verdictPrefab}가 없습니다.");
 
 
             // 캐릭터 생성
             PhotonNetwork.Instantiate(playerPrefabName, tempSpawnPos, Quaternion.identity);
             //판정바 생성
-            PhotonNetwork.Instantiate(playerVerdictPrefab, tempSpawnPos, Quaternion.identity);
+            // PhotonNetwork.Instantiate(playerVerdictPrefab, tempSpawnPos, Quaternion.identity);
         }
 
         #region 게임 시작 종료 로직
@@ -344,13 +344,13 @@ namespace RhythmGame
                 StartCoroutine(IE_DelayPlace(actorNumber, lane));
                 return;
             }
-            //플레이어 컨트롤러가 액터 넘버 기준으로 딕셔너리에 등록돼 있는지 확인
-            if (!PlayerVerdict.VerdictByActor.TryGetValue(actorNumber, out var vt))
-            {
-                //아닐 경우 코루틴으로 지연 후 확인
-                StartCoroutine(IE_DelayVerdictPlace(actorNumber, lane));
-                return;
-            }
+            // //플레이어 컨트롤러가 액터 넘버 기준으로 딕셔너리에 등록돼 있는지 확인
+            // if (!PlayerVerdict.VerdictByActor.TryGetValue(actorNumber, out var vt))
+            // {
+            //     //아닐 경우 코루틴으로 지연 후 확인
+            //     StartCoroutine(IE_DelayVerdictPlace(actorNumber, lane));
+            //     return;
+            // }
             //lane 인덱스 초과 방지
             int idx = Mathf.Clamp(lane - 1, 0, playerPoints.Length - 1);
 
@@ -360,7 +360,7 @@ namespace RhythmGame
 
             //아바타 위치 해당 위치로 이동
             t.SetPositionAndRotation(p.position, p.rotation);
-            vt.SetPositionAndRotation(vp.position, vp.rotation);
+            // vt.SetPositionAndRotation(vp.position, vp.rotation);
         }
 
 
@@ -382,24 +382,24 @@ namespace RhythmGame
             }
             Debug.LogWarning($"액터넘버 : {actorNumber} 아바타를 찾지 못했습니다.");
         }
-        IEnumerator IE_DelayVerdictPlace(int actorNumber, int lane)
-        {
-            //최대 10번 시도
-            for (int i = 0; i < 10; i++)
-            {
-                yield return new WaitForSeconds(0.1f);
+        // IEnumerator IE_DelayVerdictPlace(int actorNumber, int lane)
+        // {
+        //     //최대 10번 시도
+        //     for (int i = 0; i < 10; i++)
+        //     {
+        //         yield return new WaitForSeconds(0.1f);
 
-                //아바타가 딕셔너리에 등록돼 있다면 배치 진행
-                if (PlayerVerdict.VerdictByActor.TryGetValue(actorNumber, out var t))
-                {
-                    int idx = Mathf.Clamp(lane - 1, 0, playerVerdictPoints.Length - 1);
-                    var p = playerVerdictPoints[idx];
-                    t.SetPositionAndRotation(p.position, p.rotation);
-                    yield break;
-                }
-            }
-            Debug.LogWarning($"액터넘버 : {actorNumber} 판정바를 찾지 못했습니다.");
-        }
+        //         //아바타가 딕셔너리에 등록돼 있다면 배치 진행
+        //         if (PlayerVerdict.VerdictByActor.TryGetValue(actorNumber, out var t))
+        //         {
+        //             int idx = Mathf.Clamp(lane - 1, 0, playerVerdictPoints.Length - 1);
+        //             var p = playerVerdictPoints[idx];
+        //             t.SetPositionAndRotation(p.position, p.rotation);
+        //             yield break;
+        //         }
+        //     }
+        //     Debug.LogWarning($"액터넘버 : {actorNumber} 판정바를 찾지 못했습니다.");
+        // }
 
         public Pose GetLaneSpawnPose(int lane)
         {

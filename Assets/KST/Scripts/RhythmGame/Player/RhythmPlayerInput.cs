@@ -21,6 +21,10 @@ namespace RhythmGame
 
         List<Note> _noteToTap = new(); // performed 시점 노트(지속 아니면 cancel에서 판정)
 
+        [SerializeField] float _inputBlockTime = 1f;
+        private bool _canPlayerInput = true;
+        public bool CanPlayerInput => _canPlayerInput;
+
         void Update()
         {
             if (!_isPress || _holdTarget == null) return;
@@ -90,6 +94,7 @@ namespace RhythmGame
                 Debug.Log($"홀드 지속 시간 : {_requireHoldTime}");
                 _isPress = true;
                 _isDone = false;
+                StartCoroutine(IE_PlayerCooldown());
                 // _noteToTap = null;
             }
             else
@@ -124,6 +129,7 @@ namespace RhythmGame
 
                 InitHold();
                 _noteToTap.Clear();
+                StartCoroutine(IE_PlayerCooldown());
                 return;
             }
             //탭 처리
@@ -160,6 +166,7 @@ namespace RhythmGame
                     ScoreManager.Instance.VerdictMiss(missType.Value);
                 }
                 _noteToTap.Clear();
+                StartCoroutine(IE_PlayerCooldown());
             }
             else
             {
@@ -181,7 +188,7 @@ namespace RhythmGame
         bool IsInVerdictBar(Note note)
         {
             var list = verdictNote.Notes;
-            return list!=null && list.Contains(note);
+            return list != null && list.Contains(note);
         }
 
         bool TryGetMyLane(out int lane)
@@ -254,7 +261,16 @@ namespace RhythmGame
 
             // 레인이 없거나, 포톤쪽 연결 안됏으면 무시
             if (!LaneManager.Instance || !PhotonNetwork.IsConnected) return false;
+
+            if (!_canPlayerInput) return false;
             return true;
+        }
+
+        IEnumerator IE_PlayerCooldown()
+        {
+            _canPlayerInput = false;
+            yield return new WaitForSeconds(_inputBlockTime);
+            _canPlayerInput = true;
         }
     }
 

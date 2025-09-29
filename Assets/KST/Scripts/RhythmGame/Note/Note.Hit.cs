@@ -8,6 +8,7 @@ namespace RhythmGame
         [SerializeField] Collider cd;
         bool _isWaiting; //히트 대기 상태
         public bool IsWaiting => _isWaiting;
+        [SerializeField] GameObject _bubbleGo;
 
         [SerializeField] MeshFilter _mf;
         /// <summary>
@@ -41,6 +42,18 @@ namespace RhythmGame
             cd.enabled = true;
             foreach (var r in rr)
                 r.enabled = true;
+        }
+
+        public void BubblePop()
+        {
+            if (_bubbleGo != null)
+                _bubbleGo.SetActive(false);
+        }
+
+        public void BubbleInit()
+        {
+            if (_bubbleGo != null)
+                _bubbleGo.SetActive(true);
         }
 
     }
