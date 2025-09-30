@@ -10,18 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
-  m_Name: Packed Assets
+  m_Name: Login
   m_EditorClassIdentifier: 
   m_GroupName: Packed Assets
   m_Data:
     m_SerializedData: []
   m_GUID: 4138263cd5e8185419c37c16009fd481
-  m_SerializeEntries:
-  - m_GUID: 9a932b3611580e94190a1e363dae5efc
-    m_Address: Assets/Imports/Meteo1.1.0/BGM/click2.mp3
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
+  m_SerializeEntries: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: efc2531fbc716f7409d27168060779e5, type: 2}
   m_SchemaSet:

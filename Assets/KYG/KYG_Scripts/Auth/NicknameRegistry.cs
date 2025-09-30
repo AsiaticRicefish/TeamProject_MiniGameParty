@@ -15,14 +15,8 @@ public static class NicknameRegistry
     /// FirebaseApp과 URL로 Realtime DB를 명시적으로 바인딩.
     /// 게임 시작 시 1회 호출 필수.
     /// </summary>
-    public static async void ConfigureDatabase(string databaseUrl)
+    public static void ConfigureDatabase(string databaseUrl)
     {
-        if (!await FirebaseInitGate.EnsureReadyAsync())
-        {
-            Debug.LogError("Firebase not ready"); 
-            return;
-        }
-        
         var app = FirebaseApp.DefaultInstance;
         if (app == null) throw new InvalidOperationException("FirebaseApp not initialized.");
 

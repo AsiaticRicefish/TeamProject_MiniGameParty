@@ -15,7 +15,6 @@ using UnityEngine.SceneManagement;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
 using static LDH_Util.Define_LDH;
 using Random = System.Random;
-using Firebase.Auth;
 
 namespace Network
 {
@@ -74,43 +73,6 @@ namespace Network
 #endif
         }
         
-        // 자동 접속/로비 진입을 건너뛸지 판단하는 공통 가드
-        private bool ShouldSkipAutoConnect()
-        {
-            // A) 로그아웃 절차 진행 중이면 모든 자동접속/로비진입을 금지
-            //    (원클릭 로그아웃 보장을 위해 "가장 먼저" 검사)
-            if (AuthLogout.IsLoggingOut)
-            {
-                Debug.Log("[NetworkManager] skip auto-connect (logging out)");
-                return true;
-            }
-
-            // B) 로그아웃 직후 1회 억제 플래그(Logout에서 MarkOnce) 소비
-            if (AuthAutoSuppressor.Consume())
-            {
-                Debug.Log("[NetworkManager] suppress auto-connect once (after logout)");
-                return true;
-            }
-
-            // C) 로그인/타이틀 씬에서는 자동 접속 금지
-            string scene = SceneManager.GetActiveScene().name;
-            if (scene.Contains("Login") || scene.Contains("Title"))
-            {
-                Debug.Log("[NetworkManager] skip auto-connect in Login/Title scene");
-                return true;
-            }
-
-            // D) Firebase 인증이 아직 없으면 자동 접속 금지
-            var auth = FirebaseAuth.DefaultInstance;
-            if (auth == null || auth.CurrentUser == null)
-            {
-                Debug.Log("[NetworkManager] skip auto-connect (not authenticated)");
-                return true;
-            }
-
-            return false;
-        }
-        
 
 
         #region Connect Server(로그인 없이 게임 테스트 시 사용할 메서드)
@@ -151,9 +113,6 @@ namespace Network
 
         public void TryJoinLobby()
         {
-            // 자동 접속 금지 조건이면 즉시 반환
-            if (ShouldSkipAutoConnect())
-                return;
             if (!PhotonNetwork.IsConnectedAndReady)
             {
                 Debug.Log("[NetworkManager] 서버에 연결이 완료되지 않았습니다.");
@@ -321,8 +280,6 @@ namespace Network
         public override void OnConnectedToMaster()
         {
             Debug.Log("[NetworkManager] 마스터 서버에 연결 완료");
-            // 로그인 씬/미인증/로그아웃 직후에는 로비 진입 시도 금지
-            if (!ShouldSkipAutoConnect())
             TryJoinLobby(); // 로비로 가겠다는 요청이 아니므로 tryjoinlobby를 사용. 로비로 가겠다는 요청이 있었다면 로비로 진입하고 없었다면 로비로 진입하지 않음.
             ConnectedToMaster?.Invoke();
         }
@@ -330,7 +287,6 @@ namespace Network
         /// 서버 연결 끊어졌을 때 재접속 시도
         public override void OnDisconnected(DisconnectCause cause)
         {
-            if (AuthLogout.IsLoggingOut) return;
             Debug.Log("[NetworkManager] 서버 연결 끊어짐. 재접속 시도");
             
             // 다른 기기 로그인으로 강제 종료된 경우 자동 재접속 금지
@@ -341,9 +297,6 @@ namespace Network
             }
             
             base.OnDisconnected(cause);
-            // 로그인 씬/미인증/로그아웃 직후엔 재접속하지 않음
-            if (ShouldSkipAutoConnect())
-                return;
             PhotonNetwork.ConnectUsingSettings(); // 재접속
         }
 

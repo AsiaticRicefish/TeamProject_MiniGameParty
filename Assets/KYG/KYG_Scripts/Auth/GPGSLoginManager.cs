@@ -10,7 +10,6 @@ using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
 using UnityEngine.SocialPlatforms;
-using System.Threading.Tasks;
 
 namespace KYG.Auth
 {
@@ -190,22 +189,6 @@ namespace KYG.Auth
             // if (!PhotonNetwork.IsConnected) PhotonNetwork.ConnectUsingSettings();
             // else if (!PhotonNetwork.InLobby && PhotonNetwork.NetworkClientState != ClientState.JoiningLobby) // 방어로직 추가
             //     PhotonNetwork.JoinLobby();
-        }
-        
-        private async Task ApplyPhotonAndConnectAsync(string uid, string nickname)
-        {
-            var enf = FindObjectOfType<SessionEnforcer>(true);
-            if (enf != null)
-            {
-                var ok = await enf.StartForUidAsync(uid);
-                if (!ok) { /* UI 폴백 */ return; }
-            }
-
-            AuthAccount.Remember("gpgs", uid, nickname);
-
-            PhotonNetwork.NickName = nickname;
-            PhotonNetwork.AuthValues = new Photon.Realtime.AuthenticationValues(uid);
-            new GameObject("Game Bootstrap", typeof(GameBootstrap));
         }
 
         public override void OnConnectedToMaster()
