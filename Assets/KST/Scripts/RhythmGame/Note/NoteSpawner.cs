@@ -347,6 +347,7 @@ namespace RhythmGame
                     // }
                     mover.ReturnPool();
                     mover.Visible();
+                    mover.BubbleInit();
                 }
             }
             _waitingLocal.Remove(noteId);

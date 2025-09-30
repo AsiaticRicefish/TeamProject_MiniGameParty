@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Photon.Pun;
@@ -21,6 +22,21 @@ namespace RhythmGame
 
         List<Note> _noteToTap = new(); // performed 시점 노트(지속 아니면 cancel에서 판정)
 
+        float _inputBlockTime = 0.5f;
+        private bool _canPlayerInput = true;
+        bool _isCooldown;
+        public bool CanPlayerInput => _canPlayerInput;
+
+        public static event Action<float> OnCooldownStart;
+        public static RhythmPlayerInput instance;
+
+        bool _isRealPressed;
+
+        void Awake()
+        {
+            instance = this;
+        }
+
         void Update()
         {
             if (!_isPress || _holdTarget == null) return;
@@ -36,6 +52,7 @@ namespace RhythmGame
                     ScoreManager.Instance.RequestHit(_holdTarget.NoteId, true, NoteType.Continue);
                     _isDone = true;
                     InitHold();
+                    InputCoolDown();
                 }
             }
             else
@@ -43,6 +60,8 @@ namespace RhythmGame
                 ScoreManager.Instance.RequestMiss(NoteType.Continue);
                 _isDone = true;
                 InitHold();
+                InputCoolDown();
+
             }
         }
 
@@ -55,18 +74,27 @@ namespace RhythmGame
             //홀드 시작
             if (callback.performed)
             {
+                if (!CanInput())
+                { _isRealPressed = false; return; }
+                _isRealPressed = true;
+                _isDone = false;
                 BeginHold();
+                return;
             }
             //홀드 종료
             else if (callback.canceled)
             {
+                if (!_isRealPressed) return;
                 EndHold();
+                InputCoolDown();
+                _isRealPressed = false;
+                return;
             }
         }
 
         void BeginHold()
         {
-            if (!CanInput()) return;
+            // if (!CanInput()) return;
             if (_holdTarget != null) return;
 
             _noteToTap.Clear();
@@ -101,10 +129,11 @@ namespace RhythmGame
         }
         void EndHold()
         {
-            if (!CanInput()) return;
+            // if (!CanInput()) return;
             if (_isDone)
             {
                 _isDone = false;
+                _isRealPressed = false;
                 return;
             }
             //홀드 중일 때
@@ -128,6 +157,12 @@ namespace RhythmGame
             }
             //탭 처리
             // if (_noteToTap != null)
+            if (_noteToTap.Count == 0)
+            {
+                var note = PickNote();
+                if (note != null && note.Type != NoteType.Continue)
+                    _noteToTap.Add(note);
+            }
             if (_noteToTap.Count > 0)
             {
                 bool anyHit = false;
@@ -181,7 +216,7 @@ namespace RhythmGame
         bool IsInVerdictBar(Note note)
         {
             var list = verdictNote.Notes;
-            return list!=null && list.Contains(note);
+            return list != null && list.Contains(note);
         }
 
         bool TryGetMyLane(out int lane)
@@ -247,14 +282,36 @@ namespace RhythmGame
             if (!GameManager.Instance || !GameManager.Instance.IsGameStart || GameManager.Instance.IsGameOver) return false;
 
             //스턴 시 입력 방지
-            if (GameManager.Instance.IsOverHeat) return false;
+            // if (GameManager.Instance.IsOverHeat) return false;
 
             //UI 입력일 경우 아랫단 무시
             if (IsOnUI()) return false;
 
             // 레인이 없거나, 포톤쪽 연결 안됏으면 무시
             if (!LaneManager.Instance || !PhotonNetwork.IsConnected) return false;
+
+            if (!_canPlayerInput) return false;
             return true;
+        }
+
+        void InputCoolDown()
+        {
+            if (_isCooldown) return;
+            _isCooldown = true;
+            _canPlayerInput = false;
+            OnCooldownStart?.Invoke(_inputBlockTime);
+
+
+            StartCoroutine(IE_PlayerCooldown());
+        }
+
+        IEnumerator IE_PlayerCooldown()
+        {
+            Debug.Log("<color=red>쿨타임ooooooooooooooooooooo</color>");
+            yield return new WaitForSeconds(_inputBlockTime);
+            _canPlayerInput = true;
+            _isCooldown = false;
+            Debug.Log("<color=red>쿨타임끝xxxxxxxxxxxxxxxxxxxx</color>");
         }
     }
 
