@@ -116,14 +116,15 @@ namespace RhythmGame
                 if (remain < 0) remain = 0;
 
                 int sec = Mathf.FloorToInt((float)remain);
-                int mm = sec / 60;
-                int ss = sec % 60;
+                // int mm = sec / 60;
+                // int ss = sec % 60;
 
-                _timerText.text = $"{mm:00}:{ss:00}";
+                // _timerText.text = $"{mm:00}:{ss:00}";
+                _timerText.text = $"{sec:00}";
                 yield return null;
             }
 
-            _timerText.text = "00:00";
+            _timerText.text = "00";
         }
 
         IEnumerator IE_ShowGameStart()
