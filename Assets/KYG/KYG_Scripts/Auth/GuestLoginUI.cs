@@ -754,9 +754,9 @@ public class GuestLoginUI : MonoBehaviour
 
     private int CalcEffectiveMax(string s)
     {
-        if (string.IsNullOrEmpty(s)) return 8;
+        if (string.IsNullOrEmpty(s)) return 10;
         if (RxKorean.IsMatch(s) || RxUpper.IsMatch(s)) return 6;
-        return 8;
+        return 10;
     }
 
     // ---------- 디버그/강제표시 유틸 ----------
