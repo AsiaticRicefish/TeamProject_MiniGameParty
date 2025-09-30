@@ -177,7 +177,7 @@ namespace LDH_Util
 
         public static partial class DefaultData
         {
-            public const CurrencyType DefaultRewardCurrency = CurrencyType.Currency1;
+            public const CurrencyType DefaultRewardCurrency = CurrencyType.Currency2;
             public const int DefaultReward = 50;
             public const int DefaultPointReward = 10;
         }
@@ -205,8 +205,8 @@ namespace LDH_Util
 
         public static partial class DefaultData
         {
-            public const int DefaultCurrency1 = 500;
-            public const int DefaultCurrency2 = 500;
+            public const int DefaultCurrency1 = 0;
+            public const int DefaultCurrency2 = 0;
             public const int DefaultCurrency3 = 0;
         }
         
