@@ -12,8 +12,6 @@ namespace RhythmGame
         ScoreManager _sm;
         [SerializeField] TMP_Text scoreText;
         // [SerializeField] TMP_Text _heatscoreText;
-        [SerializeField] Slider _heatSlider;
-
         //콤보
         [SerializeField] GameObject _comboGO;
         [SerializeField] TMP_Text _comboText;
@@ -28,7 +26,6 @@ namespace RhythmGame
         void OnDisable()
         {
             _sm.OnScoreChanged -= OnScoreValueChanged;
-            // _sm.OnOverHeatScoreChanaged -= OnOverHeatValueChanged;
         }
 
         //초기화 순서 문제 발생 방지를 위해 딜레이 구독
@@ -40,15 +37,12 @@ namespace RhythmGame
             _sm = ScoreManager.Instance;
 
             scoreText.text = $"점수 : {_sm.Score}";
-            // _heatscoreText.text = $"OverHeat Score : {_sm.HeatScore}";
-            _heatSlider.value = _sm.HeatScore;
             _verdictText.text = "";
             _comboText.text = "";
             _verdictScoreText.text = "";
 
             //이벤트 구독
             _sm.OnScoreChanged += OnScoreValueChanged;
-            // _sm.OnOverHeatScoreChanaged += OnOverHeatValueChanged;
             _sm.OnVerdict += OnVerdict;
         }
 
@@ -57,11 +51,6 @@ namespace RhythmGame
             scoreText.text = $"점수 score : {value}";
         }
 
-        // void OnOverHeatValueChanged(int value)
-        // {
-        //     _heatscoreText.text = $"OverHeat Score : {value}";
-        //     _heatSlider.value = value;
-        // }
         /// <summary>
         /// 
         /// </summary>
@@ -70,23 +59,7 @@ namespace RhythmGame
         /// <param name="verdictScore"></param>
         void OnVerdict(Verdict verdict, int combo, int verdictScore)
         {
-            /*
-            switch (verdict)
-            {
-                case Verdict.Perfect:
-                    _verdictText.text = $"Perfect!";
-                    break;
-                case Verdict.Good:
-                    _verdictText.text = $"Good!";
-                    break;
-                case Verdict.Miss:
-                    _verdictText.text = $"Miss!";
-                    break;
-                case Verdict.Bad:
-                    _verdictText.text = $"Bad!";
-                    break;
-            }
-            */
+
             _verdictText.text = $"{verdict} !";
             _comboText.text = $"COMBO {combo} !!";
             _verdictScoreText.text = $"Extra Score {verdictScore}";

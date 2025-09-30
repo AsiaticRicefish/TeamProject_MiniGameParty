@@ -14,10 +14,15 @@ namespace RhythmGame
     [RequireComponent(typeof(PhotonView))]
     public class PlayerController : MonoBehaviourPun
     {
+
+        //캐릭터 랜더러 관련
+        Renderer[] _renderer;
+        string _invincibleProp = "_Invincible";
+        int _invincibleID;
         public static Dictionary<int, Transform> AvatarByActor = new(); //액터넘버, 위치 매핑
         [SerializeField] private AvatarStruct avatarStruct;
-        
-        
+
+
         private void Start()
         {
             Debug.Log($"owner actornubmer : {photonView.OwnerActorNr}");
@@ -35,12 +40,13 @@ namespace RhythmGame
                     Debug.LogError("Game Player is null!!");
                     return;
                 }
-                
+
                 // 해당 플레이어 커스텀을 적용하고 적용 완료 했음을 알리기
                 SetPlayerCustom(gp.PlayerId, gp.CharacterId, gp.EquipId);
+                SetPlayerColor();
             }
-           
-            
+
+
         }
 
         void OnEnable()
@@ -48,7 +54,7 @@ namespace RhythmGame
             if (photonView && photonView.Owner != null) //포톤뷰 및 owner가 정상적으로 할당된 경우
                 AvatarByActor[photonView.OwnerActorNr] = transform; //딕셔너리에 등록
         }
-        
+
 
         void OnDisable()
         {
@@ -59,8 +65,30 @@ namespace RhythmGame
 
         public async void SetPlayerCustom(string uid, string charId, string equipId)
         {
-            await Manager.Custom.ApplyToAvatarAsync(avatarStruct, charId, equipId);
-            GameManager.Instance.AddCustomizedPlayer(uid);
+            if (avatarStruct != null)
+            {
+                await Manager.Custom.ApplyToAvatarAsync(avatarStruct, charId, equipId);
+                GameManager.Instance.AddCustomizedPlayer(uid);
+            }
+        }
+
+        void SetPlayerColor()
+        {
+            _renderer = GetComponentsInChildren<Renderer>();
+            _invincibleID = Shader.PropertyToID(_invincibleProp);
+
+            //내가 아닌 플레이어들은 투명하게
+            if (!photonView.IsMine)
+            {
+                foreach (var renderer in _renderer)
+                {
+                    //유니모 쉐이더 용
+                    var mpb = new MaterialPropertyBlock();
+                    renderer.GetPropertyBlock(mpb);
+                    mpb.SetFloat(_invincibleID, 0.5f);
+                    renderer.SetPropertyBlock(mpb);
+                }
+            }
         }
     }
 }
