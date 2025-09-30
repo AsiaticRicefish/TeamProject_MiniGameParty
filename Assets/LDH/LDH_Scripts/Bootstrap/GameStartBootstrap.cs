@@ -15,7 +15,7 @@ using UnityEngine.SceneManagement;
 
 namespace LDH_Game
 {
-    public class GameBootstrap : MonoBehaviour
+    public class GameStartBootstrap : MonoBehaviour
     {
         private UI_Loading _loadingUI;
         private const string loadingThemePath = "Data/Lobby_Theme";

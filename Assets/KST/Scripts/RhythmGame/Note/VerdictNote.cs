@@ -25,6 +25,7 @@ namespace RhythmGame
 
             _notes.Add(note);
             note.Status = NoteStatus.CanInteract;
+            note.BubblePop();
 
             note.OnDespawn -= Despawn;
             note.OnDespawn += Despawn;
@@ -42,6 +43,7 @@ namespace RhythmGame
             _notes.Remove(note);
 
             note.Status = NoteStatus.None;
+            // note.BubbleInit();
 
             // //속임수 블럭의 경우 미스처리 금지.
             // if (note.Type == NoteType.Fake)

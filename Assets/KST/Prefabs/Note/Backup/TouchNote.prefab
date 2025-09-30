@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 1904699549630125104}
   - component: {fileID: 4174333819846018357}
   - component: {fileID: 8467070504968221719}
+  - component: {fileID: 4882761071702471181}
   m_Layer: 0
   m_Name: StarGem2 (2)
   m_TagString: Untagged
@@ -83,6 +84,27 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!65 &4882761071702471181
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4669196656025835550}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2.6846116, y: 2.553218, z: 0.5140314}
+  m_Center: {x: -0.00000023841858, y: 0.13477683, z: 0.00047780573}
 --- !u!1 &5692559007277031231
 GameObject:
   m_ObjectHideFlags: 0
@@ -177,7 +199,6 @@ GameObject:
   - component: {fileID: 7010502684658695956}
   - component: {fileID: 351156399658851704}
   - component: {fileID: 2731271280903465021}
-  - component: {fileID: 957080310749740309}
   m_Layer: 0
   m_Name: TouchNote
   m_TagString: Untagged
@@ -228,7 +249,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rr:
   - {fileID: 8467070504968221719}
-  cd: {fileID: 957080310749740309}
+  cd: {fileID: 4882761071702471181}
   _bubbleGo:
   - {fileID: 5692559007277031231}
   _mf: {fileID: 4174333819846018357}
@@ -236,24 +257,3 @@ MonoBehaviour:
   _status: 0
   _noteId: 0
   _lane: 0
---- !u!65 &957080310749740309
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6867739877921304798}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 1
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}

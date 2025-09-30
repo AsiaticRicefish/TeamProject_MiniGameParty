@@ -10,14 +10,6 @@ public class PlayerAnimController : MonoBehaviourPun
     string _invincibleProp = "_Invincible";
     int _invincibleID;
 
-    //애니메이션
-    // [SerializeField] Animator animator;
-    // public readonly int idle_Hash = Animator.StringToHash("anim_CH000_Idle");
-    // public readonly int stun_Hash = Animator.StringToHash("anim_CH000_Stun");
-
-    // Coroutine _stunCo;
-    // bool isStun;
-
     void Awake()
     {
         _renderer = GetComponentsInChildren<Renderer>();
@@ -31,45 +23,9 @@ public class PlayerAnimController : MonoBehaviourPun
                 //유니모 쉐이더 용
                 var mpb = new MaterialPropertyBlock();
                 renderer.GetPropertyBlock(mpb);
-                mpb.SetFloat(_invincibleID, 0.5f);
+                mpb.SetFloat(_invincibleID, 0.2f);
                 renderer.SetPropertyBlock(mpb);
-
-                //일반 테스트용
-                // Color c = renderer.material.color;
-                // c.a = 0.5f;
-                // renderer.material.color = c;
             }
         }
     }
-
-    // public void PlayeStunAnim(float time)
-    // {
-    //     if (_stunCo != null) StopCoroutine(_stunCo);
-        
-    //     _stunCo = StartCoroutine(IE_Stun(time));
-    // }
-
-    // IEnumerator IE_Stun(float time)
-    // {
-    //     isStun = true;
-    //     // animator.Play(stun_Hash);
-    //     animator.SetBool("isstun", true);
-    //     Debug.Log("스턴 애니메이션 실행");
-
-    //     //스턴 사운드 실행
-    //     SoundManager.Instance.PlaySFX_GAME(SfX_Game.SFX_Rhythm_Stun);
-
-    //     yield return new WaitForSeconds(time);
-
-    //     isStun = false;
-    //     // animator.Play(idle_Hash);
-    //     animator.SetBool("isstun", false);
-    //     Debug.Log("휴지 애니메이션 실행");
-
-    //     //스턴 사운드 종료
-    //     SoundManager.Instance.StopSFX();
-
-    //     _stunCo = null;
-    // }
-
 }
