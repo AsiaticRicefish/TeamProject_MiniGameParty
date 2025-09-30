@@ -51,8 +51,14 @@ namespace KYG.Auth
             
         }
 
-        private void Start()
+        private async void Start()
         {
+            if (!await FirebaseInitGate.EnsureReadyAsync())
+            {
+                Debug.LogError("Firebase not ready"); 
+                return;
+            }
+            
             FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task =>
             {
                 var status = task.Result;
@@ -423,6 +429,25 @@ namespace KYG.Auth
             Debug.Log($"[GuestLoginManager] MasterClient loading gameplay scene: {gameplaySceneName}");
             PhotonNetwork.LoadLevel(gameplaySceneName); // 전원 동기화
         }*/
+        
+        private async Task ApplyPhotonIdentityAndConnectAsync(string uid, string nickname)
+        {
+            // 1) (중요) 단일 세션 시작
+            var enf = FindObjectOfType<SessionEnforcer>(true);
+            if (enf != null)
+            {
+                var ok = await enf.StartForUidAsync(uid);
+                if (!ok) { /* UI로 폴백하거나 실패 처리 */ return; }
+            }
+
+            // 2) 로컬 저장 → 다음 실행 자동 로그인
+            AuthAccount.Remember("guest", uid, nickname);
+
+            // 3) Photon 값 주입 + 네트워크 부트
+            PhotonNetwork.NickName = nickname;
+            PhotonNetwork.AuthValues = new Photon.Realtime.AuthenticationValues(uid);
+            new GameObject("Game Bootstrap", typeof(GameBootstrap));
+        }
 
         /// <summary>
         /// (보강) 로비/룸 진입 타이밍에 uid 유실 시 재주입하고 싶다면 사용

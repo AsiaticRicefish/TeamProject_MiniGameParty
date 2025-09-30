@@ -15,7 +15,7 @@ MonoBehaviour:
   bgmSounds:
   - soundName: Title
     audioClip:
-      m_AssetGUID: 0150d7dea9d616144af15397cc784bff
+      m_AssetGUID: 
       m_SubObjectName: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
