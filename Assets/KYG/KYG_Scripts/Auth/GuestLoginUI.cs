@@ -9,6 +9,9 @@ using System.Text.RegularExpressions;
 using System;
 using Firebase.Extensions;
 using LDH_UI;
+using Cysharp.Threading.Tasks;   // UniTask 사용 (취소 안전 대기)
+using System.Threading;         // CancellationToken
+
 
 namespace KYG
 {
@@ -56,6 +59,15 @@ public class GuestLoginUI : MonoBehaviour
     
     [Header("Button Wiring (GPGS 스타일)")]
     [SerializeField] private bool wireButtonsInCode = false; 
+    
+    [Header("Open Policy")]
+    [Tooltip("true면 '첫 사용자 탭'이 오기 전의 모든 자동 호출(ShowLoginChoice)을 무시합니다.")]
+    [SerializeField] private bool requireTapToOpen = true;  
+    
+    // 첫 탭이 왔는지 여부
+    private bool _firstTapReceived = false;
+    // 첫 탭 전에 ShowLoginChoice가 불리면 여기 표기해 두었다가, 첫 탭 때 열어줌
+    private bool _deferredOpenRequested = false;
 
     
     private bool _dupCheckedOk = false;  // "중복확인 통과" 여부
@@ -68,6 +80,8 @@ public class GuestLoginUI : MonoBehaviour
     private int _effectiveMax = 8;
     private bool _blockSubmit;
     private GameObject _nicknamePopupInstance;
+    
+    public bool IsChoiceOpen { get; private set; }
 
     // 한글/대문자 혼합 시 6자, 소문자만 8자 룰
     private static readonly System.Text.RegularExpressions.Regex RxKorean =
@@ -78,9 +92,10 @@ public class GuestLoginUI : MonoBehaviour
 
     private void Awake()
     {
-        ProfanityFilter.Configure(profanityList);
         // 시작 시 버튼/입력/로딩 모두 숨김(팝업은 ScreenTapCatcher가 ShowLoginChoice로 띄움)
         SafeShowFirst();
+        
+        ProfanityFilter.Configure(profanityList);
 
         if (guestLoginButton)
         {
@@ -184,15 +199,82 @@ public class GuestLoginUI : MonoBehaviour
     }
 
     /// <summary>
-    /// ScreenTapCatcher에서 호출: 로그인 선택(버튼) 팝업을 표시.
-    /// 강제 표시/그래픽/레이캐스트까지 정리하여 SetActive(false)로 가려지는 문제를 무력화.
+    /// 로그인 선택(게스트/구글 버튼) 팝업을 띄움.
+    /// 단, requireTapToOpen이 켜져 있고 아직 첫 탭을 받지 않았다면
+    /// "지연 요청"만 표시하고 실제로는 열지 않습니다.
     /// </summary>
     public void ShowLoginChoice()
     {
+        // [핵심 게이트] 첫 사용자 탭 전에는 열지 않음
+        if (requireTapToOpen && !_firstTapReceived)
+        {
+            _deferredOpenRequested = true;
+            Debug.Log("[GuestLoginUI] ShowLoginChoice 요청이 첫 탭 전에 들어와 지연시켰습니다.");
+            return;
+        }
+
+        // --- 아래는 기존 구현 그대로 ---
         if (inputRoot) inputRoot.SetActive(false);
         if (loadingRoot) loadingRoot.SetActive(false);
 
-        ForceButtonsOn(); // 핵심: 버튼/그래픽/레이캐스트 강제 ON
+        ForceButtonsOn(); // 버튼 루트/그래픽/레이캐스트 강제 활성
+        LogButtonStates("ShowLoginChoice-done");
+
+        // 비동기 준비(예외 콘솔 노이즈 방지)
+        _ = ShowLoginChoiceAsync();
+    }
+    
+    /// <summary>
+    /// 타이틀 화면의 탭 캐처가 호출하는 함수.
+    /// - 첫 사용자 탭을 기록하고
+    /// - 지연된 요청이 있었다면 지금 바로 팝업을 보여줍니다.
+    /// </summary>
+    public void NotifyFirstTapAndOpen()
+    {
+        _firstTapReceived = true;
+
+        // 탭 전에 자동 호출이 들어왔었다면 지금 열어줌
+        if (_deferredOpenRequested)
+        {
+            _deferredOpenRequested = false;
+            ShowLoginChoice(); // 이제 게이트를 통과하므로 정상 표시
+            return;
+        }
+
+        // 자동 호출이 없었어도 타이틀 탭으로 바로 열어줌(원하는 동작)
+        ShowLoginChoice();
+    }
+    
+    /// <summary>
+    /// 로그인 선택(게스트/구글) 팝업을 띄우는 "취소 안전" 비동기 버전.
+    /// - 외부 코드가 이걸 await 하면, 씬 전환/오브젝트 파괴로 취소돼도 콘솔에 예외가 찍히지 않습니다.
+    /// - 외부에서 토큰을 넘기지 않으면, 기본적으로 "오브젝트 파괴 시 자동 취소" 토큰을 사용.
+    /// </summary>
+    public async UniTask ShowLoginChoiceAsync(CancellationToken external = default)
+    {
+        // 이 UI 오브젝트가 파괴되면 자동으로 취소되는 토큰
+        var destroyCt = this.GetCancellationTokenOnDestroy();
+
+        // 외부 토큰이 있으면 링크해서 사용
+        var ct = external.CanBeCanceled
+            ? CancellationTokenSource.CreateLinkedTokenSource(destroyCt, external).Token
+            : destroyCt;
+
+        // … UI 켜고 레이아웃 안정화 한 프레임 대기(취소는 조용히 무시)
+        await UniTask.NextFrame(ct).SuppressCancellationThrow();
+        if (ct.IsCancellationRequested) return;
+
+        // 3) 실 UI 토글
+        if (inputRoot)   inputRoot.SetActive(false);
+        if (loadingRoot) loadingRoot.SetActive(false);
+
+        ForceButtonsOn();    // 버튼/그래픽/레이캐스트 강제 ON
+        IsChoiceOpen = true; // 상태 기록
+
+        // 4) 한 프레임 뒤에 레이아웃/레이캐스트 안정 → 취소되어도 예외 미출력
+        await UniTask.NextFrame(ct).SuppressCancellationThrow();
+        if (ct.IsCancellationRequested) return;
+
         LogButtonStates("ShowLoginChoice-done");
     }
 
@@ -357,7 +439,9 @@ public class GuestLoginUI : MonoBehaviour
             if (catcher) catcher.ResetForNextTap();
         }
 
+        IsChoiceOpen = false;
         Debug.Log("[GuestLoginUI] ReturnToTapCatcher -> TapCatcher 복귀 완료");
+        
     }
 
     private void OnClickGpgsLogin()
@@ -481,6 +565,7 @@ public class GuestLoginUI : MonoBehaviour
                 _submitting = true; ShowSubmittingUI(true);
                 NicknameRegistry.IsAvailableAsync(nick).ContinueWithOnMainThread(task =>
                 {
+                    if (_destroyed || !isActiveAndEnabled) return;
                     bool ok = task.Exception == null && task.Result;
 
                     if (!ok)
@@ -766,6 +851,7 @@ public class GuestLoginUI : MonoBehaviour
 {
     // 1) 로그인 선택 팝업은 끄기
     if (buttonRoot) buttonRoot.SetActive(false);
+    IsChoiceOpen = false;
 
     // 2) 타겟 Canvas 결정(씬 오브젝트)
     var canvas = ResolveTargetCanvas(); // 이전에 드린 메서드 그대로 사용

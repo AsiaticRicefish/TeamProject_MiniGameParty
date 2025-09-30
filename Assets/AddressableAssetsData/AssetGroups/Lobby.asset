@@ -29,6 +29,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Sound
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 74b4033cb15e3234cbd09a87d609d3a5
+    m_Address: Assets/Imports/Meteo1.1.0/BGM/BGM001.mp3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 89138ab3d47044009932d54f0a343883
     m_Address: Assets/Imports/Lobby/click.wav
     m_ReadOnly: 0
