@@ -15,8 +15,13 @@ namespace LDH_Game
         public static DatabaseReference Root { get; private set; }
         public static FirebaseFirestore Firestore { get; private set; }
         
+        private static bool _initialized;
+
+        
         public static async UniTask InitializeAsync(string rtdbUrl, bool rtdbPersistence = true, bool fsPersistence = true)
         {
+            if (_initialized) return;
+            
             // FirebaseApp 의존성 확인
             var dependencyStatus = await FirebaseApp.CheckAndFixDependenciesAsync();
             if (dependencyStatus != DependencyStatus.Available)
@@ -78,6 +83,7 @@ namespace LDH_Game
 #else
             Firestore.Settings.PersistenceEnabled = fsPersistence;
 #endif
+            _initialized = true;
             Debug.Log("[FirebaseBootstrap] RTDB & Firestore ready.");
 
         }
