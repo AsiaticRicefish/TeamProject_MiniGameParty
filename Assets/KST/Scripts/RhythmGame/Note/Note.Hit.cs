@@ -8,15 +8,17 @@ namespace RhythmGame
         [SerializeField] Collider cd;
         bool _isWaiting; //히트 대기 상태
         public bool IsWaiting => _isWaiting;
-        [SerializeField] GameObject _bubbleGo;
+        [SerializeField] GameObject[] _bubbleGo;
 
         [SerializeField] MeshFilter _mf;
+        [SerializeField] GameObject _go;
         /// <summary>
         /// z축 길이 구하는 로직
         /// </summary>
         /// <returns></returns>
         public float GetZLength() =>
-            Mathf.Abs(_mf.sharedMesh.bounds.size.z * transform.lossyScale.z);
+            // Mathf.Abs(_mf.sharedMesh.bounds.size.z * transform.lossyScale.z);
+            _go.transform.localScale.z;
 
         /// <summary>
         /// 최소 홀드 시간
@@ -46,14 +48,16 @@ namespace RhythmGame
 
         public void BubblePop()
         {
-            if (_bubbleGo != null)
-                _bubbleGo.SetActive(false);
+            if (_bubbleGo == null) return;
+            foreach(var go in _bubbleGo)
+                go.SetActive(false);
         }
 
         public void BubbleInit()
         {
-            if (_bubbleGo != null)
-                _bubbleGo.SetActive(true);
+            if (_bubbleGo == null) return;
+            foreach(var go in _bubbleGo)
+                go.SetActive(true);
         }
 
     }

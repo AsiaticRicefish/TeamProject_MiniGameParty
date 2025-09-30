@@ -360,7 +360,7 @@ namespace RhythmGame
 
             //해당 인덱스의 플레이어 위치 가져오기
             var p = playerPoints[idx];
-            var vp = playerVerdictPoints[idx];
+            // var vp = playerVerdictPoints[idx];
 
             //아바타 위치 해당 위치로 이동
             t.SetPositionAndRotation(p.position, p.rotation);
