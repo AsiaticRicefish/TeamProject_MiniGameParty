@@ -5,6 +5,7 @@ using Managers;
 using ShootingScene;
 using UnityEngine;
 using UnityEngine.UI;
+using PMS_Util;
 
 public class OpenGameSettingPopupButton : MonoBehaviour
 {
@@ -34,10 +35,10 @@ public class OpenGameSettingPopupButton : MonoBehaviour
         // 팝업이 꺼질때 슈팅게임 PlayerInputManager 차단 해제
         if (PlayerInputManager.Instance != null)
         {
-            PlayerInputManager.Instance?.DisableAllInput();
+            PlayerInputManager.Instance.PushMode(InputMode.UI);
             popup.OnCloseRequested += (_) =>
             {
-                PlayerInputManager.Instance?.EnableAllInput();
+                PlayerInputManager.Instance?.PopMode();
             };
         }
         

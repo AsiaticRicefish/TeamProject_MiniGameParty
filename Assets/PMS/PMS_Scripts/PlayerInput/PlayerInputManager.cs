@@ -5,77 +5,56 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using ShootingScene;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
+using PMS_Util;
+using Cysharp.Threading.Tasks;
+
 
 namespace ShootingScene
 {
     [RequireComponent(typeof(PlayerInput))]
     public class PlayerInputManager : CombinedSingleton<PlayerInputManager>, IGameComponent
     {
-        public CameraSwipeController cameraSwipeController; 
-
+        [Header("References")]
         private PlayerInput playerInput; // PlayerInput 컴포넌트 참조 변수
 
-        public InputAction touchAction; // 유니모 터치 액션 참조 변수 (실질적인 게임 플레이 액션)
-        public InputAction cameraControlAction; // 카메라 액션 참조 변수 (스와이프, 줌 등 -> 부가적인 카메라 연출을 하기 위한 인풋액션)
-        public InputAction cameraPositionAction; // PrimaryPosition
-
-        //유니모 터치 액션
         public event Action<InputAction.CallbackContext> onTouchPress;
-
-        //카메라 터치 액션
         public event Action<InputAction.CallbackContext> onCameraGesture;
         public event Action<InputAction.CallbackContext> onCameraPosition;
 
-        private bool inputEnabled = false;
-        private bool cameraControlEnabled = false;
-        private bool cameraPositionEnabled = false;
+        // 실제 사용할 InputAction 레퍼런스
+        private InputAction _touchAction;                   // 유니모 터치 액션 참조 변수 (실질적인 게임 플레이 액션)
+        private InputAction _cameraGestureAction;           // 카메라 액션 참조 변수 (스와이프, 줌 등 -> 부가적인 카메라 연출을 하기 위한 인풋액션)
+        private InputAction _cameraPositionAction;          //카메라 터치 Pos값 - PrimaryPosition
+
+        private readonly Dictionary<InputMode, List<InputAction>> _modeActions = new();
+
+        // 현재 활성 모드 저장
+        private InputMode _currentMode = InputMode.None;
+        private InputMode _pendingMode;
 
         protected override void OnAwake()
         {
-           isPersistent = false;
-           Debug.Log("PlayerInputManager OnAwake 호출");
-        }
-
-        //테스트코드
-        //private void Start()
-        //{
-        //    Initialize();
-        //}
-
-        public void OnTouchPress(InputAction.CallbackContext ctx)
-        {
-            onTouchPress?.Invoke(ctx); // 구독자에게 전달
-        }
-
-        public void OnCameraGesture(InputAction.CallbackContext ctx)
-        {
-            Debug.Log("[PlayerInputManger] - OnCameraGesture 가 이벤트 Invoke");
-            onCameraGesture?.Invoke(ctx); // 구독자에게 전달
-        }
-
-        public void OnCameraPosition(InputAction.CallbackContext ctx)
-        {
-            onCameraPosition?.Invoke(ctx); // 구독자들에게 이벤트 전달
+            isPersistent = false;
+            Debug.Log("PlayerInputManager OnAwake 호출");
         }
 
         public void Initialize()
         {
-            Debug.Log("PlayerInputManager 초기화 시도");
+            InitializeActions();
 
-            // PlayerInput 컴포넌트 초기화
-            InitializePlayerInput();
+            // 모드별로 사용할 액션 등록
+            RegisterMode(InputMode.Gameplay, _touchAction);
+            RegisterMode(InputMode.Camera, _cameraGestureAction, _cameraPositionAction);
+            // 만약 InputSystemUIInputModule을 쓰면 UI 모드 액션도 여기에 등록 가능
+            // RegisterMode(InputMode.UI, playerInput.actions["Navigate"], playerInput.actions["Submit"]);
 
-            // Input Actions 초기화
-            InitializeInputActions();
+            // 기본은 전부 꺼두기
+            SetInputMode(InputMode.None);
 
-            RegisterActions();          // 액션 구독 등록하고
-
-            Debug.Log("[PlayerInputManager] - cameraSwipeController 의존성 주입");
-            //의존성 주입 CameraSwipeController
-            //cameraSwipeController.Initialize(this);
-
-            DisableAllInput2();
-            //DisableAllInput();          // 액션을 비활성화
+            // 콜백 구독
+            RegisterCallbacks();
         }
 
         private void InitializePlayerInput()
@@ -87,183 +66,149 @@ namespace ShootingScene
             }
         }
 
-        private void InitializeInputActions()
+        protected override void OnDestroy()
         {
-            if (playerInput == null) return;
+            UnregisterCallbacks();
+        }
 
-            // TouchPress
-            var touchMap = playerInput.actions.FindActionMap("Player");
-            touchAction = touchMap.FindAction("TouchPress");
-            if (touchAction == null) Debug.LogError("TouchPress 액션을 찾을 수 없습니다!");
+        // 1) PlayerInput에서 액션 뽑아오기
+        private void InitializeActions()
+        {
+            if (playerInput == null)
+                playerInput = GetComponent<PlayerInput>();
 
-            // PrimaryTouch
+            var playerMap = playerInput.actions.FindActionMap("Player");
+            _touchAction = playerMap?.FindAction("TouchPress");
+
             var cameraMap = playerInput.actions.FindActionMap("Camera");
-            cameraControlAction = cameraMap.FindAction("PrimaryTouch");
-            if (cameraControlAction == null) Debug.LogError("PrimaryTouch 액션을 찾을 수 없습니다!");
-
-            // PrimaryPosition
-            cameraPositionAction = cameraMap.FindAction("PrimaryPosition");
-            if (cameraPositionAction == null) Debug.LogError("PrimaryPosition 액션을 찾을 수 없습니다!");
+            _cameraGestureAction = cameraMap?.FindAction("PrimaryTouch");
+            _cameraPositionAction = cameraMap?.FindAction("PrimaryPosition");
         }
 
-        #region 유니모 터치 클릭 관련 활성/비활성화 함수
-        public void EnableInput()
+        // 2) 모드별로 켤/끄를 액션을 등록
+        public void RegisterMode(InputMode mode, params InputAction[] actions)
         {
-            Debug.Log("유니모 클릭 활성화");
+            if (!_modeActions.ContainsKey(mode))
+                _modeActions[mode] = new List<InputAction>();
 
-            if (inputEnabled) return; // 이미 활성화되었으면 그냥 리턴
-
-            if (touchAction != null)
+            foreach (var act in actions)
             {
-                touchAction.Enable();
-            }
-            inputEnabled = true;
-        }
-
-        public void DisableInput()
-        {
-            Debug.Log("유니모 클릭 비활성화");
-            if (!inputEnabled) return;
-
-            if (touchAction != null)
-            {
-                touchAction.Disable();
-            }
-            inputEnabled = false;
-        }
-        #endregion
-
-        #region 카메라 관련 InputAction 구독,구독해제 함수 (스와이프,줌인줌아웃 관련 활성/비활성화 함수)
-        public void EnableCameraControl()
-        {
-            Debug.Log("카메라 컨트롤 액션 활성화");
-
-            if (cameraControlEnabled) return;
-
-            if (cameraControlAction != null)
-            {
-                cameraControlAction.Enable();
-            }
-            cameraControlEnabled = true;
-        }
-
-        public void DisableCameraControl()
-        {
-            Debug.Log("카메라 컨트롤 액션 비활성화");
-            if (!cameraControlEnabled) return;
-
-            if (cameraControlAction != null)
-            {
-                cameraControlAction.Disable();
-            }
-            cameraControlEnabled = false;
-        }
-
-        public void EnableCameraPosition()
-        {
-            Debug.Log("카메라 포지션 액션 활성화");
-            if (cameraPositionEnabled) return;
-
-            if (cameraPositionAction != null)
-            {
-                cameraPositionAction.Enable();
-            }
-            cameraPositionEnabled = true;
-        }
-
-        public void DisableCameraPosition()
-        {
-            Debug.Log("카메라 포지션 액션 비활성화");
-            if (!cameraPositionEnabled) return;
-
-            if (cameraPositionAction != null)
-            {
-                cameraPositionAction.Disable();
-            }
-            cameraPositionEnabled = false;
-        }
-        #endregion
-
-        //구독만 하고 Enable처리는 각자 따로 하기
-        public void RegisterActions()
-        {
-            if (touchAction != null && !inputEnabled)
-            {
-                touchAction.started += OnTouchPress;
-            }
-
-            if (cameraControlAction != null && !cameraControlEnabled)
-            {
-                cameraControlAction.started += OnCameraGesture;
-                cameraControlAction.canceled += OnCameraGesture;
-            }
-
-            if (cameraPositionAction != null && !cameraPositionEnabled)
-            {
-                cameraPositionAction.performed += OnCameraPosition;
+                if (act != null && !_modeActions[mode].Contains(act))
+                    _modeActions[mode].Add(act);
             }
         }
 
-        //비활성화 및 구독해제
-        private void UnRegisterActions()
+        // 3) 호출 한 줄로 각 모드를 Enable/Disable
+        public void SetInputMode(InputMode mode)
         {
-            // 플래그 상관없이 강제로 비활성화
-            if (touchAction != null && inputEnabled == true)
+            _currentMode = mode;
+
+            foreach (var kv in _modeActions)
             {
-                touchAction.started -= OnTouchPress;
-                touchAction.Disable();
+                bool shouldBeOn = mode.HasFlag(kv.Key);
+                foreach (var action in kv.Value)
+                {
+                    if (shouldBeOn) action.Enable();
+                    else action.Disable();
+                }
+            }
+        }
+
+        /*/// <summary>
+        /// 콜백 내에서 바로 호출해도 안전하도록,
+        /// 다음 프레임 LateUpdate 시점에 모드 전환을 수행합니다.
+        /// </summary>
+        public void RequestInputModeAsync(InputMode mode)
+        {
+            _pendingMode = mode;
+            UniTask.Void(async () =>
+            {
+                // 모든 InputSystem 콜백이 끝나고 LateUpdate 이후에 적용
+                await UniTask.Yield(PlayerLoopTiming.LastUpdate);
+                SetInputMode(_pendingMode);
+            });
+        }*/
+
+        // 4) InputAction 콜백 구독
+        private void RegisterCallbacks()
+        {
+            if (_touchAction != null)
+                _touchAction.started += OnTouchPress;
+
+            if (_cameraGestureAction != null)
+            {
+                _cameraGestureAction.started += OnCameraGesture;
+                _cameraGestureAction.canceled += OnCameraGesture;
             }
 
-            if (cameraControlAction != null && cameraControlEnabled == true)
+            if (_cameraPositionAction != null)
+                _cameraPositionAction.performed += OnCameraPosition;
+        }
+
+        // 5) 콜백 해제
+        public void UnregisterCallbacks()
+        {
+            if (_touchAction != null)
+                _touchAction.started -= OnTouchPress;
+
+            if (_cameraGestureAction != null)
             {
-                cameraControlAction.started -= OnCameraGesture;
-                cameraControlAction.canceled -= OnCameraGesture;
-                cameraControlAction.Disable();
+                _cameraGestureAction.started -= OnCameraGesture;
+                _cameraGestureAction.canceled -= OnCameraGesture;
             }
 
-            if (cameraPositionAction != null && cameraPositionEnabled == true)
-            {
-                cameraPositionAction.performed -= OnCameraPosition;
-                cameraPositionAction.Disable();
-            }
-
-            // 플래그 리셋
-            inputEnabled = false;
-            cameraControlEnabled = false;
-            cameraPositionEnabled = false;
+            if (_cameraPositionAction != null)
+                _cameraPositionAction.performed -= OnCameraPosition;
         }
 
-        public void EnableAllInput()
+        // 6) 터치 콜백 – 특정 UI면 무시, 아니면 이벤트 발생
+        private void OnTouchPress(InputAction.CallbackContext ctx)
         {
-            EnableInput();
-            EnableCameraControl();
-            EnableCameraPosition();
+            if (EventSystem.current.IsPointerOverGameObject())
+                return;
+
+            onTouchPress?.Invoke(ctx);
         }
 
-        public void DisableAllInput2()
+        // 7) 카메라 제스처 콜백
+        private void OnCameraGesture(InputAction.CallbackContext ctx)
         {
-            Debug.Log("모든 액션 비활성화");
-            touchAction.Disable();
-            cameraControlAction.Disable();
-            cameraPositionAction.Disable();
+            if (EventSystem.current.IsPointerOverGameObject())
+                return;
+
+            onCameraGesture?.Invoke(ctx);
         }
 
-        public void DisableAllInput()
+        // 8) 카메라 포지션 콜백
+        private void OnCameraPosition(InputAction.CallbackContext ctx)
         {
-            DisableInput();
-            DisableCameraControl();
-            DisableCameraPosition();
+            if (EventSystem.current.IsPointerOverGameObject())
+                return;
+
+            onCameraPosition?.Invoke(ctx);
+
         }
 
-        //게임 종료시 구독 해제 처리
-        public void Cleanup()
-        {
-            UnRegisterActions();
+        private readonly Stack<InputMode> _modeStack = new();
 
-            // 이벤트 구독자들 정리
-            onTouchPress = null;
-            onCameraGesture = null;
-            onCameraPosition = null;
+        public void PushMode(InputMode mode)
+        {
+            _modeStack.Push(_currentMode);
+            StartCoroutine(DelayedSetMode(mode));
+        }
+
+        public void PopMode()
+        {
+            if (_modeStack.Count > 0)
+                StartCoroutine(DelayedSetMode(_modeStack.Pop()));
+            else
+                StartCoroutine(DelayedSetMode(InputMode.None));
+        }
+
+        private IEnumerator DelayedSetMode(InputMode mode)
+        {
+            yield return null; // 다음 프레임으로 연기
+            SetInputMode(mode);
         }
     }
 }
