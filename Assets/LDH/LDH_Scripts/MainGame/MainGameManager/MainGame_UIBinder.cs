@@ -208,6 +208,8 @@ namespace LDH_MainGame
 
         public async UniTask ShowGameEnd(bool isMainEnd = false)
         {
+            await Manager.UI.CloseAllPopupUI();
+            
             _gameEndPopup = Manager.UI.CreatePopupUI<UI_Popup_GameEnd>();
             if(isMainEnd)
                 _gameEndPopup.SetMatchEnd();
