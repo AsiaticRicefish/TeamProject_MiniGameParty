@@ -143,6 +143,7 @@ public class LogoutPopup : MonoBehaviour
         {
             // 5) 진행중 오버레이 끄고 버튼 되살리기(씬 이동 시에는 의미 없음)
             SetProgress(false);
+            await Managers.Manager.UI.CloseAllPopupUI();
             SetAllButtonsInteractable(true);
         }
     }
