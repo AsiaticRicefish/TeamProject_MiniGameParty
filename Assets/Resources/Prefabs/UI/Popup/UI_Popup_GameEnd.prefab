@@ -275,6 +275,10 @@ MonoBehaviour:
   text: {fileID: 7855403820361949332}
   xOffset: -160
   duration: 0.35
+  miniGameEnd: "\uAC8C\uC784 \uC885\uB8CC"
+  matchEnd: "\uB9E4\uCE58 \uC885\uB8CC"
+  miniGameEndSfx: 8
+  matchEndSfx: 9
 --- !u!225 &6857421069722020799
 CanvasGroup:
   m_ObjectHideFlags: 0

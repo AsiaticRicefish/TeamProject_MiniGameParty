@@ -160,8 +160,7 @@ namespace LDH_MainGame
 
             // 3) 미니게임 씬 언로드
             yield return MainGameManager.Instance.Loader.UnloadAdditive();
-
-
+            
             // 4) 필요한 변수 초기화 및 UI 활성화
             PhotonViewSync.Instance.Clear();
 

@@ -15,7 +15,7 @@ using UnityEngine.SceneManagement;
 
 namespace LDH_Game
 {
-    public class GameBootstrap : MonoBehaviour
+    public class GameStartBootstrap : MonoBehaviour
     {
         private UI_Loading _loadingUI;
         private const string loadingThemePath = "Data/Lobby_Theme";
@@ -111,26 +111,30 @@ namespace LDH_Game
             // 수동으로 캐시를 삭제해주시나거나
 
             // 모든 로케이터 → 모든 키 순회하며 캐시 삭제
-            /*foreach (var locator in Addressables.ResourceLocators)
-            {
-                foreach (var key in locator.Keys)
-                {
-                    // 삭제 요청
-                    Addressables.ClearDependencyCacheAsync(key);
-                    Debug.Log($"'{key}' 그룹/키 캐시 삭제 완료");
-                }
-            }*/
+            // foreach (var locator in Addressables.ResourceLocators)
+            // {
+            //     foreach (var key in locator.Keys)
+            //     {
+            //         // 삭제 요청
+            //         Addressables.ClearDependencyCacheAsync(key);
+            //         Debug.Log($"'{key}' 그룹/키 캐시 삭제 완료");
+            //     }
+            // }
 #endif
             //============= [1단계] ==================
 
+            Debug.Log("0) AdMobService InitializeAsync");
             // 0) 광고 AdMobService 초기화
             await AdMobService.InitializeAsync();
-            
+            Debug.Log("0) AdMobService InitializeAsync ---- complete");
             // 1) Addressable 초기화
+            Debug.Log("1) Addressable Addressable initializeAsync ");
             Small("리소스 시스템 초기화…");
             await Addressables.InitializeAsync().Task;
             subStep1.Complete();
-
+            Debug.Log("1) Addressable initializeAsync ---- complete");
+            
+            Debug.Log("0) Check contents update");
             // 2) 원격 카탈로그 최신화 (카탈로그 파일만 다운로드)
             Small("콘텐츠 업데이트 확인…");
             var updates = await Addressables.CheckForCatalogUpdates().Task;
@@ -144,7 +148,7 @@ namespace LDH_Game
             {
                 Util_LDH.ConsoleLog(this, $"update 내역이 없습니다.");
             }
-
+            Debug.Log("0) Check contents update----- complete");
             subStep2.Complete();
 
             // 3) Addressables 선 다운로드

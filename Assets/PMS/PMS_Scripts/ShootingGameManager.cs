@@ -174,11 +174,24 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
         foreach (var uid in rankedUids)
             unimoRankingList.Add(uid);
 
+        // 6. Egg 비활성화 유저 추가 (턴 인덱스 기준)
+        var remainingPlayers = PlayerManager.Instance.Players
+            .Values                                     // Player 객체 컬렉션
+            .Where(p => !unimoRankingList.Contains(p.PlayerId))
+            .OrderBy(p => p.ShootingData.myTurnIndex)                  // 턴 인덱스 기준 오름차순
+            .Select(p => p.PlayerId);
+
+        foreach (var uid in remainingPlayers)
+        {
+            unimoRankingList.Add(uid);
+        }
+
+        /*// 6. Egg 비활성화 유저 추가
         foreach (var uid in PlayerManager.Instance.Players.Keys)
         {
             if (!unimoRankingList.Contains(uid))
                 unimoRankingList.Add(uid); // 알이 없거나 비활성화된 유저도 포함
-        }
+        }*/
 
         // 배열을 문자열로 조합
         string rankingString = string.Join(",", unimoRankingList);
@@ -240,10 +253,16 @@ public class ShootingGameManager : PunSingleton<ShootingGameManager>, IGameCompo
         foreach (var uid in rankedUids)
             unimoRankingList.Add(uid);
 
-        foreach (var uid in PlayerManager.Instance.Players.Keys)
+        // 6. 알이 비활성화인 유저들은 턴인덱스 순으로
+        var remainingPlayers = PlayerManager.Instance.Players
+            .Values                                                     // Player 객체 컬렉션
+            .Where(p => !unimoRankingList.Contains(p.PlayerId))
+            .OrderBy(p => p.ShootingData.myTurnIndex)                  // 턴 인덱스 기준 오름차순
+            .Select(p => p.PlayerId);
+
+        foreach (var uid in remainingPlayers)
         {
-            if (!unimoRankingList.Contains(uid))
-                unimoRankingList.Add(uid); // 알이 없거나 비활성화된 유저도 포함
+            unimoRankingList.Add(uid);
         }
 
         // 5. UID별 등수 매핑

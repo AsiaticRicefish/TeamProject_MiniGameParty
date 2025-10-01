@@ -46,7 +46,8 @@ namespace LDH_MainGame
             _sequential.Clear();
             _parallel.Clear();
             
-            _uiLoading = _uiLoading ? _uiLoading : Manager.UI.PeekPopupUI<UI_Loading>();
+            _uiLoading = Manager.UI.PeekPopupUI<UI_Loading>();
+            Debug.Log($"<color=red> {_uiLoading == null} </color>");
             
         }
 
@@ -60,24 +61,20 @@ namespace LDH_MainGame
         {
             //플레이어 인원수 확인 및 모든 플레이어 ui 확인
             yield return WaitForAllPlayerUids(5f);
-            _uiLoading?.SetProgress(0.2f);
-            Debug.Log("2");
+            _uiLoading.SetProgress(0.2f);
+            Debug.Log($"<color=red> {_uiLoading == null} </color>");
             //룸 오브젝트 - 메인 게임 매니저 생성
             yield return StartCoroutine(EnsureRoomObjects(new[] { mainGameManagerPrefabPath }));
             _uiLoading?.SetProgress(0.4f);
-            Debug.Log("3");
             //타입 체크 및 type list 초기화
             yield return StartCoroutine(SetInitializeList());
             _uiLoading?.SetProgress(0.6f);
-            Debug.Log("4");
-
             // 초기화가 필요한 대상(매니저 등 initializeTargets에 있는 요소들)이 생성될 때까지 대기  
             foreach (var seqType in _seqTypeMap.Values)
             {
                 //초반에 배열에 있는 타입들을 찾아서 initializeTypes에 추가해두었으므로 이 타입을 넘긴다.
                 yield return WaitForSingletonReady(seqType);
             }
-            Debug.Log("5");
 
             _uiLoading?.SetProgress(0.7f);
 
@@ -200,7 +197,6 @@ namespace LDH_MainGame
 
         private IEnumerator EnsureRoomObjects(string[] roomObjectPaths)
         {
-            Debug.Log("2-2");
             // 0) 이미 누군가가 스폰해둔 경우(마스터 교체 등): 프로퍼티만 기다리면 됨
             if (TryGetRoomObjectIds(out var idsFromProp) && idsFromProp.Length == roomObjectPaths.Length)
             {

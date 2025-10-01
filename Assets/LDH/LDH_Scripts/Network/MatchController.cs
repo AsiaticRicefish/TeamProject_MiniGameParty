@@ -21,7 +21,6 @@ namespace Network
         // 매칭 모드
         public MatchType CurrentMatchType { get; private set; } = MatchType.None;
         public bool IsMatching { get; private set; }
-        public event Action<MatchType, bool> MatchTypeChanged;
 
 
         [Header("Match Controller")] public QuickMatchController QuickMatch;
@@ -59,14 +58,14 @@ namespace Network
         private void Subscribe()
         {
             PhotonNetwork.NetworkingClient.StateChanged += OnPhotonStateChanged;
-            Manager.Network.MatchStateChanged += CloseMatchingPanelAndShowLoading;
+            Manager.Network.MatchStateChanged += StartGameAsync;
         }
 
         private void Unsubscribe()
         {
             PhotonNetwork.NetworkingClient.StateChanged -= OnPhotonStateChanged;
             if (Manager.Network)
-                Manager.Network.MatchStateChanged -= CloseMatchingPanelAndShowLoading;
+                Manager.Network.MatchStateChanged -= StartGameAsync;
         }
 
 
@@ -74,8 +73,6 @@ namespace Network
         {
             IsMatching = isMatching;
             CurrentMatchType = isMatching ? type : MatchType.None;
-
-            MatchTypeChanged?.Invoke(type, isMatching);
             RefreshButtons();
         }
 
@@ -121,16 +118,16 @@ namespace Network
 
         #region Matching Button Control
 
+        private bool ReadyToMatch() =>
+            PhotonNetwork.IsConnected && PhotonNetwork.InLobby && !PhotonNetwork.InRoom && !IsMatching;
+        
         private void OnPhotonStateChanged(ClientState prev, ClientState curr)
         {
             // Debug.Log($"<color=blue>{prev} -> {curr}</color>");
             RefreshButtons();
         }
 
-
-        private bool ReadyToMatch() =>
-            PhotonNetwork.IsConnected && PhotonNetwork.InLobby && !PhotonNetwork.InRoom && !IsMatching;
-
+        
         private void RefreshButtons()
         {
             // Debug.Log("<color=red>refresh button</color>");
@@ -161,10 +158,7 @@ namespace Network
             _startCts?.Cancel();
             _startCts?.Dispose();
             _startCts = new CancellationTokenSource();
-
-            // 로딩 창 띄우기
-
-
+            
             // 가드: InRoom & Joined 상태에서만 입장 차단 + 상태 전파
             if (PhotonNetwork.InRoom && PhotonNetwork.NetworkClientState == ClientState.Joined)
             {
@@ -174,71 +168,81 @@ namespace Network
                     { Define_LDH.RoomProps.MatchState, Define_LDH.MatchState.Complete.ToString() }
                 });
             }
-
-            StartGameAsync(_startCts.Token).Forget();
         }
 
         /// 매칭 완료 연출 시간만큼 기다렸다가 씬 이동
-        private async UniTask StartGameAsync(CancellationToken ct)
+        private async void StartGameAsync(string state)
         {
-            Debug.Log("[MatchController] 마스터 클라이언트에서 게임을 시작합니다.");
-            await UniTask.Delay(TimeSpan.FromSeconds(startDelaySec));
-
-            // 취소/중단 플래그면 즉시 종료
-            if (ct.IsCancellationRequested || _leavingByAbort) return;
-
-            // 안전 재검증(이탈 대비)
-            var room = PhotonNetwork.CurrentRoom;
-            if (room != null &&
-                PhotonNetwork.InRoom &&
-                PhotonNetwork.NetworkClientState == ClientState.Joined &&
-                room.PlayerCount == room.MaxPlayers &&
-                Equals(room.CustomProperties[Define_LDH.RoomProps.MatchState],
-                    Define_LDH.MatchState.Complete.ToString()))
+            if (!string.Equals(state, Define_LDH.MatchState.Complete.ToString(), StringComparison.Ordinal))
             {
-                Manager.Network.LoadGameScene();
+                Debug.Log("[MatchController] match state가 complete가 아닙니다. 게임을 시작할 수 없습니다.");
+                return;
             }
-            else
+            
+            //모든 팝업 창 닫고 로딩창 띄우기
+            await CloseMatchingPanelAndShowLoading();
+            
+            //마스터는 게임 시작 처리
+            if (PhotonNetwork.IsMasterClient)
             {
-                // Joined일 때만 롤백
-                if (room != null && PhotonNetwork.InRoom &&
-                    PhotonNetwork.NetworkClientState == ClientState.Joined && !_leavingByAbort)
+                Debug.Log("[MatchController] 마스터 클라이언트에서 게임을 시작합니다.");
+
+                await UniTask.Delay(TimeSpan.FromSeconds(startDelaySec));
+
+                // 취소/중단 플래그면 즉시 종료
+                if (_startCts.IsCancellationRequested || _leavingByAbort) return;
+
+                // 안전 재검증(이탈 대비)
+                var room = PhotonNetwork.CurrentRoom;
+                if (room != null &&
+                    PhotonNetwork.InRoom &&
+                    PhotonNetwork.NetworkClientState == ClientState.Joined &&
+                    room.PlayerCount == room.MaxPlayers &&
+                    Equals(room.CustomProperties[Define_LDH.RoomProps.MatchState],
+                        Define_LDH.MatchState.Complete.ToString()))
                 {
-                    room.IsOpen = true;
-                    room.SetCustomProperties(new Hashtable
-                    {
-                        { Define_LDH.RoomProps.MatchState, Define_LDH.MatchState.Matching.ToString() }
-                    });
+                    Manager.Network.LoadGameScene();
                 }
-
-                QuickMatch.starting = false;
-                PrivateMatch.starting = false;
-            }
-        }
-
-        private async void CloseMatchingPanelAndShowLoading(string state)
-        {
-            if (string.Equals(state, Define_LDH.MatchState.Complete.ToString(), StringComparison.Ordinal))
-            {
-                if (_uiLoading == null)
+                else
                 {
-                    _uiLoading = Manager.UI.CreatePopupUI<UI_Loading>();
-                    if (loadingTheme)
+                    // Joined일 때만 롤백
+                    if (room != null && PhotonNetwork.InRoom &&
+                        PhotonNetwork.NetworkClientState == ClientState.Joined && !_leavingByAbort)
                     {
-                        _uiLoading.ApplyTheme(loadingTheme);
+                        room.IsOpen = true;
+                        room.SetCustomProperties(new Hashtable
+                        {
+                            { Define_LDH.RoomProps.MatchState, Define_LDH.MatchState.Matching.ToString() }
+                        });
                     }
 
-                    _uiLoading.SetProgress(0f);
+                    QuickMatch.starting = false;
+                    PrivateMatch.starting = false;
                 }
-                
-                await UniTask.Delay(TimeSpan.FromSeconds(startDelaySec));
-                if (CurrentMatchType == MatchType.Quick)
-                    await QuickMatch.CloseRoomPanel();
-                else if (CurrentMatchType == MatchType.Private)
-                    await PrivateMatch.CloseRoomPanel();
-                
-                await Manager.UI.ShowPopupUI(_uiLoading);
             }
+           
+        }
+
+        private async UniTask CloseMatchingPanelAndShowLoading()
+        {
+            if (_uiLoading == null)
+            {
+                _uiLoading = Manager.UI.CreatePopupUI<UI_Loading>();
+                if (loadingTheme)
+                {
+                    _uiLoading.ApplyTheme(loadingTheme);
+                }
+
+                _uiLoading.SetProgress(0f);
+            }
+
+            await UniTask.Delay(TimeSpan.FromSeconds(startDelaySec));
+            if (CurrentMatchType == MatchType.Quick)
+                await QuickMatch.CloseRoomPanel();
+            else if (CurrentMatchType == MatchType.Private)
+                await PrivateMatch.CloseRoomPanel();
+
+            await Manager.UI.ShowPopupUI(_uiLoading);
         }
 
         #endregion
@@ -279,6 +283,7 @@ namespace Network
                     Debug.Log("<color=green> 비공개 매칭 취소. 구독 해제 및 정리</color>");
                     PrivateMatch.OnClickLeaveRoom();
                 }
+
                 _leavingByAbort = false;
             }
         }

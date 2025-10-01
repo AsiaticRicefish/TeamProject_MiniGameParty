@@ -624,7 +624,7 @@ namespace LDH_MainGame
                 }
                 catch (Exception e)
                 {
-                    Debug.LogError(e);
+                    Debug.Log(e);
                 }
             });
             

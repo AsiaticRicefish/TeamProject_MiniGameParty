@@ -2,6 +2,7 @@ using Cysharp.Threading.Tasks;
 using InputBlocker;
 using LDH_UI;
 using Managers;
+using ShootingScene;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -22,12 +23,24 @@ public class OpenGameSettingPopupButton : MonoBehaviour
     {
         // 입력 차단
         if (InputManager.Instance != null && InputManager.Instance.IsBlocked(InputType.UI)) return;
-
+        
         if (!button || !button.interactable) return;
 
         button.interactable = false;
-
+        
         var popup = Manager.UI.CreatePopupUI<UI_Popup_GameSetting>();
+        
+        // 슈팅게임 PlayerInputManager 차단
+        // 팝업이 꺼질때 슈팅게임 PlayerInputManager 차단 해제
+        if (PlayerInputManager.Instance != null)
+        {
+            PlayerInputManager.Instance?.DisableAllInput();
+            popup.OnCloseRequested += (_) =>
+            {
+                PlayerInputManager.Instance?.EnableAllInput();
+            };
+        }
+        
         await Manager.UI.ShowPopupUI(popup);
 
         // 팝업이 닫힐 때까지 대기

@@ -1,3 +1,4 @@
+using LDH_Game;
 using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
@@ -54,17 +55,24 @@ public class GameBootstrap : MonoBehaviourPunCallbacks
 
         // 실제 접속 로직(예시)
         if (verbose) Debug.Log("[GameBootstrap] ConnectUsingSettings()");
-        PhotonNetwork.AutomaticallySyncScene = true; // 필요 시
-        PhotonNetwork.ConnectUsingSettings();
-
+        // PhotonNetwork.AutomaticallySyncScene = true; // 필요 시
+        // PhotonNetwork.ConnectUsingSettings();
+        
         // 마스터 연결 후 로비 자동 진입을 원하면 flag를 사용
         // (OnConnectedToMaster에서 체크해서 JoinLobby 호출)
+        
+        // 게임 부트스트랩을 돌려줘야 합니다. (초기화 및 데이터 정보 가져온 후에 포톤 네트워크에 연결해서 로비로 이동시켜야 합니다. 이 일을 모두 GameBootstrap에서 처리합니다.)
+        GameObject gameBootstrap = new GameObject("GameStartBootstrap", typeof(GameStartBootstrap));
     }
 
     public override void OnConnectedToMaster()
     {
         if (verbose) Debug.Log("[GameBootstrap] OnConnectedToMaster");
-        if (autoJoinLobby) PhotonNetwork.JoinLobby();
+        if (autoJoinLobby)
+        {
+            //join lobby 중복 호출되서 오류나므로 주석처리합니다.
+            // PhotonNetwork.JoinLobby();
+        }
     }
 
     public override void OnJoinedLobby()

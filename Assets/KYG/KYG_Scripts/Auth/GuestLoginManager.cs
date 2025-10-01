@@ -331,7 +331,7 @@ namespace KYG.Auth
             Debug.Log($"[GuestLogin] Photon.AuthValues.UserId={PhotonNetwork.AuthValues?.UserId}");
 
             //game 리소스 다운 / 초기화 및 파이어베이스 데이터 로드 진행 후 서버로 연결하기 위해 game boot strap을 생성한다.(bootstrap 이 완료되면 자동으로 서버연결이 됩니다)
-            GameObject gameBootstrap = new GameObject("Game Bootstrap", typeof(GameBootstrap));
+            GameObject gameBootstrap = new GameObject("GameBootstrap", typeof(GameStartBootstrap));
             
             
             
@@ -446,7 +446,7 @@ namespace KYG.Auth
             // 3) Photon 값 주입 + 네트워크 부트
             PhotonNetwork.NickName = nickname;
             PhotonNetwork.AuthValues = new Photon.Realtime.AuthenticationValues(uid);
-            new GameObject("Game Bootstrap", typeof(GameBootstrap));
+            new GameObject("Game Bootstrap", typeof(GameStartBootstrap));
         }
 
         /// <summary>

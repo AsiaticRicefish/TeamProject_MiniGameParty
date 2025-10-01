@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: Rhythm
   sceneName: Rhythm
-  gameName: "\uB9AC\uB4EC\uAC8C\uC784"
+  gameName: "\uC2A4\uD0C0 \uC774\uC2A4\uCF00\uC774\uD504"
   description: Rythm Game Desc
   sprite: {fileID: 0}
   tutorialVideo: {fileID: 0}

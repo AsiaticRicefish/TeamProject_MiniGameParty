@@ -71,7 +71,7 @@ public static class AuthAccount
 
         // (Android) GPGS SignOut
 #if UNITY_ANDROID && !UNITY_EDITOR
-    try { GooglePlayGames.PlayGamesPlatform.Instance?.SignOut(); } catch {}
+    // try { GooglePlayGames.PlayGamesPlatform.Instance?.SignOut(); } catch {}
 #endif
 
         // 로컬 자동로그인 정보/닉네임 캐시 등 지우기
