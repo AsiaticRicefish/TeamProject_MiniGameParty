@@ -11,6 +11,7 @@ using Network;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace LDH_MainGame
 {
@@ -208,8 +209,12 @@ namespace LDH_MainGame
 
         public async UniTask ShowGameEnd(bool isMainEnd = false)
         {
+            //미니게임 씬의 event system 비활성화시키기
+            EventSystem.current.enabled = false;
+
+            //열려있는 모든 팝업 닫기
             await Manager.UI.CloseAllPopupUI();
-            
+
             _gameEndPopup = Manager.UI.CreatePopupUI<UI_Popup_GameEnd>();
             if(isMainEnd)
                 _gameEndPopup.SetMatchEnd();

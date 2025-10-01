@@ -185,7 +185,7 @@ namespace KYG.Auth
             
             
             //game 리소스 다운 / 초기화 및 파이어베이스 데이터 로드 진행 후 서버로 연결하기 위해 game boot strap을 생성한다.
-            GameObject gameBootstrap = new GameObject("Game Bootstrap", typeof(GameBootstrap));
+            GameObject gameBootstrap = new GameObject("Game Bootstrap", typeof(GameStartBootstrap));
             
             // if (!PhotonNetwork.IsConnected) PhotonNetwork.ConnectUsingSettings();
             // else if (!PhotonNetwork.InLobby && PhotonNetwork.NetworkClientState != ClientState.JoiningLobby) // 방어로직 추가
@@ -205,13 +205,14 @@ namespace KYG.Auth
 
             PhotonNetwork.NickName = nickname;
             PhotonNetwork.AuthValues = new Photon.Realtime.AuthenticationValues(uid);
-            new GameObject("Game Bootstrap", typeof(GameBootstrap));
+            new GameObject("Game Bootstrap", typeof(GameStartBootstrap));
         }
 
         public override void OnConnectedToMaster()
         {
-            if (!PhotonNetwork.InLobby && PhotonNetwork.NetworkClientState != ClientState.JoiningLobby) // 방어로직 추가
-                PhotonNetwork.JoinLobby();
+            // 중복로비 진입으로 주석처리합니다.
+            // if (!PhotonNetwork.InLobby && PhotonNetwork.NetworkClientState != ClientState.JoiningLobby) // 방어로직 추가
+            //     PhotonNetwork.JoinLobby();
         }
         
         private void PreflightLog()

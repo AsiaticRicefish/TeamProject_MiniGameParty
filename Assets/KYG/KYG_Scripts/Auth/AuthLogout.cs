@@ -6,6 +6,7 @@ using Photon.Pun;
 using Photon.Realtime;
 using Firebase.Auth;
 using GooglePlayGames;
+using LDH_Game;
 using UnityEngine.SocialPlatforms;
 
 /// <summary>
@@ -46,7 +47,7 @@ public static class AuthLogout
             // ↑ 내부에서 닉네임 예약 해제 시도 + PhotonNetwork.Disconnect 호출 + UI 원복까지 처리합니다.  :contentReference[oaicite:6]{index=6} :contentReference[oaicite:7]{index=7}
 
             // 3) GameBootstrap 같이 "접속을 다시 시도"하는 오브젝트를 모두 제거해서 재부팅 차단
-            foreach (var gb in UnityEngine.Object.FindObjectsOfType<GameBootstrap>()) // 타입은 프로젝트 클래스명 유지
+            foreach (var gb in UnityEngine.Object.FindObjectsOfType<GameStartBootstrap>()) // 타입은 프로젝트 클래스명 유지
                 UnityEngine.Object.Destroy(gb.gameObject);
             // (GPGSLoginManager/GuestLoginManager가 GameBootstrap을 생성해 접속을 이어갑니다. 이것부터 끊어줘야 재연결 레이스가 안 납니다.) :contentReference[oaicite:8]{index=8} :contentReference[oaicite:9]{index=9}
 
@@ -73,7 +74,7 @@ public static class AuthLogout
             try
             {
                 var pg = PlayGamesPlatform.Instance as PlayGamesPlatform;
-                if (pg != null) pg.SignOut();
+                // if (pg != null) pg.SignOut();
             }
             catch { /* ignore */ }
 #endif
