@@ -88,7 +88,7 @@ namespace RhythmGame
             }
             // 캐릭터 생성
             PhotonNetwork.Instantiate(playerPrefabName, tempSpawnPos, Quaternion.identity);
-            
+
             //판정바 생성
             // PhotonNetwork.Instantiate(playerVerdictPrefab, tempSpawnPos, Quaternion.identity);
         }
@@ -110,7 +110,7 @@ namespace RhythmGame
             Debug.Log("모든 플레이어의 커스터마이징이 완료될때까지 대기");
             yield return new WaitUntil(() => customedPlayer.Count == PhotonNetwork.CurrentRoom.PlayerCount);
             Debug.Log("모든 플레이어의 커스터마이징 완료");
-            
+
             // 플레이어 자리 배정
             LaneManager.Instance.SetLane();
 
@@ -155,7 +155,7 @@ namespace RhythmGame
         IEnumerator IE_WaitStart(double startTime, double endTime)
         {
             while (PhotonNetwork.Time < startTime) yield return null;
-
+            if (IsGameOver) yield return null;
 
             if (PhotonNetwork.IsMasterClient)
             {
@@ -219,7 +219,6 @@ namespace RhythmGame
                 BroadcastRankSnapshot(rankings);
                 SendResultToMainGame(rankings);
             }
-
 
             //게임 종료 이벤트 호출
             OnGameOver?.Invoke();
@@ -649,6 +648,6 @@ namespace RhythmGame
         }
 
         #endregion
-        
+
     }
 }
