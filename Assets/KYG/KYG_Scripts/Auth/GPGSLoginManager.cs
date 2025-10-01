@@ -11,6 +11,8 @@ using Photon.Realtime;
 using UnityEngine;
 using UnityEngine.SocialPlatforms;
 using System.Threading.Tasks;
+using LDH_Util;
+using PMS_Util;
 
 namespace KYG.Auth
 {
@@ -47,7 +49,7 @@ namespace KYG.Auth
         public void LoginWithGPGS()
         {
             PreflightLog();
-#if UNITY_ANDROID && !UNITY_EDITOR
+// #if UNITY_ANDROID && !UNITY_EDITOR
             PlayGamesPlatform.Instance.Authenticate(status =>
             {
                 if (status != SignInStatus.Success)
@@ -83,9 +85,9 @@ namespace KYG.Auth
                     TryIdTokenFallback(displayName);
                 }
             });
-#else
+// #else
             Debug.LogWarning("[GPGS] Android 기기에서 테스트하세요. (에디터 미지원)");
-#endif
+// #endif
         }
 
         /// <summary>GetIdToken 공개 API가 없는 환경을 위한 리플렉션 폴백</summary>
@@ -185,7 +187,8 @@ namespace KYG.Auth
             
             
             //game 리소스 다운 / 초기화 및 파이어베이스 데이터 로드 진행 후 서버로 연결하기 위해 game boot strap을 생성한다.
-            GameObject gameBootstrap = new GameObject("Game Bootstrap", typeof(GameStartBootstrap));
+            Util_LDH.ConsoleLog(this, "------------Game Start Bootstrap을 만듭니다. -----------");
+            GameObject gameBootstrap = new GameObject("GameStartBootstrap", typeof(GameStartBootstrap));
             
             // if (!PhotonNetwork.IsConnected) PhotonNetwork.ConnectUsingSettings();
             // else if (!PhotonNetwork.InLobby && PhotonNetwork.NetworkClientState != ClientState.JoiningLobby) // 방어로직 추가
@@ -205,7 +208,7 @@ namespace KYG.Auth
 
             PhotonNetwork.NickName = nickname;
             PhotonNetwork.AuthValues = new Photon.Realtime.AuthenticationValues(uid);
-            new GameObject("Game Bootstrap", typeof(GameStartBootstrap));
+            // new GameObject("Game Bootstrap", typeof(GameStartBootstrap));
         }
 
         public override void OnConnectedToMaster()
