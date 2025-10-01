@@ -645,13 +645,20 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
             remainingTime = Mathf.Max(0f, (float)(end - PhotonNetwork.Time));
             OnTimeUpdated?.Invoke(remainingTime);
 
-            Debug.Log($"[Timer] now={PhotonNetwork.Time:F3}, end={end:F3}, rem={remainingTime:F3}, state={currentState}");
-
-            // if (remainingTime <= 0f) break;
-
             if (remainingTime <= TIMER_EPS)
             {
-                Debug.Log($"<color=yellow>[JengaGameManager - GameTimer] TIME UP! rem={remainingTime:F3}, breaking loop</color>");
+                Debug.Log($"<color=yellow>[JengaGameManager - GameTimer] TIME UP! rem={remainingTime:F3}</color>");
+
+                // 비마스터는 RPC 대기
+                if (!PhotonNetwork.IsMasterClient)
+                {
+                    float waitTime = 0f;
+                    while (!_ended && waitTime < 1f)
+                    {
+                        yield return new WaitForSeconds(0.1f);
+                        waitTime += 0.1f;
+                    }
+                }
                 break;
             }
 

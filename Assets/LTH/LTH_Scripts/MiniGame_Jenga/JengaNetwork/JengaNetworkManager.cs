@@ -126,13 +126,7 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     private void RPC_ApplyGameState(int stateInt)
     {
         var state = (JengaGameState)stateInt;
-        Debug.Log($"[NM] ApplyGameState → {state}");
-
-        if (JengaGameManager.Instance?.currentState == state)
-        {
-            Debug.Log($"[NM] State already {state}, skip");
-            return;
-        }
+        Debug.Log($"<color=cyan>[JengaNetworkManager - RPC_ApplyGameState] Received state={state} by Actor#{PhotonNetwork.LocalPlayer.ActorNumber}, current={JengaGameManager.Instance?.currentState}</color>");
 
         JengaGameManager.Instance?.ApplyGameStateChange(state);
     }
