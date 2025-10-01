@@ -5,6 +5,9 @@ using Firebase.Auth;
 using UnityEngine;
 using Photon.Pun;
 using KYG.Auth;
+using LDH_Game;
+using Photon.Pun.Demo.Procedural;
+using UnityEngine.EventSystems;
 
 namespace KYG
 {
@@ -41,6 +44,7 @@ public class AuthBootstrapper : MonoBehaviour
 
     private async void Start()
     {
+        
         // 로그아웃 직후 1회: 어떤 자동 로그인도 금지하고 UI만 띄움
         if (AuthAutoSuppressor.Consume())
         {
@@ -59,7 +63,6 @@ public class AuthBootstrapper : MonoBehaviour
         if (dep != DependencyStatus.Available)
         {
             Debug.LogError($"[AuthBootstrapper] Firebase deps: {dep}");
-            ShowLoginUI();
             return;
         }
 
@@ -67,7 +70,6 @@ public class AuthBootstrapper : MonoBehaviour
         if (string.IsNullOrWhiteSpace(databaseUrl) || !databaseUrl.StartsWith("https://"))
         {
             Debug.LogError("[AuthBootstrapper] Realtime DB URL을 올바르게 설정하세요.");
-            ShowLoginUI();
             return;
         }
         // 닉네임 레지스트리 사용 중이라면 여기에 ConfigureDatabase(...) 호출 (프로젝트에 따라)
@@ -76,7 +78,6 @@ public class AuthBootstrapper : MonoBehaviour
         // 3) 개발자 강제 UI 옵션
         if (forceShowLoginUI)
         {
-            ShowLoginUI();
             return;
         }
 
@@ -84,7 +85,6 @@ public class AuthBootstrapper : MonoBehaviour
         if (kickCooldownSeconds > 0 && SessionEnforcer.WasKickedRecently(kickCooldownSeconds * 1000))
         {
             if (verbose) Debug.Log("[AuthBootstrapper] 최근 세션 킥 감지 → 자동 로그인 보류, UI 표시");
-            ShowLoginUI();
             return;
         }
 
@@ -119,7 +119,6 @@ public class AuthBootstrapper : MonoBehaviour
         }
 
         // 7) 완전 첫 실행 또는 정보 불충분 → UI
-        ShowLoginUI();
     }
 
     // ------------------ 내부 구현 ------------------
@@ -139,7 +138,7 @@ public class AuthBootstrapper : MonoBehaviour
             if (!ok)
             {
                 Debug.LogWarning("[AuthBootstrapper] SessionEnforcer 실패 → UI로 폴백");
-                ShowLoginUI();
+                // ShowLoginUI();
                 return;
             }
         }
@@ -171,7 +170,10 @@ public class AuthBootstrapper : MonoBehaviour
             if (enf != null)
             {
                 var ok = await enf.StartForUidAsync(user.UserId);
-                if (!ok) { ShowLoginUI(); return; }
+                if (!ok)
+                {
+                    ShowLoginUI(); return;
+                }
             }
 
             // 로컬 저장
@@ -288,7 +290,7 @@ public class AuthBootstrapper : MonoBehaviour
         PhotonNetwork.AuthValues = new Photon.Realtime.AuthenticationValues(uid);
 
         // (선택) 바로 연결/로비 진입이 GameBootstrap/NetworkManager에 숨어 있다면 해당 진입점을 생성
-        new GameObject("Game Bootstrap", typeof(GameBootstrap));
+        new GameObject("GameBootstrap", typeof(GameStartBootstrap));
 
         if (verbose) Debug.Log($"[AuthBootstrapper] Ready → UID={uid}, Nick={nickname}");
     }
@@ -341,5 +343,7 @@ public class AuthBootstrapper : MonoBehaviour
             // 인스펙터에서 overlayPrefab 슬롯에 SessionKickOverlay 프리팹을 넣으세요.
         }
     }
+
+    -
 }
 }

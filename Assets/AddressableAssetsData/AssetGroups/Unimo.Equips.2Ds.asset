@@ -18,117 +18,117 @@ MonoBehaviour:
   m_GUID: 09e4877ebd345433e90ed4dfb8c3a1d6
   m_SerializeEntries:
   - m_GUID: 00145deaca1149a41a67a7438509ae80
-    m_Address: Assets/Imports/123/Resources_Image/Image/Equip_2D/3_HoneyJar.png
+    m_Address: Assets/Imports/UnimoAsset/123/Resources_Image/Image/Equip_2D/3_HoneyJar.png
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0b9186369dcd4e448ba1ae22ea294339
-    m_Address: Assets/Imports/123/Resources_Image/Image/Equip_2D/7_HatchedEgg.png
+    m_Address: Assets/Imports/UnimoAsset/123/Resources_Image/Image/Equip_2D/7_HatchedEgg.png
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0e7d9081fe1d7c540ac761a155cd13a1
-    m_Address: Assets/Imports/123/Resources_Image/Image/Equip_2D/Trashcan.png
+    m_Address: Assets/Imports/UnimoAsset/123/Resources_Image/Image/Equip_2D/Trashcan.png
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1c72d4b94ed2d6740a3e0e7bfa9e93ba
-    m_Address: Assets/Imports/123/Resources_Image/Image/Equip_2D/Icecream.png
+    m_Address: Assets/Imports/UnimoAsset/123/Resources_Image/Image/Equip_2D/Icecream.png
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 22ead7b9a7b07934da0f4c1d9e29c8d9
-    m_Address: Assets/Imports/123/Resources_Image/Image/Equip_2D/DogBowl.png
+    m_Address: Assets/Imports/UnimoAsset/123/Resources_Image/Image/Equip_2D/DogBowl.png
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2e5cd44ea3d59974ab58e33d71b3bd43
-    m_Address: Assets/Imports/123/Resources_Image/Image/Equip_2D/8_Scuootus.png
+    m_Address: Assets/Imports/UnimoAsset/123/Resources_Image/Image/Equip_2D/8_Scuootus.png
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2ebf4a5eff1cb124f8365b2c6380e025
-    m_Address: Assets/Imports/123/Resources_Image/Image/Equip_2D/2_Box.png
+    m_Address: Assets/Imports/UnimoAsset/123/Resources_Image/Image/Equip_2D/2_Box.png
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 32a165f820e00894aaa4431c6e00bcde
-    m_Address: Assets/Imports/123/Resources_Image/Image/Equip_2D/5_CleanBucket.png
+    m_Address: Assets/Imports/UnimoAsset/123/Resources_Image/Image/Equip_2D/5_CleanBucket.png
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 35f7a2e6f9db5cb4e8f929d41dfb6bda
-    m_Address: Assets/Imports/123/Resources_Image/Image/Equip_2D/BathTub.png
+    m_Address: Assets/Imports/UnimoAsset/123/Resources_Image/Image/Equip_2D/BathTub.png
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3db93fc29ad9e744c8308e3f01b4142e
-    m_Address: Assets/Imports/123/Resources_Image/Image/Equip_2D/6_MonoPlane.png
+    m_Address: Assets/Imports/UnimoAsset/123/Resources_Image/Image/Equip_2D/6_MonoPlane.png
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4066771a27750cd4b9a9641a528b9ab4
-    m_Address: Assets/Imports/123/Resources_Image/Image/Equip_2D/12_Sack.png
+    m_Address: Assets/Imports/UnimoAsset/123/Resources_Image/Image/Equip_2D/12_Sack.png
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 531215ba61898634aa9f618bf595c999
-    m_Address: Assets/Imports/123/Resources_Image/Image/Equip_2D/9_Vase.png
+    m_Address: Assets/Imports/UnimoAsset/123/Resources_Image/Image/Equip_2D/9_Vase.png
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 74eb02dfd2dd7eb4c8f1770d26a29c78
-    m_Address: Assets/Imports/123/Resources_Image/Image/Equip_2D/10_EmperorPenguin.png
+    m_Address: Assets/Imports/UnimoAsset/123/Resources_Image/Image/Equip_2D/10_EmperorPenguin.png
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7b93000b215e8024198619d99f5dd32b
-    m_Address: Assets/Imports/123/Resources_Image/Image/Equip_2D/1_BeeTail.png
+    m_Address: Assets/Imports/UnimoAsset/123/Resources_Image/Image/Equip_2D/1_BeeTail.png
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8444abae7e4bfd14f9a69a0331e6dcfe
-    m_Address: Assets/Imports/123/Resources_Image/Image/Equip_2D/ElfCup.png
+    m_Address: Assets/Imports/UnimoAsset/123/Resources_Image/Image/Equip_2D/ElfCup.png
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9ee4786cdf73b6641b371868d33b69ee
-    m_Address: Assets/Imports/123/Resources_Image/Image/Equip_2D/11_DogHouse.png
+    m_Address: Assets/Imports/UnimoAsset/123/Resources_Image/Image/Equip_2D/11_DogHouse.png
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a5c974c50fbc3154aa1d38d3d67355ea
-    m_Address: Assets/Imports/123/Resources_Image/Image/Equip_2D/SandCastle.png
+    m_Address: Assets/Imports/UnimoAsset/123/Resources_Image/Image/Equip_2D/SandCastle.png
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: afe458fb495cf084cb14fbc7d590e5da
-    m_Address: Assets/Imports/123/Resources_Image/Image/Equip_2D/OakTong.png
+    m_Address: Assets/Imports/UnimoAsset/123/Resources_Image/Image/Equip_2D/OakTong.png
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c211f8ea5b051f243afadcb33a6759f0
-    m_Address: Assets/Imports/123/Resources_Image/Image/Equip_2D/13_Toaster.png
+    m_Address: Assets/Imports/UnimoAsset/123/Resources_Image/Image/Equip_2D/13_Toaster.png
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: de6b1c4cc18d1514dacab49b2700bd12
-    m_Address: Assets/Imports/123/Resources_Image/Image/Equip_2D/4_StoneMortar.png
+    m_Address: Assets/Imports/UnimoAsset/123/Resources_Image/Image/Equip_2D/4_StoneMortar.png
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e30ebb12162adc740adb3755b43a9c12
-    m_Address: Assets/Imports/123/Resources_Image/Image/Equip_2D/WitchSot.png
+    m_Address: Assets/Imports/UnimoAsset/123/Resources_Image/Image/Equip_2D/WitchSot.png
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e9e9948515bc1b042b33d1831eb08f45
-    m_Address: Assets/Imports/123/Resources_Image/Image/Equip_2D/MagicHat.png
+    m_Address: Assets/Imports/UnimoAsset/123/Resources_Image/Image/Equip_2D/MagicHat.png
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: eec46f469883a854d87c943bf701185e
-    m_Address: Assets/Imports/123/Resources_Image/Image/Equip_2D/Cloud.png
+    m_Address: Assets/Imports/UnimoAsset/123/Resources_Image/Image/Equip_2D/Cloud.png
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
