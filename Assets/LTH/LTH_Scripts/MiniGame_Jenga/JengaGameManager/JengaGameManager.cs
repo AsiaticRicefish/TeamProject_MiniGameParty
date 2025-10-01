@@ -39,7 +39,7 @@ public static class JengaRoomProps
 public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameComponent
 {
     [Header("게임 설정")]
-    [SerializeField] private float gameTime = 180f; // 전체 게임 시간 (기본 180초)
+    [SerializeField] private float gameTime = 90f; // 전체 게임 시간 (기본 90초)
 
     [Header("게임 상태")]
     public JengaGameState currentState = JengaGameState.Waiting;
@@ -651,7 +651,7 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
 
             if (remainingTime <= TIMER_EPS)
             {
-                Debug.Log($"<color=yellow>[JengaGameManager - GameTimer] ⏰ TIME UP! rem={remainingTime:F3}, breaking loop</color>");
+                Debug.Log($"<color=yellow>[JengaGameManager - GameTimer] TIME UP! rem={remainingTime:F3}, breaking loop</color>");
                 break;
             }
 
@@ -706,9 +706,7 @@ public class JengaGameManager : CombinedSingleton<JengaGameManager>, IGameCompon
     public string GetFormattedTime()
     {
         int totalSeconds = Mathf.FloorToInt(remainingTime + 1e-3f);
-        int minutes = totalSeconds / 60;
-        int seconds = totalSeconds % 60;
-        return $"{minutes}:{seconds:00}";
+        return $"{totalSeconds}";
     }
 
     private Vector3 GetPlayerTowerPosition(string playerId)
