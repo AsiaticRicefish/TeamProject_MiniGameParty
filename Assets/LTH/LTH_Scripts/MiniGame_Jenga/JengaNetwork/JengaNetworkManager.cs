@@ -119,7 +119,7 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
         }
         Debug.Log($"[JengaNetwork] Sending RPC to change state to: {state}");
 
-        thisPhotonView.RPC(nameof(RPC_ApplyGameState), RpcTarget.Others, (int)state);
+        thisPhotonView.RPC(nameof(RPC_ApplyGameState), RpcTarget.All, (int)state);
     }
 
     [PunRPC]
@@ -127,6 +127,13 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     {
         var state = (JengaGameState)stateInt;
         Debug.Log($"[NM] ApplyGameState → {state}");
+
+        if (JengaGameManager.Instance?.currentState == state)
+        {
+            Debug.Log($"[NM] State already {state}, skip");
+            return;
+        }
+
         JengaGameManager.Instance?.ApplyGameStateChange(state);
     }
 
@@ -500,12 +507,14 @@ public class JengaNetworkManager : PunSingleton<JengaNetworkManager>, IGameCompo
     {
         if (!PhotonNetwork.IsMasterClient) return;
 
+        Debug.Log($"[NET-TIME] BroadcastTimeSync({remainingTime:F2}) to All");
         thisPhotonView.RPC(nameof(RPC_SyncTime), RpcTarget.All, remainingTime);
     }
 
     [PunRPC]
     private void RPC_SyncTime(float syncedTime)
     {
+        Debug.Log($"[NET-RPC] RPC_SyncTime received: {syncedTime:F2} by Actor#{PhotonNetwork.LocalPlayer.ActorNumber}");
         JengaGameManager.Instance?.SyncRemainingTime(syncedTime);
     }
 
