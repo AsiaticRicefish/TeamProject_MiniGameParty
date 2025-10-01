@@ -213,7 +213,7 @@ public class TimingGame : MonoBehaviour
             SoundManager.Instance.PlaySFX("Fail");
         }
 
-        yield return new WaitForSeconds(2f);
+        yield return new WaitForSeconds(1f);
 
         _finishPanel.SetActive(false);
         _finishText.text = "";
