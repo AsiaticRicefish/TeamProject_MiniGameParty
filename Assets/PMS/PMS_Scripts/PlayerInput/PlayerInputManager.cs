@@ -9,6 +9,8 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using PMS_Util;
 using Cysharp.Threading.Tasks;
+using UnityEngine.InputSystem.Controls;    // ← 이 라인 추가
+using static UnityEditor.PlayerSettings;
 
 
 namespace ShootingScene
@@ -24,7 +26,9 @@ namespace ShootingScene
         public event Action<InputAction.CallbackContext> onCameraPosition;
 
         // 실제 사용할 InputAction 레퍼런스
-        private InputAction _touchAction;                   // 유니모 터치 액션 참조 변수 (실질적인 게임 플레이 액션)
+        private InputAction _touchAction;                   // 유니모 터치 액션 Button type
+        //[SerializeField] private InputAction _touchPositionAction;                   // 유니모 터치 액션 Button type
+
         private InputAction _cameraGestureAction;           // 카메라 액션 참조 변수 (스와이프, 줌 등 -> 부가적인 카메라 연출을 하기 위한 인풋액션)
         private InputAction _cameraPositionAction;          //카메라 터치 Pos값 - PrimaryPosition
 
@@ -164,8 +168,20 @@ namespace ShootingScene
         // 6) 터치 콜백 – 특정 UI면 무시, 아니면 이벤트 발생
         private void OnTouchPress(InputAction.CallbackContext ctx)
         {
-            if (EventSystem.current.IsPointerOverGameObject())
+            // 1) 화면 좌표 얻기
+            Vector2 screenPos = ctx.control is Vector2Control
+                ? ctx.ReadValue<Vector2>()
+                : (Mouse.current?.position.ReadValue() ?? Touchscreen.current.primaryTouch.position.ReadValue());
+
+            // 2) 특정 UI만 막기
+            if (PMS_Util.Util.IsOverBlockedUI(screenPos))
                 return;
+
+            // 3) 입력 처리
+            if (ctx.control is ButtonControl)
+                Debug.Log(ctx.ReadValueAsButton() ? "Pressed" : "Released");
+            else
+                Debug.Log($"Position: {screenPos}");
 
             onTouchPress?.Invoke(ctx);
         }
