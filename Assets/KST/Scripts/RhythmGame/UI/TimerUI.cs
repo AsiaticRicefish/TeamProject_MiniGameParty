@@ -66,7 +66,7 @@ namespace RhythmGame
             _countDownText.gameObject.SetActive(false);
             _gameStartText.gameObject.SetActive(false);
             _timerText.gameObject.SetActive(true);
-            _timerText.text = "00:00";
+            _timerText.text = "00";
 
         }
 

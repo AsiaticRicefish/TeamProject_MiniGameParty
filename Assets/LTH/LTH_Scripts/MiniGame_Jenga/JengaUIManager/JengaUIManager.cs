@@ -8,7 +8,6 @@ using Photon.Pun;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using DG.Tweening;
 
 public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
 {
@@ -252,15 +251,10 @@ public class JengaUIManager : CombinedSingleton<JengaUIManager>, IGameComponent
             if (remainingTime > 0f && remainingTime <= 10f)
             {
                 timerText.color = Color.red;
-
-                timerText.transform.DOKill();
-                timerText.transform.DOShakePosition(0.5f, 3f, 20, 45f, false, true)
-                    .SetLoops(-1, LoopType.Restart);
             }
             else
             {
                 timerText.color = Color.black;
-                timerText.transform.DOKill();
             }
         }
     }

@@ -70,8 +70,8 @@ public class SoundManager : CombinedSingleton<SoundManager>
     #endregion
 
     // 볼륨
-    public float bgmSoundVolume { get; private set; } = 1f;
-    public float sfxSoundVolume { get; private set; } = 1f;
+    public float bgmSoundVolume { get; private set; } = 0.5f;
+    public float sfxSoundVolume { get; private set; } = 0.5f;
 
     #region 최적화
 
@@ -98,7 +98,6 @@ public class SoundManager : CombinedSingleton<SoundManager>
     {
         base.Awake();
         InitializeAudioSources();
-        LoadVolumeSettings();
         BuildMaps();
 
         SceneManager.sceneLoaded += OnSceneLoaded;
@@ -106,10 +105,17 @@ public class SoundManager : CombinedSingleton<SoundManager>
 
         //활성 씬 변경 감지
         SceneManager.activeSceneChanged += OnActiveSceneChanged;
+    }
 
+    private async void Start()
+    {
+        await UniTask.Yield();
 
-        // 타이틀 사운드로 초기화
-        //LoadGameSounds(GameType.Title);
+        LoadVolumeSettings();
+
+        await UniTask.Yield();
+        SetBGMSoundVolume(bgmSoundVolume);
+        SetSFXSoundVolume(sfxSoundVolume);
     }
 
     protected override void OnDestroy()
@@ -393,6 +399,9 @@ public class SoundManager : CombinedSingleton<SoundManager>
         }
 
         PlayerPrefs.SetFloat("BGMVolume", volume);
+        PlayerPrefs.Save();
+
+        Debug.Log($"<color=yellow>BGM 볼륨 저장됨: {volume}</color>");
     }
 
     public void SetSFXSoundVolume(float volume)
@@ -421,6 +430,7 @@ public class SoundManager : CombinedSingleton<SoundManager>
         }
 
         PlayerPrefs.SetFloat("SFXVolume", volume);
+        PlayerPrefs.Save();
     }
 
     #endregion
@@ -593,6 +603,8 @@ public class SoundManager : CombinedSingleton<SoundManager>
     {
         bgmSoundVolume = PlayerPrefs.GetFloat("BGMVolume", 1f);
         sfxSoundVolume = PlayerPrefs.GetFloat("SFXVolume", 1f);
+
+        Debug.Log($"<color=cyan>PlayerPrefs 로드됨 - BGM: {bgmSoundVolume}, SFX: {sfxSoundVolume}</color>");
 
         SetBGMSoundVolume(bgmSoundVolume);
         SetSFXSoundVolume(sfxSoundVolume);
