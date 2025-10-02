@@ -17,8 +17,8 @@ namespace Data
         public HashSet<string> ownedEquips;
         public long updatedAt; // 서버 시각(ms)
 
-        public IReadOnlyList<string> OwnedCharacters => ownedCharacters.ToList();
-        public IReadOnlyList<string> OwnedEquips => ownedEquips.ToList();
+        public IReadOnlyCollection<string> OwnedCharacters => ownedCharacters;
+        public IReadOnlyCollection<string> OwnedEquips => ownedEquips;
         public UnimoCombo CurrentCombo => new UnimoCombo(characterId, equipId);
         
         
@@ -52,12 +52,13 @@ namespace Data
             var defaultCharacterId =  Define_LDH.DefaultData.DefaultCharacter;
             var defaultEquipId     = Define_LDH.DefaultData.DefaultEquip;
             
+            
             return new CustomizationData
             {
                 characterId = defaultCharacterId,
                 equipId = defaultEquipId,
-                ownedCharacters = new() {  defaultCharacterId},
-                ownedEquips = new() { defaultEquipId },
+                ownedCharacters = new HashSet<string>(Define_LDH.DefaultData.DefaultOwnedCharacters),
+                ownedEquips     = new HashSet<string>(Define_LDH.DefaultData.DefaultOwnedEquips),
                 updatedAt  = 0 // 저장 시 서버타임으로 채움
             };
         }
