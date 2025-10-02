@@ -905,7 +905,7 @@ Transform:
   m_GameObject: {fileID: 281150527}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 2, y: 0, z: 1}
+  m_LocalPosition: {x: 2, y: 0, z: 1.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1141,7 +1141,7 @@ Transform:
   m_GameObject: {fileID: 348252278}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.25, y: 0, z: 1}
+  m_LocalPosition: {x: 0.25, y: 0, z: 1.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1415,7 +1415,7 @@ MonoBehaviour:
   - {fileID: 351156399658851704, guid: 8b50fe8b38e93ff45868f9fd191da9bb, type: 3}
   _hitEffect:
   - {fileID: -2183472396014260670, guid: 33cbbf70a735d40c09095dad893fe459, type: 3}
-  - {fileID: 820710234137249982, guid: cc4edba986607ba48b17927b27d25e4e, type: 3}
+  - {fileID: -9122617242247568557, guid: cc4edba986607ba48b17927b27d25e4e, type: 3}
   speed: 20
   _songBpm: 160
   _songOffsetSec: 0
@@ -1617,7 +1617,7 @@ PrefabInstance:
     - target: {fileID: 873450919960001178, guid: b4f2cd633f84448609793082bcf66d70,
         type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0.0304414
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 873450919960001178, guid: b4f2cd633f84448609793082bcf66d70,
         type: 3}
@@ -2464,9 +2464,14 @@ MonoBehaviour:
   - {fileID: 281150528}
   - {fileID: 348252279}
   - {fileID: 1534204817}
-  playerVerdictPoints: []
+  playerVerdictPoints:
+  - {fileID: 1946492246}
+  - {fileID: 1784050621}
+  - {fileID: 1644965635}
+  - {fileID: 1677164762}
   playerPrefabName: Prefabs/Rhythm/RhythmUnimo
   backupPrefabName: Prefabs/Rhythm/RhythmPlayer
+  playerVerdictPrefab: Prefabs/Rhythm/LaneCube
   tempSpawnPos: {x: 0, y: 0, z: 0}
 --- !u!4 &771616244
 Transform:
@@ -2857,6 +2862,46 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 944378920}
   m_PrefabAsset: {fileID: 0}
+--- !u!21 &1014671538
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: UI/RoundedCorners/RoundedCorners
+  m_Shader: {fileID: 4800000, guid: 0bd2ec5d73751e34a814274a454bec41, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _ColorMask: 15
+    - _Stencil: 0
+    - _StencilComp: 8
+    - _StencilOp: 0
+    - _StencilReadMask: 255
+    - _StencilWriteMask: 255
+    - _UseUIAlphaClip: 0
+    m_Colors:
+    - _OuterUV: {r: 0, g: 0, b: 1, a: 1}
+    - _WidthHeightRadius: {r: 149.651, g: 51.939, b: 40, a: 0}
+  m_BuildTextureStacks: []
 --- !u!1 &1027446214
 GameObject:
   m_ObjectHideFlags: 0
@@ -3248,7 +3293,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 34.677963, y: 1.2000008}
+  m_AnchoredPosition: {x: 25, y: 1.2000008}
   m_SizeDelta: {x: 98.4777, y: 37.7403}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1077306839
@@ -3631,8 +3676,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 4, z: 2.5}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 1, y: 4, z: 3}
+  m_Center: {x: 0, y: 0, z: -0.2}
 --- !u!54 &1196916484
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -3719,7 +3764,7 @@ Transform:
   m_GameObject: {fileID: 1196916479}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.1, y: 2.5, z: -5}
+  m_LocalPosition: {x: 1.1, y: 2.5, z: -5.24}
   m_LocalScale: {x: 6.8, y: 1, z: 1.45}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3912,7 +3957,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Material: {fileID: 1909852908}
+  m_Material: {fileID: 1014671538}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
@@ -3998,7 +4043,7 @@ Transform:
   m_GameObject: {fileID: 1376969139}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 3.75, y: 0, z: 1}
+  m_LocalPosition: {x: 3.75, y: 0, z: 1.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4314,7 +4359,7 @@ Transform:
   m_GameObject: {fileID: 1534204816}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1.5, y: 0, z: 1}
+  m_LocalPosition: {x: -1.5, y: 0, z: 1.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4376,7 +4421,7 @@ Transform:
   m_GameObject: {fileID: 1644965634}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -1}
+  m_LocalPosition: {x: 0.25, y: 0, z: -1.55}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4407,7 +4452,7 @@ Transform:
   m_GameObject: {fileID: 1677164761}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -2, y: 0, z: -1}
+  m_LocalPosition: {x: -1.5, y: 0, z: -1.55}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4606,7 +4651,7 @@ Transform:
   m_GameObject: {fileID: 1784050620}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 2, y: 0, z: -1}
+  m_LocalPosition: {x: 2, y: 0, z: -1.55}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5227,46 +5272,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
---- !u!21 &1909852908
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: UI/RoundedCorners/RoundedCorners
-  m_Shader: {fileID: 4800000, guid: 0bd2ec5d73751e34a814274a454bec41, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _MainTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats:
-    - _ColorMask: 15
-    - _Stencil: 0
-    - _StencilComp: 8
-    - _StencilOp: 0
-    - _StencilReadMask: 255
-    - _StencilWriteMask: 255
-    - _UseUIAlphaClip: 0
-    m_Colors:
-    - _OuterUV: {r: 0, g: 0, b: 1, a: 1}
-    - _WidthHeightRadius: {r: 149.651, g: 51.939, b: 40, a: 0}
-  m_BuildTextureStacks: []
 --- !u!1001 &1918526450
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5437,7 +5442,7 @@ Transform:
   m_GameObject: {fileID: 1946492245}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 4, y: 0, z: -1}
+  m_LocalPosition: {x: 3.75, y: 0, z: -1.55}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5573,9 +5578,9 @@ SceneRoots:
   - {fileID: 771616244}
   - {fileID: 682961389}
   - {fileID: 1872738575}
+  - {fileID: 1358550686}
   - {fileID: 2021070405}
   - {fileID: 1196916487}
-  - {fileID: 1358550686}
   - {fileID: 457379607}
   - {fileID: 1941556641}
   - {fileID: 305406254}

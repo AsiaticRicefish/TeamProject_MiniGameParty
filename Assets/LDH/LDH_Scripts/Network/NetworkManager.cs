@@ -92,13 +92,13 @@ namespace Network
                 return true;
             }
 
-            // C) 로그인/타이틀 씬에서는 자동 접속 금지
-            string scene = SceneManager.GetActiveScene().name;
-            if (scene.Contains("Login") || scene.Contains("Title"))
-            {
-                Debug.Log("[NetworkManager] skip auto-connect in Login/Title scene");
-                return true;
-            }
+            // // C) 로그인/타이틀 씬에서는 자동 접속 금지
+            // string scene = SceneManager.GetActiveScene().name;
+            // if (scene.Contains("Login") || scene.Contains("Title"))
+            // {
+            //     Debug.Log("[NetworkManager] skip auto-connect in Login/Title scene");
+            //     return true;
+            // }
 
             // D) Firebase 인증이 아직 없으면 자동 접속 금지
             var auth = FirebaseAuth.DefaultInstance;
@@ -359,7 +359,7 @@ namespace Network
             // 커스텀 프로퍼티 설정
             if (!PhotonNetwork.LocalPlayer.CustomProperties.ContainsKey("uid"))
             {
-//                Debug.Log("프로퍼티 - uid를 설정합니다.");
+                 // Debug.Log("프로퍼티 - uid를 설정합니다.");
                 var props = new Hashtable { { "uid", PhotonNetwork.AuthValues?.UserId }, };
                 PhotonNetwork.LocalPlayer.SetCustomProperties(props);
             }

@@ -209,9 +209,15 @@ namespace LDH_MainGame
 
         public async UniTask ShowGameEnd(bool isMainEnd = false)
         {
-            //미니게임 씬의 event system 비활성화시키기
-            EventSystem.current.enabled = false;
-
+            if(!isMainEnd)
+            {
+                EventSystem.current.enabled = false;
+            }
+            else
+            {
+                Debug.Log("<color=red> 이벤트 시스템 안끕니다.</color>");
+            }
+         
             //열려있는 모든 팝업 닫기
             await Manager.UI.CloseAllPopupUI();
 
@@ -254,8 +260,7 @@ namespace LDH_MainGame
         }
 
         public async UniTask ShowRewardPopup(GamePlayer localPlayer)
-        {
-            _rewardPanel = Manager.UI.CreatePopupUI<UI_Popup_Reward>();
+        { _rewardPanel = Manager.UI.CreatePopupUI<UI_Popup_Reward>();
             await _rewardPanel.SetData(localPlayer);
             await Manager.UI.ShowPopupUI(_rewardPanel);
         }
