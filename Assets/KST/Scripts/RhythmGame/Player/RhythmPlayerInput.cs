@@ -47,9 +47,11 @@ namespace RhythmGame
 
                 if (_holdTimer >= _requireHoldTime)
                 {
-                    ScoreManager.Instance.VerdictHold(_holdTimer, _requireHoldTime);
+                    var verdict = ScoreManager.Instance.VerdictHold(_holdTimer, _requireHoldTime);
+
                     NoteSpawner.Instance.ClientLocalHit(_holdTarget.NoteId);
-                    ScoreManager.Instance.RequestHit(_holdTarget.NoteId, true, NoteType.Continue);
+                    ScoreManager.Instance.RequestHit(_holdTarget.NoteId, true, NoteType.Continue, verdict);
+
                     _isDone = true;
                     InitHold();
                     InputCoolDown();
@@ -140,13 +142,13 @@ namespace RhythmGame
             if (_holdTarget != null)
             {
 
-                ScoreManager.Instance.VerdictHold(_holdTimer, _requireHoldTime);
+                var verdict = ScoreManager.Instance.VerdictHold(_holdTimer, _requireHoldTime);
 
                 bool success = _holdTimer >= _requireHoldTime && IsInVerdictBar(_holdTarget);
-                if (success)
+                if (success && verdict != Verdict.Miss)
                 {
                     NoteSpawner.Instance.ClientLocalHit(_holdTarget.NoteId);
-                    ScoreManager.Instance.RequestHit(_holdTarget.NoteId, true, NoteType.Continue);
+                    ScoreManager.Instance.RequestHit(_holdTarget.NoteId, true, NoteType.Continue,verdict);
                 }
                 else
                     ScoreManager.Instance.RequestMiss(NoteType.Continue);
@@ -169,12 +171,7 @@ namespace RhythmGame
                 NoteType? missType = null;
                 foreach (var t in _noteToTap)
                 {
-
-                    // t = _noteToTap;
-                    // _noteToTap = null;
-                    if (t == null) continue;
-
-                    if (t.Type == NoteType.Continue) continue;
+                    if (t == null || t.Type == NoteType.Continue) continue;
 
                     if (missType == null)
                         missType = t.Type;
@@ -183,10 +180,16 @@ namespace RhythmGame
 
                     if (isCan)
                     {
-                        ScoreManager.Instance.VerdictTouch(t, verdictNote.transform);
-                        NoteSpawner.Instance.ClientLocalHit(t.NoteId);
-                        ScoreManager.Instance.RequestHit(t.NoteId, true, t.Type);
-                        anyHit = true;
+                        var verdict = ScoreManager.Instance.VerdictTouch(t, verdictNote.transform);
+
+                        if (verdict != Verdict.Miss)
+                        {
+                            NoteSpawner.Instance.ClientLocalHit(t.NoteId);
+                            ScoreManager.Instance.RequestHit(t.NoteId, true, t.Type, verdict);
+                            anyHit = true;
+                        }
+                        else
+                            ScoreManager.Instance.RequestMiss(t.Type);
                     }
                 }
                 if (!anyHit && missType.HasValue)
