@@ -710,10 +710,6 @@ MonoBehaviour:
   - {fileID: 1440069744}
   - {fileID: 869958634}
   - {fileID: 1292268865}
-  - {fileID: 3247915723829185699}
-  - {fileID: 8637609340347961904}
-  - {fileID: 8040409701241700671}
-  - {fileID: 8555021752165952465}
   - {fileID: 1611597704}
   - {fileID: 1395323797}
 --- !u!114 &762849032
@@ -1243,7 +1239,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1028160839
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1260,7 +1256,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0.00044918, y: 625.4}
+  m_AnchoredPosition: {x: -0.0018566, y: 641}
   m_SizeDelta: {x: 582.94, y: 103.64}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1028160840
@@ -1292,8 +1288,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4278243327
+  m_fontColor: {r: 1, g: 0.81104887, b: 0, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -1310,8 +1306,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 100
-  m_fontSizeBase: 100
+  m_fontSize: 200
+  m_fontSizeBase: 200
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -1599,7 +1595,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1395323798
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1701,13 +1697,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   myTurnBanner: {fileID: 1909530764}
-  nextBanner: {fileID: 0}
+  nextBanner: {fileID: 562621477}
+  waitBanner: {fileID: 0}
   sharedCountText: {fileID: 1028160840}
   roundInfoText: {fileID: 1948850265}
   progressBar: {fileID: 0}
   tapButton: {fileID: 1287887179}
   gameOverPanel: {fileID: 2130115543}
-  bannerShowSec: 0.8
 --- !u!225 &1395323803
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -2875,12 +2871,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9b66637549c8c544196e8e5f31e514d1, type: 3}
---- !u!1 &3247915723829185699 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 526872811739570889, guid: 9b66637549c8c544196e8e5f31e514d1,
-    type: 3}
-  m_PrefabInstance: {fileID: 3247915723829185698}
-  m_PrefabAsset: {fileID: 0}
 --- !u!95 &3247915723829185700 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 4125386879836753908, guid: 9b66637549c8c544196e8e5f31e514d1,
@@ -2960,12 +2950,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 652e8bd4a4fad8947b45b6d299e59d50, type: 3}
---- !u!1 &8040409701241700671 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2144552536824244677, guid: 652e8bd4a4fad8947b45b6d299e59d50,
-    type: 3}
-  m_PrefabInstance: {fileID: 8040409701241700670}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &8555021752165952464
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3039,12 +3023,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e227aac54d8857e4390ae6b7f7366954, type: 3}
---- !u!1 &8555021752165952465 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7711502254516557250, guid: e227aac54d8857e4390ae6b7f7366954,
-    type: 3}
-  m_PrefabInstance: {fileID: 8555021752165952464}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &8637609340347961903
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3118,12 +3096,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: cf289e4c427c12843926fc296697c82c, type: 3}
---- !u!1 &8637609340347961904 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7522881878128491199, guid: cf289e4c427c12843926fc296697c82c,
-    type: 3}
-  m_PrefabInstance: {fileID: 8637609340347961903}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

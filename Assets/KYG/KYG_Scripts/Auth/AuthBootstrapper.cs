@@ -344,6 +344,5 @@ public class AuthBootstrapper : MonoBehaviour
         }
     }
 
-    -
-}
+    }
 }

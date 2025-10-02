@@ -40,9 +40,13 @@ namespace YG
             order.Clear(); order.AddRange(actorOrder);
             curIndex = order.Count > 0 ? 0 : -1;
 
-            // ★ 턴 순서 확정되었음을 먼저 알림 (게임 시작 트리거로 사용)
+            // 1) 순서 확정 이벤트
             OnOrderInitialized?.Invoke(actorOrder);
 
+            // 2) 모든 클라에 order를 버퍼링 전파(씬 재입장/late join 대비)
+            photonView.RPC(nameof(RPC_SetOrder), RpcTarget.AllBuffered, actorOrder);
+
+            // 3) 첫 턴 브로드캐스트
             if (PhotonNetwork.IsMasterClient && order.Count > 0)
                 photonView.RPC(nameof(RPC_SetCurrentTurn), RpcTarget.AllBuffered, -1, order[curIndex]);
         }
@@ -86,12 +90,31 @@ namespace YG
                 if (showLog) Debug.Log($"[Turn] Master switched → rebroadcast current={CurrentActor}");
             }
         }
+        
+        // ▼ 모든 클라이언트가 order를 알도록 버퍼링 전파
+        [PunRPC] private void RPC_SetOrder(int[] actorOrder)
+        {
+            order.Clear();
+            order.AddRange(actorOrder);
+        }
 
         [PunRPC]
         private void RPC_SetCurrentTurn(int prevActor, int currentActor)
         {
+            // 로컬에서도 현재 턴 인덱스 동기화(모든 클라)
+            int idx = order.IndexOf(currentActor);
+            curIndex = idx;  // 없으면 -1(게임 종료)로 자연스럽게 세팅
+
             if (showLog) Debug.Log($"[TurnManager] Turn → {prevActor} ▶ {currentActor}");
             OnTurnChanged?.Invoke(prevActor, currentActor);
+        }
+
+        /// <summary>현재 턴 기준 '다음 턴' 주인의 ActorNumber(없으면 -1).</summary>
+        public int GetNextActor()
+        {
+            if (order.Count == 0 || curIndex < 0) return -1;
+            int nextIdx = (curIndex + 1) % order.Count;
+            return order[nextIdx];
         }
     }
 }
