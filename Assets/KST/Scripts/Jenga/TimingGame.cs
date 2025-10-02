@@ -16,6 +16,29 @@ public class TimingGame : MonoBehaviour
     [SerializeField] GameObject _finishPanel; //성공, 실패 여부 패널
     [SerializeField] TMP_Text _finishText;
 
+    [Header("난이도 UI")]
+    [SerializeField] TMP_Text _speedLevelText;
+    [SerializeField] TMP_Text _zoneLevelText;
+
+    [Header("난이도 레벨별 색상 (0~4단계)")]
+    [SerializeField]
+    private Color[] levelColors = new Color[4]
+{
+    Color.black,                // 레벨 0: 검정
+    Color.green,                // 레벨 1: 초록
+    Color.yellow,               // 레벨 2: 노랑
+    new Color(1f, 0.5f, 0f)    // 레벨 3: 주황  
+};
+
+    [Header("깜빡임 설정")]
+    [SerializeField] private Color blinkColor = Color.cyan; // 깜빡일 때 색상
+    [SerializeField] private int blinkCount = 3;
+    [SerializeField] private float blinkSpeed = 0.2f;
+
+    private int _currentSpeedLevel = 0;
+    private int _currentZoneLevel = 0;
+    private int _prevSpeedLevel = 0;
+    private int _prevZoneLevel = 0;
 
     [Header("타이밍 세팅")]
     [SerializeField] float _limitTime = 5f; // 제한시간
@@ -27,12 +50,16 @@ public class TimingGame : MonoBehaviour
     [SerializeField]
     float _zoneHeight = 40f;                          // 성공존 세로 높이(px)
 
-
     bool _isRun = false; // 게임 실행 여부
     float _remainTime; // 잔여 시간
     float _pingPongTimer;
     float _zoneW;
     public event Action<bool, float> OnFinished; // 성공여부 이벤트
+
+    [Header("판정 설정")]
+    [SerializeField, Range(0f, 1f)]
+    private float requiredOverlapRatio = 0.5f; // 성공 판정에 필요한 겹침 비율 (0.5 = 50%)
+
 
     void Awake() => Init();
 
@@ -65,14 +92,6 @@ public class TimingGame : MonoBehaviour
         _slider.maxValue = 100f;
         _slider.value = 0f;
 
-        //슬라이더 핸들 크기(별 크기) 조절
-        RectTransform handle = _slider.handleRect;
-
-        float handleW = _sliderRect.rect.width * 0.15f;
-        float handleH = _sliderRect.rect.height * 0.15f;
-
-        handle.sizeDelta = new(handleW, handleH);
-
         //텍스트 초기화
         _timeText.text = "";
 
@@ -104,6 +123,8 @@ public class TimingGame : MonoBehaviour
 
         _remainTime = _limitTime;
         _timeText.text = Mathf.CeilToInt(_remainTime).ToString();
+
+        UpdateDifficultyUI(); // UI 갱신
     }
 
     /// <summary>
@@ -120,6 +141,10 @@ public class TimingGame : MonoBehaviour
             _successZone.SetParent(slideArea, worldPositionStays: false);
         }
 
+        // 앵커를 중앙으로 강제 설정
+        _successZone.anchorMin = new Vector2(0.5f, 0.5f);
+        _successZone.anchorMax = new Vector2(0.5f, 0.5f);
+        _successZone.pivot = new Vector2(0.5f, 0.5f);
 
         float w = slideArea ? slideArea.rect.width : _sliderRect.rect.width;
         _zoneW = w * _zoneWRate;
@@ -127,14 +152,24 @@ public class TimingGame : MonoBehaviour
         // 가로폭은 비율, 세로 높이는 인스펙터 값 사용
         _successZone.sizeDelta = new(_zoneW, _zoneHeight);
 
-        // 중앙 배치
-        _successZone.anchoredPosition = Vector2.right * ((w - _zoneW) * 0.5f);
+        _successZone.anchoredPosition = Vector2.zero;
 
         // 그리기 순서: 성공존 뒤, 핸들 앞
         _successZone.SetSiblingIndex(0);                 // 성공존을 맨 뒤로
         _slider.handleRect.SetAsLastSibling();           // 핸들을 맨 앞으로
 
         _successZone.gameObject.SetActive(true);
+
+        if (slideArea)
+        {
+            var sliderCorners = new Vector3[4];
+            slideArea.GetWorldCorners(sliderCorners);
+            Debug.Log($"슬라이더 전체 범위: {sliderCorners[0].x:F2} ~ {sliderCorners[2].x:F2}");
+        }
+
+        var corners = new Vector3[4];
+        _successZone.GetWorldCorners(corners);
+        Debug.Log($"성공존 실제 범위: {corners[0].x:F2} ~ {corners[2].x:F2}");
     }
 
     public IEnumerator IE_CountDownPublic() => IE_CountDown(); // JengaTimingManager에서 코루틴이 접근하도록 수정
@@ -159,23 +194,54 @@ public class TimingGame : MonoBehaviour
     (bool isSuccess, float accuracy) Calculate()
     {
         var handleGraphic = _slider.handleRect.GetComponentInChildren<Image>()?.rectTransform
-                            ?? _slider.handleRect;
+                         ?? _slider.handleRect;
 
-        float handleCenterX = GetWorldCenterX(handleGraphic);
+        // 핸들의 월드 코너
+        var handleCorners = new Vector3[4];
+        handleGraphic.GetWorldCorners(handleCorners);
+        float handleLeft = handleCorners[0].x;
+        float handleRight = handleCorners[2].x;
+        float handleCenter = 0.5f * (handleLeft + handleRight);
 
-        var z = new Vector3[4];
-        _successZone.GetWorldCorners(z);
-        float start = z[0].x;   // left
-        float end   = z[3].x;   // right
-        float center = 0.5f * (start + end);
-        float half   = 0.5f * (end - start);
+        var zoneCorners = new Vector3[4];
+        _successZone.GetWorldCorners(zoneCorners);
+        float zoneLeft = zoneCorners[0].x;
+        float zoneRight = zoneCorners[2].x;
+        float zoneCenter = 0.5f * (zoneLeft + zoneRight);
+        float zoneHalfWidth = 0.5f * (zoneRight - zoneLeft);
 
-        bool inside = (start <= handleCenterX) && (handleCenterX <= end);
-        if (!inside) return (false, 0f);
+        // 겹치는 영역 계산
+        float overlapLeft = Mathf.Max(handleLeft, zoneLeft);
+        float overlapRight = Mathf.Min(handleRight, zoneRight);
+        float overlapWidth = Mathf.Max(0f, overlapRight - overlapLeft);
 
-        float acc = 1f - Mathf.Clamp01(Mathf.Abs(handleCenterX - center) / half);
+        float handleWidth = handleRight - handleLeft;
+        float overlapRatio = handleWidth > 0 ? (overlapWidth / handleWidth) : 0f;
+
+        // Inspector에서 설정한 비율 이상 겹쳐야 성공
+        if (overlapRatio < requiredOverlapRatio) return (false, 0f);
+
+        // 정확도 계산
+        float centerDistance = Mathf.Abs(handleCenter - zoneCenter);
+        float acc = 1f - Mathf.Clamp01(centerDistance / zoneHalfWidth);
 
         return (true, acc);
+
+        #region Removed Code
+        //var z = new Vector3[4];
+        //_successZone.GetWorldCorners(z);
+        //float start = z[0].x;   // left
+        //float end   = z[3].x;   // right
+        //float center = 0.5f * (start + end);
+        //float half   = 0.5f * (end - start);
+
+        //bool inside = (start <= handleCenterX) && (handleCenterX <= end);
+        //if (!inside) return (false, 0f);
+
+        //float acc = 1f - Mathf.Clamp01(Mathf.Abs(handleCenterX - center) / half);
+
+        //return (true, acc);
+        #endregion
     }
 
     /// <summary>
@@ -183,7 +249,7 @@ public class TimingGame : MonoBehaviour
     /// </summary>
     /// <param name="isSuccess">성공 여부</param>
     /// <param name="accuracy">정확도 </param>
-   void GameEnd(bool isSuccess, float accuracy)
+    void GameEnd(bool isSuccess, float accuracy)
     {
         if (!_isRun) return;
         _isRun = false;
@@ -213,7 +279,7 @@ public class TimingGame : MonoBehaviour
             SoundManager.Instance.PlaySFX("Fail");
         }
 
-        yield return new WaitForSeconds(2f);
+        yield return new WaitForSeconds(1f);
 
         _finishPanel.SetActive(false);
         _finishText.text = "";
@@ -233,6 +299,8 @@ public class TimingGame : MonoBehaviour
         //랜덤으로 아래 중 하나 고르기
         bool type = UnityEngine.Random.Range(0, 2) == 0;
         bool isChnaged = type ? DescSpeed(level) || DescZone(level) : DescZone(level) || DescSpeed(level);
+
+        UpdateDifficultyUI();
     }
 
 
@@ -251,6 +319,7 @@ public class TimingGame : MonoBehaviour
         if (after < before)
         {
             _speed = after;
+            _currentSpeedLevel = level; // 현재 속도 레벨 저장
             return true;
         }
         return false;
@@ -271,10 +340,82 @@ public class TimingGame : MonoBehaviour
         if (after < before)
         {
             _zoneWRate = after;
+            _currentZoneLevel = level; // 현재 영역 레벨 저장
             return true;
         }
         return false;
     }
+
+    #region 난이도 증가 UI
+    private void UpdateDifficultyUI()
+    {
+        // 속도 UI 업데이트
+        if (_speedLevelText != null)
+        {
+            string speedLabel = GetLevelLabel(_currentSpeedLevel);
+            _speedLevelText.text = $"속도: {speedLabel}";
+
+            Color baseColor = GetLevelColor(_currentSpeedLevel);
+            _speedLevelText.color = baseColor;
+
+            // 레벨이 증가했으면 깜빡임
+            if (_currentSpeedLevel > _prevSpeedLevel)
+            {
+                StartCoroutine(BlinkText(_speedLevelText, baseColor));
+                _prevSpeedLevel = _currentSpeedLevel;
+            }
+        }
+
+        // 성공존 UI 업데이트
+        if (_zoneLevelText != null)
+        {
+            string zoneLabel = GetLevelLabel(_currentZoneLevel);
+            _zoneLevelText.text = $"성공존: {zoneLabel}";
+
+            Color baseColor = GetLevelColor(_currentZoneLevel);
+            _zoneLevelText.color = baseColor;
+
+            // 레벨이 증가했으면 깜빡임
+            if (_currentZoneLevel > _prevZoneLevel)
+            {
+                StartCoroutine(BlinkText(_zoneLevelText, baseColor));
+                _prevZoneLevel = _currentZoneLevel;
+            }
+        }
+    }
+
+    private string GetLevelLabel(int level)
+    {
+        switch (level)
+        {
+            case 0: return "기본";
+            case 1: return "1단계";
+            case 2: return "2단계";
+            case 3: return "MAX";
+            default: return "MAX";
+        }
+    }
+
+    private Color GetLevelColor(int level)
+    {
+        if (level >= 0 && level < levelColors.Length)
+            return levelColors[level];
+
+        return levelColors[levelColors.Length - 1];
+    }
+
+    private IEnumerator BlinkText(TMP_Text text, Color originalColor)
+    {
+        for (int i = 0; i < blinkCount; i++)
+        {
+            text.color = blinkColor;
+            yield return new WaitForSeconds(blinkSpeed);
+            text.color = originalColor;
+            yield return new WaitForSeconds(blinkSpeed);
+        }
+    }
+
+    #endregion
 
     float GetWorldCenterX(RectTransform rt)
     {

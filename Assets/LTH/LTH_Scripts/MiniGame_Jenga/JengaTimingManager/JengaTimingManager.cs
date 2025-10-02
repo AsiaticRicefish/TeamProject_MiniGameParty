@@ -124,11 +124,12 @@ namespace MiniGameJenga
             var tower = JengaTowerManager.Instance?.GetPlayerTower(block.OwnerActorNumber);
             if (tower != null)
             {
-                int removedCount = tower.GetRemovedBlocksCount();
-                Debug.Log($"[JengaTimingManager] 타이밍 시작 - 제거된 블록 수: {removedCount}");
+                // 2개 이상 제거된 층의 개수로 난이도 결정
+                int completedLayers = tower.GetCompletedLayersCount();
 
-                // 타이밍 게임에 제거된 블록 수 기반으로 난이도 적용
-                ui.DifficultyChange(removedCount);
+                Debug.Log($"[JengaTimingManager] 타이밍 시작 - 완료된 층: {completedLayers}, 난이도 레벨: {completedLayers}");
+
+                ui.DifficultyChange(completedLayers);
             }
 
             // 이벤트 연결 + GameStart
@@ -137,8 +138,6 @@ namespace MiniGameJenga
 
             // 매니저에서 코루틴 시작
             _countdownCo = StartCoroutine(ui.IE_CountDownPublic());
-
-            Debug.Log($"[JengaTimingManager] Timing game started for block: {block.name}");
         }
 
         private static void ActivateHierarchy(GameObject go)

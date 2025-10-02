@@ -62,7 +62,7 @@ public class GameBootstrap : MonoBehaviourPunCallbacks
         // (OnConnectedToMaster에서 체크해서 JoinLobby 호출)
         
         // 게임 부트스트랩을 돌려줘야 합니다. (초기화 및 데이터 정보 가져온 후에 포톤 네트워크에 연결해서 로비로 이동시켜야 합니다. 이 일을 모두 GameBootstrap에서 처리합니다.)
-        GameObject gameBootstrap = new GameObject("GameStartBootstrap", typeof(GameStartBootstrap));
+        // GameObject gameBootstrap = new GameObject("GameStartBootstrap", typeof(GameStartBootstrap));
     }
 
     public override void OnConnectedToMaster()
