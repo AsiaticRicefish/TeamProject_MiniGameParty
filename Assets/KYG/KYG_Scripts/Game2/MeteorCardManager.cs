@@ -9,6 +9,7 @@ using UnityEngine.UI;
 using Random = UnityEngine.Random;
 using TMPro;
 
+
 namespace YG
 {
     public enum DistributionRule
