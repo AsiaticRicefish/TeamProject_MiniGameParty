@@ -84,7 +84,7 @@ namespace RhythmGame
             var uid = PhotonNetwork.LocalPlayer.CustomProperties?["uid"] as string;
             if (string.IsNullOrEmpty(uid)) return;
 
-            GameManager.Instance.photonView.RPC(nameof(GameManager.RPC_ReceiveScore), RpcTarget.MasterClient, uid, _score, _verdictScore,perfectCount);
+            GameManager.Instance.photonView.RPC(nameof(GameManager.RPC_ReceiveScore), RpcTarget.MasterClient, uid, _score, _verdictScore, perfectCount);
         }
 
         #region RPC
@@ -128,13 +128,13 @@ namespace RhythmGame
 
         #region 판정관련 로직
         // 클라 → 마스터: 히트 요청(판정 포함)
-        public void RequestHit(int noteId, bool isCanInteract, NoteType type)
+        public void RequestHit(int noteId, bool isCanInteract, NoteType type, Verdict verdict)
         {
-            photonView.RPC(nameof(RPC_RequestHit), RpcTarget.MasterClient, noteId, isCanInteract, type);
+            photonView.RPC(nameof(RPC_RequestHit), RpcTarget.MasterClient, noteId, isCanInteract, type, verdict);
         }
 
         [PunRPC]
-        void RPC_RequestHit(int noteId, bool isCanInteract, NoteType type, PhotonMessageInfo info)
+        void RPC_RequestHit(int noteId, bool isCanInteract, NoteType type, Verdict verdict, PhotonMessageInfo info)
         {
             if (!PhotonNetwork.IsMasterClient) return;
 
@@ -146,37 +146,30 @@ namespace RhythmGame
             if (noteLane != actorLane) return;
             if (!LaneManager.Instance.LaneByNoteId.Remove(noteId)) return;
 
-            // 파괴
-            // LaneManager.Instance.LaneByNoteId.Remove(noteId);
-            NoteSpawner.Instance.DestroyNote(noteId, isCanInteract);
-
             // 득점 처리
-
             // 상호작용 불가능한 상태일 경우
             if (!isCanInteract)
-            {
-                GameManager.Instance.MissBlock(info.Sender, type);
-                return;
-            }
-            //상호작용 가능할 때
-            if (type == NoteType.Fake)
-            {
-                GameManager.Instance.GoodHitScore(type, info.Sender);
-            }
-            //속임수 노트가 아닐 경우
-            else
-            {
-                GameManager.Instance.GoodHitScore(type, info.Sender);
-                /*if (SoundManager.Instance != null)
-                    SoundManager.Instance.PlaySFX
-                    (type == NoteType.Continue ? "Continue" : "Touch");*/
+                verdict = Verdict.Miss;
 
+            // 파괴
+            NoteSpawner.Instance.DestroyNote(noteId, isCanInteract);
+
+            if (verdict == Verdict.Miss)
+                GameManager.Instance.MissBlock(info.Sender, type);
+            else
+                GameManager.Instance.GoodHitScore(type, info.Sender);
+
+            if (verdict != Verdict.Miss)
                 photonView.RPC(nameof(RPC_ExecuteSoundAction), info.Sender, type);
-            }
+            // else
+            // {
+            //     GameManager.Instance.GoodHitScore(type, info.Sender);
+            //     photonView.RPC(nameof(RPC_ExecuteSoundAction), info.Sender, type);
+            // }
         }
 
         // TODO - 확장성 있게 만들려면 
-        [PunRPC] 
+        [PunRPC]
         void RPC_ExecuteSoundAction(NoteType type)
         {
             if (SoundManager.Instance != null)
@@ -188,7 +181,7 @@ namespace RhythmGame
                 // TODO - 노트Type의 이름이랑 사운드 Key값이 같다는 가정하에
                 //SoundManager.Instance.PlaySFX(type.ToString());
             }
-        }             
+        }
 
         public void RequestMiss(NoteType noteType)
         {

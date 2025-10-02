@@ -128,6 +128,33 @@ public class JengaTower : MonoBehaviour
         return false;
     }
 
+    #region 타이밍 게임 난이도 증가 관련 메서드
+    /// <summary>
+    /// 2개 이상의 블록이 제거된 층의 개수를 반환
+    /// </summary>
+    public int GetCompletedLayersCount()
+    {
+        int completedLayers = 0;
+
+        foreach (var kv in _blocksByLayer)
+        {
+            int layer = kv.Key;
+            var blocksInLayer = kv.Value;
+
+            // 이 층에서 제거된 블록 수 계산
+            int removedInThisLayer = blocksInLayer.Count(b => b.IsRemoved);
+
+            // 2개 이상 제거되었으면 "완료된 층"으로 카운트
+            if (removedInThisLayer >= 2)
+            {
+                completedLayers++;
+            }
+        }
+
+        return completedLayers;
+    }
+    #endregion
+
     public void InitializeOwner(int actorNumber, string uid)
     {
         ownerActorNumber = actorNumber;
