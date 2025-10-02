@@ -74,7 +74,7 @@ public class UnimoEgg : MonoBehaviourPun
     {
         if (!photonView.IsMine) return;
 
-        ShootingScene.PlayerInputManager.Instance.DisableInput();
+        ShootingScene.PlayerInputManager.Instance.SetInputMode(InputMode.None);
         //ShootingCameraManager.Instance.StartFollowTarget(gameObject);
         // 자기 화면에서 AddForce 적용
         isLaunched = true;

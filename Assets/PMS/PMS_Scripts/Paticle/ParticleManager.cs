@@ -6,14 +6,15 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using System;
-using Unity.VisualScripting;
 
 //게임 끝날때 까지 사용할 매니저
 public class ParticleManager : CombinedSingleton<ParticleManager> //추후 SingleTon or PunSingleton으로 변경
 {
     [Header("Inspector에 할당된 ParticleData SO들")]
     [SerializeField] Transform ParticlePoolRegister_Transform;
-    [SerializeField] ParticleData[] particles;
+
+
+    private List<ParticleData> particles = new List<ParticleData>();
 
     // id → SO 참조 캐시
     private Dictionary<string, ParticleData> dataMap;
@@ -24,13 +25,45 @@ public class ParticleManager : CombinedSingleton<ParticleManager> //추후 Singl
 
     protected override void Awake()
     {
+        //base.Awake();
+        //LoadAllParticleDataAsync().Forget();
         // ParticleData SO들을 dataMap에 등록
         //BuildDataMap();
+    }
+    private async UniTask LoadAllParticleDataAsync()
+    {
+        // 1) "ParticleData" 레이블을 가진 모든 SO 로드
+        var handles = Addressables.LoadAssetsAsync<ParticleData>
+        (
+            "ParticleSO",
+            (obj) =>
+            {
+                Debug.Log("로드된 파티클 객체: " + obj.name);
+            }
+        );
+
+        var results = await handles.ToUniTask();
+
+        // 2) particles 리스트에 담기
+        particles.Clear();
+        particles.AddRange(results);
+
+        Debug.Log($"ParticleData 로드 완료: {particles.Count}개");
+    }
+
+    private void OnAssetsLoaded(AsyncOperationHandle<IList<GameObject>> handle)
+    {
+        if (handle.Status == AsyncOperationStatus.Succeeded)
+        {
+            Debug.Log("모든 에셋 로드 완료. 개수: " + handle.Result.Count);
+        }
     }
 
     private void BuildDataMap()
     {
         dataMap.Clear();
+
+
 
         if (dataMap == null) return;
 

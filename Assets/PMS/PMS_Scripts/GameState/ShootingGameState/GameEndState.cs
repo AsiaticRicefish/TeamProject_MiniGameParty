@@ -22,7 +22,7 @@ public class GameEndState : ShootingGameState
         ShootingNetworkManager.Instance.ClearShootingGamePlayerProperties();
 
         //플레이어 인풋 매니저 구독 해제 처리
-        PlayerInputManager.Instance.Cleanup();
+        PlayerInputManager.Instance.UnregisterCallbacks();
 
         //사운드 정리
         SoundManager.Instance.StopAllSounds();
