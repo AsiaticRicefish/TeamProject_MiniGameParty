@@ -217,16 +217,19 @@ namespace ShootingScene
             if (isMyTurn)       
             {
                 ShootingCameraManager.Instance.SwipePosInit();
-                ShootingScene.PlayerInputManager.Instance.EnableInput();
-                ShootingScene.PlayerInputManager.Instance.DisableCameraControl();
-                ShootingScene.PlayerInputManager.Instance.DisableCameraPosition();
+
+                PlayerInputManager.Instance.SetInputMode(InputMode.Gameplay);
+                //ShootingScene.PlayerInputManager.Instance.EnableInput();
+                //ShootingScene.PlayerInputManager.Instance.DisableCameraControl();
+                //ShootingScene.PlayerInputManager.Instance.DisableCameraPosition();
                 Debug.Log("난 인풋 활성화");
             }
             else
             {
-                ShootingScene.PlayerInputManager.Instance.DisableInput();
-                ShootingScene.PlayerInputManager.Instance.EnableCameraControl();
-                ShootingScene.PlayerInputManager.Instance.EnableCameraPosition();
+                PlayerInputManager.Instance.SetInputMode(InputMode.Camera);
+                //ShootingScene.PlayerInputManager.Instance.DisableInput();
+                //ShootingScene.PlayerInputManager.Instance.EnableCameraControl();
+                //ShootingScene.PlayerInputManager.Instance.EnableCameraPosition();
                 Debug.Log("난 인풋 비활성화");
             }
             #endregion 

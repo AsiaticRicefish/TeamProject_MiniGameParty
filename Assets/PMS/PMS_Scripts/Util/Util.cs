@@ -5,6 +5,7 @@ using UnityEngine;
 using Photon.Pun;
 using ExitGames.Client.Photon; // Hashtable
 using System.Linq;
+using UnityEngine.EventSystems;
 
 namespace PMS_Util
 {
@@ -215,5 +216,27 @@ namespace PMS_Util
             return default;
         }
         #endregion
+
+        // 화면 좌표에 있는 UI를 Raycast 한 뒤, BlockInput Tag가 붙은 오브젝트가 있으면 true 반환
+        public static bool IsOverBlockedUI(Vector2 screenPosition)
+        {
+            if (EventSystem.current == null)
+                return false;
+
+            var pointerData = new PointerEventData(EventSystem.current)
+            {
+                position = screenPosition
+            };
+
+            var results = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(pointerData, results);
+
+            // 마커 컴포넌트로 필터링
+            //return results.Any(r => r.gameObject.GetComponent<BlockInputTag>() != null);
+
+            // 태그 기반 필터링 예시
+            return results.Any(r => r.gameObject.CompareTag("BlockableUI"));
+        }
     }
 }
+

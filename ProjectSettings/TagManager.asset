@@ -13,6 +13,7 @@ TagManager:
   - Monster
   - Bullet
   - Door
+  - BlockableUI
   layers:
   - Default
   - TransparentFX

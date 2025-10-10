@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using LDH_Util;
@@ -5,6 +6,16 @@ using UnityEngine;
 
 namespace PMS_Util
 {
+    [Flags]
+    public enum InputMode
+    {
+        None = 0,
+        Gameplay = 1 << 0,   // 터치, 발사 등 게임플레이
+        Camera = 1 << 1,   // 스와이프, 줌 등 카메라 제어
+        UI = 1 << 2,   // UI 버튼, 네비게이션
+        All = Gameplay | Camera | UI // OR 연산
+    }
+
     public enum SH_GameStateType
     {
         None,
