@@ -197,6 +197,10 @@ namespace LDH_Util
         {
             public const string DefaultCharacter = "unimo_ch_001";
             public const string DefaultEquip = "unimo_equip_001";
+            public static readonly IReadOnlyList<string> DefaultOwnedCharacters =
+                new List<string> { "unimo_ch_001", "unimo_ch_002" }.AsReadOnly();           
+            public static readonly IReadOnlyList<string> DefaultOwnedEquips= new[] { "unimo_equip_001", "unimo_equip_002" };
+
         }
 
         #endregion
