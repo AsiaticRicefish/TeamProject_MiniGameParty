@@ -16,13 +16,7 @@ MonoBehaviour:
   m_Data:
     m_SerializedData: []
   m_GUID: ebac7c44ac3391d4f8df9777d4d1a060
-  m_SerializeEntries:
-  - m_GUID: 0150d7dea9d616144af15397cc784bff
-    m_Address: Assets/Imports/Title/BGM001.mp3
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Sound
-    FlaggedDuringContentUpdateRestriction: 0
+  m_SerializeEntries: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: efc2531fbc716f7409d27168060779e5, type: 2}
   m_SchemaSet:

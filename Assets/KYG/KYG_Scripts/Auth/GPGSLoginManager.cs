@@ -48,46 +48,55 @@ namespace KYG.Auth
         /// <summary>UI 버튼에서 호출</summary>
         public void LoginWithGPGS()
         {
-            PreflightLog();
-// #if UNITY_ANDROID && !UNITY_EDITOR
-            PlayGamesPlatform.Instance.Authenticate(status =>
+            PreflightLog(); // Firebase/GPGS/Photon 설정 프리플라이트 로그【turn4file9†L47-L58】
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+    // (디버깅 도움) GPGS 내부 로그 ON
+    PlayGamesPlatform.DebugLogEnabled = true;
+
+    // 간혹 이전 세션 꼬임 방지: 1회 SignOut 시도(예외 무시)
+    try { PlayGamesPlatform.Instance.SignOut(); } catch {}
+
+    // GPGS 인증 시작
+    PlayGamesPlatform.Instance.Authenticate(status =>
+    {
+        if (status != GooglePlayGames.BasicApi.SignInStatus.Success)
+        {
+            Debug.LogError($"[GPGS] Authenticate 실패: {status}");
+            // 필요 시 여기서 재시도/가이드 표시
+            return;
+        }
+
+        string displayName = UnityEngine.SocialPlatforms.Social.localUser?.userName ?? "Player";
+
+        // 서버 인증코드 우선 → Firebase Credential 생성
+        try
+        {
+            PlayGamesPlatform.Instance.RequestServerSideAccess(false, code =>
             {
-                if (status != SignInStatus.Success)
+                if (!string.IsNullOrEmpty(code))
                 {
-                    Debug.LogError($"[GPGS] Authenticate 실패: {status}");
-                    return;
+                    Debug.Log("[GPGS] ServerAuthCode OK");
+                    var cred = Firebase.Auth.PlayGamesAuthProvider.GetCredential(code);
+                    SignInFirebase(cred, displayName); // 내부에서 SessionEnforcer/Photon 주입/부트스트랩 생성까지 연결됨【turn4file4†L64-L72】【turn4file0†L45-L72】
                 }
-
-                string displayName = Social.localUser?.userName ?? "Player";
-
-                // 1) v2.1.0 정석: 서버 인증코드 먼저
-                try
+                else
                 {
-                    PlayGamesPlatform.Instance.RequestServerSideAccess(false, code =>
-                    {
-                        if (!string.IsNullOrEmpty(code))
-                        {
-                            Debug.Log("[GPGS] ServerAuthCode OK");
-                            Debug.Log($"[GPGS] ServerAuthCode length={code.Length}");
-                            var cred = PlayGamesAuthProvider.GetCredential(code);
-                            SignInFirebase(cred, displayName);
-                        }
-                        else
-                        {
-                            TryIdTokenFallback(displayName);
-                            Debug.LogWarning("[GPGS] ServerAuthCode EMPTY → Try IdToken fallback");
-                        }
-                    });
-                }
-                catch (Exception e)
-                {
-                    Debug.LogWarning($"[GPGS] RequestServerSideAccess 예외: {e.Message} → IdToken 폴백");
-                    TryIdTokenFallback(displayName);
+                    Debug.LogWarning("[GPGS] ServerAuthCode 비어있음 → IdToken 폴백");
+                    TryIdTokenFallback(displayName); // 리플렉션 폴백 경로【turn4file4†L21-L30】
                 }
             });
-// #else
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"[GPGS] RequestServerSideAccess 예외: {e.Message} → IdToken 폴백");
+            TryIdTokenFallback(displayName);
+        }
+    });
+#else
+            // 에디터/타 OS는 실제 인증 불가 → 안내만
             Debug.LogWarning("[GPGS] Android 기기에서 테스트하세요. (에디터 미지원)");
-// #endif
+#endif
         }
 
         /// <summary>GetIdToken 공개 API가 없는 환경을 위한 리플렉션 폴백</summary>
