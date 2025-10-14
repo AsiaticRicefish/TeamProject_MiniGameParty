@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -60,7 +61,8 @@ namespace LDH_UI
             
             if (pages.Count > 0 && pages[defaultIndex].toggle != null)
             {
-                pages[defaultIndex].toggle.SetIsOnWithoutNotify(true);
+               // pages[defaultIndex].toggle.SetIsOnWithoutNotify(true);
+               pages[defaultIndex].toggle.isOn = true;
             }
         }
 
