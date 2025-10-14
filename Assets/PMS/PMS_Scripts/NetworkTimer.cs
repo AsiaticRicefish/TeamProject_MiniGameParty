@@ -79,7 +79,7 @@ public class NetworkTimer
 
     private async UniTask RunTimerAsync(CancellationToken token)
     {
-        Debug.Log("[NetworkTimer] - 타이머 실행");
+        //Debug.Log("[NetworkTimer] - 타이머 실행");
         OnTimerStart?.Invoke(); //게임 타이머 시작을 알림
         int lastTick = -1;
 
@@ -88,11 +88,11 @@ public class NetworkTimer
             // 시작 시간이 이미 지났다면 즉시 시작
             if (PhotonNetwork.Time >= startAt)
             {
-                Debug.Log($"시작 시간이 이미 지났습니다. 즉시 타이머 시작 현재시간 {PhotonNetwork.Time}시작 시간:{startAt}");
+                //Debug.Log($"시작 시간이 이미 지났습니다. 즉시 타이머 시작 현재시간 {PhotonNetwork.Time}시작 시간:{startAt}");
             }
             else
             {
-                Debug.Log("대기중");
+                //Debug.Log("대기중");
             }
             // 시작 시간까지 대기
             await UniTask.WaitUntil(() => PhotonNetwork.Time >= startAt ,cancellationToken: token);

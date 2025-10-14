@@ -11,12 +11,12 @@ public class OpenGameSettingPopupButton : MonoBehaviour
 {
     [SerializeField] private Button button;
 
-
     private void Awake()
     {
         if (!button) button = GetComponent<Button>();
         button.onClick.AddListener(OnClick);
     }
+   
 
     private void OnClick() => OnClickAsync().Forget();
 
@@ -28,9 +28,42 @@ public class OpenGameSettingPopupButton : MonoBehaviour
         if (!button || !button.interactable) return;
 
         button.interactable = false;
-        
-        var popup = Manager.UI.CreatePopupUI<UI_Popup_GameSetting>();
-        
+        UI_Popup_GameSetting popup = null;
+        System.Action<UI_Base> restoreInput = null;
+
+        try
+        {
+            popup = Manager.UI.CreatePopupUI<UI_Popup_GameSetting>();
+            if (popup == null) return;
+
+            if (PlayerInputManager.Instance != null)
+            {
+                PlayerInputManager.Instance.ShowPopup();
+                restoreInput = (_) => PlayerInputManager.Instance?.ClosePopup();
+                popup.OnCloseRequested += restoreInput;
+            }
+
+            await Manager.UI.ShowPopupUI(popup);
+
+            // 팝업이 닫힐 때까지 간단 대기
+            await UniTask.WaitWhile(() => popup != null && popup.gameObject.activeSelf);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError(e);
+        }
+        finally
+        {
+            if (popup != null && restoreInput != null)
+                popup.OnCloseRequested -= restoreInput;
+
+            try { PlayerPrefs.Save(); } catch { }
+
+            if (button) button.interactable = true;
+        }
+
+        /*var popup = Manager.UI.CreatePopupUI<UI_Popup_GameSetting>();
+
         // 슈팅게임 PlayerInputManager 차단
         // 팝업이 꺼질때 슈팅게임 PlayerInputManager 차단 해제
         if (PlayerInputManager.Instance != null)
@@ -50,6 +83,6 @@ public class OpenGameSettingPopupButton : MonoBehaviour
 
         PlayerPrefs.Save();
 
-        if (button) button.interactable = true;
+        if (button) button.interactable = true;*/
     }
 }
