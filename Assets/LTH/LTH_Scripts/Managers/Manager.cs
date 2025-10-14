@@ -30,6 +30,8 @@ namespace Managers
         
         public static ParticleManager Particle => ParticleManager.Instance;     // Particle
 
+        public static AdMobManager Ads => AdMobManager.Instance;
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         public static void Initialize()
         {
@@ -47,7 +49,7 @@ namespace Managers
             manager.AddComponent<UIManager>();
             manager.AddComponent<CameraManager>();
             manager.AddComponent<PurchaseManager>();
-
+            manager.AddComponent<AdMobManager>();
 
             SceneManager.sceneLoaded += OnSceneLoaded;
             
