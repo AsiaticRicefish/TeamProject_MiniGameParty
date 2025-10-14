@@ -138,21 +138,6 @@ PrefabInstance:
       propertyPath: m_SizeDelta.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8614715979461851309, guid: fb63d0dc508b44286a4950eb59e578ce,
-        type: 3}
-      propertyPath: m_Spacing
-      value: 120
-      objectReference: {fileID: 0}
-    - target: {fileID: 8614715979461851309, guid: fb63d0dc508b44286a4950eb59e578ce,
-        type: 3}
-      propertyPath: m_Padding.m_Top
-      value: 30
-      objectReference: {fileID: 0}
-    - target: {fileID: 8614715979461851309, guid: fb63d0dc508b44286a4950eb59e578ce,
-        type: 3}
-      propertyPath: m_Padding.m_Bottom
-      value: 50
-      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 3496758183037696642, guid: fb63d0dc508b44286a4950eb59e578ce, type: 3}
     m_RemovedGameObjects: []

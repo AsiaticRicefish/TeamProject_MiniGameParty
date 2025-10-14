@@ -49,7 +49,7 @@ namespace Managers
             manager.AddComponent<UIManager>();
             manager.AddComponent<CameraManager>();
             manager.AddComponent<PurchaseManager>();
-
+            manager.AddComponent<AdMobManager>();
 
             SceneManager.sceneLoaded += OnSceneLoaded;
             
