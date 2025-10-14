@@ -94,28 +94,31 @@ public class SoundManager : CombinedSingleton<SoundManager>
 
     #endregion
 
-    protected override void Awake()
+    protected override async void Awake()
     {
         base.Awake();
         InitializeAudioSources();
         BuildMaps();
-
+        
+        //awake에서 로드 (start에서 scene loaded 이벤트에서 0.5로 덮어씌워버리는 문제)
+        LoadVolumeSettings();
+        await UniTask.Yield();
+        
+        
+        // 씬 이벤트
         SceneManager.sceneLoaded += OnSceneLoaded;
         SceneManager.sceneUnloaded += OnSceneUnloaded;
-
         //활성 씬 변경 감지
         SceneManager.activeSceneChanged += OnActiveSceneChanged;
     }
 
     private async void Start()
     {
-        await UniTask.Yield();
-
-        LoadVolumeSettings();
-
-        await UniTask.Yield();
-        SetBGMSoundVolume(bgmSoundVolume);
-        SetSFXSoundVolume(sfxSoundVolume);
+        // await UniTask.Yield();
+        // LoadVolumeSettings();
+        // await UniTask.Yield();
+        // SetBGMSoundVolume(bgmSoundVolume);
+        // SetSFXSoundVolume(sfxSoundVolume);
     }
 
     protected override void OnDestroy()
@@ -701,12 +704,12 @@ public class SoundManager : CombinedSingleton<SoundManager>
     /// <summary>
     /// 씬 로드 시 자동으로 호출되어 해당 씬의 사운드를 로드
     /// </summary>
-    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    private async void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         if (sceneMappingConfig != null)
         {
             GameType gameType = sceneMappingConfig.GetGameTypeForScene(scene.name);
-            LoadGameSoundsAsync(gameType);
+            await LoadGameSoundsAsync(gameType);
             Debug.Log($"씬 '{scene.name}'에서 '{gameType}' 사운드 자동 로드됨");
         }
         else
@@ -763,12 +766,7 @@ public class SoundManager : CombinedSingleton<SoundManager>
 
         _currentSettings = settings;
         currentGameType = gt;
-
-
-        // 믹서 재적용
-        SetBGMSoundVolume(bgmSoundVolume);
-        SetSFXSoundVolume(sfxSoundVolume);
-
+        
         Debug.Log($"[SoundManager] ActiveScene → '{newScene.name}', GameType → {gt}, GameSetting 변경 완료");
     }
 
