@@ -25,15 +25,18 @@ namespace LDH_UI
         private bool claimed; // 최종 수령 완료 플래그
         private bool requesting; // 어떤 비동기 작업(광고/수령) 중인지
 
-        protected override void Init()
+        protected override async void Init()
         {
             base.Init();
+
+            await Manager.Ads.LoadRewardedAsync();
+            
             okButton.onClick.RemoveAllListeners();
             okButton.onClick.AddListener(OnClickClaim);
 
             adsButton.onClick.RemoveAllListeners();
             adsButton.onClick.AddListener(OnClickAds);
-
+            
             // 버튼 활성화 처리
             SetButtonsInteractable(true);
         }
@@ -59,7 +62,7 @@ namespace LDH_UI
         private void SetButtonsInteractable(bool v)
         {
             if (okButton) okButton.interactable = v;
-            if (adsButton) adsButton.interactable = v && AdMobService.IsRewardedReady;
+            if (adsButton) adsButton.interactable = v && Manager.Ads.IsRewardedReady;
         }
 
 
@@ -93,7 +96,7 @@ namespace LDH_UI
                 bool earned = false; // 광고 시청 완료 여부
 
                 // 광고 표시 & 보상 콜백
-                bool closed = await AdMobService.ShowRewardedAsync(rewardObj =>
+                bool closed = await Manager.Ads.ShowRewardedAsync(rewardObj =>
                 {
                     earned = true;
                 });
