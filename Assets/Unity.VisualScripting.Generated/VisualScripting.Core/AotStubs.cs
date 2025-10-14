@@ -743,6 +743,9 @@ namespace Unity.VisualScripting.Generated.Aot
 	// UI_Screen_Charging.op_Implicit
 	// UI_Screen_Charging.op_Equality
 	// UI_Screen_Charging.op_Inequality
+	// SafeAreaCameraViewport.op_Implicit
+	// SafeAreaCameraViewport.op_Equality
+	// SafeAreaCameraViewport.op_Inequality
 	// AdMobInitializer.op_Implicit
 	// AdMobInitializer.op_Equality
 	// AdMobInitializer.op_Inequality
@@ -10772,6 +10775,41 @@ namespace Unity.VisualScripting.Generated.Aot
 		// UI_Screen_Charging.op_Inequality
 		[global::UnityEngine.Scripting.PreserveAttribute()]
 		public static void UI_Screen_Charging_op_Inequality()
+		{
+			global::UnityEngine.Object arg0 = default(global::UnityEngine.Object);
+			global::UnityEngine.Object arg1 = default(global::UnityEngine.Object);
+			bool @operator = (arg0 != arg1);
+			global::Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Object, UnityEngine.Object, bool> optimized = new global::Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Object, UnityEngine.Object, bool>(default(global::System.Reflection.MethodInfo));
+			optimized.Invoke(null, arg0, arg1);
+			optimized.Invoke(default(object[]));
+		}
+		
+		// SafeAreaCameraViewport.op_Implicit
+		[global::UnityEngine.Scripting.PreserveAttribute()]
+		public static void SafeAreaCameraViewport_op_Implicit()
+		{
+			global::UnityEngine.Object arg0 = default(global::UnityEngine.Object);
+			bool conversion = ((bool)(arg0));
+			global::Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Object, bool> optimized = new global::Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Object, bool>(default(global::System.Reflection.MethodInfo));
+			optimized.Invoke(null, arg0);
+			optimized.Invoke(default(object[]));
+		}
+		
+		// SafeAreaCameraViewport.op_Equality
+		[global::UnityEngine.Scripting.PreserveAttribute()]
+		public static void SafeAreaCameraViewport_op_Equality()
+		{
+			global::UnityEngine.Object arg0 = default(global::UnityEngine.Object);
+			global::UnityEngine.Object arg1 = default(global::UnityEngine.Object);
+			bool @operator = (arg0 == arg1);
+			global::Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Object, UnityEngine.Object, bool> optimized = new global::Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Object, UnityEngine.Object, bool>(default(global::System.Reflection.MethodInfo));
+			optimized.Invoke(null, arg0, arg1);
+			optimized.Invoke(default(object[]));
+		}
+		
+		// SafeAreaCameraViewport.op_Inequality
+		[global::UnityEngine.Scripting.PreserveAttribute()]
+		public static void SafeAreaCameraViewport_op_Inequality()
 		{
 			global::UnityEngine.Object arg0 = default(global::UnityEngine.Object);
 			global::UnityEngine.Object arg1 = default(global::UnityEngine.Object);
