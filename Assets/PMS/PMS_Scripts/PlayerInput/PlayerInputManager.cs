@@ -36,7 +36,9 @@ namespace ShootingScene
 
         // 현재 활성 모드 저장
         private InputMode _currentMode = InputMode.None;
-        private InputMode _pendingMode;
+        private InputMode _pendingMode = InputMode.None;
+
+        private bool _isUIActive = false;
 
         protected override void OnAwake()
         {
@@ -105,6 +107,13 @@ namespace ShootingScene
         // 3) 호출 한 줄로 각 모드를 Enable/Disable
         public void SetInputMode(InputMode mode)
         {
+            if (_isUIActive)
+            {
+                // UI가 켜져 있으면 모드만 저장하고 실제 적용은 하지 않음
+                _pendingMode = mode;
+                return;
+            }
+
             _currentMode = mode;
 
             foreach (var kv in _modeActions)
@@ -226,5 +235,18 @@ namespace ShootingScene
             yield return null; // 다음 프레임으로 연기
             SetInputMode(mode);
         }
+
+        public void ShowPopup()
+        {
+            _isUIActive = true;
+            SetInputMode(InputMode.UI); // UI 모드만 적용
+        }
+
+        public void ClosePopup()
+        {
+            _isUIActive = false;
+            SetInputMode(_pendingMode); // 저장해둔 모드 복원
+            _pendingMode = InputMode.None;
+        }       
     }
 }
