@@ -35,10 +35,11 @@ public class OpenGameSettingPopupButton : MonoBehaviour
         // 팝업이 꺼질때 슈팅게임 PlayerInputManager 차단 해제
         if (PlayerInputManager.Instance != null)
         {
-            PlayerInputManager.Instance.PushMode(InputMode.UI);
+            PlayerInputManager.Instance.ShowPopup();
+
             popup.OnCloseRequested += (_) =>
             {
-                PlayerInputManager.Instance?.PopMode();
+                PlayerInputManager.Instance?.ClosePopup();
             };
         }
         
