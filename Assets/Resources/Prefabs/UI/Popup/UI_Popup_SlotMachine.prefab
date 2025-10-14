@@ -880,10 +880,10 @@ RectTransform:
   - {fileID: 4002365295986117696}
   m_Father: {fileID: 4674570672488484584}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 1157.0483}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: -1126}
+  m_SizeDelta: {x: 922, y: 1157.0483}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!222 &4155357700874163999
 CanvasRenderer:
@@ -2019,7 +2019,6 @@ MonoBehaviour:
   rowListRect: {fileID: 621513740871312935}
   font: {fileID: 11400000, guid: 263a5f6c8c323c84e9bd6ede05411f99, type: 2}
   fontSize: 58
-  fontColor: {r: 0, g: 0, b: 0, a: 1}
   minVisualCount: 7
   accelRatio: 0.13
   decelRatio: 0.25
@@ -2027,6 +2026,7 @@ MonoBehaviour:
   cellsPerSecondAtMax: 20
   extraLapsMin: 1
   extraLapsMax: 2
+  pickedMiniSfx: 4
 --- !u!1 &7177921792866085621
 GameObject:
   m_ObjectHideFlags: 0
@@ -2649,7 +2649,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 342, y: -3.5629272}
+  m_AnchoredPosition: {x: 342, y: -3.5629883}
   m_SizeDelta: {x: 329.3602, y: 807.1829}
   m_Pivot: {x: 0.23485726, y: 0.024342712}
 --- !u!222 &4058696585272080829
@@ -2918,6 +2918,7 @@ MonoBehaviour:
   dropTimeUp: 0.1
   dropOvershoot: 50
   handleDownDeg: 95
+  pickingStateSfx: 2
 --- !u!1001 &5938126375426884533
 PrefabInstance:
   m_ObjectHideFlags: 0
