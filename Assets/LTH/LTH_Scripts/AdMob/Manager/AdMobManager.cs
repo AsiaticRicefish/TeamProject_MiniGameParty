@@ -156,7 +156,16 @@ public class AdMobManager : CombinedSingleton<AdMobManager>
     private void OnAdFailed(AdError error)
     {
         Debug.LogError($"[AdMob] Fullscreen failed: {error}");
+
+        if (_rewardedAd != null)
+        {
+            _rewardedAd.OnAdFullScreenContentFailed -= OnAdFailed;
+        }
+
         _rewardedAd = null;
+
+        // 실패 시에도 재로드
+        _ = LoadRewardedAsync();
     }
 
     /// <summary>
@@ -164,11 +173,14 @@ public class AdMobManager : CombinedSingleton<AdMobManager>
     /// </summary>
     public async Task<bool> ShowRewardedAsync(Action<Reward> onRewarded)
     {
-        if (!IsRewardedReady)
+        var adToShow = _rewardedAd;
+
+        if (adToShow == null || !adToShow.CanShowAd())
         {
             Debug.LogWarning("[AdMob] Rewarded not ready, try preload...");
             bool loaded = await LoadRewardedAsync();
-            if (!loaded || !IsRewardedReady)
+            adToShow = _rewardedAd;
+            if (adToShow == null || !adToShow.CanShowAd())
             {
                 Debug.LogError("[AdMob] Failed to load ad for show");
                 return false;
@@ -181,7 +193,7 @@ public class AdMobManager : CombinedSingleton<AdMobManager>
         {
             Debug.Log("[AdMob] Attempting to show rewarded ad...");
 
-            if (!_rewardedAd.CanShowAd())
+            if (!adToShow.CanShowAd())
             {
                 Debug.LogWarning("[AdMob] CanShowAd returned false");
                 return false;
@@ -193,17 +205,20 @@ public class AdMobManager : CombinedSingleton<AdMobManager>
             {
                 Debug.Log("[AdMob] Ad closed, cleaning up...");
 
-                if (_rewardedAd != null)
+                adToShow.OnAdFullScreenContentClosed -= closedHandler;
+
+                if (_rewardedAd == adToShow)
                 {
-                    _rewardedAd.OnAdFullScreenContentClosed -= closedHandler;
+                    _rewardedAd = null;
                 }
 
-                _rewardedAd = null;
+                _ = LoadRewardedAsync();
+
                 tcs.SetResult(true);
             };
 
-            _rewardedAd.OnAdFullScreenContentClosed += closedHandler;
-            _rewardedAd.Show(reward =>
+            adToShow.OnAdFullScreenContentClosed += closedHandler;
+            adToShow.Show(reward =>
             {
                 Debug.Log($"[AdMob] Reward received: {reward.Type}, Amount: {reward.Amount}");
                 onRewarded?.Invoke(reward);
