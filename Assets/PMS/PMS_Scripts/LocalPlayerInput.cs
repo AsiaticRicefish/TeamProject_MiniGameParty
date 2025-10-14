@@ -319,7 +319,7 @@ public class LocalPlayerInput : MonoBehaviourPun
 
         if (ctx.started) // 어느 단계에서든 터치하면 즉시 완료
         {
-            Debug.Log($"Step {currentStepIndex}: 터치로 즉시 완료");
+            //Debug.Log($"Step {currentStepIndex}: 터치로 즉시 완료");
             CompleteStep();
         }
 
