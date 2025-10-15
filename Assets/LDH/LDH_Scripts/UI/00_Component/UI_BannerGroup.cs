@@ -30,6 +30,8 @@ namespace LDH_UI
         private List<Toggle> toggles = new List<Toggle>();
         private CancellationTokenSource cts;
 
+        public bool IsUserDragging { get; private set; } = false;
+
         private void Awake()
         {
             if(scrollSnap == null)
@@ -166,6 +168,7 @@ namespace LDH_UI
         {
             //Debug.Log("[Banner] OnBeginDrag 호출됨");
             CancelAutoSlide();
+            IsUserDragging = true;
         }
 
         // 사용자가 드래그 해제
@@ -173,6 +176,7 @@ namespace LDH_UI
         {
             //Debug.Log("[Banner] OnEndDrag 호출됨");
             scrollSnap.OnEndDrag(eventData);
+            IsUserDragging = false;
             RestartAutoSlide();
         }
 
