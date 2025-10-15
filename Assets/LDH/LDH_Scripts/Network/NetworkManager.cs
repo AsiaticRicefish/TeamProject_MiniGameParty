@@ -25,6 +25,12 @@ namespace Network
         [SerializeField] private string gameSceneName;
         [SerializeField] private string lobbySceneName;
         [SerializeField] private bool autoSyncScene = true;
+        
+        //연결 시간
+        [SerializeField] private float keepAliveInBackgroundSeconds = 300f;   // 5분
+        [SerializeField] private int disconnectTimeoutMs = 20000;            // 20초
+        
+        
         public string LobbySceneName => lobbySceneName;
         
         // ---- 인증 여부, 로비 진입과 관련 플래그
@@ -65,7 +71,16 @@ namespace Network
         protected override void OnAwake()
         {
             PhotonNetwork.AutomaticallySyncScene = autoSyncScene;
-
+            
+//연결 시간 설정
+#if UNITY_ANDROID || UNITY_IOS
+            PhotonNetwork.KeepAliveInBackground = keepAliveInBackgroundSeconds;
+#endif
+            var peer = PhotonNetwork.NetworkingClient?.LoadBalancingPeer;
+            if (peer != null)
+                peer.DisconnectTimeout = disconnectTimeoutMs;
+            
+            
 #if TEST_WITHOUT_LOGIN
             if (SceneManager.GetActiveScene().name.Equals(lobbySceneName))
             {
@@ -154,6 +169,7 @@ namespace Network
             // 자동 접속 금지 조건이면 즉시 반환
             if (ShouldSkipAutoConnect())
                 return;
+            
             if (!PhotonNetwork.IsConnectedAndReady)
             {
                 Debug.Log("[NetworkManager] 서버에 연결이 완료되지 않았습니다.");
