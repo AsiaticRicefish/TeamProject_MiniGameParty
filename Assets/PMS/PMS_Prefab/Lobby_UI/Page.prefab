@@ -93,6 +93,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   bannerBackGround: {fileID: 7688241717523727526}
   bannerImage: {fileID: 2443109973508529824}
+  dragThreshold: 25
+  clickMaxDuration: 0.35
 --- !u!1 &6427123208976742337
 GameObject:
   m_ObjectHideFlags: 0
