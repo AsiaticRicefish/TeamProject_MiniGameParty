@@ -18,7 +18,7 @@ MonoBehaviour:
   m_GUID: 23f2ad1c622b042e58717d5a259744d9
   m_SerializeEntries:
   - m_GUID: 04461538a68f1634c8d625592c202503
-    m_Address: Assets/Imports/123/Prefabs/Character/CH009_Al.prefab
+    m_Address: Assets/Imports/UnimoAsset/123/Prefabs/Character/CH009_Al.prefab
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -29,11 +29,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 319efe519960d8f46947e9186ead52bb
     m_Address: Assets/Imports/123/Prefabs/Character/CH013_Toaster.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 43515d1f3d7fb3b468a6eef5317e9b27
-    m_Address: Assets/Imports/123/Prefabs/Character/CH007_DoomDoom_ST000 (1).prefab
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

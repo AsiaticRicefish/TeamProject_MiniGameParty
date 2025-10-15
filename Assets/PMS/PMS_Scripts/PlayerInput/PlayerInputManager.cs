@@ -9,8 +9,8 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using PMS_Util;
 using Cysharp.Threading.Tasks;
-using UnityEngine.InputSystem.Controls;    // ← 이 라인 추가
-using static UnityEditor.PlayerSettings;
+using UnityEngine.InputSystem.Controls;
+
 
 
 namespace ShootingScene
@@ -36,7 +36,9 @@ namespace ShootingScene
 
         // 현재 활성 모드 저장
         private InputMode _currentMode = InputMode.None;
-        private InputMode _pendingMode;
+        private InputMode _pendingMode = InputMode.None;
+
+        private bool _isUIActive = false;
 
         protected override void OnAwake()
         {
@@ -103,8 +105,20 @@ namespace ShootingScene
         }
 
         // 3) 호출 한 줄로 각 모드를 Enable/Disable
-        public void SetInputMode(InputMode mode)
+        public void SetInputMode(InputMode mode, bool forceApply = false)
         {
+            // 중복 호출 방지: 이미 같은 모드라면 아무 작업도 하지 않음(단 forceApply가 true면 다시 적용)
+            if (!forceApply && _currentMode == mode && !_isUIActive)
+                return;
+
+            // UI가 활성화된 상태이고 강제 적용이 아닐 경우 pending으로 저장 후 반환
+            if (_isUIActive && !forceApply)
+            {
+                Debug.Log($"[PlayerInputManager] - 입력 모드 상태를 저장합니다. {mode}");
+                _pendingMode = mode;
+                return;
+            }
+
             _currentMode = mode;
 
             foreach (var kv in _modeActions)
@@ -112,8 +126,18 @@ namespace ShootingScene
                 bool shouldBeOn = mode.HasFlag(kv.Key);
                 foreach (var action in kv.Value)
                 {
-                    if (shouldBeOn) action.Enable();
-                    else action.Disable();
+                    if (action == null) continue;
+                    try
+                    {
+                        if (shouldBeOn) action.Enable();
+                        else action.Disable();
+
+                        Debug.Log($"[PlayerInputManager] - 입력 모드 변경 {action.name} : {action.enabled}");
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogWarning($"InputAction Enable/Disable 실패: {action.name} 예외: {e.Message}");
+                    }
                 }
             }
         }
@@ -189,20 +213,19 @@ namespace ShootingScene
         // 7) 카메라 제스처 콜백
         private void OnCameraGesture(InputAction.CallbackContext ctx)
         {
-            if (EventSystem.current.IsPointerOverGameObject())
-                return;
-
+            /*if (EventSystem.current.IsPointerOverGameObject())
+                return;*/
+            if (IsPointerOverBlockedUI(ctx, out var pos)) return;
             onCameraGesture?.Invoke(ctx);
         }
 
         // 8) 카메라 포지션 콜백
         private void OnCameraPosition(InputAction.CallbackContext ctx)
         {
-            if (EventSystem.current.IsPointerOverGameObject())
-                return;
-
+            /*if (EventSystem.current.IsPointerOverGameObject())
+                return;*/
+            if (IsPointerOverBlockedUI(ctx, out var pos)) return;
             onCameraPosition?.Invoke(ctx);
-
         }
 
         private readonly Stack<InputMode> _modeStack = new();
@@ -225,6 +248,54 @@ namespace ShootingScene
         {
             yield return null; // 다음 프레임으로 연기
             SetInputMode(mode);
+        }
+
+        public void ShowPopup()
+        {
+            Debug.Log($"[PlayerInputManager] - ShowPopup 상태 입니다. 현재 currentMode를 저장합니다 현재 입력상태 모드 : {_currentMode}");
+            // 현재 활성 모드를 보존 (중복 저장 방지)
+            if (!_isUIActive)
+                _pendingMode = _currentMode;
+
+            _isUIActive = true;                    // 먼저 플래그 설정
+            SetInputMode(InputMode.UI, forceApply: true); // 강제 적용
+        }
+
+        public void ClosePopup()
+        {
+            Debug.Log($"[PlayerInputManager] - ClosePopup 상태 입니다. 저장된 입력 모드를 복원합니다. 저장된 모드: {_pendingMode}");
+            // 팝업 카운팅을 쓰지 않는 단순 구현이라면 바로 플래그 해제
+            _isUIActive = false;
+
+            // 복원할 모드가 유효하면 복원, 아니면 안전한 기본 모드 유지
+            var modeToRestore = _pendingMode == InputMode.None ? InputMode.None : _pendingMode;
+            SetInputMode(modeToRestore, forceApply: true);
+
+            _pendingMode = InputMode.None;
+        }
+
+        private bool IsPointerOverBlockedUI(InputAction.CallbackContext ctx, out Vector2 screenPos)
+        {
+            screenPos = Vector2.zero;
+            if (ctx.control is Vector2Control)
+            {
+                screenPos = ctx.ReadValue<Vector2>();
+                return PMS_Util.Util.IsOverBlockedUI(screenPos);
+            }
+
+            if (Mouse.current != null)
+            {
+                screenPos = Mouse.current.position.ReadValue();
+                return PMS_Util.Util.IsOverBlockedUI(screenPos);
+            }
+
+            if (Touchscreen.current != null && Touchscreen.current.primaryTouch != null)
+            {
+                screenPos = Touchscreen.current.primaryTouch.position.ReadValue();
+                return PMS_Util.Util.IsOverBlockedUI(screenPos);
+            }
+
+            return false;
         }
     }
 }
