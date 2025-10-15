@@ -79,7 +79,7 @@ namespace KYG.Auth
         }
 
         // 4) 임시 표시 이름 (Firebase 로그인 후 DisplayName으로 덮어씀)
-        string displayName = SystemInfo.deviceName;
+        string displayName = Social.localUser.userName;
         if (string.IsNullOrWhiteSpace(displayName)) displayName = "Player";
 
         // 5) 서버 인증코드(권장) → Firebase 크리덴셜 생성
