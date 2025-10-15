@@ -1448,6 +1448,9 @@ namespace Unity.VisualScripting.Generated.Aot
 	// EpicToonFX.ETFXLightFade.op_Implicit
 	// EpicToonFX.ETFXLightFade.op_Equality
 	// EpicToonFX.ETFXLightFade.op_Inequality
+	// EpicToonFX.ETFXPitchRandomizer.op_Implicit
+	// EpicToonFX.ETFXPitchRandomizer.op_Equality
+	// EpicToonFX.ETFXPitchRandomizer.op_Inequality
 	// EpicToonFX.ETFXRotation.op_Implicit
 	// EpicToonFX.ETFXRotation.op_Equality
 	// EpicToonFX.ETFXRotation.op_Inequality
@@ -19000,6 +19003,41 @@ namespace Unity.VisualScripting.Generated.Aot
 		// EpicToonFX.ETFXLightFade.op_Inequality
 		[global::UnityEngine.Scripting.PreserveAttribute()]
 		public static void EpicToonFX_ETFXLightFade_op_Inequality()
+		{
+			global::UnityEngine.Object arg0 = default(global::UnityEngine.Object);
+			global::UnityEngine.Object arg1 = default(global::UnityEngine.Object);
+			bool @operator = (arg0 != arg1);
+			global::Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Object, UnityEngine.Object, bool> optimized = new global::Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Object, UnityEngine.Object, bool>(default(global::System.Reflection.MethodInfo));
+			optimized.Invoke(null, arg0, arg1);
+			optimized.Invoke(default(object[]));
+		}
+		
+		// EpicToonFX.ETFXPitchRandomizer.op_Implicit
+		[global::UnityEngine.Scripting.PreserveAttribute()]
+		public static void EpicToonFX_ETFXPitchRandomizer_op_Implicit()
+		{
+			global::UnityEngine.Object arg0 = default(global::UnityEngine.Object);
+			bool conversion = ((bool)(arg0));
+			global::Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Object, bool> optimized = new global::Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Object, bool>(default(global::System.Reflection.MethodInfo));
+			optimized.Invoke(null, arg0);
+			optimized.Invoke(default(object[]));
+		}
+		
+		// EpicToonFX.ETFXPitchRandomizer.op_Equality
+		[global::UnityEngine.Scripting.PreserveAttribute()]
+		public static void EpicToonFX_ETFXPitchRandomizer_op_Equality()
+		{
+			global::UnityEngine.Object arg0 = default(global::UnityEngine.Object);
+			global::UnityEngine.Object arg1 = default(global::UnityEngine.Object);
+			bool @operator = (arg0 == arg1);
+			global::Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Object, UnityEngine.Object, bool> optimized = new global::Unity.VisualScripting.StaticFunctionInvoker<UnityEngine.Object, UnityEngine.Object, bool>(default(global::System.Reflection.MethodInfo));
+			optimized.Invoke(null, arg0, arg1);
+			optimized.Invoke(default(object[]));
+		}
+		
+		// EpicToonFX.ETFXPitchRandomizer.op_Inequality
+		[global::UnityEngine.Scripting.PreserveAttribute()]
+		public static void EpicToonFX_ETFXPitchRandomizer_op_Inequality()
 		{
 			global::UnityEngine.Object arg0 = default(global::UnityEngine.Object);
 			global::UnityEngine.Object arg1 = default(global::UnityEngine.Object);
