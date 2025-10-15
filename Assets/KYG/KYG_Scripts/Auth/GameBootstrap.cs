@@ -56,7 +56,7 @@ public class GameBootstrap : MonoBehaviourPunCallbacks
         // 실제 접속 로직(예시)
         if (verbose) Debug.Log("[GameBootstrap] ConnectUsingSettings()");
         // PhotonNetwork.AutomaticallySyncScene = true; // 필요 시
-        // PhotonNetwork.ConnectUsingSettings();
+        PhotonNetwork.ConnectUsingSettings();
         
         // 마스터 연결 후 로비 자동 진입을 원하면 flag를 사용
         // (OnConnectedToMaster에서 체크해서 JoinLobby 호출)

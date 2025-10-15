@@ -9,6 +9,7 @@ using UnityEngine.UI;
 using Random = UnityEngine.Random;
 using TMPro;
 
+
 namespace YG
 {
     public enum DistributionRule
@@ -49,6 +50,8 @@ namespace YG
 
         private List<int> _values = new();
         private Coroutine _timeoutCo;
+        
+        private bool _localPickLocked = false; // 첫 클릭 직후 즉시 true
 
         private void OnEnable() => StartCoroutine(Co_WaitAndSpawn());
         
@@ -186,12 +189,50 @@ namespace YG
         private void OnClickCard(int index)
         {
             if (!PhotonNetwork.InRoom) return;
-            if (_actorToValue.ContainsKey(PhotonNetwork.LocalPlayer.ActorNumber)) return;
+            if (_localPickLocked) return; // ★ 같은 프레임 중복 방지 (확정 전에도 막음)
+
             if (!_indexToItem.TryGetValue(index, out var item)) return;
 
             int value = item.Value;
+
+            // ★ 로컬 즉시 잠금 + 모든 버튼 임시 비활성 (중복 입력 방어)
+            _localPickLocked = true;
+            SetAllInteractable(false);
+
             photonView.RPC(nameof(RPC_RequestPick), RpcTarget.MasterClient,
                 PhotonNetwork.LocalPlayer.ActorNumber, value, index);
+        }
+        
+        // 모든 카드 버튼 활성/비활성 일괄 제어
+        private void SetAllInteractable(bool interactable)
+        {
+            foreach (var kv in _indexToItem)
+            {
+                var item = kv.Value;                  // 카드 아이템(또는 null)
+                if (item == null) continue;           // null 안전 처리
+
+                var btn = item.GetComponent<Button>(); // 버튼 컴포넌트 찾기
+                if (btn != null)                      // 버튼이 있을 때만
+                    btn.interactable = interactable;
+            }
+        }
+        
+        // 현재까지 확정된 값(_actorToValue) 기준으로 버튼 상태 재계산
+        private void RefreshInteractivityFromTaken()
+        {
+            // UniqueRandom 정책: 이미 선택된 value만 막으면 됨
+            HashSet<int> taken = new HashSet<int>(_actorToValue.Values);
+
+            foreach (var kv in _indexToItem)
+            {
+                var it = kv.Value;
+                if (!it) continue;
+
+                bool alreadyTaken = taken.Contains(it.Value);
+                var btn = it.GetComponent<UnityEngine.UI.Button>();
+                if (btn) btn.interactable = !alreadyTaken && !_localPickLocked;
+                if (alreadyTaken) it.DimUnavailable(); // 시각 피드백(뒷면 유지)
+            }
         }
         
         private void TryAutoWireFromScene()
@@ -254,25 +295,43 @@ namespace YG
                 FinalizeOrderAndStart();
         }
 
-        [PunRPC] private void RPC_PickRejected(int value) =>
+        [PunRPC]
+        private void RPC_PickRejected(int value)
+        {
+            // ★ 선택 충돌 시(동일 카드 경합) → 로컬 잠금 해제 + 상태 재계산
+            _localPickLocked = false;
+            SetBanner("이미 선택된 카드입니다. 다른 카드를 고르세요.");
+            RefreshInteractivityFromTaken();
             Debug.Log($"[Card] Pick rejected: {value}");
+        }
 
         [PunRPC]
         private void RPC_ConfirmPick(int actorNumber, int value)
         {
+            // ★ 모든 클라이언트의 딕셔너리도 동기화하여 로컬 체크가 유효하게
+            _actorToValue[actorNumber] = value;
+
+            // 시각 피드백: 선택된 카드만 강조(숫자 공개는 나중 일괄 공개)
             foreach (var kv in _indexToItem)
             {
                 var item = kv.Value;
-                //if (!item) continue;
+                if (!item) continue;
 
-                // **선택 즉시 숫자 공개하지 않음**
                 if (item.Value == value)
                     item.MarkPicked(mine: actorNumber == PhotonNetwork.LocalPlayer.ActorNumber);
-                //else
-                   //item.DimUnavailable();
             }
+
+            // 내가 확정된 경우 → 계속 잠금 유지(재선택 불가)
             if (actorNumber == PhotonNetwork.LocalPlayer.ActorNumber)
+            {
                 SetBanner("다른 플레이어 대기중…");
+                // 나머지 카드들은 굳이 상호작용 복구할 필요 없음(이미 내 선택 확정)
+            }
+            else
+            {
+                // 다른 사람이 확정되면, 그 value만 선택 불가로 갱신
+                if (!_localPickLocked) RefreshInteractivityFromTaken();
+            }
         }
 
         private void FinalizeOrderAndStart()
@@ -387,6 +446,7 @@ namespace YG
         {
             _actorToValue.Clear();
             _lockedValues.Clear();
+            _localPickLocked = false;
             if (rebuildCards) BuildCardsForCurrentPlayers();
             foreach (var it in _indexToItem.Values) it?.SetBackface();
 
