@@ -46,7 +46,7 @@ namespace LDH_UI
                 //GameObject bannerGo = Instantiate(bannerItemPrefab, bannersParent);
                 GameObject bannerGo = Instantiate(bannerItemPrefab);
                 var banner = bannerGo.GetComponent<UI_Banner>();
-                banner.Initialize(bannerData);
+                banner.Initialize(bannerData,this);
 
                 // parent 설정과 내부 리스트 등록을 한 번에 처리
                 scrollSnap.AddChild(bannerGo, false); 

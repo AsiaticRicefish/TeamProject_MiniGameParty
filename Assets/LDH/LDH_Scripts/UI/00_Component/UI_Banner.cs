@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using LDH_Util;
 
 public class UI_Banner : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerClickHandler
 {
@@ -12,7 +13,7 @@ public class UI_Banner : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, 
     // 판정 변수
     private Vector2 pointerDownPos;
     private float pointerDownTime;
-    [SerializeField] private float dragThreshold = 10f;      // 픽셀
+    [SerializeField] private float dragThreshold = 25f;      // 픽셀
     [SerializeField] private float clickMaxDuration = 0.35f; // 초
 
 
@@ -25,6 +26,7 @@ public class UI_Banner : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, 
     public void Initialize(BannerData bannerData, LDH_UI.UI_BannerGroup group = null)
     {
         data = bannerData;
+        parentGroup = group;
         bannerBackGround.color = bannerData.bannerBackGroundColor;
         bannerBackGround.sprite = data.bannerBackGroundImage;
         bannerImage.sprite = data.bannerImage;
@@ -38,6 +40,7 @@ public class UI_Banner : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, 
     {
         pointerDownPos = eventData.position;
         pointerDownTime = Time.unscaledTime;
+        Debug.Log($"[Banner] OnPointerDown pos={pointerDownPos} time={pointerDownTime}");
     }
 
     public void OnPointerUp(PointerEventData eventData)
@@ -54,12 +57,19 @@ public class UI_Banner : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, 
         // 2) 시간/이동 기준 검사
         float duration = Time.unscaledTime - pointerDownTime;
         float move = Vector2.Distance(pointerDownPos, eventData.position);
+        Debug.Log($"[Banner] OnPointerClick duration={duration} move={move} isDragging={(parentGroup != null && parentGroup.IsUserDragging)}");
+
         if (duration > clickMaxDuration || move > dragThreshold)
             return;
 
         // 실제 클릭으로 인정하면 URL 실행
         if (!string.IsNullOrEmpty(data?.url))
-            Application.OpenURL(data.url);
+        {
+            Debug.Log($"[UI_Banner] URL 오픈 시도: {data.url}");
+            UrlOpener.Open(data.url);
+        }
+            
+            //Application.OpenURL(data.url);
 
         //if (!string.IsNullOrEmpty(data?.url))
         //    Application.OpenURL(data.url);
