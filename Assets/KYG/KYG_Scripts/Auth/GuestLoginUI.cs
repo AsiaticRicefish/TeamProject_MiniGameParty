@@ -234,6 +234,10 @@ public class GuestLoginUI : MonoBehaviour
         if (loadingRoot) loadingRoot.SetActive(false);
 
         ForceButtonsOn(); // 버튼 루트/그래픽/레이캐스트 강제 활성
+        
+        if (gpgsLoginManager) OnGPGSLoginRequest(gpgsLoginManager.Processing);
+
+        
         LogButtonStates("ShowLoginChoice-done");
 
         // 비동기 준비(예외 콘솔 노이즈 방지)
@@ -469,7 +473,9 @@ public class GuestLoginUI : MonoBehaviour
     //button interaction control
     private void OnGPGSLoginRequest(bool requesting)
     {
-        gpgsLoginButton.interactable = !requesting;
+        if (gpgsLoginButton)  gpgsLoginButton.interactable  = !requesting;
+        if (guestLoginButton) guestLoginButton.interactable = !requesting;
+
     }
     
     private void OnClickGpgsLogin()
@@ -489,6 +495,8 @@ public class GuestLoginUI : MonoBehaviour
         
         
         if (gpgsLoginButton) gpgsLoginButton.interactable = false;
+        if (guestLoginButton) guestLoginButton.interactable = false;
+
         gpgsLoginManager.LoginWithGPGS();
     }
 
