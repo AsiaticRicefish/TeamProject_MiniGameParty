@@ -48,17 +48,27 @@ public class MeteorTapMiniGame : MonoBehaviourPun
 
     private int localTurnTap;       // "이번 내 턴" 동안 내가 누른 횟수
     private Coroutine turnWindowCo; // 무탭 자동 처리 코루틴
+    
+    private const int MaxTapPerTurn = 3;     // 턴당 최대 탭 수(기획 기준)
+   
+    private bool turnResolved = false;       // ★ 이미 커밋(해소)했는지 여부 가드
 
     private bool myTurn => currentActor == PhotonNetwork.LocalPlayer.ActorNumber;
 
     // ---------- lifecycle ----------
+    // 초기화 직후에도 현재/다음 배너가 올바르게 보이도록 보정
     public void SafeInitialize()
     {
         TurnManager.Instance.OnTurnChanged += HandleTurnChanged;
         EnsureAnimatorBaseState();
 
-        // 씬 합류 직후에도 현재 턴 상태를 즉시 반영(배너/버튼 상태 동기화)
-        HandleTurnChanged(-2, TurnManager.Instance.CurrentActor);
+        int curr = TurnManager.Instance.CurrentActor;    // 마스터/클라 모두 최신 브로드캐스트 반영
+        int next = TurnManager.Instance.GetNextActor();
+        if (!disableUI && ui)
+        {
+            ui.UpdateTurnBanners(curr, next);
+            ui.SetTapInteractable(curr == PhotonNetwork.LocalPlayer.ActorNumber);
+        }
     }
 
     public void OnGameStart()
@@ -116,40 +126,30 @@ public class MeteorTapMiniGame : MonoBehaviourPun
     {
         currentActor = curr;
 
-        // 턴 전환 배너(짧게) + 조작 가능 여부
         if (!disableUI && ui)
         {
-            ui.ShowTurnTransition(prev, curr); // “마이 턴!”(당사자만) + “NEXT >>”(모두) 짧게 표시
+            int next = TurnManager.Instance.GetNextActor();
+            ui.UpdateTurnBanners(curr, next);
             ui.SetTapInteractable(myTurn);
         }
 
-        // 게임 종료(최후 1인 남아 TurnManager가 curr=-1 브로드캐스트)
         if (curr == -1)
         {
-            if (!disableUI && ui)
-            {
-                ui.SetTapInteractable(false);
-                // 최종 게임오버는 팀 정책에 맞춰 공용 UI에서 처리하세요
-                // (여기서는 라운드 엔딩 폭발자가 아닌 "최종 우승 확정" 상황)
-            }
+            if (!disableUI && ui) ui.SetTapInteractable(false);
             return;
         }
 
-        // 새 턴 진입
         if (myTurn)
         {
             localTurnTap = 0;
+            turnResolved = false; // ✅ 이번 턴 시작이므로 커밋/해소 플래그 초기화
 
-            // “무탭이면 자동 1회 적용” 타이머 시작
             if (turnWindowCo != null) StopCoroutine(turnWindowCo);
             turnWindowCo = StartCoroutine(Co_NoTapAutoCommit(noTapAutoTime));
         }
         else
         {
-            // 내 턴 아니면 보호적으로 인터랙션 Off
             if (!disableUI) ui?.SetTapInteractable(false);
-
-            // 내 이전 코루틴 정리
             if (turnWindowCo != null) { StopCoroutine(turnWindowCo); turnWindowCo = null; }
         }
     }
@@ -157,39 +157,42 @@ public class MeteorTapMiniGame : MonoBehaviourPun
     // “아무 것도 안 누르면” 자동으로 최소 1회 탭 반영 후 턴 종료
     private IEnumerator Co_NoTapAutoCommit(float sec)
     {
-        float t = Mathf.Max(0.01f, sec);
-        while (t > 0f && localTurnTap == 0)
+        turnResolved = false; // 안전: 턴 시작 시 항상 false
+
+        float elapsed = 0f;
+        float limit = Mathf.Max(0.01f, sec);
+
+        // ⬇️ 더 이상 localTurnTap 값(0/1/2/3)을 기다리지 않습니다.
+        while (elapsed < limit && !turnResolved && myTurn)
         {
+            elapsed += Time.deltaTime;
             yield return null;
-            t -= Time.deltaTime;
         }
 
-        // 여전히 0번이면 자동 1회 반영
-        if (localTurnTap == 0 && myTurn)
-        {
-            RequestAddTap(1);   // 네트워크 증가 요청(마스터 경유)
-            localTurnTap = 1;
-            TryEndTurn();       // 최소 조건 채웠으니 턴 종료 시도
-        }
         turnWindowCo = null;
+
+        // 이미 커밋됐거나 내 턴이 아니면 종료
+        if (turnResolved || !myTurn) yield break;
+
+        // 시간 종료 → 현재까지의 탭 수(0/1/2/3)로 턴 종료
+        // 0회면 TryEndTurn()에서 1회로 자동 보정
+        TryEndTurn();
     }
 
     // ---------- input ----------
     public void OnTap()
     {
-        if (!myTurn) return;
+        if (!myTurn) return;        // 내 턴이 아니면 무시
+        if (turnResolved) return;   // ✅ 이미 커밋(턴 종료)된 상태면 무시
+        if (localTurnTap >= maxTapsPerTurn) return; // 최대 3회 제한
 
-        // 최대 3회 제한
-        if (localTurnTap >= maxTapsPerTurn) return;
-
-        // 간단한 연출(옵셔널)
         if (!disableAnimator) SafeTrigger(trgStarPulse);
 
-        // 네트워크에 “+1” 요청 (마스터에서 누적 관리)
+        // 네트워크에 “+1” 요청 (마스터가 진짜 누적/브로드캐스트)
         RequestAddTap(1);
         localTurnTap++;
 
-        // 이번 턴의 최대치에 도달하면 자동으로 턴 종료
+        // 3회 도달 시 즉시 턴 종료
         if (localTurnTap >= maxTapsPerTurn)
             TryEndTurn();
     }
@@ -201,27 +204,31 @@ public class MeteorTapMiniGame : MonoBehaviourPun
     /// </summary>
     private void TryEndTurn()
     {
-        Debug.Log($"[Tap] TryEndTurn by {PhotonNetwork.LocalPlayer.ActorNumber} (master:{PhotonNetwork.IsMasterClient}) localTurnTap={localTurnTap}");
         if (!myTurn) return;
+        if (turnResolved) return;   // ✅ 이중 호출 방지
+        turnResolved = true;        // ✅ 이제부터는 더 이상 커밋 로직 진입 금지
 
+        // 타이머 코루틴 중지
+        if (turnWindowCo != null) { StopCoroutine(turnWindowCo); turnWindowCo = null; }
+
+        // 최소 보장치(예: 0회면 1회로) 자동 보정
         int need = Mathf.Max(0, minTapsPerTurn - localTurnTap);
         if (need > 0)
         {
-            RequestAddTap(need);
+            RequestAddTap(need);   // 네트워크에 누적 반영
             localTurnTap += need;
         }
 
-        // 내 턴 버튼 막기
+        // 내 턴 입력 차단
         if (!disableUI) ui?.SetTapInteractable(false);
 
-        // ✅ 누구 턴이든 "마스터"가 NextTurn을 호출하도록 보장
+        // 다음 턴 진행(마스터만 직접 호출, 클라는 요청)
         if (PhotonNetwork.IsMasterClient)
         {
             TurnManager.Instance.NextTurn();
         }
         else
         {
-            // 비마스터일 땐 마스터에게 다음 턴 요청
             photonView.RPC(nameof(RPC_RequestNextTurn), RpcTarget.MasterClient);
         }
     }

@@ -9,7 +9,6 @@ using Managers; // SignInStatus
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
-using UnityEngine.SocialPlatforms;
 using System.Threading.Tasks;
 using LDH_Util;
 using PMS_Util;
@@ -47,48 +46,72 @@ namespace KYG.Auth
 
         /// <summary>UI 버튼에서 호출</summary>
         public void LoginWithGPGS()
+{
+    PreflightLog(); // 사전 로그 출력 (Firebase/GPGS/Photon 상태 확인)
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+    // 1) GPGS 디버그 로그 켜기(개발중에만)
+    PlayGamesPlatform.DebugLogEnabled = true;
+
+    // 2) 이전 세션 꼬임 방지: SignOut은 버전 의존 → 안전 호출
+    try
+    {
+        var platform = PlayGamesPlatform.Instance;
+        if (platform != null)
         {
-            PreflightLog();
-// #if UNITY_ANDROID && !UNITY_EDITOR
-            PlayGamesPlatform.Instance.Authenticate(status =>
+            var mi = typeof(PlayGamesPlatform).GetMethod("SignOut",
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (mi != null) mi.Invoke(platform, null);
+        }
+    }
+    catch (Exception e)
+    {
+        Debug.Log($"[GPGS] SignOut 생략 또는 실패(무시): {e.Message}");
+    }
+
+    // 3) 인증 시작
+    PlayGamesPlatform.Instance.Authenticate(status =>
+    {
+        if (status != GooglePlayGames.BasicApi.SignInStatus.Success)
+        {
+            Debug.LogError($"[GPGS] Authenticate 실패: {status}");
+            return;
+        }
+
+        // 4) 임시 표시 이름 (Firebase 로그인 후 DisplayName으로 덮어씀)
+        string displayName = SystemInfo.deviceName;
+        if (string.IsNullOrWhiteSpace(displayName)) displayName = "Player";
+
+        // 5) 서버 인증코드(권장) → Firebase 크리덴셜 생성
+        try
+        {
+            PlayGamesPlatform.Instance.RequestServerSideAccess(false, code =>
             {
-                if (status != SignInStatus.Success)
+                if (!string.IsNullOrEmpty(code))
                 {
-                    Debug.LogError($"[GPGS] Authenticate 실패: {status}");
-                    return;
-                }
+                    Debug.Log("[GPGS] ServerAuthCode OK");
+                    //var cred = GooglePlayGames.BasicApi.PlayGamesServerAuthCode.GetServerAuthCodeCredential(code);
+                     var cred = Firebase.Auth.PlayGamesAuthProvider.GetCredential(code);
 
-                string displayName = Social.localUser?.userName ?? "Player";
-
-                // 1) v2.1.0 정석: 서버 인증코드 먼저
-                try
-                {
-                    PlayGamesPlatform.Instance.RequestServerSideAccess(false, code =>
-                    {
-                        if (!string.IsNullOrEmpty(code))
-                        {
-                            Debug.Log("[GPGS] ServerAuthCode OK");
-                            Debug.Log($"[GPGS] ServerAuthCode length={code.Length}");
-                            var cred = PlayGamesAuthProvider.GetCredential(code);
-                            SignInFirebase(cred, displayName);
-                        }
-                        else
-                        {
-                            TryIdTokenFallback(displayName);
-                            Debug.LogWarning("[GPGS] ServerAuthCode EMPTY → Try IdToken fallback");
-                        }
-                    });
+                    SignInFirebase(cred, displayName);
                 }
-                catch (Exception e)
+                else
                 {
-                    Debug.LogWarning($"[GPGS] RequestServerSideAccess 예외: {e.Message} → IdToken 폴백");
-                    TryIdTokenFallback(displayName);
+                    Debug.LogWarning("[GPGS] ServerAuthCode 비어있음 → (선택) IdToken 폴백 로직으로");
+                    TryIdTokenFallback(displayName); // 구현해두신 폴백 함수 사용
                 }
             });
-// #else
-            Debug.LogWarning("[GPGS] Android 기기에서 테스트하세요. (에디터 미지원)");
-// #endif
         }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"[GPGS] RequestServerSideAccess 예외: {e.Message} → IdToken 폴백");
+            TryIdTokenFallback(displayName);
+        }
+    });
+#else
+    Debug.LogWarning("[GPGS] Android 기기에서 테스트하세요. (에디터 미지원)");
+#endif
+}
 
         /// <summary>GetIdToken 공개 API가 없는 환경을 위한 리플렉션 폴백</summary>
         private void TryIdTokenFallback(string displayName)
