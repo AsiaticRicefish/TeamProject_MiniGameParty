@@ -9,6 +9,7 @@ using LDH_Game;
 using LDH_Util;
 using Photon.Pun.Demo.Procedural;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace KYG
 {
@@ -30,6 +31,10 @@ namespace KYG
         [Header("Verbose Logs")] [SerializeField]
         private bool verbose = true;
 
+        [SerializeField] private TitleController titleController; //StartUI는 자동로그인에 대한 결과값이 False일 때 Start 버튼이 클릭및 표시 되어야한다.
+        [SerializeField] private Image screenCapture; //StartUI는 자동로그인에 대한 결과값이 False일 때 Start 버튼이 클릭및 표시 되어야한다.
+
+        
         private void Awake()
         {
             DontDestroyOnLoad(gameObject);
@@ -47,10 +52,17 @@ namespace KYG
 
         private async void Start()
         {
+            
+            // 스크린 캡쳐 이미지 비활성화(클릭 이벤트 막기 위함)
+            screenCapture.enabled = false;
+            
             // 로그아웃 직후 1회: 어떤 자동 로그인도 금지하고 UI만 띄움
             if (AuthAutoSuppressor.Consume())
             {
                 Debug.Log("[AuthBootstrapper] auto-login suppressed → 대기 상태");
+                Debug.Log("자동 로그인 X");
+                screenCapture.enabled = true;
+                titleController.ShowStartButton();
                 return;
             }
 
@@ -118,6 +130,12 @@ namespace KYG
                 return;
             }
 #endif
+            }
+            else
+            {
+                Debug.Log("자동 로그인 X");
+                screenCapture.enabled = true;
+                titleController.ShowStartButton();
             }
 
             // 7) 완전 첫 실행 또는 정보 불충분 → UI

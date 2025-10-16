@@ -7,6 +7,7 @@ using System;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using UnityEngine.Events;
+using UnityEngine.AddressableAssets;
 
 namespace LDH_UI
 {
@@ -40,13 +41,14 @@ namespace LDH_UI
 
         private void Start()
         {
+            InitialGroup().Forget();
             // 배너 생성  
-            foreach (var bannerData in groupData.banners)
+            /*foreach (var bannerData in groupData.banners)
             {
                 //GameObject bannerGo = Instantiate(bannerItemPrefab, bannersParent);
                 GameObject bannerGo = Instantiate(bannerItemPrefab);
                 var banner = bannerGo.GetComponent<UI_Banner>();
-                banner.Initialize(bannerData);
+                banner.Initialize(bannerData,this);
 
                 // parent 설정과 내부 리스트 등록을 한 번에 처리
                 scrollSnap.AddChild(bannerGo, false); 
@@ -81,12 +83,60 @@ namespace LDH_UI
 
             UpdateToggleIndicator(0);
 
-            StartAutoSlide();
+            StartAutoSlide();*/
         }
         private void UpdateToggleIndicator(int pageIndex)
         {
             for (int i = 0; i < toggles.Count; i++)
                 toggles[i].isOn = (i == pageIndex);
+        }
+
+        private async UniTask InitialGroup()
+        {
+            groupData = await Addressables.LoadAssetAsync<BannerGroupData>("Assets/PMS/PMS_Scripts/SO Data Scripts/BannerGroupData.asset");
+
+            // 배너 생성  
+            foreach (var bannerData in groupData.banners)
+            {
+                //GameObject bannerGo = Instantiate(bannerItemPrefab, bannersParent);
+                GameObject bannerGo = Instantiate(bannerItemPrefab);
+                var banner = bannerGo.GetComponent<UI_Banner>();
+                banner.Initialize(bannerData, this);
+
+                // parent 설정과 내부 리스트 등록을 한 번에 처리
+                scrollSnap.AddChild(bannerGo, false);
+            }
+
+
+            // 토글 생성
+            int pageCount = bannersParent.childCount;
+            for (int i = 0; i < pageCount; i++)
+            {
+                var toggle = Instantiate(togglePrefab, toggleParent);
+                toggle.group = toggleGroup;
+                int index = i;
+                toggle.onValueChanged.AddListener(isOn =>
+                {
+                    if (isOn)
+                    {
+                        RestartAutoSlide();
+                        scrollSnap.GoToScreen(index);
+                    }
+                });
+                toggles.Add(toggle);
+            }
+            // 2) 페이지 변경 이벤트 구독
+            //scrollSnap.OnSelectionPageChangedEvent.AddListener(UpdateToggleIndicator);
+
+            // 페이지 변경 이벤트 구독
+            scrollSnap.OnSelectionPageChangedEvent.AddListener(OnPageSettled);
+
+            // 첫 페이지로 이동 & 자동 슬라이드 시작
+            scrollSnap.GoToScreen(0, false);
+
+            UpdateToggleIndicator(0);
+
+            StartAutoSlide();
         }
 
         private void StartAutoSlide()

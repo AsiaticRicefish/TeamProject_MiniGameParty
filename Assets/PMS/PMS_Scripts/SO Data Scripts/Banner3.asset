@@ -12,22 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e9828f20d6e9dbf4f8e536be3afe14c4, type: 3}
   m_Name: Banner3
   m_EditorClassIdentifier: 
+  bannerBackGroundImageKey: Assets/Imports/Lobby/Banner Image/banner_terms.png
+  bannerImageKey: 
   bannerBackGroundImage: {fileID: -5177388603050735206, guid: 322a613594cf84e46bafc50ec9cd47b2,
     type: 3}
   bannerImage: {fileID: -1590759027, guid: 15dfdef939c964bb592f727f9d0ab58c, type: 3}
-  bannerBackGroundColor: {r: 0.98039216, g: 0.7294118, b: 0.6509804, a: 1}
-  onClickEvent:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: 
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+  bannerBackGroundColor: {r: 1, g: 1, b: 1, a: 1}
+  url: https://sites.google.com/kiweb.or.kr/terms-privacy/

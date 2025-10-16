@@ -227,6 +227,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e743a6b9b9e939446b9207bb1a819990, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gpgsLoginManager: {fileID: 1974923860}
   buttonRoot: {fileID: 1709206993066246670}
   guestLoginButton: {fileID: 1771110005793179502}
   gpgsLoginButton: {fileID: 9199652751304874120}
@@ -335,6 +336,8 @@ MonoBehaviour:
   kickCooldownSeconds: 10
   defaultNick: Player
   verbose: 1
+  titleController: {fileID: 1744896514}
+  screenCapture: {fileID: 1217156120}
 --- !u!4 &501258903
 Transform:
   m_ObjectHideFlags: 0
@@ -1110,6 +1113,11 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3709094554513307345, guid: 1413c71ec6ba0ed4ca21b4ac9cc3a26c,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4686231576285124958, guid: 1413c71ec6ba0ed4ca21b4ac9cc3a26c,
         type: 3}
       propertyPath: m_Name
@@ -1239,7 +1247,6 @@ GameObject:
   - component: {fileID: 1577206875}
   - component: {fileID: 1577206874}
   - component: {fileID: 1577206877}
-  - component: {fileID: 1577206878}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -1365,18 +1372,6 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
---- !u!114 &1577206878
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1577206873}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dce867e64cbe477b98a62debc5761de7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1589312108
 GameObject:
   m_ObjectHideFlags: 0
@@ -1421,6 +1416,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1744896514 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3196372979967275605, guid: 1413c71ec6ba0ed4ca21b4ac9cc3a26c,
+    type: 3}
+  m_PrefabInstance: {fileID: 1403389312}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a86765e0c9ae20439dcccfeb7e5083d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1749410759
 GameObject:
   m_ObjectHideFlags: 0

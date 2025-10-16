@@ -17,11 +17,51 @@ MonoBehaviour:
     m_SerializedData: []
   m_GUID: 0f1a12dbe15bd424fa0e3ae6dd4fe239
   m_SerializeEntries:
+  - m_GUID: 14f343eb5653a8e418b92d5b64ecd247
+    m_Address: Assets/PMS/PMS_Scripts/SO Data Scripts/Banner2.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2a5e99808ef88f542991f8599e80ac87
+    m_Address: Assets/PMS/PMS_Scripts/SO Data Scripts/Banner1.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 412d11a418d673c42a5df6e1fbabe20a
+    m_Address: Assets/PMS/PMS_Scripts/SO Data Scripts/BannerGroupData.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 448ba8e7c87a8844fa8896baa143871d
+    m_Address: Assets/PMS/PMS_Scripts/SO Data Scripts/Banner3.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5cbec8e9d3cb44770977349f3990a15c
     m_Address: Assets/LDH/LDH_Resources/Definitions/UI/ToastStyleTable.asset
     m_ReadOnly: 0
     m_SerializedLabels:
     - ui:toastStyle
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7332c82c6ed984c409ad28a033a1c5d5
+    m_Address: Assets/Imports/Lobby/Banner Image/banner_service.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 93a96c96e27f4ad46a30901d6cc64713
+    m_Address: Assets/Imports/Lobby/Banner Image/banner_grand_open.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9cbf8140e04090741a9f568f3e22783d
+    m_Address: Assets/Imports/Lobby/Banner Image/banner_HG_KGA.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f98c9a33996ddb64f84168ebe505a5d6
+    m_Address: Assets/Imports/Lobby/Banner Image/banner_terms.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: efc2531fbc716f7409d27168060779e5, type: 2}

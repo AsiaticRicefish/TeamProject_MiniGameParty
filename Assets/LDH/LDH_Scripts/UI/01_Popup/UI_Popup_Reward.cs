@@ -5,6 +5,7 @@ using Data;
 using LDH_MainGame;
 using LDH_Util;
 using Managers;
+using Photon.Pun;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -141,7 +142,20 @@ namespace LDH_UI
                 claimed = true;
                 Manager.UI.EnqueueToast(Define_LDH.ToastType.Check, $"보상 {reward} 수령 완료!", 2f);
                 await UniTask.Delay(TimeSpan.FromSeconds(1.5f));
-                MainGameManager.Instance?.EndGameAsync(false).Forget();
+
+
+                if (MainGameManager.Instance != null)
+                {
+                    MainGameManager.Instance.EndGameAsync(false).Forget();
+                }
+                else if(MainGameManager.Instance == null && !PhotonNetwork.IsConnected)
+                {
+                    
+                    Debug.Log("Photon Connection Loss. MainGameManager is null -> Try to reconnect server");
+                    await Manager.UI.CloseAllPopupUI();
+                    await UniTask.WaitUntil(() => Photon.Pun.PhotonNetwork.IsConnectedAndReady);
+                }
+               
             }
             else
             {
@@ -150,6 +164,8 @@ namespace LDH_UI
                 Manager.UI.EnqueueToast(Define_LDH.ToastType.Error, "보상 수령에 실패했습니다. 다시 시도해 주세요.");
 
             }
+            
+            
         }
 
 

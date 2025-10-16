@@ -1,18 +1,25 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using LDH_Util;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 public class UI_Banner : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerClickHandler
 {
     [SerializeField] private Image bannerBackGround;
     [SerializeField] private Image bannerImage;         //인스펙터창에서 무조건 넣어주기
+
+    public Sprite backgroundRenderer;
+    public Sprite bannerRenderer;
+
     private BannerData data;
     private LDH_UI.UI_BannerGroup parentGroup;
 
     // 판정 변수
     private Vector2 pointerDownPos;
     private float pointerDownTime;
-    [SerializeField] private float dragThreshold = 10f;      // 픽셀
+    [SerializeField] private float dragThreshold = 25f;      // 픽셀
     [SerializeField] private float clickMaxDuration = 0.35f; // 초
 
 
@@ -25,9 +32,37 @@ public class UI_Banner : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, 
     public void Initialize(BannerData bannerData, LDH_UI.UI_BannerGroup group = null)
     {
         data = bannerData;
+        parentGroup = group;
         bannerBackGround.color = bannerData.bannerBackGroundColor;
-        bannerBackGround.sprite = data.bannerBackGroundImage;
-        bannerImage.sprite = data.bannerImage;
+        //bannerBackGround.sprite = data.bannerBackGroundImage;
+        //bannerImage.sprite = data.bannerImage;
+        Addressables.LoadAssetAsync<Sprite>(bannerData.bannerBackGroundImageKey).Completed += handle =>
+        {
+            if (handle.Status == AsyncOperationStatus.Succeeded)
+            {
+                backgroundRenderer = handle.Result;
+                bannerBackGround.sprite = handle.Result; // UI Image에도 적용
+            }
+            else
+            {
+                //에셋 로드 실패시 기본 백그라운드 이미지 사용
+                bannerBackGround.sprite = data.bannerBackGroundImage;
+            }
+        };
+
+        /*Addressables.LoadAssetAsync<Sprite>(bannerData.bannerImageKey).Completed += handle =>
+        {
+            if (handle.Status == AsyncOperationStatus.Succeeded)
+            {
+                bannerRenderer.sprite = handle.Result;
+                bannerImage.sprite = handle.Result; // UI Image에도 적용
+            }
+            else
+            {
+                //에셋 로드 실패시 기본 이미지 사용
+                bannerImage.sprite = data.bannerImage;
+            }
+        };*/
     }
 
     /*public void OnPointerClick(PointerEventData eventData)
@@ -38,6 +73,7 @@ public class UI_Banner : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, 
     {
         pointerDownPos = eventData.position;
         pointerDownTime = Time.unscaledTime;
+        Debug.Log($"[Banner] OnPointerDown pos={pointerDownPos} time={pointerDownTime}");
     }
 
     public void OnPointerUp(PointerEventData eventData)
@@ -54,12 +90,19 @@ public class UI_Banner : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, 
         // 2) 시간/이동 기준 검사
         float duration = Time.unscaledTime - pointerDownTime;
         float move = Vector2.Distance(pointerDownPos, eventData.position);
+        Debug.Log($"[Banner] OnPointerClick duration={duration} move={move} isDragging={(parentGroup != null && parentGroup.IsUserDragging)}");
+
         if (duration > clickMaxDuration || move > dragThreshold)
             return;
 
         // 실제 클릭으로 인정하면 URL 실행
         if (!string.IsNullOrEmpty(data?.url))
-            Application.OpenURL(data.url);
+        {
+            Debug.Log($"[UI_Banner] URL 오픈 시도: {data.url}");
+            UrlOpener.Open(data.url);
+        }
+            
+            //Application.OpenURL(data.url);
 
         //if (!string.IsNullOrEmpty(data?.url))
         //    Application.OpenURL(data.url);

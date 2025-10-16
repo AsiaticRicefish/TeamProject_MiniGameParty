@@ -18,6 +18,10 @@ namespace KYG
     
 public class GuestLoginUI : MonoBehaviour
 {
+    [Header("GPGS LoginManager")] [SerializeField]
+    private GPGSLoginManager gpgsLoginManager;
+    
+    
     [Header("UI Roots")] [SerializeField] private GameObject buttonRoot; // 팝업 카드(버튼 컨테이너)
     [SerializeField] private Button guestLoginButton; // "게스트로 바로 시작하기"
     [SerializeField] private Button gpgsLoginButton; // "Google Play Games 연결"
@@ -81,6 +85,7 @@ public class GuestLoginUI : MonoBehaviour
     private bool _blockSubmit;
     private GameObject _nicknamePopupInstance;
     
+    
     public bool IsChoiceOpen { get; private set; }
 
     // 한글/대문자 혼합 시 6자, 소문자만 8자 룰
@@ -106,7 +111,14 @@ public class GuestLoginUI : MonoBehaviour
         if (gpgsLoginButton)
         {
             gpgsLoginButton.onClick.RemoveAllListeners();
+            if (gpgsLoginManager != null)
+            {
+                gpgsLoginManager.OnGPGSLogin += OnGPGSLoginRequest;
+                
+            }
+            
             gpgsLoginButton.onClick.AddListener(OnClickGpgsLogin);
+          
         }
         
         if (wireButtonsInCode && guestLoginButton)
@@ -147,7 +159,11 @@ public class GuestLoginUI : MonoBehaviour
 
         if (guestLoginButton) guestLoginButton.onClick.RemoveListener(SwitchToInput);
         if (guestLoginButton) guestLoginButton.onClick.RemoveListener(OpenNicknamePopup);
-        if (gpgsLoginButton) gpgsLoginButton.onClick.RemoveListener(OnClickGpgsLogin);
+        if (gpgsLoginButton)
+        {
+            gpgsLoginButton.onClick.RemoveListener(OnClickGpgsLogin);
+            if (gpgsLoginManager!=null) gpgsLoginManager.OnGPGSLogin -= OnGPGSLoginRequest;
+        }
 
         if (nicknameInput)
         {
@@ -218,6 +234,10 @@ public class GuestLoginUI : MonoBehaviour
         if (loadingRoot) loadingRoot.SetActive(false);
 
         ForceButtonsOn(); // 버튼 루트/그래픽/레이캐스트 강제 활성
+        
+        if (gpgsLoginManager) OnGPGSLoginRequest(gpgsLoginManager.Processing);
+
+        
         LogButtonStates("ShowLoginChoice-done");
 
         // 비동기 준비(예외 콘솔 노이즈 방지)
@@ -394,7 +414,12 @@ public class GuestLoginUI : MonoBehaviour
         if (cancelLoadingButton) cancelLoadingButton.gameObject.SetActive(false);
 
         if (guestLoginButton) guestLoginButton.gameObject.SetActive(false);
-        if (gpgsLoginButton) gpgsLoginButton.gameObject.SetActive(false);
+        if (gpgsLoginButton)
+        {
+            gpgsLoginButton.gameObject.SetActive(false);
+            
+        }
+        
 
         if (nicknameInput)
         {
@@ -444,17 +469,35 @@ public class GuestLoginUI : MonoBehaviour
         
     }
 
+    
+    //button interaction control
+    private void OnGPGSLoginRequest(bool requesting)
+    {
+        if (gpgsLoginButton)  gpgsLoginButton.interactable  = !requesting;
+        if (guestLoginButton) guestLoginButton.interactable = !requesting;
+
+    }
+    
     private void OnClickGpgsLogin()
     {
         // GPGS 팝업/흐름은 별도 매니저가 처리
-        var g = FindObjectOfType<KYG.Auth.GPGSLoginManager>();
-        if (g == null)
+        if (gpgsLoginManager == null)
         {
             Debug.LogWarning("[GuestLoginUI] GPGSLoginManager가 씬에 없습니다.");
             return;
         }
 
-        g.LoginWithGPGS();
+        if (gpgsLoginManager.Processing)
+        {
+            Debug.Log("[GPGS] GPGS Login Processing : true");
+            return;
+        }
+        
+        
+        if (gpgsLoginButton) gpgsLoginButton.interactable = false;
+        if (guestLoginButton) guestLoginButton.interactable = false;
+
+        gpgsLoginManager.LoginWithGPGS();
     }
 
     private void ActivateInput()

@@ -22,7 +22,7 @@ public class TitleController : MonoBehaviour
 
     private Vector2[] originalPositions;
     private void Awake()
-    {
+    {   
         DOTween.Init();
 
         // 원본 위치 저장
@@ -76,8 +76,7 @@ public class TitleController : MonoBehaviour
               });
         }
         
-        StartStartButtonAnimation();
-      
+        //StartStartButtonAnimation();    
     }
 
     private IEnumerator Test()
