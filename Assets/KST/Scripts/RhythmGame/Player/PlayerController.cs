@@ -21,6 +21,7 @@ namespace RhythmGame
         int _invincibleID;
         public static Dictionary<int, Transform> AvatarByActor = new(); //액터넘버, 위치 매핑
         [SerializeField] private AvatarStruct avatarStruct;
+        float _alphaValue = 1f;
 
 
         private void Start()
@@ -46,9 +47,7 @@ namespace RhythmGame
                 SetPlayerColor();
             }
 
-
         }
-
         void OnEnable()
         {
             if (photonView && photonView.Owner != null) //포톤뷰 및 owner가 정상적으로 할당된 경우
@@ -69,6 +68,7 @@ namespace RhythmGame
             {
                 await Manager.Custom.ApplyToAvatarAsync(avatarStruct, charId, equipId);
                 GameManager.Instance.AddCustomizedPlayer(uid);
+                SetPlayerColor();
             }
         }
 
@@ -85,7 +85,7 @@ namespace RhythmGame
                     //유니모 쉐이더 용
                     var mpb = new MaterialPropertyBlock();
                     renderer.GetPropertyBlock(mpb);
-                    mpb.SetFloat(_invincibleID, 0.5f);
+                    mpb.SetFloat(_invincibleID, _alphaValue);
                     renderer.SetPropertyBlock(mpb);
                 }
             }
