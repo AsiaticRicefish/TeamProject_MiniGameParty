@@ -30,6 +30,8 @@ namespace KYG
         [Header("Verbose Logs")] [SerializeField]
         private bool verbose = true;
 
+        [SerializeField] private TitleController titleController; //StartUI는 자동로그인에 대한 결과값이 False일 때 Start 버튼이 클릭및 표시 되어야한다.
+
         private void Awake()
         {
             DontDestroyOnLoad(gameObject);
@@ -118,6 +120,11 @@ namespace KYG
                 return;
             }
 #endif
+            }
+            else
+            {
+                Debug.Log("자동 로그인 X");
+                titleController.ShowStartButton();
             }
 
             // 7) 완전 첫 실행 또는 정보 불충분 → UI
