@@ -337,6 +337,7 @@ MonoBehaviour:
   defaultNick: Player
   verbose: 1
   titleController: {fileID: 1744896514}
+  screenCapture: {fileID: 1217156120}
 --- !u!4 &501258903
 Transform:
   m_ObjectHideFlags: 0
