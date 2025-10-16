@@ -2,11 +2,17 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using LDH_Util;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 public class UI_Banner : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerClickHandler
 {
     [SerializeField] private Image bannerBackGround;
     [SerializeField] private Image bannerImage;         //인스펙터창에서 무조건 넣어주기
+
+    public Sprite backgroundRenderer;
+    public Sprite bannerRenderer;
+
     private BannerData data;
     private LDH_UI.UI_BannerGroup parentGroup;
 
@@ -28,8 +34,35 @@ public class UI_Banner : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, 
         data = bannerData;
         parentGroup = group;
         bannerBackGround.color = bannerData.bannerBackGroundColor;
-        bannerBackGround.sprite = data.bannerBackGroundImage;
-        bannerImage.sprite = data.bannerImage;
+        //bannerBackGround.sprite = data.bannerBackGroundImage;
+        //bannerImage.sprite = data.bannerImage;
+        Addressables.LoadAssetAsync<Sprite>(bannerData.bannerBackGroundImageKey).Completed += handle =>
+        {
+            if (handle.Status == AsyncOperationStatus.Succeeded)
+            {
+                backgroundRenderer = handle.Result;
+                bannerBackGround.sprite = handle.Result; // UI Image에도 적용
+            }
+            else
+            {
+                //에셋 로드 실패시 기본 백그라운드 이미지 사용
+                bannerBackGround.sprite = data.bannerBackGroundImage;
+            }
+        };
+
+        /*Addressables.LoadAssetAsync<Sprite>(bannerData.bannerImageKey).Completed += handle =>
+        {
+            if (handle.Status == AsyncOperationStatus.Succeeded)
+            {
+                bannerRenderer.sprite = handle.Result;
+                bannerImage.sprite = handle.Result; // UI Image에도 적용
+            }
+            else
+            {
+                //에셋 로드 실패시 기본 이미지 사용
+                bannerImage.sprite = data.bannerImage;
+            }
+        };*/
     }
 
     /*public void OnPointerClick(PointerEventData eventData)
