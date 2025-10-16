@@ -120,6 +120,9 @@ namespace RhythmGame
                 // int ss = sec % 60;
 
                 // _timerText.text = $"{mm:00}:{ss:00}";
+                if (sec <= 10)
+                    _timerText.color = Color.red;
+                    
                 _timerText.text = $"{sec:00}";
                 yield return null;
             }

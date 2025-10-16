@@ -94,6 +94,13 @@ public class GuestLoginUI : MonoBehaviour
 
     private static readonly System.Text.RegularExpressions.Regex RxUpper =
         new System.Text.RegularExpressions.Regex("[A-Z]", System.Text.RegularExpressions.RegexOptions.Compiled);
+    
+    // 자음만(Compatibility Jamo + Jamo L/Ext-A 일부) / 모음만(Compatibility Jamo + Jamo V)
+    private static readonly System.Text.RegularExpressions.Regex RxJamoConsonantsOnly =
+        new System.Text.RegularExpressions.Regex(@"^[\u1100-\u115F\u3131-\u314E\uA960-\uA97F]+$", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    private static readonly System.Text.RegularExpressions.Regex RxJamoVowelsOnly =
+        new System.Text.RegularExpressions.Regex(@"^[\u1160-\u11A7\u314F-\u3163]+$", System.Text.RegularExpressions.RegexOptions.Compiled);
 
     private void Awake()
     {
@@ -389,6 +396,12 @@ public class GuestLoginUI : MonoBehaviour
         if (blockOnProfanity && ProfanityFilter.ContainsBannedWord(nick, out _))
         {
             msg = "닉네임에 사용할 수 없는 \n 단어가 들어가 있습니다. \n 다른 닉네임을 사용하세요";
+            return false;
+        }
+        
+        if (RxJamoConsonantsOnly.IsMatch(nick) || RxJamoVowelsOnly.IsMatch(nick))
+        {
+            msg = "자음 또는 모음만으로 된 닉네임은 사용할 수 없습니다.";
             return false;
         }
 

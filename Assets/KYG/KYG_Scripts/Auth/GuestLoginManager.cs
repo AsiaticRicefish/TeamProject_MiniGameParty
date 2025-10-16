@@ -34,6 +34,11 @@ namespace KYG.Auth
 
         //[Header("Flow Options")]
         //[SerializeField] private bool loadLobbyOnJoinedRoom = true; // 룸 입장 시 로비씬 자동 로드
+        
+        private static readonly System.Text.RegularExpressions.Regex RxJamoConsonantsOnly =
+            new(@"^[\u1100-\u115F\u3131-\u314E\uA960-\uA97F]+$", System.Text.RegularExpressions.RegexOptions.Compiled);
+        private static readonly System.Text.RegularExpressions.Regex RxJamoVowelsOnly =
+            new(@"^[\u1160-\u11A7\u314F-\u3163]+$", System.Text.RegularExpressions.RegexOptions.Compiled);
 
         public bool IsFirebaseReady { get; private set; }
         public bool IsPhotonConnected => PhotonNetwork.IsConnected;
@@ -187,6 +192,13 @@ namespace KYG.Auth
         
         public void LoginAsGuestWithNickname(string nickname)
         {
+            var nickTrim = (nickname ?? "").Trim();
+            if (RxJamoConsonantsOnly.IsMatch(nickTrim) || RxJamoVowelsOnly.IsMatch(nickTrim))
+            {
+                PromptRetry("자음 또는 모음만으로 된 닉네임은 사용할 수 없습니다.");
+                return;
+            }
+            
             if (!IsFirebaseReady)
             {
                 Debug.LogWarning("[GuestLoginManager] Firebase not ready yet.");
