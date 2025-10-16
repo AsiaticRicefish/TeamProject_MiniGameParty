@@ -12,8 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e9828f20d6e9dbf4f8e536be3afe14c4, type: 3}
   m_Name: Banner1
   m_EditorClassIdentifier: 
+  bannerBackGroundImageKey: Assets/Imports/Lobby/Banner Image/banner_grand_open.png
+  bannerImageKey: 
   bannerBackGroundImage: {fileID: -5177388603050735206, guid: 322a613594cf84e46bafc50ec9cd47b2,
     type: 3}
   bannerImage: {fileID: -1590759027, guid: 15dfdef939c964bb592f727f9d0ab58c, type: 3}
-  bannerBackGroundColor: {r: 1, g: 0.972549, b: 0, a: 1}
-  url: https://www.google.com/
+  bannerBackGroundColor: {r: 1, g: 1, b: 1, a: 1}
+  url: 
