@@ -6,8 +6,9 @@ using ShootingScene;
 using UnityEngine;
 using UnityEngine.UI;
 using PMS_Util;
+using UnityEngine.EventSystems;
 
-public class OpenGameSettingPopupButton : MonoBehaviour
+public class OpenGameSettingPopupButton : MonoBehaviour, IPointerDownHandler
 {
     [SerializeField] private Button button;
 
@@ -17,7 +18,15 @@ public class OpenGameSettingPopupButton : MonoBehaviour
         button.onClick.AddListener(OnClick);
     }
    
-
+    
+    public void OnPointerDown(PointerEventData eventData)
+    {
+        // 게임 입력을 즉시 UI 모드로 전환(터치 다운 프레임 차단)
+        PlayerInputManager.Instance?.ShowPopup();
+    }
+    
+    
+    
     private void OnClick() => OnClickAsync().Forget();
 
     private async UniTask OnClickAsync()
@@ -36,12 +45,15 @@ public class OpenGameSettingPopupButton : MonoBehaviour
             popup = Manager.UI.CreatePopupUI<UI_Popup_GameSetting>();
             if (popup == null) return;
 
-            if (PlayerInputManager.Instance != null)
-            {
-                PlayerInputManager.Instance.ShowPopup();
-                restoreInput = (_) => PlayerInputManager.Instance?.ClosePopup();
-                popup.OnCloseRequested += restoreInput;
-            }
+            //팝업 닫히면 입력 복원
+            popup.OnCloseRequested += _ => PlayerInputManager.Instance?.ClosePopup();
+            
+            // if (PlayerInputManager.Instance != null)
+            // {
+            //     PlayerInputManager.Instance.ShowPopup();
+            //     restoreInput = (_) => PlayerInputManager.Instance?.ClosePopup();
+            //     popup.OnCloseRequested += restoreInput;
+            // }
 
             await Manager.UI.ShowPopupUI(popup);
 
@@ -85,4 +97,6 @@ public class OpenGameSettingPopupButton : MonoBehaviour
 
         if (button) button.interactable = true;*/
     }
+
+   
 }

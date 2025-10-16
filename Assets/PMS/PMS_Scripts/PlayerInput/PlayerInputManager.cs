@@ -9,8 +9,8 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using PMS_Util;
 using Cysharp.Threading.Tasks;
-using UnityEngine.InputSystem.Controls;    // ← 이 라인 추가
-using static UnityEditor.PlayerSettings;
+using UnityEngine.InputSystem.Controls;
+
 
 
 namespace ShootingScene
