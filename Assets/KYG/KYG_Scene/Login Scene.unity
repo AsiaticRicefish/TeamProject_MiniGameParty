@@ -227,6 +227,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e743a6b9b9e939446b9207bb1a819990, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gpgsLoginManager: {fileID: 1974923860}
   buttonRoot: {fileID: 1709206993066246670}
   guestLoginButton: {fileID: 1771110005793179502}
   gpgsLoginButton: {fileID: 9199652751304874120}
