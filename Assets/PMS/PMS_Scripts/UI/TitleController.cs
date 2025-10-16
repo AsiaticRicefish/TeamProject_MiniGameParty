@@ -76,8 +76,7 @@ public class TitleController : MonoBehaviour
               });
         }
         
-        StartStartButtonAnimation();
-      
+        //StartStartButtonAnimation();    
     }
 
     private IEnumerator Test()
