@@ -185,6 +185,10 @@ namespace ShootingScene
                 //RPC 동기화에서는 지연이 발생하기 때문에 지연 시간을 고려해서 Start할 수 있도록
                 startAt = PhotonNetwork.Time + lead;
                 endAt = startAt + duration;
+
+                //핑찍기
+                double sendTime = PhotonNetwork.Time;
+                photonView.RPC("OnReceiveRPC", RpcTarget.All, sendTime);
             }
 
             if (isLocal == true)
@@ -194,6 +198,14 @@ namespace ShootingScene
                 if (!PhotonNetwork.IsMasterClient) return;
                 photonView.RPC("RPC_StartTimer", RpcTarget.All, startAt, endAt);
             }
+        }
+
+        [PunRPC]
+        void OnReceiveRPC(double sendTime)
+        {
+            double receiveTime = PhotonNetwork.Time;
+            double delay = receiveTime - sendTime;
+            Debug.Log($"Client {PhotonNetwork.LocalPlayer.NickName}: Delay = {delay * 1000} ms");
         }
 
         public void CancelTimer(bool isLocal)
@@ -211,6 +223,7 @@ namespace ShootingScene
         public void RPC_StartTimer(double startAt, double endAt)
         {
             Debug.Log("RPC를 통하여 모두에게 타이머 작동 시작!");
+
             networkTimer.OnStartTimer(startAt,endAt);
         }
 

@@ -160,6 +160,8 @@ MonoBehaviour:
   - SetPlayerCustom
   - RPC_SetPlayerCustom
   - RPC_SetOrder
+  - OnReceiveRPC
+  - MeasureLatency
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1
