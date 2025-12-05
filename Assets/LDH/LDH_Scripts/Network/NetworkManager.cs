@@ -156,6 +156,8 @@ namespace Network
                 PhotonNetwork.NickName = nickName;
             //아이디 = 닉네임이랑 똑같은 아이디로 부여
             PhotonNetwork.AuthValues = new AuthenticationValues(PhotonNetwork.NickName);
+            
+            Debug.Log(PhotonNetwork.NickName + "으로 닉네임 설정");
         }
 
         #endregion
